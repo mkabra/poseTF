@@ -1,52 +1,86 @@
+import os
+
+# ----- Data parameters
+
 split = True
+view = 0
 scale = 2
 rescale = 2
 numscale = 3
 pool_scale = 4
 cropsz = 200
+imsz = (624,624) # This is after cropping. Orig is 1024x1024
+map_size = 100000*psz**2*3
+
+cachedir = '/home/mayank/work/tensorflow/cacheHead/'
+labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
+viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
+ptn = 'fly_000[0-9]'
+trainfilename = 'train_lmdb'
+valfilename = 'val_lmdb'
+valdatafilename = 'valdata'
+valratio = 0.3
+
+# ----- Network parameters
 
 # sel_sz determines the patch size used for the final decision
 # i.e., patch seen by the fc6 layer
 # ideally as large as possible but limited by
 # a) gpu memory size
 # b) overfitting due to large number of variables.
-sel_sz = 512/2
-psz = sel_sz/(scale**(numscale-1))/rescale
-
-cachedir = '/home/mayank/work/tensorflow/cacheHead/'
-labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20150813.mat'
-viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
-ptn = 'fly_000[0-9]'
-trainfilename = 'train_lmdb'
-valfilename = 'val_lmdb'
-
-
-
-valdatafilename = 'valdata'
-valratio = 0.3
-
+sel_sz = 512/2/2
+psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
 dist2pos = 5
-label_blur_rad = 8.
-
-view = 1
-
-learning_rate = 0.0001
-training_iters = 20000
-batch_size = 16
-display_step = 30
-
-# Network Parameters
+label_blur_rad = 1.5
+fine_label_blur_rad = 1.5
 n_classes = 5 # 
 dropout = 0.5 # Dropout, probability to keep units
 nfilt = 128
 nfcfilt = 512
 
-map_size = 100000*psz**2*3
+# ----- Fine Network parameters
 
-outname = 'head'
-save_step = 4000
-numTest = 400
-imsz = (624,624)
+fine_flt_sz = 5
+fine_nfilt = 48
+fine_sz = 36
+
+# ----- MRF Network Parameters
+
+maxDPts = 272
+mrf_psz = (maxDPts/rescale)/pool_scale
+
+# ----- Learning parameters
+
+learning_rate = 0.0001
+fine_learning_rate = 0.0001
+base_training_iters = 8000
+# when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
+# for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
+fine_training_iters = 20000
+joint_training_iters = 20000
+gamma = 0.1
+step_size = 200000
+batch_size = 32
+display_step = 30
+numTest = 100
+# fine_batch_size = 8
+
+
+# ----- Save parameters
+
+save_step = 1000
+maxckpt = 20
+outname = 'headBase'
+fineoutname = 'headFine'
+jointoutname = 'headJoint'
+ckptbasename = 'headBaseckpt'
+ckptfinename = 'headFineckpt'
+ckptjointname = 'headjointckpt'
+databasename = 'headbasetraindata'
+datafinename = 'headfinetraindata'
+datajointname = 'headjointtraindata'
+
+# ----- project specific functions
 
 def getexpname(dirname):
     dirname = os.path.normpath(dirname)

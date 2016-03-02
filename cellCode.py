@@ -560,3 +560,39 @@ with tf.Session() as sess:
 
         movcount+=1
 
+
+# In[1]:
+
+import tensorflow as tf
+
+sess = tf.InteractiveSession()
+
+kk = tf.constant([3,-2,0.1,-0.05,5])
+ss = tf.sign(kk)
+mm = tf.mul(ss,tf.maximum(tf.abs(kk)-0.2,0))
+aa = mm.eval()
+print(aa)
+
+
+# In[3]:
+
+import lmdb
+lmdbfilename= 'cachejanLeg/train_lmdb'
+env = lmdb.open(lmdbfilename, readonly = True)
+
+
+# In[9]:
+
+txn = env.begin()
+print(txn.stat()['entries'])
+
+
+# In[13]:
+
+import math
+gamma = 0.1
+print(gamma**math.floor(41/20))
+cc = 3.3
+cc /= 2
+print(cc)
+

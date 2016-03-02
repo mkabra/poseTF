@@ -22,6 +22,7 @@ import caffe
 from random import randint,sample
 import pickle
 import h5py
+import errno
 
 
 # In[ ]:

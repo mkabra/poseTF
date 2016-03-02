@@ -5,7 +5,7 @@
 
 import numpy as np
 import scipy
-import math
+import math,h5py
 import caffe
 import pawData
 import pawconfig as conf
@@ -193,4 +193,24 @@ def getFineError(locs,pred,finepred,conf):
             finelocerr[ndx,cls,0]= float(predloc[1]+finepredloc[1])-locs[ndx][cls][0]
             finelocerr[ndx,cls,1]= float(predloc[0]+finepredloc[0])-locs[ndx][cls][1]
     return baselocerr,finelocerr
+
+
+# In[ ]:
+
+def initMRFweights(conf):
+    psz = conf.mrf_psz
+    bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
+    L = h5py.File(conf.labelfile)
+    pts = np.array(L['pts'])
+    v = conf.view
+    for ndx in range(pts.shape[0]):
+        for c1 in range(conf.n_classes):
+            for c2 in range(conf.n_classes):
+                d12x = pts[ndx,c1,v,0] - pts[ndx,c2,v,0]
+                d12y = pts[ndx,c1,v,1] - pts[ndx,c2,v,1]
+                d12x = int( (d12x/conf.rescale)/conf.pool_scale)
+                d12y = int( (d12y/conf.rescale)/conf.pool_scale)
+                bfilt[psz/2-d12y,psz/2-d12x,c1,c2] += 1
+    bfilt = bfilt/pts.shape[0]
+    return bfilt
 
