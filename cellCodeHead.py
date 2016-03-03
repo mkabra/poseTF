@@ -1,11 +1,6 @@
 
 # coding: utf-8
 
-# In[2]:
-
-get_ipython().run_cell_magic(u'javascript', u'', u"Jupyter.utils.load_extensions('vim_binding/vim_binding')")
-
-
 # In[1]:
 
 # all the f'ing imports
@@ -1148,4 +1143,113 @@ plt.imshow(pred[0,:,:,0])
 aa = labels[0,:,:,0]-pred[0,:,:,0]
 bb = aa.flatten().sum()
 print(pred.min(),labels.max(),bb,train_loss)
+
+
+# In[2]:
+
+import pickle
+with open('cacheHead/headbasetraindata','rb') as tdfile:
+    trainData = pickle.load(tdfile)
+
+plt.plot(trainData['step_no'][5:],trainData['val_err'][5:])      
+plt.plot(trainData['step_no'][5:],trainData['train_err'][5:],hold=True)      
+plt.show()
+
+
+# In[ ]:
+
+import PoseTrain
+reload(PoseTrain)
+import stephenHeadConfig as conf
+import tensorflow as tf
+
+pobj = PoseTrain.PoseTrain(conf)
+pobj.mrfTrain(restore=True)
+
+
+# In[1]:
+
+import PoseTrain
+reload(PoseTrain)
+import stephenHeadConfig as conf
+import tensorflow as tf
+
+restore = True
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+
+with tf.variable_scope('base'):
+    self.createBaseNetwork()
+
+with tf.variable_scope('mrf'):
+    self.createMRFNetwork()
+
+self.createBaseSaver()
+self.createMRFSaver()
+
+self.cost = tf.nn.l2_loss(self.mrfPred-self.ph['y'])
+basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+self.openDBs()
+self.createOptimizer()
+
+txn = self.env.begin()
+valtxn = self.valenv.begin()
+sess = tf.InteractiveSession()
+
+self.loadBase(sess,self.conf.baseIter4MRFTrain)
+self.restoreMRF(sess,restore)
+self.initializeRemainingVars(sess)
+
+self.createCursors(txn,valtxn)
+
+
+# In[2]:
+
+modlabels = (self.ph['y']+1.)/2
+basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+cost = tf.nn.l2_loss(self.mrfPred-modlabels)
+self.updateFeedDict(self.DBType.Train)
+
+preds = sess.run([self.basePred,self.mrfPred,modlabels],feed_dict=self.feed_dict)
+
+
+# In[3]:
+
+print(preds[1].max())
+print(preds[0].max())
+print(preds[2].min())
+plt.imshow(preds[1][0,:,:,0])
+plt.show()
+plt.imshow(preds[0][0,:,:,0])
+plt.show()
+plt.imshow(preds[2][0,:,:,0])
+plt.show()
+
+
+# In[11]:
+
+import PoseTools
+reload(PoseTools)
+
+
+ll = PoseTools.initMRFweights(conf)
+oo = ll[:,:,4,:].sum(2)
+print(ll.shape)
+plt.imshow(oo)
+print(oo.max())
+
+
+# In[2]:
+
+import re
+varlist = tf.all_variables()
+for vv in varlist:
+    print(vv.name)
+    
+
+
+# In[2]:
+
+print(pobj.basePred)
 

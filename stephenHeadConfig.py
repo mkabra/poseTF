@@ -1,28 +1,11 @@
 import os
 
-# ----- Data parameters
+# ----- Network parameters
 
-split = True
-view = 0
 scale = 2
 rescale = 2
 numscale = 3
 pool_scale = 4
-cropsz = 200
-imsz = (624,624) # This is after cropping. Orig is 1024x1024
-map_size = 100000*psz**2*3
-
-cachedir = '/home/mayank/work/tensorflow/cacheHead/'
-labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
-viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
-ptn = 'fly_000[0-9]'
-trainfilename = 'train_lmdb'
-valfilename = 'val_lmdb'
-valdatafilename = 'valdata'
-valratio = 0.3
-
-# ----- Network parameters
-
 # sel_sz determines the patch size used for the final decision
 # i.e., patch seen by the fc6 layer
 # ideally as large as possible but limited by
@@ -48,16 +31,19 @@ fine_sz = 36
 
 maxDPts = 272
 mrf_psz = (maxDPts/rescale)/pool_scale
+baseIter4MRFTrain = 4000
 
 # ----- Learning parameters
 
-learning_rate = 0.0001
+base_learning_rate = 0.0001
+mrf_learning_rate = 0.01
 fine_learning_rate = 0.0001
+
 base_training_iters = 8000
 # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
 # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
 fine_training_iters = 20000
-joint_training_iters = 20000
+mrf_training_iters = 20000
 gamma = 0.1
 step_size = 200000
 batch_size = 32
@@ -66,19 +52,37 @@ numTest = 100
 # fine_batch_size = 8
 
 
+# ----- Data parameters
+
+split = True
+view = 0
+cropsz = 200
+imsz = (624,624) # This is after cropping. Orig is 1024x1024
+map_size = 100000*psz**2*3
+
+cachedir = '/home/mayank/work/tensorflow/cacheHead/'
+labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
+viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
+ptn = 'fly_000[0-9]'
+trainfilename = 'train_lmdb'
+valfilename = 'val_lmdb'
+valdatafilename = 'valdata'
+valratio = 0.3
+
+
 # ----- Save parameters
 
 save_step = 1000
 maxckpt = 20
 outname = 'headBase'
 fineoutname = 'headFine'
-jointoutname = 'headJoint'
+mrfoutname = 'headMRF'
 ckptbasename = 'headBaseckpt'
 ckptfinename = 'headFineckpt'
-ckptjointname = 'headjointckpt'
+ckptmrfname = 'headMRFckpt'
 databasename = 'headbasetraindata'
 datafinename = 'headfinetraindata'
-datajointname = 'headjointtraindata'
+datamrfname = 'headMRFtraindata'
 
 # ----- project specific functions
 

@@ -4,7 +4,7 @@
 # In[ ]:
 
 import numpy as np
-import scipy
+import scipy,re
 import math,h5py
 import caffe
 import pawData
@@ -211,6 +211,17 @@ def initMRFweights(conf):
                 d12x = int( (d12x/conf.rescale)/conf.pool_scale)
                 d12y = int( (d12y/conf.rescale)/conf.pool_scale)
                 bfilt[psz/2-d12y,psz/2-d12x,c1,c2] += 1
-    bfilt = bfilt/pts.shape[0]
+    bfilt = (bfilt/pts.shape[0])/pts.shape[1]
     return bfilt
+
+
+# In[ ]:
+
+def getvars(vstr):
+    varlist = tf.all_variables()
+    blist = []
+    for var in varlist:
+        if re.match(vstr,var.name):
+            blist.append(var)
+    return blist
 
