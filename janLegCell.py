@@ -296,3 +296,10 @@ vvs = tf.trainable_variables()
 for vv in vvs:
     print(vv.name,tf.Variable.get_shape(vv))
 
+
+# In[6]:
+
+import localSetup
+reload(localSetup)
+import caffe
+

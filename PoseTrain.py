@@ -11,9 +11,7 @@ import tensorflow as tf
 import os,sys,shutil
 import tempfile,copy,re
 from enum import Enum
-
-sys.path.append('/home/mayank/work/caffe/python')
-sys.path.append('/home/mayank/work/pyutils')
+import localSetup
 
 import caffe,lmdb
 import caffe.proto.caffe_pb2
