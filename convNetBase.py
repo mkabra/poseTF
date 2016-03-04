@@ -25,7 +25,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-import multiPawTools
 import math
 
 import cv2
