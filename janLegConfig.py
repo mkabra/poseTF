@@ -8,8 +8,8 @@
 
 # In[ ]:
 
-import os
-
+import os,socket
+import localSetup
 # ----- Network Parameters
 
 scale = 2
@@ -62,10 +62,9 @@ split = True
 view = 0
 cropsz = 0
 map_size = 100000*imsz[0]*imsz[1]*3
-cachedir = '/home/mayank/work/tensorflow/cachejanLeg/'
-labelfile = '/home/mayank/work/tensorflow/janLegTracking/janLegData_20160301.mat'
+cachedir = os.path.join(localSetup.bdir,'cachejanLeg/')
+labelfile = os.path.join(localSetup.bdir,'janLegTracking','janLegData_20160301.mat')
 # this label file has more data and includes the correction for vertical flipping
-viddir = '/home/mayank/Dropbox/PoseEstimation/JanLegTracking'
 ptn = '.*'
 trainfilename = 'train_lmdb'
 valfilename = 'val_lmdb'
