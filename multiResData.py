@@ -5,12 +5,10 @@
 
 import scipy.io as sio
 import os,sys
-sys.path.append('/home/mayank/work/pyutils')
 import myutils
 import re
 import shutil
 
-get_ipython().magic(u'matplotlib inline')
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np

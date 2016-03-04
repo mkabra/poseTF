@@ -20,7 +20,6 @@ import caffe.proto.caffe_pb2
 # import pawconfig as conf
 
 from caffe.io import datum_to_array
-get_ipython().magic(u'matplotlib inline')
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -31,7 +30,6 @@ import math
 
 import cv2
 import matplotlib.animation as manimation
-sys.path.append('/home/mayank/work/pyutils')
 import myutils
 import tempfile
 import copy

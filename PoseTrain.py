@@ -16,7 +16,6 @@ import localSetup
 import caffe,lmdb
 import caffe.proto.caffe_pb2
 from caffe.io import datum_to_array
-get_ipython().magic(u'matplotlib inline')
 
 import matplotlib
 import matplotlib.pyplot as plt
