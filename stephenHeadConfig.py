@@ -29,8 +29,9 @@ fine_sz = 36
 
 # ----- MRF Network Parameters
 
-maxDPts = 272
-mrf_psz = (maxDPts/rescale)/pool_scale
+#maxDPts = 104*2
+#mrf_psz = (maxDPts/rescale)/pool_scale
+#Above should not be determined automatically
 baseIter4MRFTrain = 4000
 
 # ----- Learning parameters

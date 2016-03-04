@@ -198,11 +198,19 @@ def getFineError(locs,pred,finepred,conf):
 # In[ ]:
 
 def initMRFweights(conf):
-    psz = conf.mrf_psz
-    bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
     L = h5py.File(conf.labelfile)
     pts = np.array(L['pts'])
     v = conf.view
+    dx = np.zeros([pts.shape[0]])
+    dy = np.zeros([pts.shape[0]])
+    for ndx in range(pts.shape[0]):
+        dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
+        dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
+    maxd = max(dx.max(),dy.max())
+    psz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale))
+#     psz = conf.mrf_psz
+    bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
+    
     for ndx in range(pts.shape[0]):
         for c1 in range(conf.n_classes):
             for c2 in range(conf.n_classes):

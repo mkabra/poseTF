@@ -110,9 +110,9 @@ class PoseTrain:
     def createMRFNetwork(self,passGradients=False):
         
         ncls = self.conf.n_classes
-        ksz = self.conf.mrf_psz
         bpred = self.basePred if passGradients else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
+        ksz = mrf_weights[0] # Kernel is square for time being
         mrf_conv = 0
         for cls in range(ncls):
             with tf.variable_scope('mrf_%d'%cls):
@@ -304,12 +304,12 @@ class PoseTrain:
         return loss
         
     def updateBaseLoss(self,step,train_loss,val_loss):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " ({:.1f},{:.1f})".format(train_loss[1],val_loss[1])
+        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0])
 #         nstep = step-self.basestartat
 #         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
 #               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
-        self.basetrainData['train_err'].append(train_loss)        
-        self.basetrainData['val_err'].append(val_loss)        
+        self.basetrainData['train_err'].append(train_loss[0])      
+        self.basetrainData['val_err'].append(val_loss[0])        
         self.basetrainData['step_no'].append(step)        
 
     def updateMRFLoss(self,step,train_loss,val_loss):
@@ -357,16 +357,18 @@ class PoseTrain:
         with self.env.begin() as txn,self.valenv.begin() as valtxn, tf.Session() as sess:
             self.createCursors(txn,valtxn)
             self.restoreBase(sess,restore)
+            self.initializeRemainingVars(sess)
+
             for step in range(self.basestartat,self.conf.base_training_iters):
                 self.doOpt(sess,step,self.conf.base_learning_rate)
                 if step % self.conf.display_step == 0:
                     self.updateFeedDict(self.DBType.Train)
-                    train_loss = self.computeLoss(sess,[self.cost])[0]
+                    train_loss = self.computeLoss(sess,[self.cost])
                     numrep = int(self.conf.numTest/self.conf.batch_size)+1
-                    val_loss = 0
+                    val_loss = np.zeros([2,])
                     for rep in range(numrep):
                         self.updateFeedDict(self.DBType.Val)
-                        val_loss += self.computeLoss(sess,[self.cost])[0]
+                        val_loss += np.array(self.computeLoss(sess,[self.cost]))
                     val_loss = val_loss/numrep
                     self.updateBaseLoss(step,train_loss,val_loss)
                 if step % self.conf.save_step == 0:

@@ -303,3 +303,14 @@ import localSetup
 reload(localSetup)
 import caffe
 
+
+# In[1]:
+
+import PoseTrain
+reload(PoseTrain)
+import janLegConfig as conf
+import tensorflow as tf
+
+pobj = PoseTrain.PoseTrain(conf)
+pobj.baseTrain(restore=True)
+

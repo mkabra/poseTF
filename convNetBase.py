@@ -12,7 +12,7 @@ Project: https://github.com/aymericdamien/TensorFlow-Examples/
 import tensorflow as tf
 
 import os,sys
-import setupLocal
+import localSetup
 
 import caffe
 import lmdb

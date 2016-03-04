@@ -1164,7 +1164,7 @@ import stephenHeadConfig as conf
 import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
-pobj.mrfTrain(restore=True)
+pobj.mrfTrain(restore=False)
 
 
 # In[1]:
@@ -1227,11 +1227,11 @@ plt.imshow(preds[2][0,:,:,0])
 plt.show()
 
 
-# In[11]:
+# In[3]:
 
 import PoseTools
 reload(PoseTools)
-
+import stephenHeadConfig as conf
 
 ll = PoseTools.initMRFweights(conf)
 oo = ll[:,:,4,:].sum(2)
