@@ -304,7 +304,7 @@ reload(localSetup)
 import caffe
 
 
-# In[1]:
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
