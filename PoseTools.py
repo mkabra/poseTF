@@ -7,8 +7,6 @@ import numpy as np
 import scipy,re
 import math,h5py
 import caffe
-import pawData
-import pawconfig as conf
 from scipy import misc
 from scipy import ndimage
 import tensorflow as tf
