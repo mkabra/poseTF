@@ -112,16 +112,18 @@ class PoseTrain:
         bpred = self.basePred if passGradients else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
         
-        baseShape = tf.Tensor.get_shape(bpred).as_list()
-        if mrf_weights.shape[0] > baseShape[1]:
-            dd = int(math.ceil(float(baseShape[1]-mrf_weights.shape[0])/2))
+        baseShape = tf.Tensor.get_shape(bpred).as_list()[1]
+        mrf_sz = mrf_weights.shape[0]
+        if mrf_sz > baseShape:
+            dd = int(math.ceil(float(mrf_sz-baseShape)/2))
+            print('Padding base prediction by %d. Filter shape:%d'%(dd,mrf_size))
             bpred = tf.pad(bpred,[[0,0],[dd,dd],[dd,dd],[0,0]])
             pad = True
         else:
             dd = 0
             pad = False
             
-        sliceEnd = mrf_weights.shape[0]-dd
+        sliceEnd = mrf_sz-dd
             
         ksz = mrf_weights[0] # Kernel is square for time being
         mrf_conv = 0
