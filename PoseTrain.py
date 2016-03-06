@@ -116,7 +116,7 @@ class PoseTrain:
         mrf_sz = mrf_weights.shape[0]
         if mrf_sz > baseShape:
             dd = int(math.ceil(float(mrf_sz-baseShape)/2))
-            print('Padding base prediction by %d. Filter shape:%d'%(dd,mrf_size))
+            print('Padding base prediction by %d. Filter shape:%d'%(dd,mrf_sz))
             bpred = tf.pad(bpred,[[0,0],[dd,dd],[dd,dd],[0,0]])
             pad = True
         else:
