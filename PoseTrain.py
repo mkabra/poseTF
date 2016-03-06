@@ -111,12 +111,28 @@ class PoseTrain:
         ncls = self.conf.n_classes
         bpred = self.basePred if passGradients else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
+        
+        baseShape = tf.Tensor.get_shape(bpred).as_list()
+        if mrf_weights.shape[0] > baseShape[1]:
+            dd = int(math.ceil(float(baseShape[1]-mrf_weights.shape[0])/2))
+            bpred = tf.pad(bpred,[[0,0],[dd,dd],[dd,dd],[0,0]])
+            pad = True
+        else:
+            dd = 0
+            pad = False
+            
+        sliceEnd = mrf_weights.shape[0]-dd
+            
         ksz = mrf_weights[0] # Kernel is square for time being
         mrf_conv = 0
+        conv_out = []
+        all_wts = []
         for cls in range(ncls):
             with tf.variable_scope('mrf_%d'%cls):
+                curwt = mrf_weights[:,:,cls:cls+1,:]-1
+                #-1 is so that zero values are close to zero after softplus
                 weights = tf.get_variable("weights",dtype = tf.float32,
-                              initializer=tf.constant(mrf_weights[:,:,cls:cls+1,:]-1.2))
+                              initializer=tf.constant(curwt))
                 biases = tf.get_variable("biases", mrf_weights.shape[-1],dtype = tf.float32,
                               initializer=tf.constant_initializer(-1))
 
@@ -124,9 +140,14 @@ class PoseTrain:
             sbiases = tf.nn.softplus(biases)
             curconv = tf.nn.conv2d(tf.maximum(bpred[:,:,:,cls:cls+1],0.0001), 
                            sweights,strides=[1, 1, 1, 1], padding='SAME')+sbiases
+            conv_out.append(tf.log(curconv))
             mrf_conv += tf.log(curconv)
-        self.mrfPred = tf.exp(mrf_conv)
-
+            all_wts.append(sweights)
+        mrfout = tf.exp(mrf_conv)
+        
+        self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
+            
+        return conv_out,all_wts
         
     def createFineNetwork(self):
         if self.curtrainingType == self.TrainingType.All:

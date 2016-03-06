@@ -1156,7 +1156,7 @@ plt.plot(trainData['step_no'][5:],trainData['train_err'][5:],hold=True)
 plt.show()
 
 
-# In[ ]:
+# In[1]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -1174,7 +1174,7 @@ reload(PoseTrain)
 import stephenHeadConfig as conf
 import tensorflow as tf
 
-restore = True
+restore = False
 self = PoseTrain.PoseTrain(conf)
 self.createPH()
 self.createFeedDict()
@@ -1183,7 +1183,7 @@ with tf.variable_scope('base'):
     self.createBaseNetwork()
 
 with tf.variable_scope('mrf'):
-    self.createMRFNetwork()
+    mrf_out,all_wts = self.createMRFNetwork()
 
 self.createBaseSaver()
 self.createMRFSaver()
@@ -1211,20 +1211,45 @@ basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
 cost = tf.nn.l2_loss(self.mrfPred-modlabels)
 self.updateFeedDict(self.DBType.Train)
 
-preds = sess.run([self.basePred,self.mrfPred,modlabels],feed_dict=self.feed_dict)
+preds = sess.run([self.basePred,self.mrfPred,modlabels]+mrf_out,feed_dict=self.feed_dict)
+wts = sess.run(all_wts,feed_dict=self.feed_dict)
 
 
 # In[3]:
 
-print(preds[1].max())
-print(preds[0].max())
-print(preds[2].min())
-plt.imshow(preds[1][0,:,:,0])
+import scipy
+print(wts[0].shape)
+print(wts[0].max())
+vv = np.maximum(preds[0][0,:,:,0],0.0001)
+oo = scipy.signal.convolve2d(vv,wts[0][:,:,0,0],mode='same')
+print(oo.max(),oo.min())
+print(vv.max(),vv.min())
+print(wts[0][:,:,0,0].max(),wts[0][:,:,0,0].min())
+plt.imshow(wts[0][:,:,0,0])
+plt.show()
+plt.imshow(vv)
+plt.show()
+plt.imshow(oo)
+
+
+# In[4]:
+
+print(preds[1].shape)
+print(preds[1][0,:,:,1].max(),preds[1][0,:,:,1].min())
+plt.imshow(preds[3][0,:,:,0])
+plt.show()
+plt.imshow(preds[1][0,:,:,1])
 plt.show()
 plt.imshow(preds[0][0,:,:,0])
+
+
+# In[8]:
+
+print(preds[1].shape)
+plt.imshow(preds[3][0,:,:,0])
 plt.show()
-plt.imshow(preds[2][0,:,:,0])
-plt.show()
+plt.imshow(preds[1][0,:,:,0])
+plt.imshow(preds[0][0,:,:,0])
 
 
 # In[3]:
@@ -1240,13 +1265,25 @@ plt.imshow(oo)
 print(oo.max())
 
 
-# In[2]:
+# In[8]:
 
-import re
-varlist = tf.all_variables()
-for vv in varlist:
-    print(vv.name)
-    
+import tensorflow as tf
+
+aa = np.zeros([1,10,10,1])
+aa[0,5,5,0] = 1
+bb = np.array([[1.,2],[3,4]])
+bb = bb[:,:,np.newaxis,np.newaxis]
+print(bb.shape)
+print(aa.shape)
+aat = tf.constant(aa,dtype=tf.float32)
+bbt = tf.constant(bb,dtype=tf.float32)
+zz = tf.nn.conv2d(aat,bbt,strides=[1,1,1,1],padding= 'SAME')
+sess = tf.InteractiveSession()
+sess.run(tf.initialize_all_variables())
+zz1 = zz.eval()
+plt.imshow(zz1[0,:,:,0])
+print(zz1[0,:,:,0])
+print(bb[:,:,0,0])
 
 
 # In[2]:

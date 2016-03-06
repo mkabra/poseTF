@@ -314,3 +314,31 @@ import tensorflow as tf
 pobj = PoseTrain.PoseTrain(conf)
 pobj.baseTrain(restore=True)
 
+
+# In[ ]:
+
+import PoseTools
+import janLegConfig as conf
+import tensorflow as tf
+
+mrf_weights = PoseTools.initMRFweights(conf).astype('float32')
+ksz = mrf_weights[0] # Kernel is square for time being
+weights = tf.get_variable("weights",dtype = tf.float32,
+              initializer=tf.constant(mrf_weights))
+
+aa = weights*2
+
+
+# In[3]:
+
+kk = tf.Tensor.get_shape(aa).as_list()
+print(type(kk))
+gg = aa[4:(kk[0]-4),4:(kk[1]-4),:,:]
+kk = tf.Tensor.get_shape(gg)
+print(kk)
+
+
+# In[3]:
+
+print(mrf_weights.shape)
+

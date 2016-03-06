@@ -216,8 +216,8 @@ def initMRFweights(conf):
                 d12y = pts[ndx,c1,v,1] - pts[ndx,c2,v,1]
                 d12x = int( (d12x/conf.rescale)/conf.pool_scale)
                 d12y = int( (d12y/conf.rescale)/conf.pool_scale)
-                bfilt[psz/2-d12y,psz/2-d12x,c1,c2] += 1
-    bfilt = (bfilt/pts.shape[0])/pts.shape[1]
+                bfilt[psz/2+d12y,psz/2+d12x,c1,c2] += 1
+    bfilt = (bfilt/pts.shape[0])
     return bfilt
 
 
