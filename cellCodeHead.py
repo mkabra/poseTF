@@ -1230,7 +1230,7 @@ with tf.variable_scope('base'):
     self.createBaseNetwork()
 
 with tf.variable_scope('mrf'):
-    self.createMRFNetwork()
+    [mrfconv,mrfw] = self.createMRFNetwork()
 
 self.createBaseSaver()
 self.createMRFSaver()
@@ -1254,10 +1254,74 @@ self.createCursors(txn,valtxn)
 self.updateFeedDict(self.DBType.Val)
 
 
-# In[3]:
+# In[46]:
 
+import scipy
+import PoseTools
+gg = PoseTools.initMRFweights(conf)
 val_loss = self.computeLoss(sess,[self.cost,basecost])
-Apreds = sess.run([self.basePred,self.mrfPred],feed_dict = self.feed_dict)
+Apreds = sess.run([self.basePred,self.mrfPred]+mrfconv+mrfw,feed_dict = self.feed_dict)
+print(Apreds[7].shape)
+ll1 = tf.maximum(self.basePred[0:1,:,:,0:1],0.0001)
+plt.imshow(gg[:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.title('orig MRF weights 0 to 1')
+plt.show()
+print('orig mrf wts',gg[:,:,0,2].max(),gg[:,:,0,2].min())
+oo = tf.nn.conv2d(ll1,ww1,strides=[1,1,1,1],padding='SAME')
+ggg1 = tf.convert_to_tensor(gg[:,:,0:1,2:3],dtype=tf.float32)
+ggg = tf.nn.softplus(10*ggg1-3)
+vv = ggg.eval(feed_dict=self.feed_dict)
+print(vv[0:5,0:5,0,0])
+print('vv',vv.max(),vv.min())
+plt.imshow(vv[:,:,0,0],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.title('orig MRF weights 0 to 1')
+plt.show()
+vv1 = ll1.eval(feed_dict=self.feed_dict)
+plt.imshow(vv1[0,:,:,0],interpolation='nearest')
+plt.colorbar()
+plt.title('Base Pred -- 1')
+plt.show()
+oo2 = tf.nn.conv2d(ll1,ggg,strides=[1,1,1,1],padding='SAME')
+ss = oo.eval(feed_dict = self.feed_dict)
+plt.imshow(ss[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.title('TF current')
+plt.show()
+ss = oo2.eval(feed_dict = self.feed_dict)
+plt.imshow(ss[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.title('TF orig')
+plt.show()
+ll = np.maximum(Apreds[0][0,:,:,2],0.0001)
+kk = scipy.signal.convolve2d(vv1[0,:,:,0],vv[:,:,0,0],mode='same')
+plt.imshow(kk,interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.title('Numpy orig')
+plt.show()
+
+
+labelims = self.feed_dict[self.ph['y']]
+plt.imshow(labelims[0,:,:,2],interpolation='nearest',vmin=0,vmax=1)
+plt.show()
+plt.imshow(labelims[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
+plt.show()
+# print(labelims.shape)
+plt.imshow(np.maximum(Apreds[0][0,:,:,2],0.0001),interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.show()
+plt.imshow(gg[:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.show()
+plt.imshow(Apreds[7][:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
+plt.colorbar()
+plt.show()
+# plt.imshow(labelims[0,:,:,0])
+# plt.show()
+
+
+# In[3]:
 
 print(Apreds[1].shape)
 labelims = self.feed_dict[self.ph['y']]
@@ -1298,6 +1362,22 @@ dd2,bb = np.histogram(abs(merr.flatten()),range(0,20,2)+[100])
 print(dd1.shape)
 fig,ax = plt.subplots()
 width = 0.35
+
 ax.bar(bb[0:-1],dd1,width=width,color='r')
 ax.bar(bb[0:-1]+width,dd2,width=width,color='b')
+
+
+# In[19]:
+
+import PoseTools
+import stephenHeadConfig as con
+
+mrfwts = PoseTools.initMRFweights(conf)
+swts = np.log(np.exp(mrfwts)+1)
+print(swts.shape)
+plt.imshow(swts[:,:,0,3],interpolation='nearest')
+plt.colorbar()
+plt.show()
+plt.imshow(swts[:,:,0,1],interpolation='nearest')
+plt.colorbar()
 

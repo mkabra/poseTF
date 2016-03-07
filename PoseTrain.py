@@ -132,8 +132,8 @@ class PoseTrain:
         all_wts = []
         for cls in range(ncls):
             with tf.variable_scope('mrf_%d'%cls):
-                curwt = mrf_weights[:,:,cls:cls+1,:]-1
-                #-1 is so that zero values are close to zero after softplus
+                curwt = 10*mrf_weights[:,:,cls:cls+1,:]-3
+                #the scaling is so that zero values are close to zero after softplus
                 weights = tf.get_variable("weights",dtype = tf.float32,
                               initializer=tf.constant(curwt))
                 biases = tf.get_variable("biases", mrf_weights.shape[-1],dtype = tf.float32,

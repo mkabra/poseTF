@@ -37,7 +37,7 @@ baseIter4MRFTrain = 4000
 # ----- Learning parameters
 
 base_learning_rate = 0.0001
-mrf_learning_rate = 0.01
+mrf_learning_rate = 0.001
 fine_learning_rate = 0.0001
 
 base_training_iters = 8000
