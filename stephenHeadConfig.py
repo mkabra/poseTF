@@ -44,7 +44,7 @@ base_training_iters = 8000
 # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
 # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
 fine_training_iters = 20000
-mrf_training_iters = 20000
+mrf_training_iters = 8000
 gamma = 0.1
 step_size = 200000
 batch_size = 32

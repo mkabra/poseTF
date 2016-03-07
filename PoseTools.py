@@ -60,6 +60,35 @@ def readLMDB(cursor,num,imsz,dataMod):
 
 # In[ ]:
 
+def readOnceLMDB(cursor,num,imsz,dataMod,reset=False):
+    images = np.zeros((0,1,imsz[0],imsz[1]))
+    locs = []
+    datum = caffe.proto.caffe_pb2.Datum()
+    
+    if reset:
+        cursor.first()
+        
+    done = False
+    for ndx in range(num):
+        if not cursor.next():
+            done = True
+            break
+            
+        value = cursor.value()
+        key = cursor.key()
+        datum.ParseFromString(value)
+        expname,curloc,t = dataMod.decodeID(cursor.key())
+
+        curlabel = datum.label
+        data = caffe.io.datum_to_array(datum)
+        images = np.append(images,data.squeeze()[np.newaxis,:,:],0)
+        locs.append(curloc)
+    return images,locs,done
+
+
+
+# In[ ]:
+
 def blurLabel(imsz,loc,scale,blur_rad):
     sz0 = int(math.ceil(float(imsz[0])/scale))
     sz1 = int(math.ceil(float(imsz[1])/scale))
@@ -167,10 +196,10 @@ def getBaseError(locs,pred,conf):
     for ndx in range(pred.shape[0]):
         for cls in range(conf.n_classes):
             maxndx = np.argmax(pred[ndx,:,:,cls])
-            predloc = np.unravel_index(maxndx,pred.shape[1:3])
-            predloc = predloc * conf.pool_scale
-            locerr[ndx][cls][0]= float(predloc[1])-loc[ndx][cls][0]
-            locerr[ndx][cls][1]= float(predloc[0])-loc[ndx][cls][1]
+            predloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
+            predloc = predloc * conf.pool_scale * conf.rescale
+            locerr[ndx][cls][0]= float(predloc[1])-locs[ndx][cls][0]
+            locerr[ndx][cls][1]= float(predloc[0])-locs[ndx][cls][1]
     return locerr
 
 

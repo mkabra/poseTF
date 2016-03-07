@@ -119,11 +119,12 @@ class PoseTrain:
             print('Padding base prediction by %d. Filter shape:%d, Base shape:%d'%(dd,mrf_sz,baseShape))
             bpred = tf.pad(bpred,[[0,0],[dd,dd],[dd,dd],[0,0]])
             pad = True
+            sliceEnd = mrf_sz-dd
         else:
             dd = 0
             pad = False
-            
-        sliceEnd = mrf_sz-dd
+            sliceEnd = baseShape
+
             
         ksz = mrf_weights[0] # Kernel is square for time being
         mrf_conv = 0
@@ -411,7 +412,11 @@ class PoseTrain:
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = (self.ph['y']+1.)/2
+        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        # the labels shouldn't be zero because the prediction is an output of
+        # exp. And it seems a lot of effort is wasted to make the prediction goto
+        # zero rather than match the location.
+        
         self.cost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.openDBs()

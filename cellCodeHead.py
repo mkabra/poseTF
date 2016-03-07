@@ -1156,7 +1156,7 @@ plt.plot(trainData['step_no'][5:],trainData['train_err'][5:],hold=True)
 plt.show()
 
 
-# In[1]:
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -1215,78 +1215,89 @@ preds = sess.run([self.basePred,self.mrfPred,modlabels]+mrf_out,feed_dict=self.f
 wts = sess.run(all_wts,feed_dict=self.feed_dict)
 
 
+# In[1]:
+
+import PoseTrain
+import tensorflow as tf
+import stephenHeadConfig as conf
+
+conf.batch_size = 1
+
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+with tf.variable_scope('base'):
+    self.createBaseNetwork()
+
+with tf.variable_scope('mrf'):
+    self.createMRFNetwork()
+
+self.createBaseSaver()
+self.createMRFSaver()
+
+mod_labels = (self.ph['y']+1.)/2
+self.cost = tf.nn.l2_loss(self.mrfPred-mod_labels)
+basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+self.openDBs()
+
+self.createOptimizer()
+
+txn = self.env.begin()
+valtxn = self.valenv.begin()
+sess = tf.InteractiveSession()
+
+self.restoreBase(sess,True)
+self.restoreMRF(sess,True)
+self.initializeRemainingVars(sess)
+self.createCursors(txn,valtxn)
+
+self.updateFeedDict(self.DBType.Val)
+
+
 # In[3]:
 
-import scipy
-print(wts[0].shape)
-print(wts[0].max())
-vv = np.maximum(preds[0][0,:,:,0],0.0001)
-oo = scipy.signal.convolve2d(vv,wts[0][:,:,0,0],mode='same')
-print(oo.max(),oo.min())
-print(vv.max(),vv.min())
-print(wts[0][:,:,0,0].max(),wts[0][:,:,0,0].min())
-plt.imshow(wts[0][:,:,0,0])
+val_loss = self.computeLoss(sess,[self.cost,basecost])
+Apreds = sess.run([self.basePred,self.mrfPred],feed_dict = self.feed_dict)
+
+print(Apreds[1].shape)
+labelims = self.feed_dict[self.ph['y']]
+print(labelims.shape)
+plt.imshow(Apreds[0][0,:,:,0])
 plt.show()
-plt.imshow(vv)
+plt.imshow(Apreds[1][0,:,:,0])
 plt.show()
-plt.imshow(oo)
-
-
-# In[4]:
-
-print(preds[1].shape)
-print(preds[1][0,:,:,1].max(),preds[1][0,:,:,1].min())
-plt.imshow(preds[3][0,:,:,0])
+plt.imshow(labelims[0,:,:,0])
 plt.show()
-plt.imshow(preds[1][0,:,:,1])
-plt.show()
-plt.imshow(preds[0][0,:,:,0])
 
 
-# In[8]:
-
-print(preds[1].shape)
-plt.imshow(preds[3][0,:,:,0])
-plt.show()
-plt.imshow(preds[1][0,:,:,0])
-plt.imshow(preds[0][0,:,:,0])
-
-
-# In[3]:
+# In[10]:
 
 import PoseTools
 reload(PoseTools)
-import stephenHeadConfig as conf
+db_sz = self.valenv.stat()['entries']
+self.val_cursor.first()
 
-ll = PoseTools.initMRFweights(conf)
-oo = ll[:,:,4,:].sum(2)
-print(ll.shape)
-plt.imshow(oo)
-print(oo.max())
-
-
-# In[8]:
-
-import tensorflow as tf
-
-aa = np.zeros([1,10,10,1])
-aa[0,5,5,0] = 1
-bb = np.array([[1.,2],[3,4]])
-bb = bb[:,:,np.newaxis,np.newaxis]
-print(bb.shape)
-print(aa.shape)
-aat = tf.constant(aa,dtype=tf.float32)
-bbt = tf.constant(bb,dtype=tf.float32)
-zz = tf.nn.conv2d(aat,bbt,strides=[1,1,1,1],padding= 'SAME')
-sess = tf.InteractiveSession()
-sess.run(tf.initialize_all_variables())
-zz1 = zz.eval()
-plt.imshow(zz1[0,:,:,0])
-print(zz1[0,:,:,0])
-print(bb[:,:,0,0])
+berr = np.zeros([0,5])
+merr = np.zeros([0,5])
+for ndx in range(db_sz):
+    self.updateFeedDict(self.DBType.Val)
+    Apreds = sess.run([self.basePred,self.mrfPred],feed_dict = self.feed_dict)
+    bee = PoseTools.getBaseError(self.locs,Apreds[0],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    berr = np.append(berr,dee,0)
+    bee = PoseTools.getBaseError(self.locs,Apreds[1],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    merr = np.append(merr,dee,0)
+print(berr.mean(),merr.mean())
 
 
-# In[2]:
+# In[11]:
 
-print(pobj.basePred)
+dd1,bb = np.histogram(abs(berr.flatten()),range(0,20,2)+[100])
+dd2,bb = np.histogram(abs(merr.flatten()),range(0,20,2)+[100])
+print(dd1.shape)
+fig,ax = plt.subplots()
+width = 0.35
+ax.bar(bb[0:-1],dd1,width=width,color='r')
+ax.bar(bb[0:-1]+width,dd2,width=width,color='b')
 
