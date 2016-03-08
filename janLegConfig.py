@@ -23,7 +23,7 @@ pool_scale = 4
 # b) overfitting due to large number of variables.
 sel_sz = 512/2/2
 psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
-label_blur_rad = 1.5
+label_blur_rad = 3 # and not 1.5 for mrf to work
 n_classes = 4 # 
 nfilt = 128
 nfcfilt = 256
@@ -42,7 +42,7 @@ baseIter4MRFTrain = 4000
 
 dropout = 0.5 # Dropout, probability to keep units
 base_learning_rate = 0.00001
-mrf_learning_rate = 0.01
+mrf_learning_rate = 0.001
 fine_learning_rate = 0.0001
 base_training_iters = 8000 # for a batch size of 32
 fine_training_iters = 20000
