@@ -14,13 +14,13 @@ pool_scale = 4
 sel_sz = 512/2/2
 psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
 dist2pos = 5
-label_blur_rad = 3 #1.5 . MRF can't handle too tiny a label.
+label_blur_rad = 1.5
 fine_label_blur_rad = 1.5
 n_classes = 5 # 
 dropout = 0.5 # Dropout, probability to keep units
 nfilt = 128
 nfcfilt = 512
-
+doBatchNorm = False
 # ----- Fine Network parameters
 
 fine_flt_sz = 5
@@ -37,14 +37,14 @@ baseIter4MRFTrain = 4000
 # ----- Learning parameters
 
 base_learning_rate = 0.0001
-mrf_learning_rate = 0.001
+mrf_learning_rate = 0.0001
 fine_learning_rate = 0.0001
 
 base_training_iters = 8000
 # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
 # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
 fine_training_iters = 20000
-mrf_training_iters = 8000
+mrf_training_iters = 20000
 gamma = 0.1
 step_size = 200000
 batch_size = 32

@@ -1156,6 +1156,17 @@ plt.plot(trainData['step_no'][5:],trainData['train_err'][5:],hold=True)
 plt.show()
 
 
+# In[1]:
+
+import PoseTrain
+reload(PoseTrain)
+import stephenHeadConfig as conf
+import tensorflow as tf
+
+pobj = PoseTrain.PoseTrain(conf)
+pobj.baseTrain(restore=False)
+
+
 # In[ ]:
 
 import PoseTrain
@@ -1172,18 +1183,20 @@ pobj.mrfTrain(restore=False)
 import PoseTrain
 reload(PoseTrain)
 import stephenHeadConfig as conf
+conf.batch_size = 1
+print('**** Setting batch size to %d! ****'%conf.batch_size)
 import tensorflow as tf
 
-restore = False
+restore = True
 self = PoseTrain.PoseTrain(conf)
 self.createPH()
 self.createFeedDict()
 
 with tf.variable_scope('base'):
-    self.createBaseNetwork()
+    self.createBaseNetwork(False, False)
 
 with tf.variable_scope('mrf'):
-    mrf_out,all_wts = self.createMRFNetwork()
+    self.createMRFNetwork(False, False)
 
 self.createBaseSaver()
 self.createMRFSaver()
@@ -1206,135 +1219,95 @@ self.createCursors(txn,valtxn)
 
 # In[2]:
 
-modlabels = (self.ph['y']+1.)/2
-basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
-cost = tf.nn.l2_loss(self.mrfPred-modlabels)
-self.updateFeedDict(self.DBType.Train)
-
-preds = sess.run([self.basePred,self.mrfPred,modlabels]+mrf_out,feed_dict=self.feed_dict)
-wts = sess.run(all_wts,feed_dict=self.feed_dict)
-
-
-# In[1]:
-
-import PoseTrain
-import tensorflow as tf
-import stephenHeadConfig as conf
-
-conf.batch_size = 1
-
-self = PoseTrain.PoseTrain(conf)
-self.createPH()
-self.createFeedDict()
-with tf.variable_scope('base'):
-    self.createBaseNetwork()
-
-with tf.variable_scope('mrf'):
-    [mrfconv,mrfw] = self.createMRFNetwork()
-
-self.createBaseSaver()
-self.createMRFSaver()
-
-mod_labels = (self.ph['y']+1.)/2
-self.cost = tf.nn.l2_loss(self.mrfPred-mod_labels)
-basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
-self.openDBs()
-
-self.createOptimizer()
-
-txn = self.env.begin()
-valtxn = self.valenv.begin()
-sess = tf.InteractiveSession()
-
-self.restoreBase(sess,True)
-self.restoreMRF(sess,True)
-self.initializeRemainingVars(sess)
-self.createCursors(txn,valtxn)
-
-self.updateFeedDict(self.DBType.Val)
-
-
-# In[46]:
-
-import scipy
 import PoseTools
-gg = PoseTools.initMRFweights(conf)
-val_loss = self.computeLoss(sess,[self.cost,basecost])
-Apreds = sess.run([self.basePred,self.mrfPred]+mrfconv+mrfw,feed_dict = self.feed_dict)
-print(Apreds[7].shape)
-ll1 = tf.maximum(self.basePred[0:1,:,:,0:1],0.0001)
-plt.imshow(gg[:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.title('orig MRF weights 0 to 1')
-plt.show()
-print('orig mrf wts',gg[:,:,0,2].max(),gg[:,:,0,2].min())
-oo = tf.nn.conv2d(ll1,ww1,strides=[1,1,1,1],padding='SAME')
-ggg1 = tf.convert_to_tensor(gg[:,:,0:1,2:3],dtype=tf.float32)
-ggg = tf.nn.softplus(10*ggg1-3)
-vv = ggg.eval(feed_dict=self.feed_dict)
-print(vv[0:5,0:5,0,0])
-print('vv',vv.max(),vv.min())
-plt.imshow(vv[:,:,0,0],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.title('orig MRF weights 0 to 1')
-plt.show()
-vv1 = ll1.eval(feed_dict=self.feed_dict)
-plt.imshow(vv1[0,:,:,0],interpolation='nearest')
-plt.colorbar()
-plt.title('Base Pred -- 1')
-plt.show()
-oo2 = tf.nn.conv2d(ll1,ggg,strides=[1,1,1,1],padding='SAME')
-ss = oo.eval(feed_dict = self.feed_dict)
-plt.imshow(ss[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.title('TF current')
-plt.show()
-ss = oo2.eval(feed_dict = self.feed_dict)
-plt.imshow(ss[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.title('TF orig')
-plt.show()
-ll = np.maximum(Apreds[0][0,:,:,2],0.0001)
-kk = scipy.signal.convolve2d(vv1[0,:,:,0],vv[:,:,0,0],mode='same')
-plt.imshow(kk,interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.title('Numpy orig')
-plt.show()
+self.val_cursor.first()
+db_sz = self.valenv.stat()['entries']
+
+pred_list = [self.basePred,self.mrfPred,self.cost,basecost]
+all_labels = []
+all_preds = []
+all_images = []
+all_locs = []
+berr = np.zeros([0,5])
+merr = np.zeros([0,5])
+for ndx in range(db_sz):
+    self.updateFeedDict(self.DBType.Val)
+    Apreds = sess.run(pred_list,feed_dict = self.feed_dict)
+    all_preds.append(Apreds)
+    all_labels.append(self.feed_dict[self.ph['y']])
+    bee = PoseTools.getBaseError(self.locs,Apreds[0],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    berr = np.append(berr,dee,0)
+    bee = PoseTools.getBaseError(self.locs,Apreds[1],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    merr = np.append(merr,dee,0)
+    all_images.append(self.feed_dict[self.ph['x0']])
+    all_locs.append(self.locs)
+print(berr.mean(),merr.mean())
 
 
-labelims = self.feed_dict[self.ph['y']]
-plt.imshow(labelims[0,:,:,2],interpolation='nearest',vmin=0,vmax=1)
-plt.show()
-plt.imshow(labelims[0,:,:,0],interpolation='nearest',vmin=0,vmax=1)
-plt.show()
-# print(labelims.shape)
-plt.imshow(np.maximum(Apreds[0][0,:,:,2],0.0001),interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.show()
-plt.imshow(gg[:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.show()
-plt.imshow(Apreds[7][:,:,0,2],interpolation='nearest',vmin=0,vmax=1)
-plt.colorbar()
-plt.show()
-# plt.imshow(labelims[0,:,:,0])
-# plt.show()
+zz = np.argwhere(berr>20)
 
 
 # In[3]:
 
-print(Apreds[1].shape)
-labelims = self.feed_dict[self.ph['y']]
-print(labelims.shape)
-plt.imshow(Apreds[0][0,:,:,0])
-plt.show()
-plt.imshow(Apreds[1][0,:,:,0])
-plt.show()
-plt.imshow(labelims[0,:,:,0])
-plt.show()
+print(zz.transpose())
+print(zz.shape)
 
 
-# In[10]:
+# In[45]:
+
+from matplotlib import cm
+for idx in range(zz.shape[0]):
+    img = zz[idx,0]
+    ondx = zz[idx,1]
+    print(img,ondx)
+    print(berr[img,ondx])
+    print(merr[img,ondx])
+    print(all_preds[img][0].max(),all_preds[img][0].min())
+    print(all_preds[img][1].max(),all_preds[img][1].min())
+    indx = 0
+    
+    fig = plt.figure(figsize=(8,5))
+    ax1 = fig.add_subplot(1,3,3)
+    ax2 = fig.add_subplot(1,3,1,sharex=ax1,sharey=ax1)
+    ax3 = fig.add_subplot(1,3,2,sharex=ax1,sharey=ax1)
+    # ax1 = fig.add_subplot(2,2,4)
+    # ax1.imshow(mrf_out[img][indx][0,:,:,ondx])
+    # ax1.set_title('MRF OUT:%d'%ondx)
+    plt.jet()
+    ax1.imshow(all_labels[img][0,:,:,ondx],interpolation='nearest',cmap=cm.jet)
+    ax1.set_title('Label')
+    ax2.imshow(all_preds[img][0][0,:,:,ondx],interpolation='nearest',cmap=cm.jet)
+    ax2.set_title('Base Pred')
+    ax3.imshow(all_preds[img][1][0,:,:,ondx],interpolation='nearest',cmap=cm.jet)
+    ax3.set_title('MRF Pred')
+    # plt.tight_layout()
+    plt.show()
+
+    fig2 = plt.figure(figsize=(5,5))
+    ax12 = fig2.add_subplot(1,1,1)
+    ax12.imshow(all_images[img][0,:,:,0],cmap=cm.gray)
+
+    maxndx = np.argmax(all_preds[img][0][0,:,:,ondx])
+    predloc = np.array(np.unravel_index(maxndx,all_preds[img][0].shape[1:3]))
+    predloc = predloc * conf.pool_scale 
+    maxndx = np.argmax(all_preds[img][1][0,:,:,ondx])
+    mrfloc = np.array(np.unravel_index(maxndx,all_preds[img][1].shape[1:3]))
+    mrfloc = mrfloc * conf.pool_scale 
+
+    ax12.scatter(all_locs[img][0,ondx,0]/2,all_locs[img][0,ondx,1]/2,
+                c=np.linspace(0,1,conf.n_classes),cmap=cm.jet)
+    ax12.scatter(predloc[1],predloc[0],
+                c=np.linspace(0,1,conf.n_classes),alpha=0.3,cmap=cm.jet)
+    ax12.scatter(mrfloc[1],mrfloc[0],
+                c=np.linspace(0,1,conf.n_classes),alpha=0.6,cmap=cm.jet)
+    ax12.set_title('Ndx:%d'%ondx)
+    plt.show()
+#     raw_input('Press Enter')
+
+
+# In[2]:
 
 import PoseTools
 reload(PoseTools)
@@ -1355,16 +1328,20 @@ for ndx in range(db_sz):
 print(berr.mean(),merr.mean())
 
 
-# In[11]:
+# In[3]:
 
-dd1,bb = np.histogram(abs(berr.flatten()),range(0,20,2)+[100])
-dd2,bb = np.histogram(abs(merr.flatten()),range(0,20,2)+[100])
+dd1,bb1 = np.histogram(abs(berr.flatten()),range(0,50,2)+[100])
+dd2,bb2 = np.histogram(abs(merr.flatten()),range(0,50,2)+[100])
 print(dd1.shape)
 fig,ax = plt.subplots()
 width = 0.35
 
-ax.bar(bb[0:-1],dd1,width=width,color='r')
-ax.bar(bb[0:-1]+width,dd2,width=width,color='b')
+ax.bar(bb1[0:-1],dd1,width=width,color='r')
+ax.bar(bb2[0:-1]+width,dd2,width=width,color='b')
+plt.show()
+
+plt.scatter(berr.flatten(),merr.flatten())
+plt.axis('equal')
 
 
 # In[19]:
@@ -1380,4 +1357,122 @@ plt.colorbar()
 plt.show()
 plt.imshow(swts[:,:,0,1],interpolation='nearest')
 plt.colorbar()
+
+
+# In[1]:
+
+import PoseTrain
+reload(PoseTrain)
+import stephenHeadConfig as conf
+conf.batch_size = 1
+print('**** Setting batch size to %d! ****'%conf.batch_size)
+import tensorflow as tf
+
+restore = False
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+
+with tf.variable_scope('base'):
+    self.createBaseNetwork(False, False)
+
+with tf.variable_scope('mrf'):
+    self.createMRFNetwork(False, False)
+
+self.createBaseSaver()
+self.createMRFSaver()
+
+self.cost = tf.nn.l2_loss(self.mrfPred-self.ph['y'])
+basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+self.openDBs()
+self.createOptimizer()
+
+txn = self.env.begin()
+valtxn = self.valenv.begin()
+sess = tf.InteractiveSession()
+
+self.loadBase(sess,self.conf.baseIter4MRFTrain)
+self.restoreMRF(sess,restore)
+self.initializeRemainingVars(sess)
+
+self.createCursors(txn,valtxn)
+
+
+# In[4]:
+
+import PoseTools
+self.val_cursor.first()
+db_sz = self.valenv.stat()['entries']
+
+pred_list = [self.basePred,self.mrfPred,self.cost,basecost]
+all_labels = []
+all_preds = []
+all_images = []
+all_locs = []
+berr = np.zeros([0,5])
+merr = np.zeros([0,5])
+for ndx in range(1):
+    self.updateFeedDict(self.DBType.Val)
+    Apreds = sess.run(pred_list,feed_dict = self.feed_dict)
+    all_preds.append(Apreds)
+    all_labels.append(self.feed_dict[self.ph['y']])
+    bee = PoseTools.getBaseError(self.locs,Apreds[0],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    berr = np.append(berr,dee,0)
+    bee = PoseTools.getBaseError(self.locs,Apreds[1],conf)
+    dee = np.sqrt(np.sum(np.square(bee),2))
+    merr = np.append(merr,dee,0)
+    all_images.append(self.feed_dict[self.ph['x0']])
+    all_locs.append(self.locs)
+print(berr.mean(),merr.mean())
+print(all_preds[0][2],all_preds[0][3])
+
+
+
+# In[9]:
+
+ll = self.feed_dict[self.ph['y']]
+pp = all_preds[0][1]
+
+kk = (ll-pp)**2
+print(kk.sum()/2)
+fig = plt.figure()
+for ndx in range(5):
+    ax = fig.add_subplot(2,3,ndx+1)
+    ax.imshow(pp[0,:,:,ndx],interpolation=None)
+plt.show()
+pp = all_preds[0][0]
+fig = plt.figure()
+for ndx in range(5):
+    ax = fig.add_subplot(2,3,ndx+1)
+    ax.imshow(pp[0,:,:,ndx],interpolation=None)
+plt.show()
+
+
+# In[3]:
+
+fig = plt.figure()
+ax = fig.add_subplot(1,2,1)
+ax.imshow(Apreds[0][0,:,:,1])
+ax = fig.add_subplot(1,2,2)
+ax.imshow(Apreds[1][0,:,:,1])
+plt.show()
+
+
+# In[20]:
+
+# var = tf.all_variables()
+
+# for vv in var:
+#     print vv.name
+with tf.variable_scope('mrf/mrf',reuse = True):
+    gg = tf.get_variable('weights')
+hh = gg.eval()
+hh.shape
+fig = plt.figure()
+for ndx in range(5):
+    ax = fig.add_subplot(2,3,ndx+1)
+    ax.grid('off')
+    ax.pcolor(hh[:,:,0,ndx])
+print(hh.max(),hh.min())
 

@@ -10,37 +10,31 @@ Project: https://github.com/aymericdamien/TensorFlow-Examples/
 '''
 
 import tensorflow as tf
-
 import os,sys
-import localSetup
-
 import caffe
 import lmdb
 import caffe.proto.caffe_pb2
-# import pawconfig as conf
-
 from caffe.io import datum_to_array
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import math
-
 import cv2
-import matplotlib.animation as manimation
-import myutils
 import tempfile
 import copy
 
+from batch_norm import batch_norm
+import myutils
+import localSetup
 
-def conv2d(name, l_input, w, b):
-    return tf.nn.relu(
-        tf.nn.bias_add(
-            tf.nn.conv2d(
-                l_input, w, strides=[1, 1, 1, 1], padding='SAME')
-            ,b), 
-        name=name)
+# def conv2d(name, l_input, w, b):
+#     return tf.nn.relu(
+#         tf.nn.bias_add(
+#             tf.nn.conv2d(
+#                 l_input, w, strides=[1, 1, 1, 1], padding='SAME')
+#             ,b), 
+#         name=name)
 
 def max_pool(name, l_input, k,s):
     return tf.nn.max_pool(
@@ -56,77 +50,85 @@ def upscale(name,l_input,sz):
     l_out = tf.image.resize_nearest_neighbor(l_input,sz,name=name)
     return l_out
 
-def initNetConvWeights(conf):
-    # Store layers weight & bias
-    nfilt = conf.nfilt
-    nfcfilt = conf.nfcfilt
-    n_classes = conf.n_classes
-    rescale = conf.rescale
-    pool_scale = conf.pool_scale
+# def initNetConvWeights(conf):
+#     # Store layers weight & bias
+#     nfilt = conf.nfilt
+#     nfcfilt = conf.nfcfilt
+#     n_classes = conf.n_classes
+#     rescale = conf.rescale
+#     pool_scale = conf.pool_scale
     
-#     sz5 = int(math.ceil(conf.psz/rescale/pool_scale))
-    sz5 = conf.psz
-    weights = {
-        'base0': initBaseWeights(nfilt),
-        'base1': initBaseWeights(nfilt),
-        'base2': initBaseWeights(nfilt),       
-        'wd1': tf.Variable(tf.random_normal([sz5,sz5,conf.numscale*nfilt,nfcfilt],stddev=0.005)),
-        'wd2': tf.Variable(tf.random_normal([1,1,nfcfilt, nfcfilt],stddev=0.005)),
-        'wd3': tf.Variable(tf.random_normal([1,1,nfcfilt, n_classes],stddev=0.01)),
-        'bd1': tf.Variable(tf.ones([nfcfilt])),
-        'bd2': tf.Variable(tf.ones([nfcfilt])),
-        'bd3': tf.Variable(tf.zeros([n_classes]))
-    }
-    return weights
+# #     sz5 = int(math.ceil(conf.psz/rescale/pool_scale))
+#     sz5 = conf.psz
+#     weights = {
+#         'base0': initBaseWeights(nfilt),
+#         'base1': initBaseWeights(nfilt),
+#         'base2': initBaseWeights(nfilt),       
+#         'wd1': tf.Variable(tf.random_normal([sz5,sz5,conf.numscale*nfilt,nfcfilt],stddev=0.005)),
+#         'wd2': tf.Variable(tf.random_normal([1,1,nfcfilt, nfcfilt],stddev=0.005)),
+#         'wd3': tf.Variable(tf.random_normal([1,1,nfcfilt, n_classes],stddev=0.01)),
+#         'bd1': tf.Variable(tf.ones([nfcfilt])),
+#         'bd2': tf.Variable(tf.ones([nfcfilt])),
+#         'bd3': tf.Variable(tf.zeros([n_classes]))
+#     }
+#     return weights
 
-def initBaseWeights(nfilt):
+# def initBaseWeights(nfilt):
     
-    weights = {
-    'wc1': tf.Variable(tf.random_normal([5, 5, 1, 48],stddev=0.01)),
-    'wc2': tf.Variable(tf.random_normal([3, 3, 48, nfilt],stddev=0.01)),
-    'wc3': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
-    'wc4': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
-    'wc5': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
-    'bc1': tf.Variable(tf.zeros([48])),
-    'bc2': tf.Variable(tf.ones([nfilt])),
-    'bc3': tf.Variable(tf.ones([nfilt])),
-    'bc4': tf.Variable(tf.ones([nfilt])),
-    'bc5': tf.Variable(tf.ones([nfilt]))
-    }
-    return weights
+#     weights = {
+#     'wc1': tf.Variable(tf.random_normal([5, 5, 1, 48],stddev=0.01)),
+#     'wc2': tf.Variable(tf.random_normal([3, 3, 48, nfilt],stddev=0.01)),
+#     'wc3': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
+#     'wc4': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
+#     'wc5': tf.Variable(tf.random_normal([3, 3, nfilt, nfilt],stddev=0.01)),
+#     'bc1': tf.Variable(tf.zeros([48])),
+#     'bc2': tf.Variable(tf.ones([nfilt])),
+#     'bc3': tf.Variable(tf.ones([nfilt])),
+#     'bc4': tf.Variable(tf.ones([nfilt])),
+#     'bc5': tf.Variable(tf.ones([nfilt]))
+#     }
+#     return weights
 
-def net_multi_base(X,_weights):
+# def net_multi_base(X,_weights):
     
-    conv1 = conv2d('conv1', X, _weights['wc1'], _weights['bc1'])
-    pool1 = max_pool('pool1', conv1, k=3,s=2)
-    norm1 = norm('norm1', pool1, lsize=2)
-    conv2 = conv2d('conv2', norm1, _weights['wc2'], _weights['bc2'])
-    pool2 = max_pool('pool2', conv2, k=3,s=2)
-    norm2 = norm('norm2', pool2, lsize=4)
-    conv3 = conv2d('conv3', norm2, _weights['wc3'], _weights['bc3'])
-    conv4 = conv2d('conv4', conv3, _weights['wc4'], _weights['bc4'])
-    conv5 = conv2d('conv5', conv4, _weights['wc5'], _weights['bc5'])
-    out_dict = {'conv1':conv1,'conv2':conv2,'conv3':conv3,
-                'conv4':conv4,'conv5':conv5,'pool1':pool1,
-                'pool2':pool2,'norm1':norm1,'norm2':norm2,
-               }
-    return conv5, out_dict
+#     conv1 = conv2d('conv1', X, _weights['wc1'], _weights['bc1'])
+#     pool1 = max_pool('pool1', conv1, k=3,s=2)
+#     norm1 = norm('norm1', pool1, lsize=2)
+#     conv2 = conv2d('conv2', norm1, _weights['wc2'], _weights['bc2'])
+#     pool2 = max_pool('pool2', conv2, k=3,s=2)
+#     norm2 = norm('norm2', pool2, lsize=4)
+#     conv3 = conv2d('conv3', norm2, _weights['wc3'], _weights['bc3'])
+#     conv4 = conv2d('conv4', conv3, _weights['wc4'], _weights['bc4'])
+#     conv5 = conv2d('conv5', conv4, _weights['wc5'], _weights['bc5'])
+#     out_dict = {'conv1':conv1,'conv2':conv2,'conv3':conv3,
+#                 'conv4':conv4,'conv5':conv5,'pool1':pool1,
+#                 'pool2':pool2,'norm1':norm1,'norm2':norm2,
+#                }
+#     return conv5, out_dict
 
-def net_multi_base_named(X,nfilt):
+def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase):
     with tf.variable_scope('layer1'):
-        conv1 = conv_relu(X,[5, 5, 1, 48],0.01,0)
+        conv1 = conv_relu(X,[5, 5, 1, 48],0.01,0,doBatchNorm,trainPhase)
         pool1 = max_pool('pool1', conv1, k=3,s=2)
-        norm1 = norm('norm1', pool1, lsize=2)
+        if not doBatchNorm:
+            norm1 = norm('norm1', pool1, lsize=2)
+        else:
+            norm1 = pool1
+    
     with tf.variable_scope('layer2'):
-        conv2 = conv_relu(norm1,[3,3,48,nfilt],0.01,1)
+        conv2 = conv_relu(norm1,[3,3,48,nfilt],0.01,1,doBatchNorm,trainPhase)
         pool2 = max_pool('pool2', conv2, k=3,s=2)
-        norm2 = norm('norm2', pool2, lsize=4)
+        if not doBatchNorm:
+            norm2 = norm('norm2', pool2, lsize=4)
+        else:
+            norm2 = pool2
+            
     with tf.variable_scope('layer3'):
-        conv3 = conv_relu(norm2,[3,3,nfilt,nfilt],0.01,1)
+        conv3 = conv_relu(norm2,[3,3,nfilt,nfilt],0.01,1,doBatchNorm,trainPhase)
     with tf.variable_scope('layer4'):
-        conv4 = conv_relu(conv3,[3,3,nfilt,nfilt],0.01,1)
+        conv4 = conv_relu(conv3,[3,3,nfilt,nfilt],0.01,1,doBatchNorm,trainPhase)
     with tf.variable_scope('layer5'):
-        conv5 = conv_relu(conv4,[3,3,nfilt,nfilt],0.01,1)
+        conv5 = conv_relu(conv4,[3,3,nfilt,nfilt],0.01,1,doBatchNorm,trainPhase)
         
     out_dict = {'conv1':conv1,'conv2':conv2,'conv3':conv3,
                 'conv4':conv4,'conv5':conv5,'pool1':pool1,
@@ -135,7 +137,7 @@ def net_multi_base_named(X,nfilt):
     return conv5,out_dict
         
 
-def net_multi_conv(X0,X1,X2,_dropout,conf):
+def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     imsz = conf.imsz; rescale = conf.rescale
     pool_scale = conf.pool_scale
     nfilt = conf.nfilt
@@ -144,11 +146,11 @@ def net_multi_conv(X0,X1,X2,_dropout,conf):
 #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
 #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
     with tf.variable_scope('scale0'):
-        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt)
+        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase)
     with tf.variable_scope('scale1'):
-        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt)
+        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase)
     with tf.variable_scope('scale2'):
-        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt)
+        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase)
 
     sz0 = int(math.ceil(float(imsz[0])/pool_scale/rescale))
     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
@@ -161,14 +163,21 @@ def net_multi_conv(X0,X1,X2,_dropout,conf):
 #     conv6 = tf.nn.dropout(conv6,_dropout)
 #     conv7 = conv2d('conv7',conv6,_weights['wd2'],_weights['bd2']) 
 #     conv7 = tf.nn.dropout(conv7,_dropout)
+
     with tf.variable_scope('layer6'):
-        conv6 = conv_relu(conv5_cat,[conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],0.005,1) 
-        conv6_sh = conv6.get_shape()
-        conv6 = tf.nn.dropout(conv6,_dropout,[conf.batch_size,1,1,conf.nfcfilt])
+        conv6 = conv_relu(conv5_cat,
+                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
+                          0.005,1,doBatchNorm,trainPhase) 
+        if not doBatchNorm:
+            conv6 = tf.nn.dropout(conv6,_dropout,
+                                  [conf.batch_size,1,1,conf.nfcfilt])
+            
     with tf.variable_scope('layer7'):
-        conv7 = conv_relu(conv6,[1,1,conf.nfcfilt,conf.nfcfilt],0.005,1) 
-        conv7_sh = conv7.get_shape()
-        conv7 = tf.nn.dropout(conv7,_dropout,[conf.batch_size,1,1,conf.nfcfilt])
+        conv7 = conv_relu(conv6,[1,1,conf.nfcfilt,conf.nfcfilt],
+                          0.005,1,doBatchNorm,trainPhase) 
+        if not doBatchNorm:
+            conv7 = tf.nn.dropout(conv7,_dropout,
+                                  [conf.batch_size,1,1,conf.nfcfilt])
 
 # Output, class prediction
 #     out = tf.nn.bias_add(tf.nn.conv2d(
@@ -180,10 +189,10 @@ def net_multi_conv(X0,X1,X2,_dropout,conf):
             initializer=tf.random_normal_initializer(stddev=0.01))
         l8_biases = tf.get_variable("biases", conf.n_classes,
             initializer=tf.constant_initializer(0))
-        
-    out = tf.nn.conv2d(conv7, l8_weights,
-        strides=[1, 1, 1, 1], padding='SAME') + l8_biases
-        
+        out = tf.nn.conv2d(conv7, l8_weights,
+            strides=[1, 1, 1, 1], padding='SAME') + l8_biases
+#   No batch norm for the output layer.
+
     out_dict = {'base_dict_0':base_dict_0,
                 'base_dict_1':base_dict_1,
                 'base_dict_2':base_dict_2,
@@ -217,38 +226,43 @@ def findPredSize(imsz,rescale,pool_scale):
     lsz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
     return lsz0, lsz1
 
-def conv_relu(X, kernel_shape, conv_std,bias_val):
+def conv_relu(X, kernel_shape, conv_std,bias_val,doBatchNorm,trainPhase):
     weights = tf.get_variable("weights", kernel_shape,
         initializer=tf.random_normal_initializer(stddev=conv_std))
     biases = tf.get_variable("biases", kernel_shape[-1],
         initializer=tf.constant_initializer(bias_val))
     conv = tf.nn.conv2d(X, weights,
         strides=[1, 1, 1, 1], padding='SAME')
+    if doBatchNorm:
+        conv = batch_norm(conv,trainPhase)
     return tf.nn.relu(conv + biases)
 
 
-def fine_base(X,conf,insize):
+def fine_base(X,conf,insize,doBatchNorm,trainPhase):
     fsz = conf.fine_flt_sz
     fine_nfilt = conf.fine_nfilt
     with tf.variable_scope("fine_1"):
-        conv1 = conv_relu(X, [fsz, fsz, insize, fine_nfilt],0.05,1)
+        conv1 = conv_relu(X, [fsz, fsz, insize, fine_nfilt],
+                          0.05,1,doBatchNorm,trainPhase)
     with tf.variable_scope("fine_2"):
-        conv2 = conv_relu(conv1, [fsz, fsz, fine_nfilt, fine_nfilt],0.05,1)
+        conv2 = conv_relu(conv1, [fsz, fsz, fine_nfilt, fine_nfilt],
+                          0.05,1,doBatchNorm,trainPhase)
     with tf.variable_scope("fine_3"):
-        conv3 = conv_relu(conv2, [fsz, fsz, fine_nfilt, fine_nfilt/2],0.05,1)
+        conv3 = conv_relu(conv2, [fsz, fsz, fine_nfilt, fine_nfilt/2],
+                          0.05,1,doBatchNorm,trainPhase)
     return conv3
 
     
 
-def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, conf):
+def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, conf,doBatchNorm,trainPhase):
     with tf.variable_scope('1_1'):
-        fine1_1 = fine_base(fineIn1_1,conf,48)
+        fine1_1 = fine_base(fineIn1_1,conf,48,doBatchNorm,trainPhase)
     with tf.variable_scope('1_2'):
-        fine1_2 = fine_base(fineIn1_2,conf,conf.nfilt)
+        fine1_2 = fine_base(fineIn1_2,conf,conf.nfilt,doBatchNorm,trainPhase)
     with tf.variable_scope('2_1'):
-        fine2_1 = fine_base(fineIn2_1,conf,48)
+        fine2_1 = fine_base(fineIn2_1,conf,48,doBatchNorm,trainPhase)
     with tf.variable_scope('2_2'):
-        fine2_2 = fine_base(fineIn2_2,conf,conf.nfilt)
+        fine2_2 = fine_base(fineIn2_2,conf,conf.nfilt,doBatchNorm,trainPhase)
 
     fsz = conf.fine_sz
     fine1_2_up = upscale('fine1_2',fine1_2,[fsz,fsz])
@@ -259,16 +273,18 @@ def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, conf):
 #     conv5_cat = tf.concat(3,[fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
     return fineSum
 
-def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf):
+def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf,doBatchNorm,trainPhase):
     inter = []
     with tf.variable_scope('fine_siamese') as scope:
         tvar = fineNetwork(fineIn1_1[0],fineIn1_2[0],
-                                 fineIn2_1[0],fineIn2_2[0],conf)
+                           fineIn2_1[0],fineIn2_2[0],conf,
+                           doBatchNorm,trainPhase)
         inter.append(tvar)
         scope.reuse_variables()
         for ndx in range(1,len(fineIn1_1)):
             tvar = fineNetwork(fineIn1_1[ndx],fineIn1_2[ndx],
-                                     fineIn2_1[ndx],fineIn2_2[ndx],conf)
+                               fineIn2_1[ndx],fineIn2_2[ndx],conf,
+                               doBatchNorm,trainPhase)
             inter.append(tvar)
 
     fineLast = []

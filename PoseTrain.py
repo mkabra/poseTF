@@ -35,10 +35,13 @@ class PoseTrain:
     Nets = Enum('Nets','Base Joint Fine')
     TrainingType = Enum('TrainingType','Base MRF Fine All')
     DBType = Enum('DBType','Train Val')
+   
     
     def __init__(self,conf):
         self.conf = conf
         self.feed_dict = {}
+    
+    # ---------------- DATABASE ---------------------
     
     def openDBs(self):
         lmdbfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename)
@@ -49,17 +52,6 @@ class PoseTrain:
     def createCursors(self,txn,valtxn):
         self.train_cursor = txn.cursor(); 
         self.val_cursor = valtxn.cursor()
-        
-    def createPH(self):
-        x0,x1,x2,y,keep_prob = CNB.createPlaceHolders(self.conf.imsz,
-                               self.conf.rescale,self.conf.scale,self.conf.pool_scale,
-                                self.conf.n_classes)
-        locs_ph = tf.placeholder(tf.float32,[self.conf.batch_size,
-                                             self.conf.n_classes,2])
-        learning_rate_ph = tf.placeholder(tf.float32,shape=[])
-        self.ph = {'x0':x0,'x1':x1,'x2':x2,
-                     'y':y,'keep_prob':keep_prob,'locs':locs_ph,
-                     'learning_rate':learning_rate_ph}
         
         
     def readImages(self,dbType):
@@ -97,23 +89,39 @@ class PoseTrain:
         self.feed_dict[self.ph['y']] = labelims
         self.feed_dict[self.ph['locs']] = self.locs
         
+    def createPH(self):
+        x0,x1,x2,y,keep_prob = CNB.createPlaceHolders(self.conf.imsz,
+                               self.conf.rescale,self.conf.scale,self.conf.pool_scale,
+                                self.conf.n_classes)
+        locs_ph = tf.placeholder(tf.float32,[self.conf.batch_size,
+                                             self.conf.n_classes,2])
+        learning_rate_ph = tf.placeholder(tf.float32,shape=[])
+        self.ph = {'x0':x0,'x1':x1,'x2':x2,
+                     'y':y,'keep_prob':keep_prob,'locs':locs_ph,
+                     'learning_rate':learning_rate_ph}
+        
+
+    # ---------------- NETWORK ---------------------
     
-    def createBaseNetwork(self):
-        pred,layers = CNB.net_multi_conv(self.ph['x0'],
-                                     self.ph['x1'],
-                                     self.ph['x2'],
-                                     self.ph['keep_prob'],self.conf)
+    def createBaseNetwork(self,doBatch,trainPhase):
+        pred,layers = CNB.net_multi_conv(self.ph['x0'],self.ph['x1'],
+                                         self.ph['x2'],self.ph['keep_prob'],
+                                         self.conf,doBatch,trainPhase)
         self.basePred = pred
         self.baseLayers = layers
 
-    def createMRFNetwork(self,passGradients=False):
+    def createMRFNetwork(self,doBatch,trainPhase,jointTraining=False):
         
-        ncls = self.conf.n_classes
-        bpred = self.basePred if passGradients else tf.stop_gradient(self.basePred)
+        n_classes = self.conf.n_classes
+        bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
+        mrf_weights = mrf_weights/n_classes
         
         baseShape = tf.Tensor.get_shape(bpred).as_list()[1]
         mrf_sz = mrf_weights.shape[0]
+
+        bpred = tf.nn.relu(bpred)
+        
         if mrf_sz > baseShape:
             dd = int(math.ceil(float(mrf_sz-baseShape)/2))
             print('Padding base prediction by %d. Filter shape:%d, Base shape:%d'%(dd,mrf_sz,baseShape))
@@ -124,47 +132,74 @@ class PoseTrain:
             dd = 0
             pad = False
             sliceEnd = baseShape
-
             
-        ksz = mrf_weights[0] # Kernel is square for time being
-        mrf_conv = 0
-        conv_out = []
-        all_wts = []
-        for cls in range(ncls):
-            with tf.variable_scope('mrf_%d'%cls):
-                curwt = 10*mrf_weights[:,:,cls:cls+1,:]-3
-                #the scaling is so that zero values are close to zero after softplus
-                weights = tf.get_variable("weights",dtype = tf.float32,
-                              initializer=tf.constant(curwt))
-                biases = tf.get_variable("biases", mrf_weights.shape[-1],dtype = tf.float32,
-                              initializer=tf.constant_initializer(-1))
-
-            sweights = tf.nn.softplus(weights)
-            sbiases = tf.nn.softplus(biases)
-            curconv = tf.nn.conv2d(tf.maximum(bpred[:,:,:,cls:cls+1],0.0001), 
-                           sweights,strides=[1, 1, 1, 1], padding='SAME')+sbiases
-            conv_out.append(tf.log(curconv))
-            mrf_conv += tf.log(curconv)
-            all_wts.append(sweights)
-        mrfout = tf.exp(mrf_conv)
-        
+        ksz = mrf_weights.shape[0] # Kernel is square for time being
+        with tf.variable_scope('mrf'):
+            conv_std = (1./n_classes)/ksz
+            weights = tf.get_variable("weights", initializer=tf.constant(mrf_weights))
+            biases = tf.get_variable("biases", n_classes,
+                                     initializer=tf.constant_initializer(0))
+            conv = tf.nn.conv2d(bpred, weights,
+                               strides=[1, 1, 1, 1], padding='SAME')
+            if self.conf.doBatchNorm:
+                conv = batch_norm(conv,trainPhase)
+            mrfout = conv+biases
         self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
-            
-        return conv_out,all_wts
         
-    def createFineNetwork(self):
-        if self.curtrainingType == self.TrainingType.All:
-            pred = tf.stop_gradient(self.basePred)
+#   BELOW is from Chris bregler's paper where they try to do MRF style inference.
+#   This didn't work so well and the performance was always worse than base.
+#         mrf_conv = 0
+#         conv_out = []
+#         all_wts = []
+#         for cls in range(n_classes):
+#             with tf.variable_scope('mrf_%d'%cls):
+#                 curwt = 10*mrf_weights[:,:,cls:cls+1,:]-3
+#                 #the scaling is so that zero values are close to zero after softplus
+#                 weights = tf.get_variable("weights",dtype = tf.float32,
+#                               initializer=tf.constant(curwt))
+#                 biases = tf.get_variable("biases", mrf_weights.shape[-1],dtype = tf.float32,
+#                               initializer=tf.constant_initializer(-1))
+
+#             sweights = tf.nn.softplus(weights)
+#             sbiases = tf.nn.softplus(biases)
+            
+#             if doBatch:
+#                 curBasePred = batch_norm(bpred[:,:,:,cls:cls+1],trainPhase)
+#                 curBasePred = tf.maximum(curBasePred,0.0001)
+#             else:
+#                 curBasePred = tf.maximum(bpred[:,:,:,cls:cls+1],0.0001)
+                
+#             curconv = tf.nn.conv2d(curBasePred,sweights,strides=[1, 1, 1, 1], 
+#                                    padding='SAME')+sbiases
+#             conv_out.append(tf.log(curconv))
+#             mrf_conv += tf.log(curconv)
+#             all_wts.append(sweights)
+#         mrfout = tf.exp(mrf_conv)
+#         self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
+#    Return the value below when we used MRF kind of stuff
+#         return conv_out,all_wts
+        
+    def createFineNetwork(self,doBatch,trainPhase,jointTraining=False):
+        if not jointTraining:
+            pred = tf.stop_gradient(self.mrfPred)
         else:
-            pred = self.basePred
+            pred = self.mrfPred
 
         # Construct fine model
         labelT  = PoseTools.createFineLabelTensor(self.conf)
         layers = self.baseLayers
-        layer1_1 = tf.stop_gradient(layers['base_dict_0']['conv1'])
-        layer1_2 = tf.stop_gradient(layers['base_dict_0']['conv2'])
-        layer2_1 = tf.stop_gradient(layers['base_dict_1']['conv1'])
-        layer2_2 = tf.stop_gradient(layers['base_dict_1']['conv2'])
+        
+        if not jointTraining:
+            layer1_1 = tf.stop_gradient(layers['base_dict_0']['conv1'])
+            layer1_2 = tf.stop_gradient(layers['base_dict_0']['conv2'])
+            layer2_1 = tf.stop_gradient(layers['base_dict_1']['conv1'])
+            layer2_2 = tf.stop_gradient(layers['base_dict_1']['conv2'])
+        else:
+            layer1_1 = layers['base_dict_0']['conv1']
+            layer1_2 = layers['base_dict_0']['conv2']
+            layer2_1 = layers['base_dict_1']['conv1']
+            layer2_2 = layers['base_dict_1']['conv2']
+            
         curfine1_1 = CNB.extractPatches(layer1_1,pred,self.conf,1,4)
         curfine1_2 = CNB.extractPatches(layer1_2,pred,self.conf,2,2)
         curfine2_1 = CNB.extractPatches(layer2_1,pred,self.conf,2,2)
@@ -173,19 +208,20 @@ class PoseTrain:
         curfine1_2u = tf.unpack(tf.transpose(curfine1_2,[1,0,2,3,4]))
         curfine2_1u = tf.unpack(tf.transpose(curfine2_1,[1,0,2,3,4]))
         curfine2_2u = tf.unpack(tf.transpose(curfine2_2,[1,0,2,3,4]))
-        finepred = CNB.fineOut(curfine1_1u,curfine1_2u,curfine2_1u,curfine2_2u,self.conf)    
+        finepred = CNB.fineOut(curfine1_1u,curfine1_2u,curfine2_1u,curfine2_2u,
+                               self.conf,doBatch,trainPhase)    
         limgs = PoseTools.createFineLabelImages(self.conf.ph['locs'],
-                                                    pred,self.conf,labelT)
-        
+                                                pred,self.conf,labelT)
         self.finePred = finepred
         self.fine_labels = limgs
+
+    # ---------------- SAVING/RESTORING ---------------------
 
     def createBaseSaver(self):
         self.basesaver = tf.train.Saver(var_list = PoseTools.getvars('base'),
                                         max_to_keep=self.conf.maxckpt)
         
     def createMRFSaver(self):
-        var_list = PoseTools.getvars('mrf')
         self.mrfsaver = tf.train.Saver(var_list = PoseTools.getvars('mrf'),
                                        max_to_keep=self.conf.maxckpt)
         
@@ -193,26 +229,17 @@ class PoseTrain:
         self.finesaver = tf.train.Saver(var_list = PoseTools.getvars('fine'),
                                         max_to_keep=self.conf.maxckpt)
         
-    def loadBase(self):
-        baseoutname = '%s_%d.ckpt'%(self.conf.outname,self.conf.base_training_iters)
-        basemodelfile = os.path.join(self.conf.cachedir,baseoutname)
-
-        self.basesaver.restore(self.sess,basemodelfile)
-
-    def saveBase(self,sess,step):
+    def createJointSaver(self):
+        vlist = PoseTools.getvars('fine') +                 PoseTools.getvars('mrf') +                 PoseTools.getvars('base') 
+        self.jointsaver = tf.train.Saver(var_list = vlist,
+                                        max_to_keep=self.conf.maxckpt)
         
+    def loadBase(self,sess,iterNum):
         outfilename = os.path.join(self.conf.cachedir,self.conf.outname)
-        traindatafilename = os.path.join(self.conf.cachedir,self.conf.databasename)
-        self.basesaver.save(sess,outfilename,global_step=step,
-                   latest_filename = self.conf.ckptbasename)
-        print('Saved state to %s-%d' %(outfilename,step))
-#         if step%self.conf.back_steps==0:
-#             shutil.copyfile('%s-%d'%(outfilename,step),'%s-%d.save'%(outfilename,step))
-#             print('Backed up state to %s-%d.save' %(outfilename,step))
+        ckptfilename = '%s-%d'%(outfilename,iterNum)
+        print('Loading base from %s'%(ckptfilename))
+        self.basesaver.restore(sess,ckptfilename)
             
-        with open(traindatafilename,'wb') as tdfile:
-            pickle.dump(self.basetrainData,tdfile)
-
     def restoreBase(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.outname)
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.databasename)
@@ -232,12 +259,6 @@ class PoseTrain:
                 self.basetrainData = pickle.load(tdfile)
             print("Loading base variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
-            
-    def loadBase(self,sess,iterNum):
-        outfilename = os.path.join(self.conf.cachedir,self.conf.outname)
-        ckptfilename = '%s-%d'%(outfilename,iterNum)
-        print('Loading base from %s'%(ckptfilename))
-        self.basesaver.restore(sess,ckptfilename)
             
     def restoreMRF(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
@@ -260,15 +281,6 @@ class PoseTrain:
             print("Loading mrf variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
             
-    def saveMRF(self,sess,step):
-        outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
-        traindatafilename = os.path.join(self.conf.cachedir,self.conf.datamrfname)
-        self.mrfsaver.save(sess,outfilename,global_step=step,
-                   latest_filename = self.conf.ckptmrfname)
-        print('Saved state to %s-%d' %(outfilename,step))
-        with open(traindatafilename,'wb') as tdfile:
-            pickle.dump(self.mrftrainData,tdfile)
-
     def restoreFine(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.fineoutname)
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.datafinename)
@@ -290,7 +302,48 @@ class PoseTrain:
                 self.finetrainData = pickle.load(tdfile)
             print("Loading fine variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
+
+    def restoreJoint(self,sess,restore):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.jointoutname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.datajointname)
+        latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
+                                latest_filename = self.conf.ckptjointname)
+        if not latest_ckpt or not restore:
+            self.finestartat = 0
+            self.finetrainData = {'train_err':[],'val_err':[],'step_no':[],
+                                'train_fine_err':[],'val_fine_err':[],
+                                'train_mrf_err':[],'val_mrf_err':[],
+                                'train_base_err':[],'val_base_err':[]}
+            print("Not loading fine variables. Initializing them")
+            return False
+        else:
+            self.jointsaver.restore(sess,latest_ckpt.model_checkpoint_path)
+            print("Loading joint variables from %s"%latest_ckpt.model_checkpoint_path)
+            matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
+            self.jointstartat = int(matchObj.group(1))+1
+            with open(traindatafilename,'rb') as tdfile:
+                self.jointtrainData = pickle.load(tdfile)
+            return True
+
+        
+    def saveBase(self,sess,step):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.outname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.databasename)
+        self.basesaver.save(sess,outfilename,global_step=step,
+                   latest_filename = self.conf.ckptbasename)
+        print('Saved state to %s-%d' %(outfilename,step))
+        with open(traindatafilename,'wb') as tdfile:
+            pickle.dump(self.basetrainData,tdfile)
             
+    def saveMRF(self,sess,step):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.datamrfname)
+        self.mrfsaver.save(sess,outfilename,global_step=step,
+                   latest_filename = self.conf.ckptmrfname)
+        print('Saved state to %s-%d' %(outfilename,step))
+        with open(traindatafilename,'wb') as tdfile:
+            pickle.dump(self.mrftrainData,tdfile)
+
     def saveFine(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.fineoutname)
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.datafinename)
@@ -300,7 +353,29 @@ class PoseTrain:
         with open(traindatafilename,'wb') as tdfile:
             pickle.dump(self.finetrainData,tdfile)
 
+    def saveJoint(self,sess,step):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.jointoutname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.datajointname)
+        self.finesaver.save(sess,outfilename,global_step=step,
+                   latest_filename = self.conf.ckptjointname)
+        print('Saved state to %s-%d' %(outfilename,step))
+        with open(traindatafilename,'wb') as tdfile:
+            pickle.dump(self.jointtrainData,tdfile)
 
+    def initializeRemainingVars(self,sess):
+        varlist = tf.all_variables()
+        for var in varlist:
+            try:
+                sess.run(tf.assert_variables_initialized([var]))
+            except tf.errors.FailedPreconditionError:
+                sess.run(tf.initialize_variables([var]))
+                print('Initializing variable:%s'%var.name)
+                
+                
+    # ---------------- OPTIMIZATION/LOSS ---------------------
+
+    
+    
     def createOptimizer(self):
         self.opt = tf.train.AdamOptimizer(learning_rate=                           self.ph['learning_rate']).minimize(self.cost)
         self.read_time = 0.
@@ -325,6 +400,13 @@ class PoseTrain:
         loss = sess.run(costfcns,self.feed_dict)
         loss = [x/self.conf.batch_size for x in loss]
         return loss
+    
+    def computePredDist(self,sess,predfcn):
+        self.feed_dict[self.ph['keep_prob']] = 1.
+        pred = sess.run(predfcn,self.feed_dict)
+        bee = PoseTools.getBaseError(self.locs,pred,self.conf)
+        dee = np.sqrt(np.sum(np.square(bee),2))
+        return dee
         
     def updateBaseLoss(self,step,train_loss,val_loss):
         print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0])
@@ -335,11 +417,9 @@ class PoseTrain:
         self.basetrainData['val_err'].append(val_loss[0])        
         self.basetrainData['step_no'].append(step)        
 
-    def updateMRFLoss(self,step,train_loss,val_loss):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " ({:.1f},{:.1f})".format(train_loss[1],val_loss[1])
-#         nstep = step-self.basestartat
-#         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
-#               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
+    def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
+        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
+                                                      trainDist[1],valDist[1])
         self.mrftrainData['train_err'].append(train_loss)        
         self.mrftrainData['val_err'].append(val_loss[0])        
         self.mrftrainData['train_base_err'].append(train_loss[1])        
@@ -347,37 +427,47 @@ class PoseTrain:
         self.mrftrainData['step_no'].append(step)        
 
     def updateFineLoss(self,step,train_loss,val_loss):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " ({:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " ({:.1f},{:.1f})".format(train_loss[2],val_loss[2])
-#         nstep = step-self.basestartat
-#         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
-#               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
-        self.mrftrainData['train_err'].append(train_loss)        
-        self.mrftrainData['val_err'].append(val_loss[0])        
-        self.mrftrainData['train_mrf_err'].append(train_loss[1])        
-        self.mrftrainData['val_mrf_err'].append(val_loss[1])        
-        self.mrftrainData['train_base_err'].append(train_loss[2])        
-        self.mrftrainData['val_base_err'].append(val_loss[2])        
-        self.mrftrainData['step_no'].append(step)        
+        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (Base:{:.1f},{:.1f})".format(train_loss[2],val_loss[2])
+        self.finetrainData['train_err'].append(train_loss)        
+        self.finetrainData['val_err'].append(val_loss[0])        
+        self.finetrainData['train_mrf_err'].append(train_loss[1])        
+        self.finetrainData['val_mrf_err'].append(val_loss[1])        
+        self.fineftrainData['train_base_err'].append(train_loss[2])        
+        self.fineftrainData['val_base_err'].append(val_loss[2])        
+        self.finetrainData['step_no'].append(step)        
 
-    def initializeRemainingVars(self,sess):
-        varlist = tf.all_variables()
-        for var in varlist:
-            try:
-                sess.run(tf.assert_variables_initialized([var]))
-            except tf.errors.FailedPreconditionError:
-                sess.run(tf.initialize_variables([var]))
-                print('Initializing variable:%s'%var.name)
+    def updateJointLoss(self,step,train_loss,val_loss):
+        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (Fine:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[2],val_loss[2]) +              " (Base:{:.1f},{:.1f})".format(train_loss[3],val_loss[3])
+        self.jointtrainData['train_err'].append(train_loss)        
+        self.jointftrainData['val_err'].append(val_loss[0])        
+        self.jointtrainData['train_fine_err'].append(train_loss[1])        
+        self.jointtrainData['val_fine_err'].append(val_loss[1])        
+        self.jointtrainData['train_mrf_err'].append(train_loss[2])        
+        self.jointtrainData['val_mrf_err'].append(val_loss[2])        
+        self.jointtrainData['train_base_err'].append(train_loss[3])        
+        self.jointtrainData['val_base_err'].append(val_loss[3])        
+        self.jointtrainData['step_no'].append(step)        
 
-    def baseTrain(self,restore=True):
+        
+
+    # ---------------- TRAINING ---------------------
+
+    
+    
+    def baseTrain(self, restore=True, trainPhase=True):
         self.createPH()
         self.createFeedDict()
+        doBatchNorm = self.conf.doBatchNorm
+        
         with tf.variable_scope('base'):
-            self.createBaseNetwork()
+            self.createBaseNetwork(doBatchNorm,trainPhase)
         self.cost = tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.openDBs()
         self.createOptimizer()
         self.createBaseSaver()
-        with self.env.begin() as txn,self.valenv.begin() as valtxn, tf.Session() as sess:
+
+        with self.env.begin() as txn,                 self.valenv.begin() as valtxn,                 tf.Session() as sess:
+                    
             self.createCursors(txn,valtxn)
             self.restoreBase(sess,restore)
             self.initializeRemainingVars(sess)
@@ -399,23 +489,25 @@ class PoseTrain:
             print("Optimization Finished!")
             self.saveBase(sess,step)
     
+    
         
-    def mrfTrain(self,restore=True):
+    def mrfTrain(self,restore=True,trainPhase = True):
         self.createPH()
         self.createFeedDict()
+        doBatchNorm = self.conf.doBatchNorm
         with tf.variable_scope('base'):
-            self.createBaseNetwork()
+            self.createBaseNetwork(doBatchNorm,trainPhase)
 
         with tf.variable_scope('mrf'):
-            self.createMRFNetwork()
+            self.createMRFNetwork(doBatchNorm,trainPhase)
 
         self.createBaseSaver()
         self.createMRFSaver()
 
         mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
-        # the labels shouldn't be zero because the prediction is an output of
-        # exp. And it seems a lot of effort is wasted to make the prediction goto
-        # zero rather than match the location.
+# the labels shouldn't be zero because the prediction is an output of
+# exp. And it seems a lot of effort is wasted to make the prediction goto
+# zero rather than match the location.
         
         self.cost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
@@ -435,15 +527,146 @@ class PoseTrain:
                 if step % self.conf.display_step == 0:
                     self.updateFeedDict(self.DBType.Train)
                     train_loss = self.computeLoss(sess,[self.cost,basecost])
+                    tt1 = self.computePredDist(sess,self.mrfPred)
+                    tt2 = self.computePredDist(sess,self.basePred)
+                    trainDist = [tt1.mean(),tt2.mean()]
+
                     numrep = int(self.conf.numTest/self.conf.batch_size)+1
                     val_loss = np.zeros([2,])
+                    valDist = [0.,0.]
                     for rep in range(numrep):
                         self.updateFeedDict(self.DBType.Val)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,basecost]))
+                        tt1 = self.computePredDist(sess,self.mrfPred)
+                        tt2 = self.computePredDist(sess,self.basePred)
+                        valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
+                        
                     val_loss = val_loss/numrep
-                    self.updateMRFLoss(step,train_loss,val_loss)
+                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
+                    self.updateMRFLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveMRF(sess,step)
             print("Optimization Finished!")
             self.saveMRF(sess,step)
+            
+            
+            
+    def fineTrain(self, restore=True, trainPhase = True):
+        self.createPH()
+        self.createFeedDict()
+        self.openDBs()
+        doBatchNorm = self.conf.doBatchNorm
+        
+        with tf.variable_scope('base'):
+            self.createBaseNetwork(doBatchNorm,trainPhase)
+        with tf.variable_scope('mrf'):
+            self.createMRFNetwork(doBatchNorm,trainPhase)
+        with tf.variable_scope('fine'):
+            self.createFineNetwork(doBatchNorm,trainPhase)
+
+        self.createBaseSaver()
+        self.createMRFSaver()
+        self.createFineSaver()
+
+        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        # the labels shouldn't be zero because the prediction is an output of
+        # exp. And it seems a lot of effort is wasted to make the prediction goto
+        # zero rather than match the location.
+        
+        self.cost = tf.nn.l2_loss(self.finePred-self.fine_labels)
+        mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
+        basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+        self.createOptimizer()
+        
+        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
+
+            self.restoreBase(sess,True)
+            self.restoreMRF(sess,True)
+            self.restoreFine(sess,restore)
+            self.initializeRemainingVars(sess)
+            self.createCursors(txn,valtxn)
+            
+            for step in range(self.finestartat,self.conf.fine_training_iters):
+                self.doOpt(sess,step,self.conf.fine_learning_rate)
+                if step % self.conf.display_step == 0:
+                    self.updateFeedDict(self.DBType.Train)
+                    train_loss = self.computeLoss(sess,[self.cost,mrfcost,basecost])
+                    tt1 = self.computePredDist(sess,[self.basePred])
+                    tt2 = self.computePredDist(sess,[self.mrfPred])
+                    trainDist = [tt1.mean(),tt2.mean()]
+
+                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    val_loss = np.zeros([2,])
+                    valDist = [0.,0.]
+                    for rep in range(numrep):
+                        self.updateFeedDict(self.DBType.Val)
+                        val_loss += np.array(self.computeLoss(sess,[self.cost,mrfcost,basecost]))
+                        tt1 = self.computePredDist(sess,[self.basePred])
+                        tt2 = self.computePredDist(sess,[self.mrfPred])
+                        valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
+                        
+                    val_loss = val_loss/numrep
+                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
+                    self.updateFineLoss(step,train_loss,val_loss,trainDist,valDist)
+                if step % self.conf.save_step == 0:
+                    self.saveFine(sess,step)
+            print("Optimization Finished!")
+            self.saveFine(sess,step)
+
+    def jointTrain(self, restore=True, trainPhase=True):
+        self.createPH()
+        self.createFeedDict()
+        self.openDBs()
+        doBatchNorm = self.conf.doBatchNorm
+        
+        with tf.variable_scope('base'):
+            self.createBaseNetwork(doBatchNorm, trainPhase)
+        with tf.variable_scope('mrf'):
+            self.createMRFNetwork(doBatchNorm, trainPhase, True)
+        with tf.variable_scope('fine'):
+            self.createFineNetwork(doBatchNorm, trainPhase, True)
+
+        self.createBaseSaver()
+        self.createMRFSaver()
+        self.createFineSaver()
+        self.createJointSaver()
+
+        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        # the labels shouldn't be zero because the prediction is an output of
+        # exp. And it seems a lot of effort is wasted to make the prediction goto
+        # zero rather than match the location.
+        
+        finecost = tf.nn.l2_loss(self.finePred-self.fine_labels) 
+        mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
+        basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+        self.cost = finecost + self.conf.joint_MRFweight*mrfcost
+        
+        self.createOptimizer()
+        
+        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
+
+            self.restoreBase(sess,True)
+            self.restoreMRF(sess,True)
+            self.restoreFine(sess,True)
+            self.restoreJoint(sess,restore)
+            self.initializeRemainingVars(sess)
+            self.createCursors(txn,valtxn)
+            
+            for step in range(self.jointstartat,self.conf.joint_training_iters):
+                self.doOpt(sess,step,self.conf.joint_learning_rate)
+                if step % self.conf.display_step == 0:
+                    self.updateFeedDict(self.DBType.Train)
+                    train_loss = self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost])
+                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    val_loss = np.zeros([2,])
+                    for rep in range(numrep):
+                        self.updateFeedDict(self.DBType.Val)
+                        val_loss += np.array(self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost]))
+                    val_loss = val_loss/numrep
+                    self.updateJointLoss(step,train_loss,val_loss)
+                if step % self.conf.save_step == 0:
+                    self.saveJoint(sess,step)
+            print("Optimization Finished!")
+            self.saveJoint(sess,step)
+                        
 
