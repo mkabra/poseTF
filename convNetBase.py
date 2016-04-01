@@ -26,6 +26,7 @@ import copy
 
 from batch_norm import batch_norm
 import myutils
+import PoseTools
 import localSetup
 
 # def conv2d(name, l_input, w, b):
@@ -156,6 +157,24 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
     conv5_1_up = upscale('5_1',conv5_1,[sz0,sz1])
     conv5_2_up = upscale('5_2',conv5_2,[sz0,sz1])
+    
+    # crop lower res layers to match higher res size
+    conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
+    conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+    crop_0 = int((sz0-conv5_0_sz[1])/2)
+    crop_1 = int((sz1-conv5_0_sz[2])/2)
+    
+    curloc = [0,crop_0,crop_1,0]
+    patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
+    conv5_1_up = tf.slice(conv5_1_up,curloc,patchsz)
+    conv5_2_up = tf.slice(conv5_2_up,curloc,patchsz)
+    conv5_1_final_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+    print("Initial lower res layer size %s"%(', '.join(map(str,conv5_1_sz))))
+    print("Initial higher res layer size %s"%(', '.join(map(str,conv5_0_sz))))
+    print("Crop start lower res layer at %s"%(', '.join(map(str,curloc))))
+    print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
+
+    
     conv5_cat = tf.concat(3,[conv5_0,conv5_1_up,conv5_2_up])
     
     # Reshape conv5 output to fit dense layer input
@@ -254,7 +273,14 @@ def fine_base(X,conf,insize,doBatchNorm,trainPhase):
 
     
 
-def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, conf,doBatchNorm,trainPhase):
+def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, fineIn7,
+                conf,doBatchNorm,trainPhase):
+
+#     fsz = conf.fine_sz
+#     fineIn1_2_up = upscale('fine1_2',fineIn1_2,[fsz,fsz])
+#     fineIn2_1_up = upscale('fine2_1',fineIn2_1,[fsz,fsz])
+#     fineIn2_2_up = upscale('fine2_2',fineIn2_2,[fsz,fsz])
+#     fineIn7_up   = upscale('fine7',fineIn7,[fsz,fsz])
     with tf.variable_scope('1_1'):
         fine1_1 = fine_base(fineIn1_1,conf,48,doBatchNorm,trainPhase)
     with tf.variable_scope('1_2'):
@@ -263,28 +289,34 @@ def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, conf,doBatchNorm,trainP
         fine2_1 = fine_base(fineIn2_1,conf,48,doBatchNorm,trainPhase)
     with tf.variable_scope('2_2'):
         fine2_2 = fine_base(fineIn2_2,conf,conf.nfilt,doBatchNorm,trainPhase)
+    with tf.variable_scope('7'):
+        fine7 = fine_base(fineIn7,conf,conf.nfcfilt,doBatchNorm,trainPhase)
 
     fsz = conf.fine_sz
     fine1_2_up = upscale('fine1_2',fine1_2,[fsz,fsz])
     fine2_1_up = upscale('fine2_1',fine2_1,[fsz,fsz])
     fine2_2_up = upscale('fine2_2',fine2_2,[fsz,fsz])
-    fineSum = tf.add_n([fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
+    fine7_up   = upscale('fine7',fine7,[fsz,fsz])
+    fineSum = tf.add_n([fine1_1,fine1_2_up,fine2_1_up,fine2_2_up,fine7_up])
+#     fineSum = tf.add_n([fine1_1,fine1_2,fine2_1,fine2_2,fine7])
     # for fine apparently adding is better than concatenating!!
 #     conv5_cat = tf.concat(3,[fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
     return fineSum
 
-def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf,doBatchNorm,trainPhase):
+def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,trainPhase):
     inter = []
     with tf.variable_scope('fine_siamese') as scope:
-        tvar = fineNetwork(fineIn1_1[0],fineIn1_2[0],
-                           fineIn2_1[0],fineIn2_2[0],conf,
-                           doBatchNorm,trainPhase)
+        tvar = fineNetwork(fineIn1_1[0], fineIn1_2[0],
+                           fineIn2_1[0], fineIn2_2[0],
+                           fineIn7[0], conf, doBatchNorm, 
+                           trainPhase)
         inter.append(tvar)
         scope.reuse_variables()
         for ndx in range(1,len(fineIn1_1)):
-            tvar = fineNetwork(fineIn1_1[ndx],fineIn1_2[ndx],
-                               fineIn2_1[ndx],fineIn2_2[ndx],conf,
-                               doBatchNorm,trainPhase)
+            tvar = fineNetwork(fineIn1_1[ndx], fineIn1_2[ndx],
+                               fineIn2_1[ndx], fineIn2_2[ndx],
+                               fineIn7[ndx], conf, doBatchNorm, 
+                               trainPhase)
             inter.append(tvar)
 
     fineLast = []
@@ -300,5 +332,21 @@ def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf,doBatchNorm,trainPhase)
 
     out = tf.concat(3,fineLast)
     return out
+
+def extractPatches(layer,out,conf,scale,outscale):
+    hsz = conf.fine_sz/scale/2
+    padsz = tf.constant([[0,0],[hsz, hsz],[hsz,hsz],[0,0]])
+    patchsz = tf.to_int32([conf.fine_sz/scale,conf.fine_sz/scale,-1])
+
+    patches = []
+    maxloc = PoseTools.argmax2d(out)*outscale
+    padlayer = tf.pad(layer,padsz)
+    for inum in range(conf.batch_size):
+        curpatches = []
+        for ndx in range(conf.n_classes):
+            curloc = tf.concat(0,[tf.squeeze(maxloc[:,inum,ndx]),[0]])
+            curpatches.append(tf.slice(padlayer[inum,:,:,:],curloc,patchsz))
+        patches.append(tf.pack(curpatches))
+    return tf.pack(patches)
         
 

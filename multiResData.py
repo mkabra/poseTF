@@ -41,6 +41,7 @@ def createValdata(conf,force=False):
     if ~force & os.path.isfile(outfile):
         return
 
+    print('Creating val data %s!'%outfile)
     localdirs,seldirs = findLocalDirs(conf)
     nexps = len(seldirs)
     isval = sample(range(nexps),int(nexps*conf.valratio))
@@ -69,6 +70,22 @@ def loadValdata(conf):
 
 # In[ ]:
 
+def getMovieLists(conf):
+    isval,localdirs,seldirs = loadValdata(conf)
+    trainexps = []; valexps = []
+    for ndx in range(len(localdirs)):
+        if not seldirs[ndx]:
+            continue
+        if isval.count(ndx):
+            valexps.append(localdirs[ndx])
+        else:
+            trainexps.append(localdirs[ndx])
+    
+    return trainexps, valexps
+
+
+# In[ ]:
+
 def createDatum(curp,label):
     datum = caffe.proto.caffe_pb2.Datum()
     datum.channels = curp.shape[0]
@@ -81,7 +98,13 @@ def createDatum(curp,label):
 
 # In[ ]:
 
-def createID(expname,curloc,fnum):
+def createID(expname,curloc,fnum,imsz):
+    for x in curloc: 
+        assert x[0] >= 0,"x value %d is less than 0" %x[0]
+        assert x[1] >= 0,"y value %d is less than 0" %x[1]
+        assert x[0] < imsz[1],"x value %d is greater than imsz %d"%(x[0],imsz[1])
+        assert x[1] < imsz[0],"y value %d is greater than imsz %d"%(x[1],imsz[0])
+    
     xstr = '_'.join([str(x[0]) for x in curloc])
     ystr = '_'.join([str(x[1]) for x in curloc])
     
@@ -117,7 +140,6 @@ def createDB(conf):
     ts = np.array(L['ts']).squeeze().astype('int')
     expid = np.array(L['expidx']).squeeze().astype('int')
     view = conf.view
-    cropsz = conf.cropsz
     count = 0; valcount = 0
     
     psz = conf.sel_sz
@@ -153,8 +175,6 @@ def createDB(conf):
             for curl in frames:
 
                 fnum = ts[curl]
-                curloc = np.round(pts[curl,:,view,:]).astype('int')
-                curloc = curloc - conf.cropsz
                 if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT):
                     if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)+1:
                         raise ValueError('Accessing frames beyond ' + 
@@ -163,13 +183,22 @@ def createDB(conf):
                                          ' at t {:d}'.format(fnum)
                                         )
                     continue
-                
                 framein = myutils.readframe(cap,fnum-1)
-                if cropsz > 0:
-                    framein = framein[cropsz:-cropsz,cropsz:-cropsz,:]
+                
+                cropy = (framein.shape[0] - conf.imsz[0])/2
+                cropx = (framein.shape[1] - conf.imsz[1])/2
+                if cropy > 0:
+                    framein = framein[cropy:-cropy,:,:]
+                if cropx > 0:
+                    framein = framein[:,cropx:-cropx,:]
                 framein = framein[:,:,0:1]
+
+                curloc = np.round(pts[curl,:,view,:]).astype('int')
+                curloc[:,0] = curloc[:,0] - cropx
+                curloc[:,1] = curloc[:,1] - cropy
+                
                 datum = createDatum(framein,1)
-                str_id = createID(expname,curloc,fnum)
+                str_id = createID(expname,curloc,fnum,conf.imsz)
                 curtxn.put(str_id.encode('ascii'), datum.SerializeToString())
 
                 if isval.count(ndx):

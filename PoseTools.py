@@ -10,25 +10,75 @@ import caffe
 from scipy import misc
 from scipy import ndimage
 import tensorflow as tf
+import multiResData
+import tempfile
+import cv2
+import PoseTrain
+import localSetup
+import myutils
+import os
+import matplotlib.pyplot as plt
+from matplotlib import cm
 
-def scalepatches(patch,scale,num,rescale):
-    sz = patch.shape
-    assert sz[0]%( (scale**(num-1))*rescale) is 0,"patch size isn't divisible by scale"
+
+# In[ ]:
+
+# not used anymore
+# def scalepatches(patch,scale,num,rescale,cropsz):
+#     sz = patch.shape
+#     assert sz[0]%( (scale**(num-1))*rescale) is 0,"patch size isn't divisible by scale"
     
-    patches = []
-    patches.append(scipy.misc.imresize(patch[:,:,0],1.0/(scale**(num-1))/rescale))
-    curpatch = patch
-    for ndx in range(num-1):
-        sz = curpatch.shape
-        crop = int((1-1.0/scale)/2*sz[0])
-#         print(ndx,crop)
+#     patches = []
+#     patches.append(scipy.misc.imresize(patch[:,:,0],1.0/(scale**(num-1))/rescale))
+#     curpatch = patch
+#     for ndx in range(num-1):
+#         sz = curpatch.shape
+#         crop = int((1-1.0/scale)/2*sz[0])
+# #         print(ndx,crop)
         
-        spatch = curpatch[crop:-crop,crop:-crop,:]
-        curpatch = spatch
-        sfactor = 1.0/(scale**(num-ndx-2))/rescale
-        tpatch = scipy.misc.imresize(spatch,sfactor,)
-        patches.append(tpatch[:,:,0])
-    return patches
+#         spatch = curpatch[crop:-crop,crop:-crop,:]
+#         curpatch = spatch
+#         sfactor = 1.0/(scale**(num-ndx-2))/rescale
+#         tpatch = scipy.misc.imresize(spatch,sfactor,)
+#         patches.append(tpatch[:,:,0])
+#     return patches
+
+
+# In[ ]:
+
+def scaleImages(img,scale):
+    sz = img.shape
+    simg = np.zeros((sz[0],sz[1]/scale,sz[2]/scale,sz[3]))
+    for ndx in range(sz[0]):
+        for chn in range(sz[3]):
+            simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],1./scale)
+    return simg
+
+def multiScaleImages(inImg, rescale, scale, l1_cropsz):
+    # only crop the highest res image
+    if l1_cropsz > 0:
+        inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
+    else:
+        inImg_crop = inImg
+    x0_in = scaleImages(inImg_crop,rescale)
+    x1_in = scaleImages(inImg,rescale*scale)
+    x2_in = scaleImages(x1_in,scale)
+    return x0_in,x1_in,x2_in
+
+
+# In[ ]:
+
+def processImage(framein,conf):
+    cropx = (framein.shape[0] - conf.imsz[0])/2
+    cropy = (framein.shape[1] - conf.imsz[1])/2
+    if cropx > 0:
+        framein = framein[cropx:-cropx,:,:]
+    if cropy > 0:
+        framein = framein[:,cropy:-cropy,:]
+    framein = framein[np.newaxis,:,:,0:1]
+    x0,x1,x2 = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
+    return x0,x1,x2
+    
 
 
 # In[ ]:
@@ -105,23 +155,6 @@ def blurLabel(imsz,loc,scale,blur_rad):
 
 # In[ ]:
 
-def scaleImages(img,scale):
-    sz = img.shape
-    simg = np.zeros((sz[0],sz[1]/scale,sz[2]/scale,sz[3]))
-    for ndx in range(sz[0]):
-        for chn in range(sz[3]):
-            simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],1./scale)
-    return simg
-
-def multiScaleImages(inImg,rescale,scale):
-    x0_in = scaleImages(inImg,rescale)
-    x1_in = scaleImages(x0_in,scale)
-    x2_in = scaleImages(x1_in,scale)
-    return x0_in,x1_in,x2_in
-
-
-# In[ ]:
-
 def createLabelImages(locs,imsz,scale,blur_rad):
     n_classes = len(locs[0])
     sz0 = int(math.ceil(float(imsz[0])/scale))
@@ -191,6 +224,39 @@ def argmax2d(Xin):
 
 # In[ ]:
 
+def getBasePredLocs(pred,conf):
+    predLocs = np.zeros([pred.shape[0],conf.n_classes,2])
+    for ndx in range(pred.shape[0]):
+        for cls in range(conf.n_classes):
+            maxndx = np.argmax(pred[ndx,:,:,cls])
+            curloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
+            curloc = curloc * conf.pool_scale * conf.rescale
+            predLocs[ndx,cls,0] = curloc[1]
+            predLocs[ndx,cls,1] = curloc[0]
+    return predLocs
+
+
+# In[ ]:
+
+def getFinePredLocs(pred,finepred,conf):
+    predLocs = np.zeros([pred.shape[0],conf.n_classes,2])
+    finepredLocs = np.zeros([pred.shape[0],conf.n_classes,2])
+    for ndx in range(pred.shape[0]):
+        for cls in range(conf.n_classes):
+            maxndx = np.argmax(pred[ndx,:,:,cls])
+            curloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
+            curloc = curloc * conf.pool_scale * conf.rescale
+            predLocs[ndx,cls,0] = curloc[1]
+            predLocs[ndx,cls,1] = curloc[0]
+            maxndx = np.argmax(finepred[ndx,:,:,cls])
+            curfineloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-conf.fine_sz/2)*conf.rescale
+            finepredLocs[ndx,cls,0] = curloc[1] + curfineloc[1]
+            finepredLocs[ndx,cls,1] = curloc[0] + curfineloc[0]
+    return predLocs,finepredLocs
+
+
+# In[ ]:
+
 def getBaseError(locs,pred,conf):
     locerr = np.zeros(locs.shape)
     for ndx in range(pred.shape[0]):
@@ -252,6 +318,28 @@ def initMRFweights(conf):
 
 # In[ ]:
 
+def initMRFweightsIdentity(conf):
+    L = h5py.File(conf.labelfile)
+    pts = np.array(L['pts'])
+    v = conf.view
+    dx = np.zeros([pts.shape[0]])
+    dy = np.zeros([pts.shape[0]])
+    for ndx in range(pts.shape[0]):
+        dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
+        dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
+    maxd = max(dx.max(),dy.max())
+    hsz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale)/2)
+    psz = hsz*2+1
+#     psz = conf.mrf_psz
+    bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
+    
+    for c1 in range(conf.n_classes):
+        bfilt[hsz,hsz,c1,c1] = 5.
+    return bfilt
+
+
+# In[ ]:
+
 def getvars(vstr):
     varlist = tf.all_variables()
     blist = []
@@ -259,4 +347,166 @@ def getvars(vstr):
         if re.match(vstr,var.name):
             blist.append(var)
     return blist
+
+
+# In[ ]:
+
+def compareConf(curconf,oldconf):
+    ff = dir(curconf)
+    for f in ff:
+        if f[0:2] == '__' or f[0:3] == 'get':
+            continue
+        if getattr(curconf,f) != getattr(oldconf,f):
+            print '%s doesnt match'%(f)
+
+
+# In[ ]:
+
+def createNetwork(conf,outtype):
+    self = PoseTrain.PoseTrain(conf)
+    self.createPH()
+    self.createFeedDict()
+    doBatchNorm = self.conf.doBatchNorm
+    trainPhase = False
+    self.feed_dict[self.ph['keep_prob']] = 1.
+    tt = self.ph['y'].get_shape().as_list()
+    tt[0] = 1
+    self.feed_dict[self.ph['y']] = np.zeros(tt)
+    tt = self.ph['locs'].get_shape().as_list()
+    self.feed_dict[self.ph['locs']] = np.zeros(tt)
+    
+    
+    with tf.variable_scope('base'):
+        self.createBaseNetwork(doBatchNorm,trainPhase)
+    self.createBaseSaver()
+
+    if outtype > 1:
+        with tf.variable_scope('mrf'):
+            self.createMRFNetwork(doBatchNorm,trainPhase)
+        self.createMRFSaver()
+
+    if outtype > 2:
+        with tf.variable_scope('fine'):
+            self.createFineNetwork(doBatchNorm,trainPhase)
+        self.createFineSaver()
+
+    return self
+
+
+# In[ ]:
+
+def compareConf(curconf,oldconf):
+    ff = dir(curconf)
+    for f in ff:
+        if f[0:2] == '__' or f[0:3] == 'get':
+            continue
+        if getattr(curconf,f) != getattr(oldconf,f):
+            print '%s doesnt match'%(f)
+
+
+# In[ ]:
+
+def initNetwork(self,sess,outtype):
+    self.restoreBase(sess,True)
+    if outtype > 1:
+        self.restoreMRF(sess,True)
+    if outtype > 2:
+        self.restoreFine(sess,True)
+    self.initializeRemainingVars(sess)
+
+
+# In[ ]:
+
+def openMovie(moviename):
+    cap = cv2.VideoCapture(moviename)
+    nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    return cap,nframes
+
+
+# In[ ]:
+
+def classifyMovie(conf,moviename,outtype):
+    cap,nframes = openMovie(moviename)
+    predLocs = np.zeros([nframes,conf.n_classes,2,2])
+    predscores = np.zeros([nframes,conf.n_classes,2])
+    self = createNetwork(conf,outtype)
+    
+    if outtype == 3:
+        if self.conf.useMRF:
+            predPair = [self.mrfPred,self.finePred]
+        else:
+            predPair = [self.basePred,self.finePred]
+    elif outtype == 2:
+        predPair = [self.mrfPred,self.basePred]
+    else:        
+        predPair = [self.basePred]
+    with tf.Session() as sess:
+        initNetwork(self,sess,outtype)
+        for curl in range(nframes):
+            framein = myutils.readframe(cap,curl)
+            x0,x1,x2 = processImage(framein,conf)
+            self.feed_dict[self.ph['x0']] = x0
+            self.feed_dict[self.ph['x1']] = x1
+            self.feed_dict[self.ph['x2']] = x2
+            pred = sess.run(predPair,self.feed_dict)
+            if outtype == 3:
+                baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
+                predLocs[curl,:,0,:] = fineLocs[0,:,:]
+                predLocs[curl,:,1,:] = baseLocs[0,:,:]
+                for ndx in range(conf.n_classes):
+                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+                    predscores[curl,:,1] = pred[1][0,:,:,ndx].max()
+            elif outtype == 2:
+                baseLocs = getBasePredLocs(pred[0],conf)
+                predLocs[curl,:,0,:] = baseLocs[0,:,:]
+                baseLocs = getBasePredLocs(pred[1],conf)
+                predLocs[curl,:,1,:] = baseLocs[0,:,:]
+                for ndx in range(conf.n_classes):
+                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+                    predscores[curl,:,1] = pred[1][0,:,:,ndx].max()
+            elif outtype == 1:
+                baseLocs = getBasePredLocs(pred[0],conf)
+                predLocs[curl,:,0,:] = baseLocs[0,:,:]
+                for ndx in range(conf.n_classes):
+                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+                
+    cap.release()
+    return predLocs,predscores
+
+
+# In[ ]:
+
+def createPredMovie(conf,moviename,outmovie,outtype):
+    
+    predLocs,predscores = classifyMovie(conf,moviename,outtype)
+#     assert false, 'stop here'
+    tdir = tempfile.mkdtemp()
+
+    cap = cv2.VideoCapture(moviename)
+    nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    plt.gray()
+    for curl in range(nframes):
+        framein = myutils.readframe(cap,curl)
+        cropy = (framein.shape[0] - conf.imsz[0])/2
+        cropx = (framein.shape[1] - conf.imsz[1])/2
+        if cropy > 0:
+            framein = framein[cropy:-cropy,:,:]
+        if cropx > 0:
+            framein = framein[:,cropx:-cropx,:]
+        framein = framein[:,:,0:1]
+
+        plt.clf()
+        plt.imshow(framein[:,:,0])
+        plt.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1],hold=True,
+                    c=np.linspace(0,1,conf.n_classes),cmap=cm.jet,
+                    s=np.clip(predscores[curl,:,0]*400,20,100),
+                    linewidths=0,edgecolors='face')
+
+        fname = "test_{:06d}.png".format(curl)
+        plt.savefig(os.path.join(tdir,fname))
+        
+    tfilestr = os.path.join(tdir,'test_*.png')
+    mencoder_cmd = "mencoder mf://" + tfilestr +     " -frames " + "{:d}".format(nframes) + " -mf type=png:fps=15 -o " +     outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+    os.system(mencoder_cmd)
+    cap.release()
 

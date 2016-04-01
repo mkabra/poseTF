@@ -131,7 +131,7 @@ expid[0,3]
 # In[1]:
 
 import lmdb
-env = lmdb.open('cache/val_lmdb', readonly=True)
+env = lmdb.open('cacheHead/val_lmdb', readonly=True)
 txn = env.begin()
 print(env.stat())
 
@@ -151,25 +151,6 @@ import pawData
 reload(pawData)
 cursor =txn.cursor()
 cursor.first()
-
-
-# In[6]:
-
-
-cursor.next()    
-raw_datum = cursor.value()
-
-datum = caffe.proto.caffe_pb2.Datum()
-datum.ParseFromString(raw_datum)
-
-flat_x = np.fromstring(datum.data, dtype=np.uint8)
-x = flat_x.reshape(datum.channels, datum.height, datum.width)
-y = datum.label
-expname,curloc,t = pawData.decodeID(cursor.key())
-plt.gray()
-plt.imshow(x[:,:,0])
-plt.scatter(curloc[0],curloc[1])
-plt.show()
 
 
 # In[6]:
@@ -537,8 +518,7 @@ with tf.Session() as sess:
             plt.clf()
             plt.axis('off')
             framein = myutils.readframe(cap,fnum)
-            framein = framein[:,0:(framein.shape[1]/2),0:1]
-            out = pawMulti.predict(copy.copy(framein),sess,pred,pholders)
+            framein = framein[:,0:(framein.shape[1]/2),0:1            out = pawMulti.predict(copy.copy(framein),sess,pred,pholders)
             plt.imshow(framein[:,:,0])
             maxndx = np.argmax(out[0,:,:,0])
             loc = np.unravel_index(maxndx,out.shape[1:3])
@@ -553,7 +533,9 @@ with tf.Session() as sess:
     #     "-f image2 -i '/path/to/your/picName%d.png' -qscale 0 '/path/to/your/new/video.avi'
 
         tfilestr = os.path.join(tdir,'test_*.png')
-        mencoder_cmd = "mencoder mf://" + tfilestr +         " -frames " + "{:d}".format(count) + " -mf type=png:fps=15 -o " +         outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+        mencoder_cmd = "mencoder mf://" + tfilestr + \
+        " -frames " + "{:d}".format(count) + " -mf type=png:fps=15 -o " + \
+        outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
     #     print(mencoder_cmd)
         os.system(mencoder_cmd)
         cap.release()
@@ -595,4 +577,69 @@ print(gamma**math.floor(41/20))
 cc = 3.3
 cc /= 2
 print(cc)
+
+
+# In[3]:
+
+import localSetup
+import stephenHeadConfig as conf
+import multiResData
+isval, localdirs, seldirs = multiResData.loadValdata(conf)
+
+
+# In[12]:
+
+import pickle
+from stephenHeadConfig import conf
+import inspect
+
+print conf.scale
+# gg = conf
+# gg = inspect.getmembers(conf)
+# gg = [xx for xx in gg[5:] if not inspect.ismodule(xx[1])]
+
+with open('delete','wb') as afile:
+    pickle.dump([gg,'asdf'],afile)
+    
+with open('delete','rb') as afile1:
+    newconf,ll = pickle.load(afile1)
+ff = dir(gg)
+for f in ff:
+    if f[0:2] == '__' or f[0:3] == 'get':
+        continue
+    if not getattr(gg,f) == getattr(newconf,f):
+        print f,' doesnt match'
+        
+
+
+# In[28]:
+
+from stephenHeadConfig import conf
+import pickle
+
+conf.base_learning_rate = 0.1
+with open('cacheHead/headBasetraindata','rb') as ff:
+    [a,b] = pickle.load(ff)
+
+kk = dir(conf)
+for atr in kk:
+    if atr[0:2] == '__' or atr[0:3] == 'get':
+        continue
+
+    if getattr(conf,atr) != getattr(b,atr):
+        print atr
+
+
+# In[35]:
+
+import re
+dd = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly254/fly253_300ms_stimuli/C002H001S0001/C002H001S0001_c.avi'
+gg = re.search('fly_*(\d+)',dd)
+print gg.group(1)
+
+
+# In[39]:
+
+kk = np.array([2,3,4])
+print np.clip(kk,3,np.inf)
 
