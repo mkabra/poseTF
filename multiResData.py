@@ -3,6 +3,7 @@
 
 # In[2]:
 
+import localSetup
 import scipy.io as sio
 import os,sys
 import myutils
@@ -21,6 +22,7 @@ from random import randint,sample
 import pickle
 import h5py
 import errno
+import PoseTools
 
 
 # In[ ]:
@@ -66,6 +68,13 @@ def loadValdata(conf):
     with open(outfile,'r') as f:
         isval,localdirs,seldirs = pickle.load(f)
     return isval,localdirs,seldirs
+
+
+# In[ ]:
+
+def createHoldOutData(conf):
+    #Split the val data in hold out data for mrf training.
+    ("")
 
 
 # In[ ]:
@@ -184,18 +193,13 @@ def createDB(conf):
                                         )
                     continue
                 framein = myutils.readframe(cap,fnum-1)
-                
-                cropy = (framein.shape[0] - conf.imsz[0])/2
-                cropx = (framein.shape[1] - conf.imsz[1])/2
-                if cropy > 0:
-                    framein = framein[cropy:-cropy,:,:]
-                if cropx > 0:
-                    framein = framein[:,cropx:-cropx,:]
+                cloc = conf.cropLoc[tuple(framein.shape[0:2])]
+                framein = PoseTools.cropImages(framein,conf)
                 framein = framein[:,:,0:1]
-
+ 
                 curloc = np.round(pts[curl,:,view,:]).astype('int')
-                curloc[:,0] = curloc[:,0] - cropx
-                curloc[:,1] = curloc[:,1] - cropy
+                curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
+                curloc[:,1] = curloc[:,1] - cloc[0]
                 
                 datum = createDatum(framein,1)
                 str_id = createID(expname,curloc,fnum,conf.imsz)

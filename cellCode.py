@@ -559,7 +559,7 @@ print(aa)
 # In[3]:
 
 import lmdb
-lmdbfilename= 'cachejanLeg/train_lmdb'
+lmdbfilename= 'cacheHead/train_lmdb'
 env = lmdb.open(lmdbfilename, readonly = True)
 
 
@@ -569,77 +569,27 @@ txn = env.begin()
 print(txn.stat()['entries'])
 
 
-# In[13]:
-
-import math
-gamma = 0.1
-print(gamma**math.floor(41/20))
-cc = 3.3
-cc /= 2
-print(cc)
-
-
-# In[3]:
-
-import localSetup
-import stephenHeadConfig as conf
-import multiResData
-isval, localdirs, seldirs = multiResData.loadValdata(conf)
-
-
-# In[12]:
+# In[11]:
 
 import pickle
-from stephenHeadConfig import conf
-import inspect
 
-print conf.scale
-# gg = conf
-# gg = inspect.getmembers(conf)
-# gg = [xx for xx in gg[5:] if not inspect.ismodule(xx[1])]
-
-with open('delete','wb') as afile:
-    pickle.dump([gg,'asdf'],afile)
+with open('cacheHead/headMRFtraindata','rb') as f:
+    gg = pickle.load(f)
     
-with open('delete','rb') as afile1:
-    newconf,ll = pickle.load(afile1)
-ff = dir(gg)
-for f in ff:
-    if f[0:2] == '__' or f[0:3] == 'get':
-        continue
-    if not getattr(gg,f) == getattr(newconf,f):
-        print f,' doesnt match'
-        
 
 
-# In[28]:
+# In[37]:
 
-from stephenHeadConfig import conf
-import pickle
-
-conf.base_learning_rate = 0.1
-with open('cacheHead/headBasetraindata','rb') as ff:
-    [a,b] = pickle.load(ff)
-
-kk = dir(conf)
-for atr in kk:
-    if atr[0:2] == '__' or atr[0:3] == 'get':
-        continue
-
-    if getattr(conf,atr) != getattr(b,atr):
-        print atr
+print gg[0].keys()
+plt.clf()
+x = gg[0]['step_no'][5:]
+plt.plot(x,gg[0]['val_base_dist'][5:])
+plt.plot(x,gg[0]['val_dist'][5:], hold=True)
+plt.legend(('base','mrf'))
 
 
-# In[35]:
+# In[40]:
 
-import re
-dd = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly254/fly253_300ms_stimuli/C002H001S0001/C002H001S0001_c.avi'
-gg = re.search('fly_*(\d+)',dd)
-print gg.group(1)
-
-
-# In[39]:
-
-kk = np.array([2,3,4])
-print np.clip(kk,3,np.inf)
+from stephenHeadConfig import conf as conf
+print conf.cachedir
 

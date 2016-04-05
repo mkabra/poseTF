@@ -1,3 +1,8 @@
+
+# coding: utf-8
+
+# In[ ]:
+
 import os
 import re
 
@@ -45,7 +50,7 @@ class myconfig(object):
     #mrf_psz = (maxDPts/rescale)/pool_scale
     #Above should not be determined automatically
     # baseIter4MRFTrain = 4000 # without batch_norm
-    baseIter4MRFTrain = 3000 # without batch_norm
+    baseIter4MRFTrain = 5000 # without batch_norm
 
 
     # ----- Learning parameters
@@ -81,6 +86,7 @@ class myconfig(object):
 #    imsz = (624,624) # This is after cropping. Orig is 1024x1024
     imsz = (512,512) # This is after cropping. Orig is 1024x1024
     map_size = 100000*psz**2*3
+    cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
 
     cachedir = '/home/mayank/work/tensorflow/cacheHead/'
 #    labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
@@ -128,3 +134,8 @@ class myconfig(object):
         
 
 conf = myconfig()
+sideconf = myconfig()
+sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
+sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
+sideconf.view = 0
+

@@ -50,10 +50,16 @@ class PoseTrain:
         self.env = lmdb.open(lmdbfilename, readonly = True)
         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
 
-    def createCursors(self,txn,valtxn):
+    def createCursors(self, txn=None, valtxn=None):
+        if txn is None:
+            txn = self.env.begin()
+            valtxn = self.valenv.begin()
         self.train_cursor = txn.cursor(); 
         self.val_cursor = valtxn.cursor()
         
+    def closeCursors(self):
+        self.env.close()
+        self.valenv.close()
         
     def readImages(self,dbType):
         conf = self.conf
@@ -479,7 +485,7 @@ class PoseTrain:
     def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
         print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
                                                       trainDist[1],valDist[1])
-        self.mrftrainData['train_err'].append(train_loss)        
+        self.mrftrainData['train_err'].append(train_loss[0])        
         self.mrftrainData['val_err'].append(val_loss[0])        
         self.mrftrainData['train_base_err'].append(train_loss[1])        
         self.mrftrainData['val_base_err'].append(val_loss[1])        
@@ -491,7 +497,7 @@ class PoseTrain:
 
     def updateFineLoss(self,step,train_loss,val_loss,trainDist,valDist):
         print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " (MRF:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[1],val_loss[1],trainDist[1],valDist[1]) +              " (Base:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[2],val_loss[2],trainDist[2],valDist[2])
-        self.finetrainData['train_err'].append(train_loss)        
+        self.finetrainData['train_err'].append(train_loss[0])        
         self.finetrainData['val_err'].append(val_loss[0])        
         self.finetrainData['train_mrf_err'].append(train_loss[1])        
         self.finetrainData['val_mrf_err'].append(val_loss[1])        

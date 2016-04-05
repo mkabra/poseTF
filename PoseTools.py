@@ -17,6 +17,7 @@ import PoseTrain
 import localSetup
 import myutils
 import os
+import cv2
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
@@ -69,16 +70,26 @@ def multiScaleImages(inImg, rescale, scale, l1_cropsz):
 # In[ ]:
 
 def processImage(framein,conf):
-    cropx = (framein.shape[0] - conf.imsz[0])/2
-    cropy = (framein.shape[1] - conf.imsz[1])/2
-    if cropx > 0:
-        framein = framein[cropx:-cropx,:,:]
-    if cropy > 0:
-        framein = framein[:,cropy:-cropy,:]
+#     cropx = (framein.shape[0] - conf.imsz[0])/2
+#     cropy = (framein.shape[1] - conf.imsz[1])/2
+#     if cropx > 0:
+#         framein = framein[cropx:-cropx,:,:]
+#     if cropy > 0:
+#         framein = framein[:,cropy:-cropy,:]
+    framein = cropImages(framein,conf)
     framein = framein[np.newaxis,:,:,0:1]
     x0,x1,x2 = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
     return x0,x1,x2
     
+
+
+# In[ ]:
+
+def cropImages(framein,conf):
+    cshape = tuple(framein.shape[0:2])
+    start = conf.cropLoc[cshape]  # cropLoc[0] should be for y.
+    end = [conf.imsz[ndx] + start[ndx] for ndx in range(2)]
+    return framein[start[0]:end[0],start[1]:end[1],:]
 
 
 # In[ ]:
@@ -425,11 +436,23 @@ def openMovie(moviename):
 
 # In[ ]:
 
-def classifyMovie(conf,moviename,outtype):
+def createPredImage(predscores,n_classes):
+    im = np.zeros(predscores.shape[0:2]+(3,))
+    im[:,:,0] = np.argmax(predscores,2).astype('float32')/(n_classes)*180
+    im[:,:,1] = (np.max(predscores,2)+1)/2*255
+    im[:,:,2] = 255.
+    im = np.clip(im,0,255)
+    im = im.astype('uint8')
+    return cv2.cvtColor(im,cv2.COLOR_HSV2RGB) 
+        
+
+
+# In[ ]:
+
+def classifyMovie(conf,moviename,outtype,self,sess):
     cap,nframes = openMovie(moviename)
     predLocs = np.zeros([nframes,conf.n_classes,2,2])
-    predscores = np.zeros([nframes,conf.n_classes,2])
-    self = createNetwork(conf,outtype)
+    predmaxscores = np.zeros([nframes,conf.n_classes,2])
     
     if outtype == 3:
         if self.conf.useMRF:
@@ -440,67 +463,76 @@ def classifyMovie(conf,moviename,outtype):
         predPair = [self.mrfPred,self.basePred]
     else:        
         predPair = [self.basePred]
-    with tf.Session() as sess:
-        initNetwork(self,sess,outtype)
-        for curl in range(nframes):
-            framein = myutils.readframe(cap,curl)
-            x0,x1,x2 = processImage(framein,conf)
-            self.feed_dict[self.ph['x0']] = x0
-            self.feed_dict[self.ph['x1']] = x1
-            self.feed_dict[self.ph['x2']] = x2
-            pred = sess.run(predPair,self.feed_dict)
-            if outtype == 3:
-                baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
-                predLocs[curl,:,0,:] = fineLocs[0,:,:]
-                predLocs[curl,:,1,:] = baseLocs[0,:,:]
-                for ndx in range(conf.n_classes):
-                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-                    predscores[curl,:,1] = pred[1][0,:,:,ndx].max()
-            elif outtype == 2:
-                baseLocs = getBasePredLocs(pred[0],conf)
-                predLocs[curl,:,0,:] = baseLocs[0,:,:]
-                baseLocs = getBasePredLocs(pred[1],conf)
-                predLocs[curl,:,1,:] = baseLocs[0,:,:]
-                for ndx in range(conf.n_classes):
-                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-                    predscores[curl,:,1] = pred[1][0,:,:,ndx].max()
-            elif outtype == 1:
-                baseLocs = getBasePredLocs(pred[0],conf)
-                predLocs[curl,:,0,:] = baseLocs[0,:,:]
-                for ndx in range(conf.n_classes):
-                    predscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-                
+        
+    for curl in range(nframes):
+        framein = myutils.readframe(cap,curl)
+        x0,x1,x2 = processImage(framein,conf)
+        self.feed_dict[self.ph['x0']] = x0
+        self.feed_dict[self.ph['x1']] = x1
+        self.feed_dict[self.ph['x2']] = x2
+        pred = sess.run(predPair,self.feed_dict)
+        if curl == 0:
+            predscores = np.zeros((nframes,)+pred[0].shape[1:] + (2,))
+        if outtype == 3:
+            baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
+            predLocs[curl,:,0,:] = fineLocs[0,:,:]
+            predLocs[curl,:,1,:] = baseLocs[0,:,:]
+            for ndx in range(conf.n_classes):
+                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+                predmaxscores[curl,:,1] = pred[1][0,:,:,ndx].max()
+            predscores[curl,:,:,:,0] = pred[0]
+        elif outtype == 2:
+            baseLocs = getBasePredLocs(pred[0],conf)
+            predLocs[curl,:,0,:] = baseLocs[0,:,:]
+            baseLocs = getBasePredLocs(pred[1],conf)
+            predLocs[curl,:,1,:] = baseLocs[0,:,:]
+            for ndx in range(conf.n_classes):
+                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+                predmaxscores[curl,:,1] = pred[1][0,:,:,ndx].max()
+            predscores[curl,:,:,:,0] = pred[0]
+            predscores[curl,:,:,:,1] = pred[1]
+        elif outtype == 1:
+            baseLocs = getBasePredLocs(pred[0],conf)
+            predLocs[curl,:,0,:] = baseLocs[0,:,:]
+            for ndx in range(conf.n_classes):
+                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
+            predscores[curl,:,:,:,0] = pred[0]
+
     cap.release()
-    return predLocs,predscores
+    return predLocs,predscores,predmaxscores
 
 
 # In[ ]:
 
-def createPredMovie(conf,moviename,outmovie,outtype):
+def createPredMovie(conf,predList,moviename,outmovie,outtype):
     
-    predLocs,predscores = classifyMovie(conf,moviename,outtype)
+    predLocs,predscores,predmaxscores = predList
 #     assert false, 'stop here'
     tdir = tempfile.mkdtemp()
 
     cap = cv2.VideoCapture(moviename)
     nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    plt.gray()
+    
+    cmap = cm.get_cmap('jet')
+    rgba = cmap(np.linspace(0,1,conf.n_classes))
+    
+    fig = plt.figure(figsize = (9,4))
     for curl in range(nframes):
         framein = myutils.readframe(cap,curl)
-        cropy = (framein.shape[0] - conf.imsz[0])/2
-        cropx = (framein.shape[1] - conf.imsz[1])/2
-        if cropy > 0:
-            framein = framein[cropy:-cropy,:,:]
-        if cropx > 0:
-            framein = framein[:,cropx:-cropx,:]
-        framein = framein[:,:,0:1]
+        framein = cropImages(framein,conf)
 
-        plt.clf()
-        plt.imshow(framein[:,:,0])
-        plt.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1],hold=True,
-                    c=np.linspace(0,1,conf.n_classes),cmap=cm.jet,
-                    s=np.clip(predscores[curl,:,0]*400,20,100),
+        fig.clf()
+        ax1 = fig.add_subplot(1,2,1)
+        ax1.imshow(framein[:,:,0], cmap=cm.gray)
+        ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
+                    c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                    s=np.clip(predmaxscores[curl,:,0]*400,20,100),
                     linewidths=0,edgecolors='face')
+        ax1.axis('off')
+        ax2 = fig.add_subplot(1,2,2)
+        rgbim = createPredImage(predscores[curl,:,:,:,0],conf.n_classes)
+        ax2.imshow(rgbim)
+        ax2.axis('off')
 
         fname = "test_{:06d}.png".format(curl)
         plt.savefig(os.path.join(tdir,fname))
@@ -509,4 +541,5 @@ def createPredMovie(conf,moviename,outmovie,outtype):
     mencoder_cmd = "mencoder mf://" + tfilestr +     " -frames " + "{:d}".format(nframes) + " -mf type=png:fps=15 -o " +     outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
     os.system(mencoder_cmd)
     cap.release()
+    return predLocs
 

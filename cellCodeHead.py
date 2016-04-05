@@ -35,6 +35,46 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
+# In[4]:
+
+# copy the validation file from front view to side view
+import pickle
+import os
+import re
+
+from stephenHeadConfig import conf
+conforig = conf
+from stephenHeadSideConfig import conf
+outfile = os.path.join(conforig.cachedir,conforig.valdatafilename)
+assert os.path.isfile(outfile),"valdatafile doesn't exist"
+
+with open(outfile,'r') as f:
+    isval,localdirs,seldirs = pickle.load(f)
+
+newdirs = []    
+for ndx,l in enumerate(localdirs):
+    if ndx == 19:
+        newdirs.append('/home/mayank/Dropbox/PoseEstimation/Stephen/7_7_13_47D05AD_81B12DBD_x_Chrimsonattp18/data/fly_0023/fly_0023_trial_005/C001H001S0002/C001H001S0002.avi')
+    else:
+        newdirs.append(re.sub('C002','C001',l,count = 3))
+#     print('%d %d:%s' % (ndx,os.path.isfile(newdirs[-1]),newdirs[-1]))
+
+outfile = os.path.join(conf.cachedir,conf.valdatafilename)
+
+with open(outfile,'w') as f:
+    pickle.dump([isval,newdirs,seldirs],f)
+    
+
+
+# In[1]:
+
+from stephenHeadSideConfig import conf
+import multiResData
+reload(multiResData)
+
+multiResData.createDB(conf)
+
+
 # In[1]:
 
 import PoseTrain
@@ -45,11 +85,21 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.baseTrain(restore=True)
 
 
+# In[2]:
+
+import PoseTrain
+reload(PoseTrain)
+from stephenHeadConfig import sideconf
+
+pobj = PoseTrain.PoseTrain(sideconf)
+pobj.baseTrain(restore=True)
+
+
 # In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
-import stephenHeadConfig as conf
+from stephenHeadConfig import conf
 import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
@@ -67,7 +117,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.fineTrain(restore=False)
 
 
-# In[35]:
+# In[ ]:
 
 ll = np.max(berr,1)
 
@@ -117,66 +167,104 @@ import PoseTools
 reload(PoseTools)
 import multiResData
 reload(multiResData)
-from stephenHeadConfig import conf
 import os
 import re
+import tensorflow as tf
+from stephenHeadConfig import conf as conf
+from scipy import io
 
+
+# conf = sideconf
+# extrastr = '_side'
+extrastr = ''
 conf.batch_size = 1
 conf.useMRF = False
+outtype = 1
 
+self = PoseTools.createNetwork(conf,outtype)
+sess = tf.InteractiveSession()
+PoseTools.initNetwork(self,sess,outtype)
+
+
+# In[3]:
+
+from scipy import io
 _,valmovies = multiResData.getMovieLists(conf)
-ndx = 3
-mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
-oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
-PoseTools.createPredMovie(conf,valmovies[ndx],
-                          '/home/mayank/work/tensorflow/results/headResults/movies/' + oname + '.avi',
-                          1)
+for ndx in [0,3]:
+    mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
+    oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
+    pname = '/home/mayank/work/tensorflow/results/headResults/movies/' + oname + extrastr
+    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+
+    predLocs = PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+    io.savemat(pname + '.mat',{'locs':predLocs,'expname':valmovies[ndx]})
 
 
-# In[1]:
+# In[ ]:
 
-import PoseTrain
-reload(PoseTrain)
+import localSetup
 import PoseTools
-reload (PoseTools)
-import stephenHeadConfig as conf
+reload(PoseTools)
+import multiResData
+reload(multiResData)
+import os
+import re
+import tensorflow as tf
+from stephenHeadConfig import conf as conf
+from scipy import io
+
+
+# conf = sideconf
+# extrastr = '_side'
+extrastr = ''
 conf.batch_size = 1
 conf.useMRF = True
+outtype = 2
 
-print('**** Setting batch size to %d! ****'%conf.batch_size)
-print('**** USING MRF ****')
-import tensorflow as tf
-
-self = PoseTools.createNetwork(conf)
+self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess)
+PoseTools.initNetwork(self,sess,outtype)
 
 
-# In[5]:
+# In[ ]:
 
-import multiResData
-import os
-import localSetup
-import myutils
-reload(PoseTools)
+self.openDBs()
+self.createCursors()
+numex = self.valenv.stat()['entries']
+all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
+predLocs = np.zeros([numex,conf.n_classes,2,2])
 
-ndx = 0
-curl = 70
+self.val_cursor.first()
+for count in range(numex):
+    self.updateFeedDict(self.DBType.Val)
+    curpred = sess.run([self.basePred,self.mrfPred],feed_dict = self.feed_dict)
+    all_preds[count,:,:,:,0] = curpred[0]
+    all_preds[count,:,:,:,1] = curpred[1]
+    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    predLocs[count,:,:,1] = PoseTools.getBasePredLocs(curpred[1],conf)[0,:,:]
 
-_,valmovies = multiResData.getMovieLists(conf)
-mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
-cap,nframes = PoseTools.openMovie(valmovies[ndx])
-framein = myutils.readframe(cap,curl)
-x0,x1,x2 = PoseTools.processImage(framein,conf)
-self.feed_dict[self.ph['x0']] = x0
-self.feed_dict[self.ph['x1']] = x1
-self.feed_dict[self.ph['x2']] = x2
-pred = sess.run(self.finePred,self.feed_dict)
-fig = plt.figure()
 
-ax1 = fig.add_subplot(2,3,1)
-ax1.imshow(pred[0,:,:,0],interpolation='nearest')
-for ndx in range(4):
-    ax = fig.add_subplot(2,3,ndx+2,sharex=ax1,sharey=ax1)
-    ax.imshow(pred[0,:,:,ndx+1],interpolation='nearest')
+
+# In[ ]:
+
+
+# diff = (all_preds[:,:,:,:,0]-2*all_preds[:,:,:,:,1]-1)**2
+diff = (predLocs[:,:,:,0]-predLocs[:,:,:,1])**2
+dd = np.squeeze(np.apply_over_axes(np.sum,diff,[1,2]))
+oo = dd.argsort()
+
+print dd[oo[-4:-1]]
+print dd[oo[:3]]
+for ndx in range(1,4):
+    curi = oo[-ndx]
+    aa1 = PoseTools.createPredImage(all_preds[curi,:,:,:,0],conf.n_classes)
+    aa2 = PoseTools.createPredImage(2*all_preds[curi,:,:,:,1]-1,conf.n_classes)
+    fig = plt.figure(figsize=(8,4))
+    ax1 = fig.add_subplot(1,2,1)
+    ax1.imshow(aa1)
+    ax1.axis('off')
+    ax2 = fig.add_subplot(1,2,2)
+    ax2.imshow(aa2)
+    ax2.axis('off')
+    plt.show()
 
