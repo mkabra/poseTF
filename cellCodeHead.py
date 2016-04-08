@@ -125,7 +125,7 @@ import tensorflow as tf
 from stephenHeadConfig import conf as conf
 
 pobj = PoseTrain.PoseTrain(conf)
-pobj.fineTrain(restore=False)
+pobj.fineTrain(restore=True)
 
 
 # In[ ]:

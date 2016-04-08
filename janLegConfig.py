@@ -68,6 +68,7 @@ class myconfig(object):
     imsz = (256,256)
     split = True
     view = 0
+    l1_cropsz = 0
     map_size = 100000*imsz[0]*imsz[1]*3
     cropLoc = {(256,256):[0,0]}
     cachedir = os.path.join(localSetup.bdir,'cachejanLeg/')

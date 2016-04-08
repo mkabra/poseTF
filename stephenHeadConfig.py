@@ -30,7 +30,7 @@ class myconfig(object):
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 1.5
-    fine_label_blur_rad = 2.5
+    fine_label_blur_rad = 1.5
     n_classes = 5 # 
     dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
