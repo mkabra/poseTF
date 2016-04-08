@@ -99,19 +99,30 @@ pobj.baseTrain(restore=True)
 
 import PoseTrain
 reload(PoseTrain)
-from stephenHeadConfig import conf
+from stephenHeadConfig import conf as conf
 import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
-pobj.mrfTrain(restore=False)
+pobj.mrfTrain(restore=True)
 
 
 # In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
-import stephenHeadConfig as conf
+from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
+
+pobj = PoseTrain.PoseTrain(conf)
+pobj.mrfTrain(restore=True)
+
+
+# In[ ]:
+
+import PoseTrain
+reload(PoseTrain)
+import tensorflow as tf
+from stephenHeadConfig import conf as conf
 
 pobj = PoseTrain.PoseTrain(conf)
 pobj.fineTrain(restore=False)
@@ -170,23 +181,22 @@ reload(multiResData)
 import os
 import re
 import tensorflow as tf
-from stephenHeadConfig import conf as conf
 from scipy import io
 
-
-# conf = sideconf
-# extrastr = '_side'
-extrastr = ''
-conf.batch_size = 1
+from stephenHeadConfig import sideconf as conf
 conf.useMRF = False
+extrastr = '_side'
+# extrastr = ''
 outtype = 1
+
+conf.batch_size = 1
 
 self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
 
-# In[3]:
+# In[2]:
 
 from scipy import io
 _,valmovies = multiResData.getMovieLists(conf)
@@ -200,7 +210,7 @@ for ndx in [0,3]:
     io.savemat(pname + '.mat',{'locs':predLocs,'expname':valmovies[ndx]})
 
 
-# In[ ]:
+# In[1]:
 
 import localSetup
 import PoseTools
@@ -210,13 +220,13 @@ reload(multiResData)
 import os
 import re
 import tensorflow as tf
-from stephenHeadConfig import conf as conf
 from scipy import io
+from matplotlib import cm
+from stephenHeadConfig import sideconf as conf
+odir = 'results/headResults/MRF_side/'
 
 
 # conf = sideconf
-# extrastr = '_side'
-extrastr = ''
 conf.batch_size = 1
 conf.useMRF = True
 outtype = 2
@@ -225,14 +235,12 @@ self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
-
-# In[ ]:
-
 self.openDBs()
 self.createCursors()
 numex = self.valenv.stat()['entries']
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
-predLocs = np.zeros([numex,conf.n_classes,2,2])
+ims = np.zeros((numex,)+conf.imsz)
+predLocs = np.zeros([numex,conf.n_classes,2,3])
 
 self.val_cursor.first()
 for count in range(numex):
@@ -242,29 +250,65 @@ for count in range(numex):
     all_preds[count,:,:,:,1] = curpred[1]
     predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
     predLocs[count,:,:,1] = PoseTools.getBasePredLocs(curpred[1],conf)[0,:,:]
+    predLocs[count,:,:,2] = self.locs[0,:,:]
+    ims[count,:,:] = self.xs[0,0,:,:]
 
 
+# In[18]:
 
-# In[ ]:
-
-
-# diff = (all_preds[:,:,:,:,0]-2*all_preds[:,:,:,:,1]-1)**2
 diff = (predLocs[:,:,:,0]-predLocs[:,:,:,1])**2
+bname = odir + 'MRF_impact_dmaxBaseMRF_%d.png'
 dd = np.squeeze(np.apply_over_axes(np.sum,diff,[1,2]))
 oo = dd.argsort()
-
+# diffb = (predLocs[:,:,:,0]-predLocs[:,:,:,2])**2
+# diffm = (predLocs[:,:,:,1]-predLocs[:,:,:,2])**2
+# ddb = np.squeeze(np.apply_over_axes(np.sum,diffb,[1,2])) 
+# ddm = np.squeeze(np.apply_over_axes(np.sum,diffm,[1,2])) 
+# # oo = (ddb-ddm).argsort()
+# # bname = odir + 'MRF_impact_maxImprovement_%d.png'
+# oo = (ddm-ddb).argsort()
+# bname = odir + 'MRF_impact_minImprovement_%d.png'
 print dd[oo[-4:-1]]
 print dd[oo[:3]]
-for ndx in range(1,4):
+nc = 2
+nr = 3
+for ndx in range(1,20):
     curi = oo[-ndx]
     aa1 = PoseTools.createPredImage(all_preds[curi,:,:,:,0],conf.n_classes)
     aa2 = PoseTools.createPredImage(2*all_preds[curi,:,:,:,1]-1,conf.n_classes)
-    fig = plt.figure(figsize=(8,4))
-    ax1 = fig.add_subplot(1,2,1)
+    fig = plt.figure(figsize=(10,6))
+    ax2 = fig.add_subplot(nc,nr,1)
+    ax2.set_title('blank')
+    ax2.axis('off')
+    ax1 = fig.add_subplot(nc,nr,3)
     ax1.imshow(aa1)
     ax1.axis('off')
-    ax2 = fig.add_subplot(1,2,2)
+    ax1.set_title('base scores')
+    ax2 = fig.add_subplot(nc,nr,2)
     ax2.imshow(aa2)
     ax2.axis('off')
+    ax2.set_title('mrf scores')
+    ax3 = fig.add_subplot(nc,nr,4)
+    ax3.imshow(ims[curi,:,:],cmap=cm.gray)
+    ax3.scatter(predLocs[curi,:,0,2],predLocs[curi,:,1,2], #hold=True,
+                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                s=10, linewidths=0, edgecolors='face')
+    ax3.axis('off')
+    ax3.set_title('Label')
+    ax3 = fig.add_subplot(nc,nr,5)
+    ax3.imshow(ims[curi,:,:],cmap=cm.gray)
+    ax3.scatter(predLocs[curi,:,0,1],predLocs[curi,:,1,1], #hold=True,
+                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                s=10, linewidths=0, edgecolors='face')
+    ax3.axis('off')
+    ax3.set_title('MRF')
+    ax3 = fig.add_subplot(nc,nr,6)
+    ax3.imshow(ims[curi,:,:],cmap=cm.gray)
+    ax3.scatter(predLocs[curi,:,0,0],predLocs[curi,:,1,0], #hold=True,
+                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                s=10, linewidths=0, edgecolors='face')
+    ax3.axis('off')
+    ax3.set_title('Base (object detector)')
     plt.show()
+    fig.savefig(bname%ndx)
 

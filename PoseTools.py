@@ -530,7 +530,12 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
                     linewidths=0,edgecolors='face')
         ax1.axis('off')
         ax2 = fig.add_subplot(1,2,2)
-        rgbim = createPredImage(predscores[curl,:,:,:,0],conf.n_classes)
+        if outtype == 1:
+            curpreds = predscores[curl,:,:,:,0]
+        elif outtype ==2:
+            curpreds = predscores[curl,:,:,:,0]*2 - 1
+            
+        rgbim = createPredImage(curpreds,conf.n_classes)
         ax2.imshow(rgbim)
         ax2.axis('off')
 
