@@ -53,7 +53,7 @@ class myconfig(object):
     base_learning_rate = 0.0003
     mrf_learning_rate = 0.00001
     fine_learning_rate = 0.0003
-    base_training_iters = 8000 # for a batch size of 32
+    base_training_iters = 5000 # for a batch size of 32
     fine_training_iters = 3000
     mrf_training_iters = 3000
     gamma = 0.1
@@ -68,7 +68,6 @@ class myconfig(object):
     imsz = (256,256)
     split = True
     view = 0
-    cropsz = 0
     map_size = 100000*imsz[0]*imsz[1]*3
     cropLoc = {(256,256):[0,0]}
     cachedir = os.path.join(localSetup.bdir,'cachejanLeg/')
