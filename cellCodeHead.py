@@ -9,7 +9,7 @@ import os,sys
 sys.path.append('/home/mayank/work/pyutils')
 import myutils
 import re
-from stephenHeadConfig import conf
+from stephenHeadConfig import conf as conf
 import shutil
 
 get_ipython().magic(u'matplotlib inline')
@@ -35,7 +35,61 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
-# In[4]:
+# In[16]:
+
+# all the f'ing imports
+import scipy.io as sio
+import os,sys
+sys.path.append('/home/mayank/work/pyutils')
+import myutils
+import re
+import shutil
+
+get_ipython().magic(u'matplotlib inline')
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+import cv2
+import math
+import lmdb
+import caffe
+from random import randint,sample
+import pickle
+import h5py
+from stephenHeadConfig import sideconf as conf
+
+
+import mpld3
+mpld3.enable_notebook()
+
+import multiResData
+reload(multiResData)
+
+multiResData.createDB(conf)
+
+
+# In[12]:
+
+# convert from dropbox to the newer location
+import pickle
+with open('cacheHead/valdata_dropbox','rb') as f:
+    isval,localdirs,seldirs = pickle.load(f)
+localdirs[0][35:]
+ll = ['/home/mayank/work/PoseEstimationData' + x[35:] for x in localdirs]
+ll[0]
+with open('cacheHead/valdata','wb') as f:
+    pickle.dump([isval,ll,seldirs],f)
+
+
+# In[18]:
+
+_,valmovies = multiResData.getMovieLists(conf)
+print valmovies[0]
+print valmovies[3]
+
+
+# In[17]:
 
 # copy the validation file from front view to side view
 import pickle
@@ -54,7 +108,7 @@ with open(outfile,'r') as f:
 newdirs = []    
 for ndx,l in enumerate(localdirs):
     if ndx == 19:
-        newdirs.append('/home/mayank/Dropbox/PoseEstimation/Stephen/7_7_13_47D05AD_81B12DBD_x_Chrimsonattp18/data/fly_0023/fly_0023_trial_005/C001H001S0002/C001H001S0002.avi')
+        newdirs.append('/home/mayank/work/PoseEstimationData/Stephen/7_7_13_47D05AD_81B12DBD_x_Chrimsonattp18/data/fly_0023/fly_0023_trial_005/C001H001S0002/C001H001S0002.avi')
     else:
         newdirs.append(re.sub('C002','C001',l,count = 3))
 #     print('%d %d:%s' % (ndx,os.path.isfile(newdirs[-1]),newdirs[-1]))
@@ -64,15 +118,6 @@ outfile = os.path.join(conf.cachedir,conf.valdatafilename)
 with open(outfile,'w') as f:
     pickle.dump([isval,newdirs,seldirs],f)
     
-
-
-# In[1]:
-
-from stephenHeadSideConfig import conf
-import multiResData
-reload(multiResData)
-
-multiResData.createDB(conf)
 
 
 # In[1]:
@@ -114,10 +159,10 @@ from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
-pobj.mrfTrain(restore=True)
+pobj.mrfTrain(restore=False)
 
 
-# In[ ]:
+# In[1]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -171,7 +216,7 @@ for idx in range(zz.shape[0]):
 #     raw_input('Press Enter')
 
 
-# In[1]:
+# In[ ]:
 
 import localSetup
 import PoseTools
@@ -183,11 +228,11 @@ import re
 import tensorflow as tf
 from scipy import io
 
-from stephenHeadConfig import sideconf as conf
+from stephenHeadConfig import conf as conf
 conf.useMRF = False
-extrastr = '_side'
-# extrastr = ''
-outtype = 1
+# extrastr = '_side'
+extrastr = ''
+outtype = 2
 
 conf.batch_size = 1
 
@@ -196,18 +241,30 @@ sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
 
-# In[2]:
+# In[ ]:
 
 from scipy import io
 _,valmovies = multiResData.getMovieLists(conf)
 for ndx in [0,3]:
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
-    pname = '/home/mayank/work/tensorflow/results/headResults/movies/' + oname + extrastr
+    pname = '/home/mayank/Dropbox/Results/stephenHeadTracking/movies/' + oname + extrastr
     predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
 
-    predLocs = PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
-    io.savemat(pname + '.mat',{'locs':predLocs,'expname':valmovies[ndx]})
+
+    cap = cv2.VideoCapture(valmovies[ndx])
+    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+    crop_loc = conf.cropLoc[(height,width)]
+    end_pad = (height-crop_loc[0]-conf.imsz[0],width-crop_loc[1]-conf.imsz[1])
+    predLocs = predList[0]
+    predScores = np.pad(predList[1],(crop_loc,end_pad))
+    predLocs[:,:,0,:] += crop_loc[1]
+    predLocs[:,:,1,:] += crop_loc[0]
+    
+    io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
+
 
 
 # In[1]:
@@ -254,10 +311,10 @@ for count in range(numex):
     ims[count,:,:] = self.xs[0,0,:,:]
 
 
-# In[18]:
+# In[3]:
 
-diff = (predLocs[:,:,:,0]-predLocs[:,:,:,1])**2
-bname = odir + 'MRF_impact_dmaxBaseMRF_%d.png'
+diff = (predLocs[:,:,:,1]-predLocs[:,:,:,2])**2
+bname = odir + 'MRF_impact_dmaxMRFLabel_%d.png'
 dd = np.squeeze(np.apply_over_axes(np.sum,diff,[1,2]))
 oo = dd.argsort()
 # diffb = (predLocs[:,:,:,0]-predLocs[:,:,:,2])**2

@@ -556,17 +556,26 @@ aa = mm.eval()
 print(aa)
 
 
-# In[3]:
+# In[23]:
 
 import lmdb
-lmdbfilename= 'cacheHead/train_lmdb'
+lmdbfilename= 'cacheHeadSide/train_lmdb'
 env = lmdb.open(lmdbfilename, readonly = True)
 
 
-# In[9]:
-
 txn = env.begin()
 print(txn.stat()['entries'])
+
+
+# In[24]:
+
+import PoseTools
+import multiResData
+cursor = txn.cursor()
+ii,ll = PoseTools.readLMDB(cursor,1,[512, 512],multiResData)
+print ii.shape
+print ll
+plt.imshow(ii[0,0,:,:])
 
 
 # In[11]:

@@ -89,8 +89,8 @@ class myconfig(object):
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
 
     cachedir = '/home/mayank/work/tensorflow/cacheHead/'
-#    labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
-    labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
+    labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
+#     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
     viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
     ptn = 'fly_000[0-9]'
     trainfilename = 'train_lmdb'

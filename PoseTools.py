@@ -18,8 +18,10 @@ import localSetup
 import myutils
 import os
 import cv2
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 # In[ ]:
@@ -516,7 +518,8 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0,1,conf.n_classes))
     
-    fig = plt.figure(figsize = (9,4))
+    fig = mpl.figure.Figure(figsize = (9,4))
+    canvas = FigureCanvasAgg(fig)
     for curl in range(nframes):
         framein = myutils.readframe(cap,curl)
         framein = cropImages(framein,conf)
@@ -540,11 +543,18 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
         ax2.axis('off')
 
         fname = "test_{:06d}.png".format(curl)
-        plt.savefig(os.path.join(tdir,fname))
+        
+        # to printout without X. 
+        # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+        # The size * the dpi gives the final image size
+        #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+        canvas.print_figure(os.path.join(tdir,fname), dpi=80)
+        
+        # below is the easy way.
+#         plt.savefig(os.path.join(tdir,fname))
         
     tfilestr = os.path.join(tdir,'test_*.png')
     mencoder_cmd = "mencoder mf://" + tfilestr +     " -frames " + "{:d}".format(nframes) + " -mf type=png:fps=15 -o " +     outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
     os.system(mencoder_cmd)
     cap.release()
-    return predLocs
 
