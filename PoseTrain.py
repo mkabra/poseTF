@@ -50,6 +50,12 @@ class PoseTrain:
         self.env = lmdb.open(lmdbfilename, readonly = True)
         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
 
+    def openHoldoutDBs(self):
+        lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
+        vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttest)
+        self.env = lmdb.open(lmdbfilename, readonly = True)
+        self.valenv = lmdb.open(vallmdbfilename, readonly = True)
+
     def createCursors(self, txn=None, valtxn=None):
         if txn is None:
             txn = self.env.begin()
@@ -592,8 +598,12 @@ class PoseTrain:
         
 #         self.cost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         self.cost = tf.nn.l2_loss(2*(self.mrfPred-0.5)-self.ph['y'])
-        basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
-        self.openDBs()
+        basecost  = tf.nn.l2_loss(self.basePred-self.ph['y'])
+        
+        if self.conf.useHoldout:
+            self.openHoldoutDBs()
+        else:
+            self.openDBs()
 
         self.createOptimizer()
         

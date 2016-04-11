@@ -35,7 +35,7 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
-# In[16]:
+# In[6]:
 
 # all the f'ing imports
 import scipy.io as sio
@@ -69,7 +69,7 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
-# In[12]:
+# In[1]:
 
 # convert from dropbox to the newer location
 import pickle
@@ -89,7 +89,7 @@ print valmovies[0]
 print valmovies[3]
 
 
-# In[17]:
+# In[2]:
 
 # copy the validation file from front view to side view
 import pickle
@@ -98,7 +98,7 @@ import re
 
 from stephenHeadConfig import conf
 conforig = conf
-from stephenHeadSideConfig import conf
+from stephenHeadConfig import sideconf as conf
 outfile = os.path.join(conforig.cachedir,conforig.valdatafilename)
 assert os.path.isfile(outfile),"valdatafile doesn't exist"
 
@@ -216,7 +216,7 @@ for idx in range(zz.shape[0]):
 #     raw_input('Press Enter')
 
 
-# In[ ]:
+# In[1]:
 
 import localSetup
 import PoseTools
@@ -229,7 +229,7 @@ import tensorflow as tf
 from scipy import io
 
 from stephenHeadConfig import conf as conf
-conf.useMRF = False
+conf.useMRF = True
 # extrastr = '_side'
 extrastr = ''
 outtype = 2
@@ -241,9 +241,10 @@ sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
 
-# In[ ]:
+# In[2]:
 
 from scipy import io
+import cv2
 _,valmovies = multiResData.getMovieLists(conf)
 for ndx in [0,3]:
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
@@ -256,15 +257,24 @@ for ndx in [0,3]:
     cap = cv2.VideoCapture(valmovies[ndx])
     height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    crop_loc = conf.cropLoc[(height,width)]
-    end_pad = (height-crop_loc[0]-conf.imsz[0],width-crop_loc[1]-conf.imsz[1])
+    orig_crop_loc = conf.cropLoc[(height,width)]
+    crop_loc = [x/4 for x in orig_crop_loc] 
+    end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+    pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
+    predScores = np.pad(predList[1],pp,mode='constant')
+
     predLocs = predList[0]
-    predScores = np.pad(predList[1],(crop_loc,end_pad))
-    predLocs[:,:,0,:] += crop_loc[1]
-    predLocs[:,:,1,:] += crop_loc[0]
+    predLocs[:,:,0,:] += orig_crop_loc[1]
+    predLocs[:,:,1,:] += orig_crop_loc[0]
     
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
 
+
+
+# In[16]:
+
+print pp
+print predList[1].shape
 
 
 # In[1]:

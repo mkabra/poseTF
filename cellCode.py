@@ -556,7 +556,7 @@ aa = mm.eval()
 print(aa)
 
 
-# In[23]:
+# In[1]:
 
 import lmdb
 lmdbfilename= 'cacheHeadSide/train_lmdb'
@@ -567,7 +567,7 @@ txn = env.begin()
 print(txn.stat()['entries'])
 
 
-# In[24]:
+# In[2]:
 
 import PoseTools
 import multiResData
@@ -597,8 +597,56 @@ plt.plot(x,gg[0]['val_dist'][5:], hold=True)
 plt.legend(('base','mrf'))
 
 
-# In[40]:
+# In[28]:
+
+from janLegConfig import conf as conf
+# from stephenHeadConfig import sideconf as conf
+import PoseTools
+
+jj = PoseTools.initMRFweights(conf)
+jj.shape
+for ndx in range(conf.n_classes):
+    fig = plt.figure()
+    for ii in range(conf.n_classes):
+        ax1 = fig.add_subplot(2,2,ii+1)
+        ax1.imshow(jj[:,:,ndx,ii],interpolation='nearest',vmax=1.,vmin=0.)
+    plt.show()
+    
+
+
+# In[26]:
+
+np.set_printoptions(precision=2)
+# print jj[35:45,35:45,0,1]
+print np.array_str(jj[35:45,35:45,2,3],precision=2,suppress_small = True)
+
+
+# In[9]:
 
 from stephenHeadConfig import conf as conf
-print conf.cachedir
+import multiResData
+a,b,c = multiResData.loadValdata(conf)
+print max(int(len(a)/conf.holdoutratio),1)
+print len(a)
+print a
+print a.index(88)
+
+
+# In[7]:
+
+from stephenHeadConfig import conf as conf
+import multiResData
+isval,a,b = multiResData.loadValdata(conf)
+n_ho = min(max(int(len(isval)*conf.holdoutratio),1),len(isval)-1)
+print n_ho
+print isval.index(73)
+print len(isval)
+
+
+# In[1]:
+
+from stephenHeadConfig import sideconf as conf
+import multiResData
+reload(multiResData)
+multiResData.createHoldoutData(conf)
 

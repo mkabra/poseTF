@@ -37,6 +37,7 @@ class myconfig(object):
     nfcfilt = 512
     doBatchNorm = True
     useMRF = True
+    useHoldout = True
 
     # ----- Fine Network parameters
 
@@ -95,8 +96,11 @@ class myconfig(object):
     ptn = 'fly_000[0-9]'
     trainfilename = 'train_lmdb'
     valfilename = 'val_lmdb'
+    holdouttrain = 'holdouttrain_lmdb'
+    holdouttest = 'holdouttest_lmdb'
     valdatafilename = 'valdata'
     valratio = 0.3
+    holdoutratio = 0.8
 
 
     # ----- Save parameters
@@ -124,14 +128,6 @@ class myconfig(object):
     def getexplist(self,L):
         fname = 'vid{:d}files'.format(self.view+1)
         return L[fname]
-    
-    def getvalsplit(L):
-        flynum = []
-        for dd in L:
-            gg = re.search('fly_*(\d+)',dd)
-            flynum.append(gg.group(1))
-        uni = set(flynum)
-        
 
 conf = myconfig()
 sideconf = myconfig()

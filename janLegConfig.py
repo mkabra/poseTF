@@ -38,6 +38,7 @@ class myconfig(object):
     nfcfilt = 512
     doBatchNorm = True
     useMRF = True
+    useHoldout = True
 
     # ----- Fine Network parameters
     fine_flt_sz = 5
@@ -79,6 +80,9 @@ class myconfig(object):
     valfilename = 'val_lmdb'
     valdatafilename = 'valdata'
     valratio = 0.3
+    holdouttrain = 'holdouttrain_lmdb'
+    holdouttest = 'holdouttest_lmdb'
+    holdoutratio = 0.8
 
 
     # ----- Save parameters

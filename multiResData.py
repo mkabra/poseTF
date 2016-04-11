@@ -72,13 +72,6 @@ def loadValdata(conf):
 
 # In[ ]:
 
-def createHoldOutData(conf):
-    #Split the val data in hold out data for mrf training.
-    ("")
-
-
-# In[ ]:
-
 def getMovieLists(conf):
     isval,localdirs,seldirs = loadValdata(conf)
     trainexps = []; valexps = []
@@ -138,6 +131,89 @@ def sanitizelocs(locs):
     nlocs = np.array(locs).astype('float')
     nlocs[nlocs<0] = np.nan
     return nlocs
+
+
+# In[ ]:
+
+def createHoldoutData(conf):
+    #Split the val data in hold out data for mrf training.
+    isval,localdirs,seldirs = loadValdata(conf)
+    n_ho = min(max(int(len(isval)*conf.holdoutratio),1),len(isval)-1)
+#     ho_train = isval[0:n_ho]
+#     ho_test = isval[(n_ho+1):]
+
+    L = h5py.File(conf.labelfile)
+    pts = np.array(L['pts'])
+    ts = np.array(L['ts']).squeeze().astype('int')
+    expid = np.array(L['expidx']).squeeze().astype('int')
+    view = conf.view
+    traincount = 0; testcount = 0
+    
+    psz = conf.sel_sz
+    map_size = 100000*conf.imsz[0]*conf.imsz[1]*8
+    
+    trainlmdbfilename =os.path.join(conf.cachedir,conf.holdouttrain)
+    testlmdbfilename =os.path.join(conf.cachedir,conf.holdouttest)
+    if os.path.isdir(trainlmdbfilename):
+        shutil.rmtree(trainlmdbfilename)
+    if os.path.isdir(testlmdbfilename):
+        shutil.rmtree(testlmdbfilename)
+    
+    trainenv = lmdb.open(trainlmdbfilename, map_size=map_size)
+    testenv = lmdb.open(testlmdbfilename, map_size=map_size)
+
+    
+    with trainenv.begin(write=True) as traintxn,testenv.begin(write=True) as testtxn:
+
+        for ndx,dirname in enumerate(localdirs):
+
+            if not seldirs[ndx]:
+                continue
+            if not isval.count(ndx):
+                continue
+
+            expname = conf.getexpname(dirname)
+            frames = np.where(expid == (ndx + 1))[0]
+            curdir = os.path.dirname(localdirs[ndx])
+            cap = cv2.VideoCapture(localdirs[ndx])
+            
+            curtxn = testtxn if isval.index(ndx)>=n_ho else traintxn
+                
+            for curl in frames:
+
+                fnum = ts[curl]
+                if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT):
+                    if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)+1:
+                        raise ValueError('Accessing frames beyond ' + 
+                                         'the length of the video for' + 
+                                         ' {} expid {:d} '.format(expname,ndx) + 
+                                         ' at t {:d}'.format(fnum)
+                                        )
+                    continue
+                framein = myutils.readframe(cap,fnum-1)
+                cloc = conf.cropLoc[tuple(framein.shape[0:2])]
+                framein = PoseTools.cropImages(framein,conf)
+                framein = framein[:,:,0:1]
+ 
+                curloc = np.round(pts[curl,:,view,:]).astype('int')
+                curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
+                curloc[:,1] = curloc[:,1] - cloc[0]
+                
+                datum = createDatum(framein,1)
+                str_id = createID(expname,curloc,fnum,conf.imsz)
+                curtxn.put(str_id.encode('ascii'), datum.SerializeToString())
+
+                if isval.index(ndx)>=n_ho:
+                    testcount+=1
+                else:
+                    traincount+=1
+                    
+            cap.release() # close the movie handles
+            print('Done %d of %d movies, train:%d test:%d' % (ndx,len(localdirs),traincount,testcount))
+    trainenv.close() # close the database
+    testenv.close()
+    print('%d,%d number of pos examples added to the train db and test db' %(traincount,testcount))
+    
 
 
 # In[ ]:
