@@ -123,6 +123,26 @@ class PoseTrain:
         self.basePred = pred
         self.baseLayers = layers
 
+    def createACNetwork(self,doBatch,trainPhase,jointTraining=False):
+        
+        n_classes = self.conf.n_classes
+        bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
+        bpred = tf.nn.relu((bpred+1)/2)
+        
+        layer7_init = self.baseLayers['conv7']
+        layer7 = layer7_init if jointTraining else tf.stop_gradient(layer7_init)
+        
+        acIn = tf.concat(3,[layer7,bpred])
+        with tf.variable_scope('AC_'):
+            ac_weights = tf.get_variable("weights", 
+                [1,1,self.conf.nfcfilt+self.conf.n_classes,self.conf.n_classes],
+                initializer=tf.random_normal_initializer(stddev=0.01))
+            ac_biases = tf.get_variable("biases", self.conf.n_classes,
+                initializer=tf.constant_initializer(0))
+            ac_out = tf.nn.conv2d(acIn, ac_weights,
+                strides=[1, 1, 1, 1], padding='SAME') + ac_biases
+        self.acPred = ac_out
+        
     def createMRFNetwork(self,doBatch,trainPhase,jointTraining=False):
         
         n_classes = self.conf.n_classes
@@ -244,6 +264,10 @@ class PoseTrain:
         self.basesaver = tf.train.Saver(var_list = PoseTools.getvars('base'),
                                         max_to_keep=self.conf.maxckpt)
         
+    def createACSaver(self):
+        self.acsaver = tf.train.Saver(var_list = PoseTools.getvars('AC_'),
+                                       max_to_keep=self.conf.maxckpt)
+        
     def createMRFSaver(self):
         self.mrfsaver = tf.train.Saver(var_list = PoseTools.getvars('mrf'),
                                        max_to_keep=self.conf.maxckpt)
@@ -289,6 +313,36 @@ class PoseTrain:
                     print("No config was stored for base. Not comparing conf")
                     self.basetrainData = inData
             print("Loading base variables from %s"%latest_ckpt.model_checkpoint_path)
+            return True
+            
+    def restoreAC(self,sess,restore):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.acoutname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.acdataname)
+        latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
+                                            latest_filename = self.conf.acckptname)
+        if not latest_ckpt or not restore:
+            self.acstartat = 0
+            self.actrainData = {'train_err':[],'val_err':[],'step_no':[],
+                                'train_base_err':[],'val_base_err':[],
+                                 'train_dist':[],'val_dist':[],
+                                'train_base_dist':[],'val_base_dist':[]}
+            sess.run(tf.initialize_variables(PoseTools.getvars('AC_')))
+            print("Not loading AC variables. Initializing them")
+            return False
+        else:
+            self.acsaver.restore(sess,latest_ckpt.model_checkpoint_path)
+            matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
+            self.acstartat = int(matchObj.group(1))+1
+            with open(traindatafilename,'rb') as tdfile:
+                inData = pickle.load(tdfile)
+                if not isinstance(inData,dict):
+                    self.actrainData, loadconf = inData
+                    print('Parameters that dont match for AC:')
+                    PoseTools.compareConf(self.conf, loadconf)
+                else:
+                    print("No config was stored for AC. Not comparing conf")
+                    self.actrainData = inData
+            print("Loading AC variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
             
     def restoreMRF(self,sess,restore):
@@ -396,6 +450,15 @@ class PoseTrain:
         with open(traindatafilename,'wb') as tdfile:
             pickle.dump([self.basetrainData,self.conf],tdfile)
             
+    def saveAC(self,sess,step):
+        outfilename = os.path.join(self.conf.cachedir,self.conf.acoutname)
+        traindatafilename = os.path.join(self.conf.cachedir,self.conf.acdataname)
+        self.acsaver.save(sess,outfilename,global_step=step,
+                   latest_filename = self.conf.acckptname)
+        print('Saved state to %s-%d' %(outfilename,step))
+        with open(traindatafilename,'wb') as tdfile:
+            pickle.dump([self.actrainData,self.conf],tdfile)
+
     def saveMRF(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.mrfdataname)
@@ -488,6 +551,19 @@ class PoseTrain:
         self.basetrainData['train_dist'].append(trainDist[0])        
         self.basetrainData['val_dist'].append(valDist[0])        
 
+    def updateACLoss(self,step,train_loss,val_loss,trainDist,valDist):
+        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
+                                                      trainDist[1],valDist[1])
+        self.actrainData['train_err'].append(train_loss[0])        
+        self.actrainData['val_err'].append(val_loss[0])        
+        self.actrainData['train_base_err'].append(train_loss[1])        
+        self.actrainData['val_base_err'].append(val_loss[1])        
+        self.actrainData['train_dist'].append(trainDist[0])        
+        self.actrainData['val_dist'].append(valDist[0])        
+        self.actrainData['train_base_dist'].append(trainDist[1])        
+        self.actrainData['val_base_dist'].append(valDist[1])        
+        self.actrainData['step_no'].append(step)        
+
     def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
         print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
                                                       trainDist[1],valDist[1])
@@ -578,6 +654,64 @@ class PoseTrain:
     
     
         
+    def acTrain(self,restore=True,trainPhase = True):
+        self.createPH()
+        self.createFeedDict()
+        doBatchNorm = self.conf.doBatchNorm
+        with tf.variable_scope('base'):
+            self.createBaseNetwork(doBatchNorm,trainPhase = False)
+
+        with tf.variable_scope('AC_'):
+            self.createACNetwork(doBatchNorm,trainPhase)
+
+        self.createBaseSaver()
+        self.createACSaver()
+
+        mod_labels = self.ph['y']
+        self.cost = tf.nn.l2_loss(self.acPred-self.ph['y'])
+        basecost  = tf.nn.l2_loss(self.basePred-self.ph['y'])
+        
+        if self.conf.useHoldout:
+            self.openHoldoutDBs()
+        else:
+            self.openDBs()
+
+        self.createOptimizer()
+        
+        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
+
+            self.loadBase(sess,self.conf.baseIter4ACTrain)
+            self.restoreAC(sess,restore)
+            self.initializeRemainingVars(sess)
+            self.createCursors(txn,valtxn)
+            
+            for step in range(self.acstartat,self.conf.ac_training_iters+1):
+                self.doOpt(sess,step,self.conf.ac_learning_rate)
+                if step % self.conf.display_step == 0:
+                    self.updateFeedDict(self.DBType.Train)
+                    train_loss = self.computeLoss(sess,[self.cost,basecost])
+                    tt1 = self.computePredDist(sess,self.acPred)
+                    tt2 = self.computePredDist(sess,self.basePred)
+                    trainDist = [tt1.mean(),tt2.mean()]
+
+                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    val_loss = np.zeros([2,])
+                    valDist = [0.,0.]
+                    for rep in range(numrep):
+                        self.updateFeedDict(self.DBType.Val)
+                        val_loss += np.array(self.computeLoss(sess,[self.cost,basecost]))
+                        tt1 = self.computePredDist(sess,self.acPred)
+                        tt2 = self.computePredDist(sess,self.basePred)
+                        valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
+                        
+                    val_loss = val_loss/numrep
+                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
+                    self.updateACLoss(step,train_loss,val_loss,trainDist,valDist)
+                if step % self.conf.save_step == 0:
+                    self.saveAC(sess,step)
+            print("Optimization Finished!")
+            self.saveAC(sess,step)
+            
     def mrfTrain(self,restore=True,trainPhase = True):
         self.createPH()
         self.createFeedDict()
@@ -669,8 +803,11 @@ class PoseTrain:
         mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.createOptimizer()
+        assert self.conf.useMRF != self.conf.useAC, "Cannot use both MRF and AC"
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
+        elif self.conf.useAC:
+            predPair = [self.acPred,self.finePred]
         else:
             predPair = [self.basePred,self.finePred]
             
@@ -678,6 +815,7 @@ class PoseTrain:
 
             self.restoreBase(sess,True)
             self.restoreMRF(sess,True)
+            self.restoreAC(sess,True)
             self.restoreFine(sess,restore)
             self.initializeRemainingVars(sess)
             self.createCursors(txn,valtxn)
@@ -729,6 +867,7 @@ class PoseTrain:
 
         self.createBaseSaver()
         self.createMRFSaver()
+        self.createACSaver()
         self.createFineSaver()
         self.createJointSaver()
 

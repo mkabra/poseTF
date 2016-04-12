@@ -151,7 +151,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=True)
 
 
-# In[ ]:
+# In[1]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -160,6 +160,17 @@ import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=False)
+
+
+# In[ ]:
+
+import PoseTrain
+reload(PoseTrain)
+from stephenHeadConfig import sideconf as conf
+import tensorflow as tf
+
+pobj = PoseTrain.PoseTrain(conf)
+pobj.acTrain(restore=False)
 
 
 # In[1]:
@@ -228,11 +239,15 @@ import re
 import tensorflow as tf
 from scipy import io
 
+# from stephenHeadConfig import sideconf as conf
+# conf.useMRF = False
+# extrastr = '_side'
+# outtype = 1
+
 from stephenHeadConfig import conf as conf
 conf.useMRF = True
-# extrastr = '_side'
-extrastr = ''
 outtype = 2
+extrastr = ''
 
 conf.batch_size = 1
 
@@ -240,13 +255,10 @@ self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
-
-# In[2]:
-
 from scipy import io
 import cv2
 _,valmovies = multiResData.getMovieLists(conf)
-for ndx in [0,3]:
+for ndx in [-1,-3]:
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
     pname = '/home/mayank/Dropbox/Results/stephenHeadTracking/movies/' + oname + extrastr
@@ -270,8 +282,6 @@ for ndx in [0,3]:
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
 
 
-
-# In[16]:
 
 print pp
 print predList[1].shape

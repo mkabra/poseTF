@@ -16,6 +16,7 @@ class myconfig(object):
     baseName = 'Base'
     fineName = 'Fine'
     mrfName = 'MRF'
+    acName = 'AC'
     
     # ----- Network Parameters
 
@@ -37,8 +38,9 @@ class myconfig(object):
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = True
-    useHoldout = True
+    useMRF = False
+    useAC = True
+    useHoldout = False
 
     # ----- Fine Network parameters
     fine_flt_sz = 5
@@ -47,16 +49,19 @@ class myconfig(object):
 
     # ----- MRF Network Parameters
     baseIter4MRFTrain = 5000
+    baseIter4ACTrain = 5000
 
 
     # ----- Learning parameters
 
     base_learning_rate = 0.0003
     mrf_learning_rate = 0.00001
+    ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
     base_training_iters = 5000 # for a batch size of 32
     fine_training_iters = 3000
     mrf_training_iters = 3000
+    ac_training_iters = 5000
     gamma = 0.1
     step_size = 200000
     batch_size = 16
@@ -92,12 +97,15 @@ class myconfig(object):
     baseoutname = expname + baseName
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
+    acoutname = expname + acName
     baseckptname = baseoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
+    acckptname = acoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
+    acdataname = acoutname + 'traindata'
 
 
     def getexpname(self,dirname):

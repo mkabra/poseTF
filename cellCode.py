@@ -643,10 +643,11 @@ print isval.index(73)
 print len(isval)
 
 
-# In[1]:
+# In[4]:
 
-from stephenHeadConfig import sideconf as conf
+from stephenHeadConfig import conf as conf
 import multiResData
 reload(multiResData)
-multiResData.createHoldoutData(conf)
+_,x = multiResData.getMovieLists(conf)
+x
 

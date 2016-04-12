@@ -14,6 +14,7 @@ class myconfig(object):
     baseName = 'Base'
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
+    acName = 'AC'
 
     # ----- Network parameters
 
@@ -36,8 +37,9 @@ class myconfig(object):
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = True
-    useHoldout = True
+    useMRF = False
+    useAC = True
+    useHoldout = False
 
     # ----- Fine Network parameters
 
@@ -52,12 +54,14 @@ class myconfig(object):
     #Above should not be determined automatically
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000 # without batch_norm
+    baseIter4ACTrain = 5000 # without batch_norm
 
 
     # ----- Learning parameters
 
     base_learning_rate = 0.0003 #0.0001 --without batch norm
     mrf_learning_rate = 0.00001
+    ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
 
     base_training_iters = 5000
@@ -70,6 +74,7 @@ class myconfig(object):
     # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
     fine_training_iters = 3000
     mrf_training_iters = 3000
+    ac_training_iters = 3000
     gamma = 0.1
     step_size = 200000
     batch_size = 16
@@ -110,12 +115,15 @@ class myconfig(object):
     baseoutname = expname + baseName
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
+    acoutname = expname + acName
     baseckptname = baseoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
+    acckptname = acoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
+    acdataname = acoutname + 'traindata'
 
     # ----- project specific functions
 

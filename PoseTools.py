@@ -369,8 +369,9 @@ def compareConf(curconf,oldconf):
     for f in ff:
         if f[0:2] == '__' or f[0:3] == 'get':
             continue
-        if getattr(curconf,f) != getattr(oldconf,f):
+        if not hasattr(curconf,f) or not hasattr(oldconf,f) or getattr(curconf,f) != getattr(oldconf,f):
             print '%s doesnt match'%(f)
+            
 
 
 # In[ ]:
@@ -404,17 +405,6 @@ def createNetwork(conf,outtype):
         self.createFineSaver()
 
     return self
-
-
-# In[ ]:
-
-def compareConf(curconf,oldconf):
-    ff = dir(curconf)
-    for f in ff:
-        if f[0:2] == '__' or f[0:3] == 'get':
-            continue
-        if getattr(curconf,f) != getattr(oldconf,f):
-            print '%s doesnt match'%(f)
 
 
 # In[ ]:
