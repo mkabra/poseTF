@@ -126,22 +126,23 @@ class PoseTrain:
     def createACNetwork(self,doBatch,trainPhase,jointTraining=False):
         
         n_classes = self.conf.n_classes
-        bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
-        bpred = tf.nn.relu((bpred+1)/2)
+        with tf.variable_scope('AC_'):
+            self.createMRFNetwork(doBatch,trainPhase,jointTraining)
+        
+        mrfpred = self.mrfPred if jointTraining else tf.stop_gradient(self.mrfPred)
         
         layer7_init = self.baseLayers['conv7']
         layer7 = layer7_init if jointTraining else tf.stop_gradient(layer7_init)
         
-        acIn = tf.concat(3,[layer7,bpred])
         with tf.variable_scope('AC_'):
             ac_weights = tf.get_variable("weights", 
-                [1,1,self.conf.nfcfilt+self.conf.n_classes,self.conf.n_classes],
+                [1,1,self.conf.nfcfilt,self.conf.n_classes],
                 initializer=tf.random_normal_initializer(stddev=0.01))
             ac_biases = tf.get_variable("biases", self.conf.n_classes,
                 initializer=tf.constant_initializer(0))
-            ac_out = tf.nn.conv2d(acIn, ac_weights,
+            ac_out = tf.nn.conv2d(layer7, ac_weights,
                 strides=[1, 1, 1, 1], padding='SAME') + ac_biases
-        self.acPred = ac_out
+        self.acPred = ac_out + mrfpred
         
     def createMRFNetwork(self,doBatch,trainPhase,jointTraining=False):
         

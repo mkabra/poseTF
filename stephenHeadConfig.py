@@ -39,7 +39,7 @@ class myconfig(object):
     doBatchNorm = True
     useMRF = False
     useAC = True
-    useHoldout = False
+    useHoldout = True
 
     # ----- Fine Network parameters
 

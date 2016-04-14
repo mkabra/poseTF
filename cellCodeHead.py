@@ -276,8 +276,8 @@ for ndx in [-1,-3]:
     predScores = np.pad(predList[1],pp,mode='constant')
 
     predLocs = predList[0]
-    predLocs[:,:,0,:] += orig_crop_loc[1]
-    predLocs[:,:,1,:] += orig_crop_loc[0]
+    predLocs[:,:,:,0] += orig_crop_loc[1]
+    predLocs[:,:,:,1] += orig_crop_loc[0]
     
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
 

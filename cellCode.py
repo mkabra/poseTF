@@ -651,3 +651,33 @@ reload(multiResData)
 _,x = multiResData.getMovieLists(conf)
 x
 
+
+# In[8]:
+
+from stephenHeadConfig import conf as conf
+import multiResData
+import cv2
+
+print cl
+_,valmovies = multiResData.getMovieLists(conf)
+ndx = -3
+cap = cv2.VideoCapture(valmovies[ndx])
+height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+orig_crop_loc = conf.cropLoc[(height,width)]
+crop_loc = [x/4 for x in orig_crop_loc] 
+print orig_crop_loc
+
+
+# In[8]:
+
+from matplotlib import cm
+cmap = cm.get_cmap('jet')
+rgba = cmap(np.linspace(0,1,4))
+print rgba
+
+ii = np.zeros([4,4,3])
+for ndx in range(4):
+    ii[:,ndx,:] =cm.hsv(0+1./4.*ndx)[0:3]
+plt.imshow(ii)    
+
