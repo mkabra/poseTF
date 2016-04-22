@@ -162,7 +162,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=False)
 
 
-# In[ ]:
+# In[1]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -170,7 +170,7 @@ from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 
 pobj = PoseTrain.PoseTrain(conf)
-pobj.acTrain(restore=False)
+pobj.acTrain(restore=True)
 
 
 # In[1]:

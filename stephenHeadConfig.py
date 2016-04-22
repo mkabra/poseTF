@@ -74,7 +74,7 @@ class myconfig(object):
     # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
     fine_training_iters = 3000
     mrf_training_iters = 3000
-    ac_training_iters = 3000
+    ac_training_iters = 5000
     gamma = 0.1
     step_size = 200000
     batch_size = 16
