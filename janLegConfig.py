@@ -78,7 +78,7 @@ class myconfig(object):
     map_size = 100000*imsz[0]*imsz[1]*3
     cropLoc = {(256,256):[0,0]}
     cachedir = os.path.join(localSetup.bdir,'cachejanLeg/')
-    labelfile = os.path.join(localSetup.bdir,'janLegTracking','janLegData_20160301.mat')
+    labelfile = os.path.join(localSetup.bdir,'janLegTracking','Labels20160421.mat')
     # this label file has more data and includes the correction for vertical flipping
     ptn = '.*'
     trainfilename = 'train_lmdb'
@@ -110,10 +110,10 @@ class myconfig(object):
 
     def getexpname(self,dirname):
         expname = os.path.basename(dirname)
-        return expname
+        return expname[:-4]
 
     def getexplist(self,L):
-        fname = 'vid{:d}files'.format(view+1)
+        fname = 'vid{:d}files'.format(self.view+1)
         return L[fname]
 
 conf = myconfig()

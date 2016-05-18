@@ -28,7 +28,7 @@ import PoseTools
 # In[ ]:
 
 def findLocalDirs(conf):
-    L = h5py.File(conf.labelfile)
+    L = h5py.File(conf.labelfile,'r')
     localdirs = [u''.join(unichr(c) for c in L[jj[0]]) for jj in conf.getexplist(L)]
     seldirs = [True]*len(localdirs)
     L.close()
@@ -142,7 +142,7 @@ def createHoldoutData(conf):
 #     ho_train = isval[0:n_ho]
 #     ho_test = isval[(n_ho+1):]
 
-    L = h5py.File(conf.labelfile)
+    L = h5py.File(conf.labelfile,'r')
     pts = np.array(L['pts'])
     ts = np.array(L['ts']).squeeze().astype('int')
     expid = np.array(L['expidx']).squeeze().astype('int')
@@ -220,7 +220,7 @@ def createHoldoutData(conf):
 
 def createDB(conf):
 
-    L = h5py.File(conf.labelfile)
+    L = h5py.File(conf.labelfile,'r')
     pts = np.array(L['pts'])
     ts = np.array(L['ts']).squeeze().astype('int')
     expid = np.array(L['expidx']).squeeze().astype('int')
@@ -260,8 +260,8 @@ def createDB(conf):
             for curl in frames:
 
                 fnum = ts[curl]
-                if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT):
-                    if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)+1:
+                if fnum > cap.get(cv2.CAP_PROP_FRAME_COUNT):
+                    if fnum > cap.get(cv2.CAP_PROP_FRAME_COUNT)+1:
                         raise ValueError('Accessing frames beyond ' + 
                                          'the length of the video for' + 
                                          ' {} expid {:d} '.format(expname,ndx) + 

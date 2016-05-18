@@ -422,7 +422,7 @@ def initNetwork(self,sess,outtype):
 
 def openMovie(moviename):
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     return cap,nframes
 
 
@@ -503,7 +503,7 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
     tdir = tempfile.mkdtemp()
 
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0,1,conf.n_classes))

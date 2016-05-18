@@ -155,7 +155,6 @@ class PoseTrain:
         mrf_sz = mrf_weights.shape[0]
 
         bpred = tf.nn.relu((bpred+1)/2)
-        
         if mrf_sz > baseShape:
             dd = int(math.ceil(float(mrf_sz-baseShape)/2))
             print('Padding base prediction by %d. Filter shape:%d, Base shape:%d'%(dd,mrf_sz,baseShape))
@@ -166,7 +165,7 @@ class PoseTrain:
             dd = 0
             pad = False
             sliceEnd = baseShape
-            
+
         ksz = mrf_weights.shape[0] # Kernel is square for time being
         with tf.variable_scope('mrf'):
             conv_std = (1./n_classes)/ksz
@@ -743,7 +742,7 @@ class PoseTrain:
         self.createOptimizer()
         
         with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
-
+            
             self.loadBase(sess,self.conf.baseIter4MRFTrain)
             self.restoreMRF(sess,restore)
             self.initializeRemainingVars(sess)
@@ -804,7 +803,7 @@ class PoseTrain:
         mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.createOptimizer()
-        assert self.conf.useMRF != self.conf.useAC, "Cannot use both MRF and AC"
+        assert not (self.conf.useMRF & self.conf.useAC), "Cannot use both MRF and AC"
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
         elif self.conf.useAC:

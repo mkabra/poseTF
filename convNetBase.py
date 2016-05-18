@@ -143,9 +143,9 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     pool_scale = conf.pool_scale
     nfilt = conf.nfilt
     
-#     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
-#     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
-#     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
+    #     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
+    #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
+    #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
     with tf.variable_scope('scale0'):
         conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase)
     with tf.variable_scope('scale1'):
@@ -157,24 +157,24 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
     conv5_1_up = upscale('5_1',conv5_1,[sz0,sz1])
     conv5_2_up = upscale('5_2',conv5_2,[sz0,sz1])
-    
+
     # crop lower res layers to match higher res size
     conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
     conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
     crop_0 = int((sz0-conv5_0_sz[1])/2)
     crop_1 = int((sz1-conv5_0_sz[2])/2)
-    
+
     curloc = [0,crop_0,crop_1,0]
     patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
     conv5_1_up = tf.slice(conv5_1_up,curloc,patchsz)
     conv5_2_up = tf.slice(conv5_2_up,curloc,patchsz)
     conv5_1_final_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
-    print("Initial lower res layer size %s"%(', '.join(map(str,conv5_1_sz))))
-    print("Initial higher res layer size %s"%(', '.join(map(str,conv5_0_sz))))
-    print("Crop start lower res layer at %s"%(', '.join(map(str,curloc))))
-    print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
+#     print("Initial lower res layer size %s"%(', '.join(map(str,conv5_1_sz))))
+#     print("Initial higher res layer size %s"%(', '.join(map(str,conv5_0_sz))))
+#     print("Crop start lower res layer at %s"%(', '.join(map(str,curloc))))
+#     print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
 
-    
+
     conv5_cat = tf.concat(3,[conv5_0,conv5_1_up,conv5_2_up])
     
     # Reshape conv5 output to fit dense layer input
@@ -190,7 +190,7 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
         if not doBatchNorm:
             conv6 = tf.nn.dropout(conv6,_dropout,
                                   [conf.batch_size,1,1,conf.nfcfilt])
-            
+
     with tf.variable_scope('layer7'):
         conv7 = conv_relu(conv6,[1,1,conf.nfcfilt,conf.nfcfilt],
                           0.005,1,doBatchNorm,trainPhase) 

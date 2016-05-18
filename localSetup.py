@@ -8,11 +8,12 @@ import sys,re
 
 if re.search('verman-ws1.janelia.priv',socket.gethostname()):
     sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
-    sys.path.append('/groups/branson/home/kabram/bransonlab/pyutils')
     bdir = '/localhome/kabram/poseTF/'
+elif re.search('bransonk-ws9.hhmi.org',socket.gethostname()):
+    sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
+    bdir = '/groups/branson/bransonlab/mayank/PoseTF/'
 else:
     sys.path.append('/home/mayank/work/caffe/python')
-    sys.path.append('/home/mayank/work/pyutils')
     bdir = '/home/mayank/work/tensorflow/'
 
 

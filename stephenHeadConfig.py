@@ -5,6 +5,7 @@
 
 import os
 import re
+import localSetup
 
 class myconfig(object): 
 
@@ -40,6 +41,7 @@ class myconfig(object):
     useMRF = False
     useAC = True
     useHoldout = True
+    device = None
 
     # ----- Fine Network parameters
 
@@ -94,10 +96,13 @@ class myconfig(object):
     map_size = 100000*psz**2*3
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
 
-    cachedir = '/home/mayank/work/tensorflow/cacheHead/'
-    labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
+    cachedir = os.path.join(localSetup.bdir,'cacheHead/')
+    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
+ 
+#     cachedir = '/home/mayank/work/tensorflow/cacheHead/'
+#     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
-    viddir = '/home/mayank/Dropbox/PoseEstimation/Stephen'
+    viddir = '/groups/branson/bransonlab/mayank/PoseEstimationData/Stephen'
     ptn = 'fly_000[0-9]'
     trainfilename = 'train_lmdb'
     valfilename = 'val_lmdb'
@@ -140,6 +145,7 @@ class myconfig(object):
 conf = myconfig()
 sideconf = myconfig()
 sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
-sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
+# sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
+sideconf.cachedir = os.path.join(localSetup.bdir,'cacheHeadSide/')
 sideconf.view = 0
 
