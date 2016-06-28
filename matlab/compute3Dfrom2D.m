@@ -400,7 +400,8 @@ for i = 1:nlandmarks,
   [psidebest_re(1,i,:),psidebest_re(2,i,:)] = dlt_3D_to_2D(dlt_side,Pbest(1,i,:),Pbest(2,i,:),Pbest(3,i,:));
 end
 
-save(savefile,'pfrontbest','psidebest','Pbest','pfrontbest_re','psidebest_re','-v7.3');
+save(savefile,'pfrontbest','psidebest','Pbest','pfrontbest_re','psidebest_re',...
+     'Psample','psample_front','psample_side','w','z','-v7.3');
 
 %% plot results with temporal smoothing
 
