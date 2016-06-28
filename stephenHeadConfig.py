@@ -135,7 +135,7 @@ class myconfig(object):
     def getexpname(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        expname = dir_parts[-6] + "!" + dir_parts[-3]
+        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-6]
         return expname
 
     def getexplist(self,L):

@@ -18,6 +18,8 @@ import localSetup
 import myutils
 import os
 import cv2
+import math
+import sys
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -456,9 +458,25 @@ def classifyMovie(conf,moviename,outtype,self,sess):
     else:        
         predPair = [self.basePred]
         
-    for curl in range(nframes):
-        framein = myutils.readframe(cap,curl)
-        x0,x1,x2 = processImage(framein,conf)
+    bsize = conf.batch_size
+    nbatches = int(math.ceil(float(nframes)/bsize))
+    framein = myutils.readframe(cap,1)
+    framein = cropImages(framein,conf)
+    framein = framein[np.newaxis,:,:,0:1]
+    x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
+    for curl in range(nbatches):
+        
+        allf = np.zeros((bsize,)+conf.imsz+(1,))
+        ndxst = curl*bsize
+        ndxe = min(nframes,(curl+1)*bsize)
+        ppe = min(ndxe-ndxst,bsize)
+        for ii in range(ppe):
+            framein = myutils.readframe(cap,curl*bsize+ii)
+            framein = cropImages(framein,conf)
+            allf[ii,...] = framein[:,:,0:1]
+            
+        x0,x1,x2 = multiScaleImages(allf, conf.rescale,  conf.scale, conf.l1_cropsz)
+
         self.feed_dict[self.ph['x0']] = x0
         self.feed_dict[self.ph['x1']] = x1
         self.feed_dict[self.ph['x2']] = x2
@@ -467,28 +485,31 @@ def classifyMovie(conf,moviename,outtype,self,sess):
             predscores = np.zeros((nframes,)+pred[0].shape[1:] + (2,))
         if outtype == 3:
             baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
-            predLocs[curl,:,0,:] = fineLocs[0,:,:]
-            predLocs[curl,:,1,:] = baseLocs[0,:,:]
+            predLocs[ndxst:ndxe,:,0,:] = fineLocs[:ppe,:,:]
+            predLocs[ndxst:ndxe,:,1,:] = baseLocs[:ppe,:,:]
             for ndx in range(conf.n_classes):
-                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-                predmaxscores[curl,:,1] = pred[1][0,:,:,ndx].max()
-            predscores[curl,:,:,:,0] = pred[0]
+                predmaxscores[ndxst:ndxe,:,0] = pred[0][:ppe,:,:,ndx].max()
+                predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
+            predscores[curl,:,:,:,0] = pred[0][:ppe,:,:,:]
         elif outtype == 2:
             baseLocs = getBasePredLocs(pred[0],conf)
-            predLocs[curl,:,0,:] = baseLocs[0,:,:]
+            predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             baseLocs = getBasePredLocs(pred[1],conf)
-            predLocs[curl,:,1,:] = baseLocs[0,:,:]
+            predLocs[ndxst:ndxe,:,1,:] = baseLocs[:ppe,:,:]
             for ndx in range(conf.n_classes):
-                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-                predmaxscores[curl,:,1] = pred[1][0,:,:,ndx].max()
-            predscores[curl,:,:,:,0] = pred[0]
-            predscores[curl,:,:,:,1] = pred[1]
+                predmaxscores[ndxst:ndxe,:,0] = pred[0][:ppe,:,:,ndx].max()
+                predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
+            predscores[ndxst:ndxe,:,:,:,0] = pred[0][:ppe,:,:,:]
+            predscores[ndxst:ndxe,:,:,:,1] = pred[1][:ppe,:,:,:]
         elif outtype == 1:
             baseLocs = getBasePredLocs(pred[0],conf)
-            predLocs[curl,:,0,:] = baseLocs[0,:,:]
+            predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             for ndx in range(conf.n_classes):
-                predmaxscores[curl,:,0] = pred[0][0,:,:,ndx].max()
-            predscores[curl,:,:,:,0] = pred[0]
+                predmaxscores[ndxst:ndxe,:,0] = pred[0][:ppe,:,:,ndx].max()
+            predscores[ndxst:ndxe,:,:,:,0] = pred[0][:ppe,:,:,:]
+        sys.stdout.write('.')
+        if curl%20==19:
+            sys.stdout.write('\n')
 
     cap.release()
     return predLocs,predscores,predmaxscores
@@ -521,6 +542,60 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
                     c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
                     s=np.clip(predmaxscores[curl,:,0]*400,20,100),
                     linewidths=0,edgecolors='face')
+        ax1.axis('off')
+        ax2 = fig.add_subplot(1,2,2)
+        if outtype == 1:
+            curpreds = predscores[curl,:,:,:,0]
+        elif outtype ==2:
+            curpreds = predscores[curl,:,:,:,0]*2 - 1
+            
+        rgbim = createPredImage(curpreds,conf.n_classes)
+        ax2.imshow(rgbim)
+        ax2.axis('off')
+
+        fname = "test_{:06d}.png".format(curl)
+        
+        # to printout without X. 
+        # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+        # The size * the dpi gives the final image size
+        #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+        canvas.print_figure(os.path.join(tdir,fname), dpi=80)
+        
+        # below is the easy way.
+#         plt.savefig(os.path.join(tdir,fname))
+        
+    tfilestr = os.path.join(tdir,'test_*.png')
+    mencoder_cmd = "mencoder mf://" + tfilestr +     " -frames " + "{:d}".format(nframes) + " -mf type=png:fps=15 -o " +     outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+    os.system(mencoder_cmd)
+    cap.release()
+
+
+# In[ ]:
+
+def createPredMovieNoConf(conf,predList,moviename,outmovie,outtype):
+    
+    predLocs,predscores,predmaxscores = predList
+#     assert false, 'stop here'
+    tdir = tempfile.mkdtemp()
+
+    cap = cv2.VideoCapture(moviename)
+    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    
+    cmap = cm.get_cmap('jet')
+    rgba = cmap(np.linspace(0,1,conf.n_classes))
+    
+    fig = mpl.figure.Figure(figsize = (9,4))
+    canvas = FigureCanvasAgg(fig)
+    for curl in range(nframes):
+        framein = myutils.readframe(cap,curl)
+        framein = cropImages(framein,conf)
+
+        fig.clf()
+        ax1 = fig.add_subplot(1,2,1)
+        ax1.imshow(framein[:,:,0], cmap=cm.gray)
+        ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
+                    c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                    s=20,linewidths=0,edgecolors='face')
         ax1.axis('off')
         ax2 = fig.add_subplot(1,2,2)
         if outtype == 1:

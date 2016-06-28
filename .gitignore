@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 cache*/
 Untitled*
 *.swp
@@ -74,3 +75,9 @@ target/
 # dotenv
 .env
 
+=======
+.apt.mat
+pref.yaml
+Manifest.txt
+*.asv
+>>>>>>> df1de9e1493d929de94fcd63b0510058ae6df479

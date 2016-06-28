@@ -188,15 +188,17 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.acTrain(restore=True)
 
 
-# In[1]:
+# In[2]:
 
 import PoseTrain
 reload(PoseTrain)
 import tensorflow as tf
-from stephenHeadConfig import conf as conf
+from stephenHeadConfig import sideconf as conf
+import os
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 conf.useAC = False
-conf.useMRf = True
+conf.useMRf = False
 pobj = PoseTrain.PoseTrain(conf)
 
 pobj.fineTrain(restore=False)
@@ -247,6 +249,37 @@ for idx in range(zz.shape[0]):
 
 # In[1]:
 
+# create a list of movies for stephen -- May 23 2016
+import os
+with open("/groups/branson/bransonlab/mayank/PoseEstimationData/Stephen/folders2track.txt", "r") as text_file:
+    movies = text_file.readlines()
+movies = [x.rstrip() for x in movies]
+
+import glob
+sdir = movies[0::2]    
+fdir = movies[1::2]
+fmovies = []
+smovies = []
+for ndx,ff  in enumerate(sdir):
+    kk = glob.glob(ff+'/*_c.avi')
+    if len(kk) is not 1:
+        print ff
+        continue
+    smovies.append(kk[0])
+    kk = glob.glob(fdir[ndx]+'/*_c.avi')
+    fmovies += kk
+        
+print smovies[0:3]
+print fmovies[0:3]
+print len(smovies)
+print len(fmovies)
+for ff in smovies+fmovies:
+    if not os.path.isfile(ff):
+        print ff
+
+
+# In[2]:
+
 import localSetup
 import PoseTools
 reload(PoseTools)
@@ -264,6 +297,7 @@ from stephenHeadConfig import sideconf as conf
 conf.useMRF = False
 outtype = 1
 extrastr = '_side'
+redo = False
 
 # For FRONT
 # from stephenHeadConfig import conf as conf
@@ -271,7 +305,7 @@ extrastr = '_side'
 # outtype = 2
 # extrastr = ''
 
-conf.batch_size = 1
+# conf.batch_size = 1
 
 self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
@@ -280,10 +314,10 @@ PoseTools.initNetwork(self,sess,outtype)
 from scipy import io
 import cv2
 
-_,valmovies = multiResData.getMovieLists(conf)
-for ndx in range(len(valmovies)):
-    valmovies[ndx] = '/groups/branson/bransonlab/mayank/' + valmovies[ndx][17:]
-for ndx in [0,3,-3,-1]:
+# _,valmovies = multiResData.getMovieLists(conf)
+# for ndx in range(len(valmovies)):
+#     valmovies[ndx] = '/groups/branson/bransonlab/mayank/' + valmovies[ndx][17:]
+# for ndx in [0,3,-3,-1]:
 
 # valmovies = ['/groups/branson/bransonlab/projects/flyHeadTracking/ExamplefliesWithNoTrainingData/fly138/fly138_trial1/C001H001S0001/C001H001S0001_c.avi',
 #              '/groups/branson/bransonlab/projects/flyHeadTracking/ExamplefliesWithNoTrainingData/fly138/fly138_trial2/C001H001S0001/C001H001S0001_c.avi',
@@ -295,13 +329,21 @@ for ndx in [0,3,-3,-1]:
 #              '/groups/branson/bransonlab/projects/flyHeadTracking/ExamplefliesWithNoTrainingData/fly163/fly163_trial4/C001H001S0001/C001H001S0001_c.avi',
 #             ]
 # for ndx in range(len(valmovies)):
-    
+valmovies = smovies    
+for ndx in range(len(valmovies)):
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
-    pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/headResults/movies/' + oname + extrastr
+#     pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/headResults/movies/' + oname + extrastr
+    pname = '/nobackup/branson/mayank/stephenOut/' + oname + extrastr
+    if os.path.isfile(pname + '.mat') and not redo:
+        continue
+        
+
+    if not os.path.isfile(valmovies[ndx]):
+        continue
     
     predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
-    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+#     PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
@@ -317,7 +359,7 @@ for ndx in [0,3,-3,-1]:
     predLocs[:,:,:,0] += orig_crop_loc[1]
     predLocs[:,:,:,1] += orig_crop_loc[0]
     
-    io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
+    io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
     print 'Done:%s'%oname
 
 
@@ -555,4 +597,21 @@ for ndx in range(ncl):
     sigray(tr_ims[curi,:,:],ax)
     ax.scatter(tr_pred_locs[curi,:,0,1],tr_pred_locs[curi,:,1,1])
     ax.scatter(ox[ndx]*4,oy[ndx]*4,c='r')
+
+
+# In[5]:
+
+# compare python gmm model to Kristin's matlab one
+import h5py
+import scipy.io
+mfile = '/nobackup/branson/mayank/movies/projects__fly219_trial1.mat'
+L = scipy.io.loadmat(mfile)
+scores = L['scores']
+print scores.shape
+
+
+# In[6]:
+
+ff = scores[30,:,:,2,0]
+Kk = np.percentile(ff,99.9)
 

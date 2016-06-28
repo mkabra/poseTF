@@ -323,7 +323,10 @@ axis equal;
 
 %% plot results.. 3D recon without smoothing(?)
 
-dosave = true;
+dosave = false;
+doplot = false;
+
+if doplot,
 if dosave,
   vidobj = VideoWriter(sprintf('../results/headResults/movies/3DRecon_%s_plain.avi',experiment_name));
   open(vidobj);
@@ -415,6 +418,7 @@ if dosave,
   close(vidobj);
 end
   
+end % do plot
 %% choose a discrete set of samples for each frame
 
 thresh_nonmax_front = 0;
