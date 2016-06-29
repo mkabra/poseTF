@@ -26,7 +26,7 @@ fclose(ff);
 
 %%
 
-for ndx = 1:numel(Xf)
+parfor ndx = 1:numel(Xf)
   fparts = strsplit(Xf{ndx},filesep);
   outf = sprintf('%s__%s__%s.mat',fparts{end-4},fparts{end-1},fparts{end}(end-3:end));
   fparts = strsplit(Xs{ndx},filesep);
@@ -51,7 +51,7 @@ for ndx = 1:numel(Xf)
     continue
   end
   
-  if ndx<5,
+  if ndx<0,
     makevideo = true;
   else
     makevideo = false;
