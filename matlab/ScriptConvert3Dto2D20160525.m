@@ -9,7 +9,7 @@ fclose(fid);
 
 %%
 
-for ndx = 20:numel(Xf)
+for ndx = 1:numel(Xf)
   matfile = [Xf{ndx} '_3Dres.mat'];
   if ~exist(matfile,'file'),
     fprintf('3D mat file dont exist for %s\n',Xf{ndx})
