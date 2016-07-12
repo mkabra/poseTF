@@ -23,7 +23,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import math,cv2,scipy,time,pickle
-import cvc
+from cvc import cvc
 import numpy as np
 
 import multiPawTools,myutils,multiResData

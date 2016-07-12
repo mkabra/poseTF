@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import cv2
-import cvc
+from cvc import cvc
 import math
 import lmdb
 import caffe

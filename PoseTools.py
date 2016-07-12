@@ -18,7 +18,7 @@ import localSetup
 import myutils
 import os
 import cv2
-import cvc
+from cvc import cvc
 import math
 import sys
 import matplotlib as mpl
