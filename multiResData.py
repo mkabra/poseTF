@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 import cv2
+import cvc
 import math
 import lmdb
 import caffe
@@ -182,8 +183,8 @@ def createHoldoutData(conf):
             for curl in frames:
 
                 fnum = ts[curl]
-                if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT):
-                    if fnum > cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)+1:
+                if fnum > cap.get(cvc.FRAME_COUNT):
+                    if fnum > cap.get(cvc.FRAME_COUNT)+1:
                         raise ValueError('Accessing frames beyond ' + 
                                          'the length of the video for' + 
                                          ' {} expid {:d} '.format(expname,ndx) + 
@@ -260,8 +261,8 @@ def createDB(conf):
             for curl in frames:
 
                 fnum = ts[curl]
-                if fnum > cap.get(cv2.CAP_PROP_FRAME_COUNT):
-                    if fnum > cap.get(cv2.CAP_PROP_FRAME_COUNT)+1:
+                if fnum > cap.get(cvc.FRAME_COUNT):
+                    if fnum > cap.get(cvc.FRAME_COUNT)+1:
                         raise ValueError('Accessing frames beyond ' + 
                                          'the length of the video for' + 
                                          ' {} expid {:d} '.format(expname,ndx) + 

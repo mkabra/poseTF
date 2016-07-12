@@ -9,6 +9,7 @@ import numpy as np
 import scipy
 import math
 import cv2
+import cvc
 
 
 # In[ ]:
@@ -40,19 +41,19 @@ def padgrab(inmat,padv,*args):
 # because of course, videos have to be a pain in the a$$
 
 def readframe(cap, position):
-  assert position < cap.get(cv2.CAP_PROP_FRAME_COUNT), "incorrect frame access" 
+  assert position < cap.get(cvc.FRAME_COUNT), "incorrect frame access" 
   positiontoset = position
   pos = -1
-  cap.set(cv2.CAP_PROP_POS_FRAMES, position)
+  cap.set(cvc.FRAME_POSITION, position)
   count =1
   while pos < position:
-    pos = cap.get(cv2.CAP_PROP_POS_FRAMES)
+    pos = cap.get(cvc.FRAME_POSITION)
     ret, image = cap.read()
     if pos == position:
       return image
     elif pos > position:
       positiontoset -= 1
-      cap.set(cv2.CAP_PROP_POS_FRAMES, positiontoset)
+      cap.set(cvc.FRAME_POSITION, positiontoset)
       pos = -1
     count +=1
     

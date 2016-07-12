@@ -18,6 +18,7 @@ import localSetup
 import myutils
 import os
 import cv2
+import cvc
 import math
 import sys
 import matplotlib as mpl
@@ -424,7 +425,7 @@ def initNetwork(self,sess,outtype):
 
 def openMovie(moviename):
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cvc.FRAME_COUNT))
     return cap,nframes
 
 
@@ -524,7 +525,7 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
     tdir = tempfile.mkdtemp()
 
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cvc.FRAME_COUNT))
     
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0,1,conf.n_classes))
@@ -579,7 +580,7 @@ def createPredMovieNoConf(conf,predList,moviename,outmovie,outtype):
     tdir = tempfile.mkdtemp()
 
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cvc.FRAME_COUNT))
     
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0,1,conf.n_classes))

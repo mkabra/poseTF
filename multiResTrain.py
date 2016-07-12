@@ -23,6 +23,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import math,cv2,scipy,time,pickle
+import cvc
 import numpy as np
 
 import multiPawTools,myutils,multiResData
@@ -384,7 +385,7 @@ def predictMovie(model_file,inmovie,outmovie):
     tdir = tempfile.mkdtemp()
 
     cap = cv2.VideoCapture(inmovie)
-    nframes = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    nframes = int(cap.get(cvc.FRAME_COUNT))
     plt.gray()
     # with writer.saving(fig,"test_results.mp4",4):
     fig = plt.figure()

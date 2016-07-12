@@ -965,7 +965,8 @@ for ii in range(3):
 fig.savefig('/groups/branson/home/kabram/temp/headValResults.png')
 
 
-# In[ ]:
+# In[1]:
 
-# sizes of various lmdbs
+from cvc import cvc
+print cvc.frame_count
 
