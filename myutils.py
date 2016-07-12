@@ -9,7 +9,7 @@ import numpy as np
 import scipy
 import math
 import cv2
-import cvc
+from cvc import cvc
 
 
 # In[ ]:
