@@ -36,9 +36,9 @@ fclose(ff);
 
 parfor ndx = 1:numel(Xf)
   fparts = strsplit(Xf{ndx},filesep);
-  outf = sprintf('%s__%s__%s_front.mat',fparts{end-4},fparts{end-1},fparts{end}(end-3:end));
+  outf = sprintf('%s__%s__%s_front.mat',fparts{end-5},fparts{end-2},fparts{end-1}(end-3:end));
   fparts = strsplit(Xs{ndx},filesep);
-  outs = sprintf('%s__%s__%s_side.mat',fparts{end-4},fparts{end-1},fparts{end}(end-3:end));
+  outs = sprintf('%s__%s__%s_side.mat',fparts{end-5},fparts{end-2},fparts{end-1}(end-3:end));
   matfilef = fullfile(outdir,outf);
   matfiles = fullfile(outdir,outs);
   if ~exist(matfilef,'file') || ~exist(matfiles,'file'),
