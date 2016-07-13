@@ -3,6 +3,7 @@
 
 # In[5]:
 
+#!/usr/bin/python
 import os
 import numpy as np
 import re
@@ -38,6 +39,10 @@ def main(argv):
                         help="GPU to use")
     parser.add_argument("-movie",dest='makemovie',type=int,
                         help="make results movie",action="store_true")
+#     parser.add_argument("-conf",dest='conf',
+#                         help="Config files")
+#     parser.add_argument("-nviews",dest='nviews',type=int,
+#                         help="make results movie")
 
     args = parser.parse_args()
     
@@ -57,9 +62,9 @@ def main(argv):
         if not os.path.isfile(ff):
             print "Movie not found %s"%(ff)
             raise exit(0)
-    if args.gpunum not None:
+    if args.gpunum is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    for view in range(2): # 0 for front and 1 for side
+    for view in range(conf.nviews): # 0 for front and 1 for side
         tf.reset_default_graph() 
         if view ==1:
 
@@ -74,7 +79,7 @@ def main(argv):
             from stephenHeadConfig import conf as conf
             conf.useMRF = True
             outtype = 2
-            extrastr = ''
+            extrastr = '_front'
             valmovies = fmovies    
 
         # conf.batch_size = 1
