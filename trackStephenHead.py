@@ -66,7 +66,7 @@ def main(argv):
             raise exit(0)
     if args.gpunum is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-    for view in range(conf.nviews): # 0 for front and 1 for side
+    for view in range(2): # 0 for front and 1 for side
         tf.reset_default_graph() 
         if view ==1:
 
