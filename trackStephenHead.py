@@ -37,7 +37,7 @@ def main(argv):
                       action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
                         help="GPU to use")
-    parser.add_argument("-movie",dest='makemovie',type=int,
+    parser.add_argument("-movie",dest='makemovie'
                         help="make results movie",action="store_true")
 #     parser.add_argument("-conf",dest='conf',
 #                         help="Config files")
