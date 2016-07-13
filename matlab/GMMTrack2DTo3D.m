@@ -42,7 +42,7 @@ parfor ndx = 1:numel(Xf)
   matfilef = fullfile(outdir,outf);
   matfiles = fullfile(outdir,outs);
   if ~exist(matfilef,'file') || ~exist(matfiles,'file'),
-    fprintf('Outfiles dont exist for %s\n',Xf{ndx})
+    fprintf('Outfile %s or %s dont exist for %s\n',matfilef,matfiles,Xf{ndx})
     continue;
   end
   flynum = str2double(fparts{end-2}(4:6));
