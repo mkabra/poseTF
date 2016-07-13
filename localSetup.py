@@ -14,6 +14,6 @@ elif re.search('bransonk-ws9.hhmi.org',socket.gethostname()):
     bdir = '/groups/branson/bransonlab/mayank/PoseTF/'
 else:
     sys.path.append('/home/mayank/work/caffe/python')
-    bdir = '/home/mayank/work/tensorflow/'
+    bdir = '/home/mayank/work/poseEstimation/'
 
 
