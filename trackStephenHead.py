@@ -45,6 +45,8 @@ def main(argv):
 #                         help="make results movie")
 
     args = parser.parse_args()
+    if args.redo is None:
+        args.redo = False
     
     with open(args.sfilename, "r") as text_file:
         smovies = text_file.readlines()
