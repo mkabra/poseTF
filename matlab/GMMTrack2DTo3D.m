@@ -2,11 +2,11 @@ function GMMTrack2DTo3D(fmoviefile,smoviefile,kinelistfile,outdir,redo)
 
 %% Constructs smoothed 3D construction for videos listed in file
 
-addpath ~bransonk/behavioranalysis/code/Jdetect/Jdetect/filehandling;
-addpath ~bransonk/behavioranalysis/code/Jdetect/Jdetect/misc;
+addpath /groups/branson/home/bransonk/behavioranalysis/code/Jdetect/Jdetect/filehandling;
+addpath /groups/branson/home/bransonk/behavioranalysis/code/Jdetect/Jdetect/misc;
 
 addpath /groups/branson/bransonlab/projects/flyHeadTracking/code/
-addpath ~bransonk/tracking/code/Ctrax/matlab/netlab
+addpath /groups/branson/home/bransonk/tracking/code/Ctrax/matlab/netlab
 
 % infile = '~/bransonlab/PoseEstimationData/Stephen/folders2track.txt';
 % outdir = '/nobackup/branson/mayank/stephenOut/';
@@ -52,40 +52,36 @@ parfor ndx = 1:numel(Xf)
     continue;
   end
   
-  kinematfile = fullfile(kineDir,[K{2}{mndx} '_kine.mat']);
-  outfile = [Xf{ndx} '_3Dres'];
-  
-  if exist([outfile '.mat'],'file') && ~redo,
-    continue
-  end
+  kinematfile = K{2}{mndx};
+  outfile = [matfiles(1:end-9) '_3Dres.mat'];
   
   if ndx<0,
     makevideo = true;
   else
     makevideo = false;
   end
-  [~,dname] = fileparts(Xf{ndx});
-  fmov = fullfile(Xf{ndx},[dname '_c.avi']);
-  [~,dname] = fileparts(Xs{ndx});
-  smov = fullfile(Xs{ndx},[dname '_c.avi']);
-  fprintf('Working on %d:%s\n',ndx,Xf{ndx});
-  compute3Dfrom2D(outfile,fmov,smov,matfilef,matfiles,kinematfile,makevideo);
-  fprintf('Done.\n');
+
+  if ~(exist(outfile,'file') && ~redo),
+    
+    [~,dname] = fileparts(Xf{ndx});
+    fmov = fullfile(Xf{ndx},[dname '_c.avi']);
+    [~,dname] = fileparts(Xs{ndx});
+    smov = fullfile(Xs{ndx},[dname '_c.avi']);
+    fprintf('Working on %d:%s\n',ndx,Xf{ndx});
+    compute3Dfrom2D(outfile,fmov,smov,matfilef,matfiles,kinematfile,makevideo);
+    fprintf('Done.\n');
+  end
 
   % convert back to 2D
-    matfile = [Xf{ndx} '_3Dres.mat'];
+    matfile = outfile;
   if ~exist(matfile,'file'),
-    fprintf('3D mat file dont exist for %s\n',Xf{ndx})
+    fprintf('3D mat file %s dont exist for %s\n',matfile,Xf{ndx})
     continue;
   end
-  [~,fname] = fileparts(Xf{ndx});
-  ftrx = fullfile(Xf{ndx}, [fname '_c.trk']);
-  
-  [~,sname] = fileparts(Xs{ndx});
-  strx = fullfile(Xs{ndx}, [sname '_c.trk']);
+  ftrx = [Xf{ndx}(1:end-4) '.trk']
+  strx = [Xs{ndx}(1:end-4) '.trk']
   
   convertResultsToTrx(matfile,ftrx,strx);
   fprintf('Done conversion for %d %s\n',ndx,Xf{ndx});
-
   
 end
