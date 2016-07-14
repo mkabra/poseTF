@@ -52,7 +52,7 @@ parfor ndx = 1:numel(Xf)
     continue;
   end
   
-  kinematfile = fullfile(kineDir,[K{2}{mndx} '_kine.mat']);
+  kinematfile = K{2}{mndx};
   outfile = [Xf{ndx} '_3Dres'];
   
   if exist([outfile '.mat'],'file') && ~redo,

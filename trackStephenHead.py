@@ -29,15 +29,18 @@ def main(argv):
     parser.add_argument("-f",dest="ffilename",
                       help="text file with list of front view videos",
                       required=True)
+    parser.add_argument("-d",dest="dltfilename",
+                      help="text file with list of DLTs one per fly as 'flynum,/path/to/dltfile",
+                      required=True)
     parser.add_argument("-o",dest="outdir",
-                      help="output directory",
+                      help="temporary output directory to store intermediate computations",
                       required=True)
     parser.add_argument("-r",dest="redo",
                       help="force recompute tracks for all videos",
                       action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
                         help="GPU to use")
-    parser.add_argument("-movie",dest='makemovie',
+    parser.add_argument("-makemovie",dest='makemovie',
                         help="make results movie",action="store_true")
 #     parser.add_argument("-conf",dest='conf',
 #                         help="Config files")
@@ -74,7 +77,6 @@ def main(argv):
             conf.useMRF = False
             outtype = 1
             extrastr = '_side'
-            redo = False
             valmovies = smovies    
         else:
             # For FRONT
@@ -125,6 +127,13 @@ def main(argv):
             io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
             print 'Done:%s'%oname
 
+    script_path = os.path.realpath(__file__)
+    [script_dir,script_name] = os.path.split(script_path)
+    matdir = os.path.join(script_dir,'matlab')
+    matlab_cmd = 'addpath %s; GMMTrack(%s,%s,%s,%s,%d)' %(matdir,args.ffilename,
+                                                          args.sfilename,args.dltfilename,
+                                                          args.outdir,args.redo)
+    matlab_cmd = 'matlab -nodesktop -nosplash -r '
 
 if __name__ == "__main__":
    main(sys.argv[1:])
