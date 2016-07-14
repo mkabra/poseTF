@@ -130,10 +130,12 @@ def main(argv):
     script_path = os.path.realpath(__file__)
     [script_dir,script_name] = os.path.split(script_path)
     matdir = os.path.join(script_dir,'matlab')
-    matlab_cmd = 'addpath %s; GMMTrack(%s,%s,%s,%s,%d)' %(matdir,args.ffilename,
+    matlab_cmd = 'addpath %s; GMMTrack(%s,%s,%s,%s,%d);' %(matdir,args.ffilename,
                                                           args.sfilename,args.dltfilename,
                                                           args.outdir,args.redo)
-    matlab_cmd = 'matlab -nodesktop -nosplash -r '
+    matlab_cmd = "matlab -nodesktop -nosplash -r '%s' " % matlab_cmd
+    print 'Executing matlab command:%s'%matlab_cmd
+    sys.exect(matlab_cmd)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

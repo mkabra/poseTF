@@ -78,8 +78,14 @@ assert(Tfront==Tside);
 T = Tfront;
 
 kd = load(kinematfile);
-dlt_side = kd.data.cal.coeff.DLT_1;
-dlt_front = kd.data.cal.coeff.DLT_2;
+if isfield(kd,'data'),
+  dlt_side = kd.data.cal.coeff.DLT_1;
+  dlt_front = kd.data.cal.coeff.DLT_2;
+else
+  dlt_side = kd.DLT_1;
+  dlt_front = kd.DLT_2;
+end
+
 
 
 %% 3d reconstruction
