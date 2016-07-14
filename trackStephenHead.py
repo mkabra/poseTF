@@ -99,7 +99,7 @@ def main(argv):
         #     pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/headResults/movies/' + oname + extrastr
             pname = os.path.join(args.outdir , oname + extrastr)
             print oname
-            if os.path.isfile(pname + '.mat') and not redo:
+            if os.path.isfile(pname + '.mat') and not args.redo:
                 continue
 
 
