@@ -89,7 +89,7 @@ def main(argv):
         # conf.batch_size = 1
 
         self = PoseTools.createNetwork(conf,outtype)
-        sess = tf.InteractiveSession()
+        sess = tf.Session()
         PoseTools.initNetwork(self,sess,outtype)
 
 
