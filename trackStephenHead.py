@@ -30,18 +30,18 @@ def main(argv):
                       help="text file with list of front view videos",
                       required=True)
     parser.add_argument("-d",dest="dltfilename",
-                      help="text file with list of DLTs one per fly as 'flynum,/path/to/dltfile",
+                      help="text file with list of DLTs, one per fly as 'flynum,/path/to/dltfile'",
                       required=True)
     parser.add_argument("-o",dest="outdir",
                       help="temporary output directory to store intermediate computations",
                       required=True)
     parser.add_argument("-r",dest="redo",
-                      help="force recompute tracks for all videos",
+                      help="if specified will recompute everything",
                       action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
-                        help="GPU to use")
+                        help="GPU to use [optional]")
     parser.add_argument("-makemovie",dest='makemovie',
-                        help="make results movie",action="store_true")
+                        help="if specified will make results movie",action="store_true")
 #     parser.add_argument("-conf",dest='conf',
 #                         help="Config files")
 #     parser.add_argument("-nviews",dest='nviews',type=int,
