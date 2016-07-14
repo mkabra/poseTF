@@ -135,7 +135,7 @@ def main(argv):
                                                           args.outdir,args.redo)
     matlab_cmd = 'matlab -nodesktop -nosplash -r "%s" ' % matlab_cmd
     print 'Executing matlab command:%s'%matlab_cmd
-    call(matlab_cmd)
+    call(matlab_cmd,shell=True)
 
 if __name__ == "__main__":
    main(sys.argv[1:])
