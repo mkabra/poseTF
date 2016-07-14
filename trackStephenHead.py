@@ -27,7 +27,7 @@ def main(argv):
                       help="text file with list of side view videos",
                       required=True)
     parser.add_argument("-f",dest="ffilename",
-                      help="text file with list of front view videos",
+                      help="text file with list of front view videos. The list of files side view videos and front view videos should match up",
                       required=True)
     parser.add_argument("-d",dest="dltfilename",
                       help="text file with list of DLTs, one per fly as 'flynum,/path/to/dltfile'",
