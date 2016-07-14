@@ -65,7 +65,7 @@ def main(argv):
     
     for ff in smovies+fmovies:
         if not os.path.isfile(ff):
-            print "Movie not found %s"%(ff)
+            print "Movie %s not found"%(ff)
             raise exit(0)
     if args.gpunum is not None:
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
