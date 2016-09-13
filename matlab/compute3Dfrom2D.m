@@ -190,7 +190,8 @@ for t = 1:Tfront,
       idxcurr = scorescurr > threshcurr;
     
       k0 = numel(r);
-      k = 2*k0;
+      k = k0+min(numel(r),floor(nnz(idxcurr)/4));
+      %k = 2*k0;
       start = nan(k,2);
       start(1:k0,:) = [c(:),r(:)];
       X = [xgrid(idxcurr),ygrid(idxcurr)];
