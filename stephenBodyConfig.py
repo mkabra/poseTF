@@ -20,7 +20,7 @@ class myconfig(object):
     # ----- Network parameters
 
     scale = 2
-    rescale = 1  # how much to downsize the base image.
+    rescale = 2  # how much to downsize the base image.
     numscale = 3
     pool_scale = 4
     # sel_sz determines the patch size used for the final decision
@@ -28,7 +28,7 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/2/2/2
+    sel_sz = 512/2/2
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 1.5

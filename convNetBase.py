@@ -189,7 +189,7 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
                           0.005,1,doBatchNorm,trainPhase) 
         if not doBatchNorm:
             conv6 = tf.nn.dropout(conv6,_dropout,
-                                  [conf.batch_size,1,1,conf.nfcfilt])
+                              [conf.batch_size,1,1,conf.nfcfilt])
 
     with tf.variable_scope('layer7'):
         conv7 = conv_relu(conv6,[1,1,conf.nfcfilt,conf.nfcfilt],

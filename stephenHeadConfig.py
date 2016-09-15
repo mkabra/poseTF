@@ -16,6 +16,7 @@ class myconfig(object):
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
     acName = 'AC'
+    evalName = 'eval'
 
     # ----- Network parameters
 
@@ -31,7 +32,7 @@ class myconfig(object):
     sel_sz = 512/2/2/2
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
-    label_blur_rad = 1.5
+    label_blur_rad = 3 #1.5
     fine_label_blur_rad = 1.5
     n_classes = 5 # 
     dropout = 0.5 # Dropout, probability to keep units
@@ -66,7 +67,9 @@ class myconfig(object):
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
 
-    base_training_iters = 5000
+    batch_size = 8
+    mult_fac = 16/batch_size
+    base_training_iters = 5000*mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
     
@@ -74,14 +77,22 @@ class myconfig(object):
     # -- March 30, 2016 Mayank
     # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
     # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
-    fine_training_iters = 3000
-    mrf_training_iters = 3000
-    ac_training_iters = 5000
+    fine_training_iters = 3000*mult_fac
+    mrf_training_iters = 3000*mult_fac
+    ac_training_iters = 5000*mult_fac
+    eval_training_iters = 500*mult_fac
     gamma = 0.1
     step_size = 200000
-    batch_size = 16
     display_step = 30
     numTest = 100
+    
+    # range for contrast, brightness and rotation adjustment
+    horzFlip = True
+    vertFlip = False
+    brange = [-0.2,0.2] 
+    crange = [0.7,1.3]
+    rrange = 30
+    imax = 255.
     # fine_batch_size = 8
 
 
@@ -121,14 +132,17 @@ class myconfig(object):
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
     acoutname = expname + acName
+    evaloutname = expname + evalName
     baseckptname = baseoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
     acckptname = acoutname + 'ckpt'
+    evalckptname = evaloutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
     acdataname = acoutname + 'traindata'
+    evaldataname = evaloutname + 'traindata'
 
     # ----- project specific functions
 

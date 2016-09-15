@@ -21,6 +21,7 @@ import cv2
 from cvc import cvc
 import math
 import sys
+import copy
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -58,7 +59,12 @@ def scaleImages(img,scale):
     for ndx in range(sz[0]):
         for chn in range(sz[3]):
             simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],1./scale)
-    return simg
+
+#     return simg
+    zz = simg.astype('float')
+    mm = zz.mean(1).mean(1)
+    xx = zz-mm[:,np.newaxis,np.newaxis,:]
+    return xx
 
 def multiScaleImages(inImg, rescale, scale, l1_cropsz):
     # only crop the highest res image
@@ -66,6 +72,7 @@ def multiScaleImages(inImg, rescale, scale, l1_cropsz):
         inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
     else:
         inImg_crop = inImg
+            
     x0_in = scaleImages(inImg_crop,rescale)
     x1_in = scaleImages(inImg,rescale*scale)
     x2_in = scaleImages(x1_in,scale)
@@ -122,6 +129,77 @@ def readLMDB(cursor,num,imsz,dataMod):
         locs.append(curloc)
     return images,locs
 
+
+
+# In[1]:
+
+def randomlyFlipLR(img,locs):
+    num = img.shape[0]
+    for ndx in range(num):
+        jj = np.random.randint(2)
+        if jj>0.5:
+            img[ndx,...] = img[ndx,:,:,::-1]
+            locs[ndx,:,0] = img.shape[3]-locs[ndx,:,0]
+    return img,locs
+
+
+# In[1]:
+
+def randomlyFlipUD(img,locs):
+    num = img.shape[0]
+    for ndx in range(num):
+        jj = np.random.randint(2)
+        if jj>0.5:
+            img[ndx,...] = img[ndx,:,::-1,:]
+            locs[ndx,:,1] = img.shape[2]-locs[ndx,:,1]
+    return img,locs
+
+
+# In[2]:
+
+def randomlyRotate(img,locs,conf):
+    if conf.rrange<1:
+        return img,locs
+    num = img.shape[0]
+    rows,cols = img.shape[2:]
+    for ndx in range(num):
+        rangle = (np.random.rand()*2-1)*conf.rrange
+        ii = copy.deepcopy(img[ndx,...]).transpose([1,2,0])
+        M = cv2.getRotationMatrix2D((cols/2,rows/2),rangle,1)
+        ii = cv2.warpAffine(ii,M,(cols,rows))
+        if ii.ndim==2:
+            ii = ii[...,np.newaxis]
+        ii = ii.transpose([2,0,1])
+        img[ndx,...] = ii
+        ll = copy.deepcopy(locs[ndx,...])
+        ll = ll - [cols/2,rows/2]
+        ang = np.deg2rad(rangle)
+        R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
+        lr = np.dot(ll,R) + [cols/2,rows/2]
+        locs[ndx,...] = lr
+        
+    return img,locs
+
+
+# In[1]:
+
+def randomlyAdjust(img,conf):
+    # For images between 0 to 255 
+    # and single channel
+    num = img.shape[0]
+    brange = conf.brange
+    bdiff = brange[1]-brange[0]
+    crange = conf.crange
+    cdiff = crange[1]-crange[0]
+    for ndx in range(num):
+        mm = img[ndx,...].mean()
+        bfactor = np.random.rand()*bdiff + brange[0]
+        jj = img[ndx,...] + bfactor*255.0
+        cfactor = np.random.rand()*cdiff + crange[0]
+        jj = np.minimum(255,(jj-mm)*cfactor+mm)
+        jj = jj.clip(0,255)
+        img[ndx,...] = jj
+    return img
 
 
 # In[ ]:
@@ -307,7 +385,7 @@ def getFineError(locs,pred,finepred,conf):
 # In[ ]:
 
 def initMRFweights(conf):
-    L = h5py.File(conf.labelfile)
+    L = h5py.File(conf.labelfile,'r')
     pts = np.array(L['pts'])
     v = conf.view
     dx = np.zeros([pts.shape[0]])
@@ -384,7 +462,8 @@ def createNetwork(conf,outtype):
     self.createPH()
     self.createFeedDict()
     doBatchNorm = self.conf.doBatchNorm
-    trainPhase = False
+    self.feed_dict[self.ph['phase_train_base']] = False
+    self.feed_dict[self.ph['phase_train_fine']] = False
     self.feed_dict[self.ph['keep_prob']] = 1.
     tt = self.ph['y'].get_shape().as_list()
     tt[0] = 1
@@ -394,17 +473,17 @@ def createNetwork(conf,outtype):
     
     
     with tf.variable_scope('base'):
-        self.createBaseNetwork(doBatchNorm,trainPhase)
+        self.createBaseNetwork(doBatchNorm)
     self.createBaseSaver()
 
     if outtype > 1:
         with tf.variable_scope('mrf'):
-            self.createMRFNetwork(doBatchNorm,trainPhase)
+            self.createMRFNetwork(doBatchNorm)
         self.createMRFSaver()
 
     if outtype > 2:
         with tf.variable_scope('fine'):
-            self.createFineNetwork(doBatchNorm,trainPhase)
+            self.createFineNetwork(doBatchNorm)
         self.createFineSaver()
 
     return self
@@ -541,7 +620,7 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
         ax1.imshow(framein[:,:,0], cmap=cm.gray)
         ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
                     c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
-                    s=np.clip(predmaxscores[curl,:,0]*400,20,100),
+                    s=np.clip(predmaxscores[curl,:,0]*100,20,40),
                     linewidths=0,edgecolors='face')
         ax1.axis('off')
         ax2 = fig.add_subplot(1,2,2)
@@ -560,7 +639,7 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
         # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
         # The size * the dpi gives the final image size
         #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-        canvas.print_figure(os.path.join(tdir,fname), dpi=80)
+        canvas.print_figure(os.path.join(tdir,fname), dpi=160)
         
         # below is the easy way.
 #         plt.savefig(os.path.join(tdir,fname))

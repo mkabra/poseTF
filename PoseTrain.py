@@ -67,12 +67,20 @@ class PoseTrain:
         self.env.close()
         self.valenv.close()
         
-    def readImages(self,dbType):
+    def readImages(self,dbType,distort):
         conf = self.conf
         curcursor = self.val_cursor if (dbType == self.DBType.Val)                     else self.train_cursor
         xs, locs = PoseTools.readLMDB(curcursor,
                          conf.batch_size,conf.imsz,multiResData)
         locs = multiResData.sanitizelocs(locs)
+        if distort:
+            if conf.horzFlip:
+                xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+            if conf.vertFlip:
+                xs,locs = PoseTools.randomlyFlipUD(xs,locs)
+            xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
+            xs = PoseTools.randomlyAdjust(xs,conf)
+        
         self.xs = xs
         self.locs = locs
         
@@ -83,8 +91,12 @@ class PoseTrain:
         locs_ph = tf.placeholder(tf.float32,[self.conf.batch_size,
                                              self.conf.n_classes,2])
         learning_rate_ph = tf.placeholder(tf.float32,shape=[])
+        phase_train_base = tf.placeholder(tf.bool, name='phase_train_base')                 
+        phase_train_fine = tf.placeholder(tf.bool, name='phase_train_fine')                 
         self.ph = {'x0':x0,'x1':x1,'x2':x2,
                      'y':y,'keep_prob':keep_prob,'locs':locs_ph,
+                     'phase_train_base':phase_train_base,
+                     'phase_train_fine':phase_train_fine,
                      'learning_rate':learning_rate_ph}
 
     def createFeedDict(self):
@@ -94,11 +106,13 @@ class PoseTrain:
                           self.ph['y']:[],
                           self.ph['keep_prob']:1.,
                           self.ph['learning_rate']:1,
+                          self.ph['phase_train_base']:False,
+                          self.ph['phase_train_fine']:False,
                           self.ph['locs']:[]}
 
-    def updateFeedDict(self,dbType):
+    def updateFeedDict(self,dbType,distort):
         conf = self.conf
-        self.readImages(dbType)
+        self.readImages(dbType,distort)
         x0,x1,x2 = PoseTools.multiScaleImages(self.xs.transpose([0,2,3,1]),
                                               conf.rescale, conf.scale,
                                               conf.l1_cropsz)
@@ -116,18 +130,20 @@ class PoseTrain:
 
     # ---------------- NETWORK ---------------------
     
-    def createBaseNetwork(self,doBatch,trainPhase):
+    def createBaseNetwork(self,doBatch):
         pred,layers = CNB.net_multi_conv(self.ph['x0'],self.ph['x1'],
                                          self.ph['x2'],self.ph['keep_prob'],
-                                         self.conf,doBatch,trainPhase)
+                                         self.conf,doBatch,
+                                         self.ph['phase_train_base']
+                                        )
         self.basePred = pred
         self.baseLayers = layers
 
-    def createACNetwork(self,doBatch,trainPhase,jointTraining=False):
+    def createACNetwork(self,doBatch,jointTraining=False):
         
         n_classes = self.conf.n_classes
         with tf.variable_scope('AC_'):
-            self.createMRFNetwork(doBatch,trainPhase,jointTraining)
+            self.createMRFNetwork(doBatch,jointTraining)
         
         mrfpred = self.mrfPred if jointTraining else tf.stop_gradient(self.mrfPred)
         
@@ -144,7 +160,7 @@ class PoseTrain:
                 strides=[1, 1, 1, 1], padding='SAME') + ac_biases
         self.acPred = ac_out + mrfpred
         
-    def createMRFNetwork(self,doBatch,trainPhase,jointTraining=False):
+    def createMRFNetwork(self,doBatch,jointTraining=False):
         
         n_classes = self.conf.n_classes
         bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
@@ -174,8 +190,6 @@ class PoseTrain:
                                      initializer=tf.constant_initializer(0))
             conv = tf.nn.conv2d(bpred, weights,
                                strides=[1, 1, 1, 1], padding='SAME')
-#             if self.conf.doBatchNorm:
-#                 conv = batch_norm(conv,trainPhase)
             mrfout = conv+biases
         self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
         
@@ -212,7 +226,7 @@ class PoseTrain:
 #    Return the value below when we used MRF kind of stuff
 #         return conv_out,all_wts
         
-    def createFineNetwork(self,doBatch,trainPhase,jointTraining=False):
+    def createFineNetwork(self,doBatch,jointTraining=False):
         if self.conf.useMRF:
             if not jointTraining:
                 pred = tf.stop_gradient(self.mrfPred)
@@ -252,7 +266,8 @@ class PoseTrain:
         curfine2_2u = tf.unpack(tf.transpose(curfine2_2,[1,0,2,3,4]))
         curfine7u = tf.unpack(tf.transpose(curfine7,[1,0,2,3,4]))
         finepred = CNB.fineOut(curfine1_1u,curfine1_2u,curfine2_1u,curfine2_2u,
-                               curfine7u,self.conf,doBatch,trainPhase)    
+                               curfine7u,self.conf,doBatch,
+                               self.ph['phase_train_fine'])    
         limgs = PoseTools.createFineLabelImages(self.ph['locs'],
                                                 pred,self.conf,labelT)
         self.finePred = finepred
@@ -511,7 +526,7 @@ class PoseTrain:
         self.feed_dict[self.ph['learning_rate']] = cur_lr
         self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
-        self.updateFeedDict(self.DBType.Train)
+        self.updateFeedDict(self.DBType.Train,distort=True)
         r_end = time.clock()
         sess.run(self.opt, self.feed_dict)
         o_end = time.clock()
@@ -614,10 +629,12 @@ class PoseTrain:
     def baseTrain(self, restore=True, trainPhase=True):
         self.createPH()
         self.createFeedDict()
+        self.feed_dict[self.ph['phase_train_base']] = trainPhase
+        self.feed_dict[self.ph['keep_prob']] = 0.5
         doBatchNorm = self.conf.doBatchNorm
         
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm,trainPhase)
+            self.createBaseNetwork(doBatchNorm)
         self.cost = tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.openDBs()
         self.createOptimizer()
@@ -628,11 +645,13 @@ class PoseTrain:
             self.createCursors(txn,valtxn)
             self.restoreBase(sess,restore)
             self.initializeRemainingVars(sess)
-
+            
             for step in range(self.basestartat,self.conf.base_training_iters+1):
+                self.feed_dict[self.ph['keep_prob']] = 0.5
                 self.doOpt(sess,step,self.conf.base_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train)
+                    self.updateFeedDict(self.DBType.Train,distort=True)
+                    self.feed_dict[self.ph['keep_prob']] = 1.
                     train_loss = self.computeLoss(sess,[self.cost])
                     tt1 = self.computePredDist(sess,self.basePred)
                     trainDist = [tt1.mean()]
@@ -640,7 +659,7 @@ class PoseTrain:
                     val_loss = np.zeros([2,])
                     valDist = [0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val)
+                        self.updateFeedDict(self.DBType.Val,distort=False)
                         val_loss += np.array(self.computeLoss(sess,[self.cost]))
                         tt1 = self.computePredDist(sess,self.basePred)
                         valDist = [valDist[0]+tt1.mean()]
@@ -654,15 +673,15 @@ class PoseTrain:
     
     
         
-    def acTrain(self,restore=True,trainPhase = True):
+    def acTrain(self,restore=True):
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm,trainPhase = False)
+            self.createBaseNetwork(doBatchNorm)
 
         with tf.variable_scope('AC_'):
-            self.createACNetwork(doBatchNorm,trainPhase)
+            self.createACNetwork(doBatchNorm)
 
         self.createBaseSaver()
         self.createACSaver()
@@ -712,15 +731,16 @@ class PoseTrain:
             print("Optimization Finished!")
             self.saveAC(sess,step)
             
-    def mrfTrain(self,restore=True,trainPhase = True):
+    def mrfTrain(self,restore=True):
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
+        self.feed_dict[self.ph['phase_train_base']] = False
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm,trainPhase = False)
+            self.createBaseNetwork(doBatchNorm)
 
         with tf.variable_scope('mrf'):
-            self.createMRFNetwork(doBatchNorm,trainPhase)
+            self.createMRFNetwork(doBatchNorm)
 
         self.createBaseSaver()
         self.createMRFSaver()
@@ -751,7 +771,7 @@ class PoseTrain:
             for step in range(self.mrfstartat,self.conf.mrf_training_iters+1):
                 self.doOpt(sess,step,self.conf.mrf_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train)
+                    self.updateFeedDict(self.DBType.Train,distort=True)
                     train_loss = self.computeLoss(sess,[self.cost,basecost])
                     tt1 = self.computePredDist(sess,self.mrfPred)
                     tt2 = self.computePredDist(sess,self.basePred)
@@ -761,7 +781,7 @@ class PoseTrain:
                     val_loss = np.zeros([2,])
                     valDist = [0.,0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val)
+                        self.updateFeedDict(self.DBType.Val,distort=False)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,basecost]))
                         tt1 = self.computePredDist(sess,self.mrfPred)
                         tt2 = self.computePredDist(sess,self.basePred)
@@ -777,18 +797,20 @@ class PoseTrain:
             
             
             
-    def fineTrain(self, restore=True, trainPhase = True):
+    def fineTrain(self, restore=True,trainPhase=True):
         self.createPH()
         self.createFeedDict()
         self.openDBs()
+        self.feed_dict[self.ph['phase_train_fine']] = trainPhase
+        self.feed_dict[self.ph['phase_train_base']] = False
         doBatchNorm = self.conf.doBatchNorm
         
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm,trainPhase)
+            self.createBaseNetwork(doBatchNorm)
         with tf.variable_scope('mrf'):
-            self.createMRFNetwork(doBatchNorm,trainPhase)
+            self.createMRFNetwork(doBatchNorm)
         with tf.variable_scope('fine'):
-            self.createFineNetwork(doBatchNorm,trainPhase)
+            self.createFineNetwork(doBatchNorm)
 
         self.createBaseSaver()
         self.createMRFSaver()
@@ -823,7 +845,7 @@ class PoseTrain:
             for step in range(self.finestartat,self.conf.fine_training_iters+1):
                 self.doOpt(sess,step,self.conf.fine_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train)
+                    self.updateFeedDict(self.DBType.Train,distort=True)
                     train_loss = self.computeLoss(sess,[self.cost,mrfcost,basecost])
                     tt1 = self.computePredDist(sess,self.basePred)
                     tt2 = self.computePredDist(sess,self.mrfPred)
@@ -835,7 +857,7 @@ class PoseTrain:
                     val_loss = np.zeros([3,])
                     valDist = [0.,0.,0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val)
+                        self.updateFeedDict(self.DBType.Val,distort=False)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,mrfcost,basecost]))
                         tt1 = self.computePredDist(sess,self.basePred)
                         tt2 = self.computePredDist(sess,self.mrfPred)
@@ -852,18 +874,20 @@ class PoseTrain:
             print("Optimization Finished!")
             self.saveFine(sess,step)
 
-    def jointTrain(self, restore=True, trainPhase=True):
+    def jointTrain(self, restore=True):
         self.createPH()
         self.createFeedDict()
         self.openDBs()
+        self.feed_dict[self.ph['phase_train_base']]=True
+        self.feed_dict[self.ph['phase_train_fine']]=True
         doBatchNorm = self.conf.doBatchNorm
         
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm, trainPhase)
+            self.createBaseNetwork(doBatchNorm)
         with tf.variable_scope('mrf'):
-            self.createMRFNetwork(doBatchNorm, trainPhase, True)
+            self.createMRFNetwork(doBatchNorm)
         with tf.variable_scope('fine'):
-            self.createFineNetwork(doBatchNorm, trainPhase, True)
+            self.createFineNetwork(doBatchNorm)
 
         self.createBaseSaver()
         self.createMRFSaver()
