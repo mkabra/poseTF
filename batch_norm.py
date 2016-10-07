@@ -4,7 +4,7 @@
 # In[ ]:
 
 import tensorflow as tf
-from tensorflow.python import control_flow_ops
+from tensorflow.python.ops import control_flow_ops
 
 
 def batch_norm(x, phase_train, scope='batch_norm'):
@@ -61,7 +61,7 @@ def batch_norm(x, phase_train, scope='batch_norm'):
 #              beta, gamma, 1e-3)
 #     return normed
 
-def batch_norm_2D(x, phase_train, scope='batch_norm'):
+def batch_norm_2DD(x, phase_train, scope='batch_norm'):
     """
     Batch normalization on convolutional maps.
     Args:
@@ -96,4 +96,7 @@ def batch_norm_2D(x, phase_train, scope='batch_norm'):
                                 lambda: (ema.average(batch_mean), ema.average(batch_var)))
             normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
         return normed            
+
+def batch_norm_2D(x, phase_train, scope='batch_norm'):
+    return x
 

@@ -17,6 +17,7 @@ class myconfig(object):
     mrfName = 'MRF' #_identity'
     acName = 'AC'
     evalName = 'eval'
+    genName = 'gen'
 
     # ----- Network parameters
 
@@ -81,6 +82,7 @@ class myconfig(object):
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
     eval_training_iters = 500*mult_fac
+    gen_training_iters = 4000*mult_fac
     gamma = 0.1
     step_size = 200000
     display_step = 30
@@ -133,16 +135,19 @@ class myconfig(object):
     mrfoutname = expname + mrfName
     acoutname = expname + acName
     evaloutname = expname + evalName
+    genoutname = expname + genName
     baseckptname = baseoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
     acckptname = acoutname + 'ckpt'
     evalckptname = evaloutname + 'ckpt'
+    genckptname = genoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
     acdataname = acoutname + 'traindata'
     evaldataname = evaloutname + 'traindata'
+    gendataname = genoutname + 'traindata'
 
     # ----- project specific functions
 

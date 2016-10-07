@@ -90,7 +90,7 @@ class PoseTrain:
                                 self.conf.n_classes)
         locs_ph = tf.placeholder(tf.float32,[self.conf.batch_size,
                                              self.conf.n_classes,2])
-        learning_rate_ph = tf.placeholder(tf.float32,shape=[])
+        learning_rate_ph = tf.placeholder(tf.float32,shape=[],name='learning_r')
         phase_train_base = tf.placeholder(tf.bool, name='phase_train_base')                 
         phase_train_fine = tf.placeholder(tf.bool, name='phase_train_fine')                 
         self.ph = {'x0':x0,'x1':x1,'x2':x2,

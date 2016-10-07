@@ -707,6 +707,53 @@ plt.scatter(dd[ini*41+sp,:,0],dd[ini*41+sp,:,1], hold=True,
             s=10, linewidths=0, edgecolors='face')
 
 
+# In[29]:
+
+# distribution of labeled points
+from stephenHeadConfig import conf as conf
+import PoseTools
+import h5py
+
+L = h5py.File(conf.labelfile,'r')
+pts = np.array(L['pts'])[:,:,v,:]
+v = conf.view
+mm = pts.mean(axis=1)
+print mm.shape
+zz = pts-mm[:,np.newaxis,...]
+smin = zz.min(axis=(0,1))
+smax = zz.max(axis=(0,1))
+pp =((smax-smin).max()).astype('int')+5
+bfilt = np.zeros([pp,pp,5])
+zz = zz-smin
+
+for ndx in range(pts.shape[0]):
+    for c1 in range(conf.n_classes):
+        bfilt[ int(zz[ndx,c1,1])+1,int(zz[ndx,c1,0])+1,c1] += 1
+bfilt = (bfilt/pts.shape[0])
+bfilt = bfilt/bfilt.max()
+
+
+fig = plt.figure()
+for ndx in range(5):
+    ax = fig.add_subplot(2,3,ndx+1)
+    ax.imshow(bfilt[:,:,ndx],interpolation='nearest')
+
+import cv2
+predscores = bfilt
+n_classes = 5
+im = np.zeros(predscores.shape[0:2]+(3,))
+im[:,:,0] = np.argmax(predscores,2).astype('float32')/(n_classes)*180
+im[:,:,1] = (np.max(predscores,2))*255
+im[:,:,2] = 255.
+im = np.clip(im,0,255)
+im = im.astype('uint8')
+rimg = cv2.cvtColor(im,cv2.COLOR_HSV2RGB) 
+    
+fig = plt.figure();
+ax = plt.imshow(rimg)
+fig.savefig('/home/mayank/Dropbox/talks/labMeetingSep21_extra/joint_dist.png')
+
+
 # In[1]:
 
 # Pose Eval training
@@ -1254,7 +1301,7 @@ print predLocs[0,...]
 #            dpi=200)
 
 
-# In[6]:
+# In[2]:
 
 # performance of pose eval on frames
 get_ipython().magic(u'pylab notebook')
@@ -1262,7 +1309,7 @@ import copy
 # mov = '/home/mayank/work/PoseEstimationData/Stephen/fly245/fly245_300ms_stimuli/C002H001S0008/C002H001S0008_c.avi'
 # fnum = 721
 mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
-fnum = 35
+fnum = 405
 
 cap,nframes = PoseTools.openMovie(mov)
 im1 = myutils.readframe(cap,fnum)
@@ -1290,7 +1337,10 @@ x01= x0
     
 curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
 predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
-predLocs[count,:,:,1] =  np.array([[276,320],[205,285],[276,276],[240,248],[228,328]])
+# predLocs[count,:,:,1] =  np.array([[276,320],[205,285],[276,276],[240,248],[228,328]])
+predLocs[count,:,:,1] = [[394,358],[ 332,336], [407,321], [351,294], [357,374]]
+predLocs[count,:,:,1] -= [128,0]
+
 # predLocs[count,:,:,0] = predLocs[count,:,:,1] + 4*np.random.randn(5,2)
 # predLocs[count,:,:,1] =  np.array([[284,228],[209,235],[253,182],[210,190],[272,252]])
 # predLocs[count,:,:,1] = predLocs[count,:,:,0]
@@ -1386,7 +1436,7 @@ ax.set_aspect(100)
 imx.colorbar
 
 
-# In[2]:
+# In[3]:
 
 # Prepare for eval for movie frames i.e., next cell
 
@@ -1439,7 +1489,7 @@ feed_dict[phDict['phase_train']] = False
 feed_dict[phDict['dropout']] = 1.
 
 
-# In[11]:
+# In[6]:
 
 # performance of pose eval on frames
 get_ipython().magic(u'pylab notebook')
@@ -1447,7 +1497,7 @@ import copy
 # mov = '/home/mayank/work/PoseEstimationData/Stephen/fly245/fly245_300ms_stimuli/C002H001S0008/C002H001S0008_c.avi'
 # fnum = 713
 mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
-fnum = 516
+fnum = 405
 cap,nframes = PoseTools.openMovie(mov)
 im1 = myutils.readframe(cap,fnum)
 
@@ -1469,7 +1519,9 @@ x01 = x0
     
 curpred = sess.run([self.mrfPred,],feed_dict = self.feed_dict)
 predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
-predLocs[count,:,:,1] =  np.array([[276,328-4*1],[220-4*4,304+4*0],[276,284-4*0],[228-4*0,276+4*0],[236+4*3,350+4*0]])
+# predLocs[count,:,:,1] =  np.array([[276,300-4*0],[208-4*0,284+4*0],[271-4*0,255-4*0],[238-4*0,258+4*0],[236+4*0,324+4*0]])
+predLocs[count,:,:,1] = [[394,358],[ 332,336], [407,321], [351,294], [357,374]]
+predLocs[count,:,:,1] -= [128,0]
 print predLocs[...,0]
 print predLocs[...,1]
 
@@ -1518,8 +1570,8 @@ for selpt in range(5):
     ax.imshow(ssImg,interpolation='nearest')
     idx = np.flipud(np.unravel_index(ssImg.argmax(), ssImg.shape))
     ax.set_title('{:}'.format(np.array(idx)-rr))
-fig = plt.figure(figsize=(12,8))
-ax = fig.add_subplot(231)
+fig2 = plt.figure(figsize=(12,8))
+ax = fig2.add_subplot(231)
 ax.imshow(x01[0,:,:,0],cmap='gray')
 ax.scatter(predLocs[curidx,:,0,0],predLocs[curidx,:,1,0], 
             c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
@@ -1529,33 +1581,11 @@ ax.scatter(predLocs[curidx,:,0,1],predLocs[curidx,:,1,1],
             s=20, linewidths=0, edgecolors='face')
 ax.set_title('o(Lab):{:.2f}, +(Pred):{:.2f}'.format(ssImg[rr,rr],evalScores[curidx,0,1]))
 for pp in range(5):
-    ax = fig.add_subplot(2,3,pp+2)
+    ax = fig2.add_subplot(2,3,pp+2)
     ax.imshow(all_preds[0,:,:,pp],interpolation='nearest')
     ax.set_title('max:{:.2f},min:{:.2f}'.format(all_preds[0,:,:,pp].max(),all_preds[0,:,:,pp].min()))
 fig = plt.figure()
 imshow(x01[0,...,0],cmap='gray')
-
-
-# In[7]:
-
-print predLocs[...,0]
-print predLocs[...,1]
-
-
-# In[4]:
-
-for lndx in range(len(out1)):
-    zz = out1[lndx]
-    vv = np.var(np.var(zz,1),1).squeeze()
-    dl = out1[lndx]-out2[lndx]
-    dn = dl/vv
-    fig = plt.figure()
-    ax = fig.add_subplot(121)
-    dump = ax.hist(dn.flatten(),40,range=[-0.3,0.3],normed=True)
-    ax = fig.add_subplot(122)
-    ldl = np.percentile(dl.flatten(),10)
-    hdl = np.percentile(dl.flatten(),90)
-    dump = ax.hist(dl.flatten(),40,range=[ldl,hdl],normed=True)
 
 
 # In[1]:
@@ -1626,29 +1656,6 @@ print pp
 print predList[1].shape
 
 
-# In[1]:
-
-# Interactive plots from
-# http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
-get_ipython().magic(u'pylab notebook')
-import ipywidgets as widgets
-import warnings
-warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipykernel/.*')
-warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
-
-fig, ax = plt.subplots()
-ax.plot(np.random.rand(10))
-
-w = widgets.HTML()
-
-def onclick(event):
-    w.value = 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
-              event.button, event.x, event.y, event.xdata, event.ydata)
-
-cid = fig.canvas.mpl_connect('button_press_event', onclick)
-display(w)
-
-
 # In[ ]:
 
 self.openDBs()
@@ -1717,40 +1724,205 @@ for ndx in range(self.xs.shape[0]):
     ax.scatter(self.locs[ndx,:,0],self.locs[ndx,:,1])
 
 
-# In[11]:
+# In[2]:
 
-get_ipython().magic(u'debug')
+# Impact of dropout on base
+import localSetup
+import PoseTools
+reload(PoseTools)
+import multiResData
+reload(multiResData)
+import os
+import re
+import tensorflow as tf
+from scipy import io
+from cvc import cvc
 
 
-# In[41]:
+# For FRONT
+from stephenHeadConfig import conf as conf
+conf.useMRF = False
+outtype = 1
+extrastr = ''
 
-plt.figure()
-plt.imshow(self.xs[0,0,...],cmap='gray')
-plt.scatter(self.locs[0,:,0],self.locs[0,:,1])
+conf.batch_size = 1
 
-ii = self.xs[0,0,...]
-rows,cols = ii.shape
+self = PoseTools.createNetwork(conf,outtype)
+sess = tf.InteractiveSession()
+PoseTools.initNetwork(self,sess,outtype)
+
+from scipy import io
 import cv2
-ang = 20
-M = cv2.getRotationMatrix2D((rows/2,cols/2),ang,1)
-jj = cv2.warpAffine(ii,M,(cols,rows))
 
-plt.figure()
-plt.imshow(jj,cmap='gray')
-import copy
-ll = copy.deepcopy(self.locs[0,...])
-# ll[:,0] = ll[:,0]-cols/2
-# ll[:,1] = ll[:,1]-rows/2
-ll = ll - [cols/2,rows/2]
-ang = np.deg2rad(ang)
-print ang
-R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
-lr = np.dot(ll,R) + [cols/2,rows/2]
-plt.scatter(lr[:,0],lr[:,1])
+self.openDBs()
+self.createCursors()
+
+l7 = self.baseLayers['conv7']
+with tf.variable_scope('base/layer8') as scope:
+    scope.reuse_variables()
+    l7_do = tf.nn.dropout(l7,self.ph['keep_prob'],[conf.batch_size,1,1,conf.nfcfilt])
+    l8_weights = tf.get_variable("weights", [1,1,conf.nfcfilt,conf.n_classes],
+        initializer=tf.random_normal_initializer(stddev=0.01))
+    l8_biases = tf.get_variable("biases", conf.n_classes,
+        initializer=tf.constant_initializer(0))
+    l8 = tf.nn.conv2d(l7_do,l8_weights,strides=[1,1,1,1],padding='SAME')+l8_biases
 
 
-# In[34]:
 
-rows,cols = self.xs.shape[2:]
-print rows,cols
+# In[ ]:
+
+self.updateFeedDict(self.DBType.Train,distort=False)
+
+self.feed_dict[self.ph['phase_train_base']] = False
+self.feed_dict[self.ph['phase_train_fine']] = False
+self.feed_dict[self.ph['keep_prob']] = 0.1
+
+outpred = sess.run([self.basePred,l8,l7_do,l7],feed_dict=self.feed_dict)
+fig = plt.figure(figsize=(8,15))
+ax = fig.add_subplot(4,3,1)
+ax.imshow(self.xs[0,0,...],cmap='gray')
+ax.scatter(self.locs[0,:,0],self.locs[0,:,1])
+predLocs = PoseTools.getBasePredLocs(outpred[1],conf)[0,:,:]
+ax = fig.add_subplot(4,3,7)
+ax.imshow(self.xs[0,0,...],cmap='gray')
+ax.scatter(predLocs[:,0],predLocs[:,1])
+for ndx in range(5):
+    ax = fig.add_subplot(4,3,ndx+2)
+    kk = outpred[0][0,...,ndx]
+    ax.imshow(outpred[0][0,...,ndx])
+    ax.axis('off')
+    ax.set_title('{:.2f},{:.2f}'.format(kk.max(),kk.min()))
+    ax = fig.add_subplot(4,3,ndx+6+2)
+    kk = outpred[1][0,...,ndx]
+    ax.imshow(kk)
+    ax.axis('off')
+    ax.set_title('{:.2f},{:.2f}'.format(kk.max(),kk.min()))
+
+
+# In[2]:
+
+# Pose Gen training
+import poseGen
+reload(poseGen)
+import stephenHeadConfig
+reload(stephenHeadConfig)
+from stephenHeadConfig import conf as conf
+import tensorflow as tf
+tf.reset_default_graph()
+poseGen.train(conf,restore=False)
+
+
+# In[8]:
+
+# check gradients
+
+import poseGen
+reload(poseGen)
+from poseGen import *
+from stephenHeadConfig import conf as conf
+import re
+
+
+tf.reset_default_graph()
+restore = False
+phDict = createGenPH(conf)
+feed_dict = createFeedDict(phDict)
+feed_dict[phDict['phase_train']] = True
+feed_dict[phDict['dropout']] = 0.02
+feed_dict[phDict['y']] = np.zeros((conf.batch_size,conf.n_classes*2))
+baseNet = PoseTools.createNetwork(conf,1)
+l8 = addDropoutLayer(baseNet,phDict['dropout'],conf)
+with tf.variable_scope('poseGen'):
+    out,layer_dict = poseGenNet(phDict['locs'],phDict['scores'],l8,
+                                 conf,baseNet,phDict['phase_train'])
+
+genSaver = createGenSaver(conf)
+y = phDict['y']
+loss = tf.nn.l2_loss(out-y)
+train_step = tf.train.AdamOptimizer(1e-2).minimize(loss)
+baseNet.openDBs()
+baseNet.feed_dict[phDict['dropout']] = feed_dict[phDict['dropout']]
+
+txn = baseNet.env.begin()
+valtxn = baseNet.valenv.begin()
+sess = tf.InteractiveSession()
+
+baseNet.createCursors()
+baseNet.restoreBase(sess,True)
+didRestore,startat = restoreGen(sess,conf,genSaver,restore)
+baseNet.initializeRemainingVars(sess)
+
+posevars = []
+uu = []
+for vv in tf.all_variables():
+    if vv.name[:7] == 'poseGen' and not re.search('batch_norm',vv.name)     and not re.search('Adam',vv.name) and not re.search('biases',vv.name):
+        posevars.append(vv)
+        uu.append(vv.eval())
+for ndx in range(len(uu)):
+    vvar = uu[ndx].std()
+    print '{:30}:{:.2e}'.format(posevars[ndx].name,
+          vvar)
+
+prepareOpt(baseNet,l8,baseNet.DBType.Train,feed_dict,sess,conf,
+           phDict,distort=True)
+feed_dict[phDict['phase_train']] = True
+sess.run(train_step, feed_dict=feed_dict)
+
+posevars = []
+uu = []
+for vv in tf.all_variables():
+    if vv.name[:7] == 'poseGen' and not re.search('batch_norm',vv.name)     and not re.search('Adam',vv.name) and not re.search('biases',vv.name):
+        posevars.append(vv)
+        uu.append(vv.eval())
+ll = tf.gradients(loss,posevars)        
+gg = sess.run(ll,feed_dict=feed_dict)
+for ndx,curg in enumerate(gg):
+    gvar = curg.std()
+    vvar = uu[ndx].std()
+    print '{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
+          vvar,gvar,vvar/gvar)
+    
+for step in range(25):
+    prepareOpt(baseNet,l8,baseNet.DBType.Train,feed_dict,sess,conf,
+               phDict,distort=True)
+    feed_dict[phDict['phase_train']] = True
+    sess.run(train_step, feed_dict=feed_dict)
+
+
+posevars = []
+uu = []
+for vv in tf.all_variables():
+    if vv.name[:7] == 'poseGen' and not re.search('batch_norm',vv.name)     and not re.search('Adam',vv.name) and not re.search('biases',vv.name):
+        posevars.append(vv)
+        uu.append(vv.eval())
+ll = tf.gradients(loss,posevars)        
+gg = sess.run(ll,feed_dict=feed_dict)
+for ndx,curg in enumerate(gg):
+    gvar = curg.std()
+    vvar = uu[ndx].std()
+    print '{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
+          vvar,gvar,vvar/gvar)
+
+
+# In[5]:
+
+# Interactive plots from
+# http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
+get_ipython().magic(u'pylab notebook')
+import ipywidgets as widgets
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipykernel/.*')
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
+
+fig, ax = plt.subplots()
+ax.plot(np.random.rand(10))
+
+w = widgets.HTML()
+
+def onclick(event):
+    w.value = 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
+              event.button, event.x, event.y, event.xdata, event.ydata)
+
+cid = fig.canvas.mpl_connect('button_press_event', onclick)
+display(w)
 

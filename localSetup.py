@@ -6,7 +6,7 @@
 import socket
 import sys,re
 
-if re.search('verman-ws1.janelia.priv',socket.gethostname()):
+if re.search('verman-ws1.hhmi.org',socket.gethostname()):
     sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
     bdir = '/localhome/kabram/poseTF/'
 elif re.search('bransonk-ws9.hhmi.org',socket.gethostname()):

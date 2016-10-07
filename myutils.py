@@ -1,14 +1,21 @@
 
 # coding: utf-8
 
+# In[2]:
+
+
+
+
 # In[1]:
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from scipy import ndimage
 import math
 import cv2
+import copy
 from cvc import cvc
 
 
@@ -62,4 +69,24 @@ def readframe(cap, position):
 #     dump,frame = cap.read()
 #     assert dump is True, "Couldn't read the frame"
 #     return frame
+
+def nms(image,rad=3,thresh=0):
+    image = copy.copy(image)
+    roi = rad
+    size = 2 * roi + 1
+    image_max = ndimage.maximum_filter(image, size=size, mode='constant')
+    mask = (image == image_max)
+    imin = image.min()
+    image[np.logical_not(mask)] = imin
+
+    # Optionally find peaks above some threshold
+    image[:roi,:] = imin
+    image[-roi:,:] = imin
+    image[:, :roi] = imin
+    image[:, -roi:] = imin
+
+    image_t = (image > thresh) * 1
+
+    # get coordinates of peaks
+    return np.transpose(image_t.nonzero())
 

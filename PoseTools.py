@@ -465,6 +465,7 @@ def createNetwork(conf,outtype):
     self.feed_dict[self.ph['phase_train_base']] = False
     self.feed_dict[self.ph['phase_train_fine']] = False
     self.feed_dict[self.ph['keep_prob']] = 1.
+    self.feed_dict[self.ph['learning_rate']] = 0
     tt = self.ph['y'].get_shape().as_list()
     tt[0] = 1
     self.feed_dict[self.ph['y']] = np.zeros(tt)
@@ -544,6 +545,10 @@ def classifyMovie(conf,moviename,outtype,self,sess):
     framein = cropImages(framein,conf)
     framein = framein[np.newaxis,:,:,0:1]
     x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
+#     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10,10))
+#     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+#     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+
     for curl in range(nbatches):
         
         allf = np.zeros((bsize,)+conf.imsz+(1,))
@@ -552,8 +557,10 @@ def classifyMovie(conf,moviename,outtype,self,sess):
         ppe = min(ndxe-ndxst,bsize)
         for ii in range(ppe):
             framein = myutils.readframe(cap,curl*bsize+ii)
+
             framein = cropImages(framein,conf)
-            allf[ii,...] = framein[:,:,0:1]
+#             framein = clahe.apply(framein[:,:,:1])
+            allf[ii,...] = framein[...,0:1]
             
         x0,x1,x2 = multiScaleImages(allf, conf.rescale,  conf.scale, conf.l1_cropsz)
 

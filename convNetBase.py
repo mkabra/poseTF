@@ -225,19 +225,19 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes):
 #     imsz = conf.imsz
     # tf Graph input
-    keep_prob = tf.placeholder(tf.float32) # dropout(keep probability)
+    keep_prob = tf.placeholder(tf.float32,name='dropout') # dropout(keep probability)
     x0 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/rescale,
-                                     imsz[1]/rescale,1])
+                                     imsz[1]/rescale,1],name='x0')
     x1 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/scale/rescale,
-                                     imsz[1]/scale/rescale,1])
+                                     imsz[1]/scale/rescale,1],name='x1')
     x2 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/scale/scale/rescale,
-                                     imsz[1]/scale/scale/rescale,1])
+                                     imsz[1]/scale/scale/rescale,1],name='x2')
 
     lsz0,lsz1 = findPredSize(imsz,rescale,pool_scale)
-    y = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes])
+    y = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes],'limg')
     return x0,x1,x2,y,keep_prob
 
 def findPredSize(imsz,rescale,pool_scale):
