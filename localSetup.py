@@ -9,7 +9,7 @@ import sys,re
 if re.search('verman-ws1.hhmi.org',socket.gethostname()):
     sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
     bdir = '/localhome/kabram/poseTF/'
-elif re.search('bransonk-ws9.hhmi.org',socket.gethostname()):
+elif re.search('bransonk-ws2',socket.gethostname()):
     sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
     bdir = '/groups/branson/bransonlab/mayank/PoseTF/'
 else:
