@@ -31,7 +31,7 @@ from batch_norm import batch_norm
 
 # In[ ]:
 
-class PoseTrain:
+class PoseTrain(object):
     
     Nets = Enum('Nets','Base Joint Fine')
     TrainingType = Enum('TrainingType','Base MRF Fine All')
@@ -45,10 +45,14 @@ class PoseTrain:
     # ---------------- DATABASE ---------------------
     
     def openDBs(self):
-        lmdbfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename)
-        vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.valfilename)
-        self.env = lmdb.open(lmdbfilename, readonly = True)
-        self.valenv = lmdb.open(vallmdbfilename, readonly = True)
+#         lmdbfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename)
+#         vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.valfilename)
+#         self.env = lmdb.open(lmdbfilename, readonly = True)
+#         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
+        trainfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename) + '.tfrecords'
+        valfilename =os.path.join(self.conf.cachedir,self.conf.valfilename) + '.tfrecords'
+        self.train_queue = tf.train.string_input_producer([trainfilename])
+        self.val_queue = tf.train.string_input_producer([valfilename])
 
     def openHoldoutDBs(self):
         lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
@@ -56,22 +60,40 @@ class PoseTrain:
         self.env = lmdb.open(lmdbfilename, readonly = True)
         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
 
-    def createCursors(self, txn=None, valtxn=None):
-        if txn is None:
-            txn = self.env.begin()
-            valtxn = self.valenv.begin()
-        self.train_cursor = txn.cursor(); 
-        self.val_cursor = valtxn.cursor()
+    def createCursors(self, sess, txn=None, valtxn=None):
+#         if txn is None:
+#             txn = self.env.begin()
+#             valtxn = self.valenv.begin()
+#         self.train_cursor = txn.cursor(); 
+#         self.val_cursor = valtxn.cursor()
+        train_ims,train_locs = multiResData.read_and_decode(self.train_queue,self.conf)
+        val_ims,val_locs = multiResData.read_and_decode(self.val_queue,self.conf)
+        self.train_data = [train_ims,train_locs]
+        self.val_data = [val_ims,val_locs]
+        coord = tf.train.Coordinator()
+        self.threads = tf.train.start_queue_runners(sess=sess,coord=coord)
         
     def closeCursors(self):
         self.env.close()
         self.valenv.close()
         
-    def readImages(self,dbType,distort):
+    def readImages(self,dbType,distort,sess):
         conf = self.conf
-        curcursor = self.val_cursor if (dbType == self.DBType.Val)                     else self.train_cursor
-        xs, locs = PoseTools.readLMDB(curcursor,
-                         conf.batch_size,conf.imsz,multiResData)
+#         curcursor = self.val_cursor if (dbType == self.DBType.Val) \
+#                     else self.train_cursor
+#         xs, locs = PoseTools.readLMDB(curcursor,
+#                          conf.batch_size,conf.imsz,multiResData)
+        cur_data = self.val_data if (dbType==self.DBType.Val)                 else self.train_data
+        xs = []; locs = []
+        for ndx in range(conf.batch_size):
+            [curxs,curlocs] = sess.run(cur_data)
+            if np.ndim(curxs)<3:
+                xs.append(curxs[np.newaxis,:,:])
+            else:
+                xs.append(curxs)
+            locs.append(curlocs)
+        xs = np.array(xs)    
+        locs = np.array(locs)
         locs = multiResData.sanitizelocs(locs)
         if distort:
             if conf.horzFlip:
@@ -110,9 +132,9 @@ class PoseTrain:
                           self.ph['phase_train_fine']:False,
                           self.ph['locs']:[]}
 
-    def updateFeedDict(self,dbType,distort):
+    def updateFeedDict(self,dbType,distort,sess):
         conf = self.conf
-        self.readImages(dbType,distort)
+        self.readImages(dbType,distort,sess)
         x0,x1,x2 = PoseTools.multiScaleImages(self.xs.transpose([0,2,3,1]),
                                               conf.rescale, conf.scale,
                                               conf.l1_cropsz)
@@ -526,7 +548,7 @@ class PoseTrain:
         self.feed_dict[self.ph['learning_rate']] = cur_lr
         self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
-        self.updateFeedDict(self.DBType.Train,distort=True)
+        self.updateFeedDict(self.DBType.Train,distort=True,sess=sess)
         r_end = time.clock()
         sess.run(self.opt, self.feed_dict)
         o_end = time.clock()
@@ -640,17 +662,19 @@ class PoseTrain:
         self.createOptimizer()
         self.createBaseSaver()
 
-        with self.env.begin() as txn,                 self.valenv.begin() as valtxn,                 tf.Session() as sess:
+#         with self.env.begin() as txn,\
+#                  self.valenv.begin() as valtxn,\
+        with tf.Session() as sess:
                     
-            self.createCursors(txn,valtxn)
             self.restoreBase(sess,restore)
             self.initializeRemainingVars(sess)
+            self.createCursors(sess)
             
             for step in range(self.basestartat,self.conf.base_training_iters+1):
                 self.feed_dict[self.ph['keep_prob']] = 0.5
                 self.doOpt(sess,step,self.conf.base_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train,distort=True)
+                    self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
                     self.feed_dict[self.ph['keep_prob']] = 1.
                     train_loss = self.computeLoss(sess,[self.cost])
                     tt1 = self.computePredDist(sess,self.basePred)
@@ -659,7 +683,7 @@ class PoseTrain:
                     val_loss = np.zeros([2,])
                     valDist = [0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val,distort=False)
+                        self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
                         val_loss += np.array(self.computeLoss(sess,[self.cost]))
                         tt1 = self.computePredDist(sess,self.basePred)
                         valDist = [valDist[0]+tt1.mean()]
@@ -672,70 +696,13 @@ class PoseTrain:
             self.saveBase(sess,step)
     
     
-        
-    def acTrain(self,restore=True):
-        self.createPH()
-        self.createFeedDict()
-        doBatchNorm = self.conf.doBatchNorm
-        with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm)
-
-        with tf.variable_scope('AC_'):
-            self.createACNetwork(doBatchNorm)
-
-        self.createBaseSaver()
-        self.createACSaver()
-
-        mod_labels = self.ph['y']
-        self.cost = tf.nn.l2_loss(self.acPred-self.ph['y'])
-        basecost  = tf.nn.l2_loss(self.basePred-self.ph['y'])
-        
-        if self.conf.useHoldout:
-            self.openHoldoutDBs()
-        else:
-            self.openDBs()
-
-        self.createOptimizer()
-        
-        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
-
-            self.loadBase(sess,self.conf.baseIter4ACTrain)
-            self.restoreAC(sess,restore)
-            self.initializeRemainingVars(sess)
-            self.createCursors(txn,valtxn)
-            
-            for step in range(self.acstartat,self.conf.ac_training_iters+1):
-                self.doOpt(sess,step,self.conf.ac_learning_rate)
-                if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train)
-                    train_loss = self.computeLoss(sess,[self.cost,basecost])
-                    tt1 = self.computePredDist(sess,self.acPred)
-                    tt2 = self.computePredDist(sess,self.basePred)
-                    trainDist = [tt1.mean(),tt2.mean()]
-
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
-                    val_loss = np.zeros([2,])
-                    valDist = [0.,0.]
-                    for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val)
-                        val_loss += np.array(self.computeLoss(sess,[self.cost,basecost]))
-                        tt1 = self.computePredDist(sess,self.acPred)
-                        tt2 = self.computePredDist(sess,self.basePred)
-                        valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
-                        
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
-                    self.updateACLoss(step,train_loss,val_loss,trainDist,valDist)
-                if step % self.conf.save_step == 0:
-                    self.saveAC(sess,step)
-            print("Optimization Finished!")
-            self.saveAC(sess,step)
-            
     def mrfTrain(self,restore=True):
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
+        self.feed_dict[self.ph['keep_prob']] = 0.5
         self.feed_dict[self.ph['phase_train_base']] = False
+        
         with tf.variable_scope('base'):
             self.createBaseNetwork(doBatchNorm)
 
@@ -760,18 +727,21 @@ class PoseTrain:
             self.openDBs()
 
         self.createOptimizer()
-        
-        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
+
+#         self.env.begin() as txn,self.valenv.begin() as valtxn,
+        with tf.Session() as sess:
             
             self.loadBase(sess,self.conf.baseIter4MRFTrain)
             self.restoreMRF(sess,restore)
             self.initializeRemainingVars(sess)
-            self.createCursors(txn,valtxn)
+            self.createCursors(sess)
             
             for step in range(self.mrfstartat,self.conf.mrf_training_iters+1):
+                self.feed_dict[self.ph['keep_prob']] = 0.5
                 self.doOpt(sess,step,self.conf.mrf_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train,distort=True)
+                    self.feed_dict[self.ph['keep_prob']] = 1.0
+                    self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
                     train_loss = self.computeLoss(sess,[self.cost,basecost])
                     tt1 = self.computePredDist(sess,self.mrfPred)
                     tt2 = self.computePredDist(sess,self.basePred)
@@ -781,7 +751,7 @@ class PoseTrain:
                     val_loss = np.zeros([2,])
                     valDist = [0.,0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val,distort=False)
+                        self.updateFeedDict(self.DBType.Val,sess=sess,distort=False)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,basecost]))
                         tt1 = self.computePredDist(sess,self.mrfPred)
                         tt2 = self.computePredDist(sess,self.basePred)

@@ -266,6 +266,41 @@ def createLabelImages(locs,imsz,scale,blur_rad):
 
 # In[ ]:
 
+def createRegLabelImages(locs,imsz,scale,blur_rad):
+    n_classes = len(locs[0])
+    sz0 = int(math.ceil(float(imsz[0])/scale))
+    sz1 = int(math.ceil(float(imsz[1])/scale))
+
+    labelims = np.zeros((len(locs),sz0,sz1,n_classes))
+    regimsx = np.zeros((len(locs),sz0,sz1,n_classes))
+    regimsy = np.zeros((len(locs),sz0,sz1,n_classes))
+    for cls in range(n_classes):
+        for ndx in range(len(locs)):
+            x,y = np.meshgrid(np.arange(sz0),np.arange(sz1))
+            modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
+            labelims[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
+            
+#             np.sqrt((x-(round(locs[ndx][cls][0]/scale)))**2 + 
+#                                (y-(round(locs[ndx][cls][1]/scale)))**2) < (rad-1)
+#             xmin = int(max(round((locs[ndx][cls][0])/scale - rad),0))
+#             xmax = int(min(round((locs[ndx][cls][0])/scale + rad),sz0))
+#             ymin = int(max(round((locs[ndx][cls][1])/scale - rad),0))
+#             ymax = int(min(round((locs[ndx][cls][1])/scale + rad),sz0))
+#             labelims[ndx,ymin:ymax,xmin:xmax,cls] = 1.
+            tx,ty = np.meshgrid(np.arange(sz0)*scale,np.arange(sz1)*scale)
+            tregx = tx.astype('float64')
+            tregy = ty.astype('float64')
+            tregx = locs[ndx][cls][0] -1 - tregx
+            tregy = locs[ndx][cls][1] -1 - tregy
+            regimsx[ndx,:,:,cls] = tregx
+            regimsy[ndx,:,:,cls] = tregy
+            
+    labelims = 2.0*(labelims-0.5)
+    return labelims,regimsx,regimsy
+
+
+# In[ ]:
+
 def createFineLabelTensor(conf):
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
     timg = np.zeros((tsz,tsz))

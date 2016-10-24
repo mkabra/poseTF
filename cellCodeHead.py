@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[5]:
 
 # all the f'ing imports
 import scipy.io as sio
@@ -35,7 +35,41 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
-# In[6]:
+# In[ ]:
+
+# all the f'ing imports
+import scipy.io as sio
+import os,sys
+sys.path.append('/home/mayank/work/pyutils')
+import myutils
+import re
+from stephenHeadConfig import conf as conf
+import shutil
+
+get_ipython().magic(u'matplotlib inline')
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+import cv2
+import math
+import lmdb
+import caffe
+from random import randint,sample
+import pickle
+import h5py
+
+
+import mpld3
+mpld3.enable_notebook()
+
+import multiResData
+reload(multiResData)
+
+multiResData.createTFRecord(conf)
+
+
+# In[2]:
 
 # all the f'ing imports
 import scipy.io as sio
@@ -66,10 +100,11 @@ mpld3.enable_notebook()
 import multiResData
 reload(multiResData)
 
-multiResData.createDB(conf)
+# multiResData.createDB(conf)
+multiResData.createTFRecord(conf)
 
 
-# In[1]:
+# In[ ]:
 
 # convert from dropbox to the newer location
 import pickle
@@ -82,14 +117,14 @@ with open('cacheHead/valdata','wb') as f:
     pickle.dump([isval,ll,seldirs],f)
 
 
-# In[18]:
+# In[ ]:
 
 _,valmovies = multiResData.getMovieLists(conf)
 print valmovies[0]
 print valmovies[3]
 
 
-# In[2]:
+# In[1]:
 
 # copy the validation file from front view to side view
 import pickle
@@ -142,7 +177,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.baseTrain(restore=False)
 
 
-# In[1]:
+# In[3]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -150,9 +185,9 @@ from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
-pobj.baseTrain(restore=True)
+pobj.baseTrain(restore=False)
 
 
 # In[1]:
@@ -164,6 +199,7 @@ import tensorflow as tf
 import os
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=False)
 
@@ -175,11 +211,12 @@ reload(PoseTrain)
 from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 
+tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=False)
 
 
-# In[1]:
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -190,7 +227,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.acTrain(restore=True)
 
 
-# In[2]:
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -249,7 +286,7 @@ for idx in range(zz.shape[0]):
 #     raw_input('Press Enter')
 
 
-# In[1]:
+# In[ ]:
 
 # create a list of movies for stephen -- May 23 2016
 import os
@@ -280,7 +317,7 @@ for ff in smovies+fmovies:
         print ff
 
 
-# In[2]:
+# In[1]:
 
 import localSetup
 import PoseTools
@@ -291,32 +328,35 @@ import os
 import re
 import tensorflow as tf
 from scipy import io
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+import cv2
+from cvc import cvc
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # For SIDE
-from stephenHeadConfig import sideconf as conf
-conf.useMRF = False
-outtype = 1
-extrastr = '_side'
-redo = False
+# from stephenHeadConfig import sideconf as conf
+# conf.useMRF = False
+# outtype = 1
+# extrastr = '_side'
+# redo = False
 
 # For FRONT
-# from stephenHeadConfig import conf as conf
-# conf.useMRF = True
-# outtype = 2
-# extrastr = ''
+from stephenHeadConfig import conf as conf
+conf.useMRF = False
+outtype = 1
+extrastr = ''
+redo = False
 
 # conf.batch_size = 1
+tf.reset_default_graph()
 
 self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
-from scipy import io
-import cv2
 
-# _,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.getMovieLists(conf)
+valmovies = valmovies[45:55]
+valmovies = ['/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi']
 # for ndx in range(len(valmovies)):
 #     valmovies[ndx] = '/groups/branson/bransonlab/mayank/' + valmovies[ndx][17:]
 # for ndx in [0,3,-3,-1]:
@@ -331,12 +371,12 @@ import cv2
 #              '/groups/branson/bransonlab/projects/flyHeadTracking/ExamplefliesWithNoTrainingData/fly163/fly163_trial4/C001H001S0001/C001H001S0001_c.avi',
 #             ]
 # for ndx in range(len(valmovies)):
-valmovies = smovies    
+# valmovies = smovies    
 for ndx in range(len(valmovies)):
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
 #     pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/headResults/movies/' + oname + extrastr
-    pname = '/nobackup/branson/mayank/stephenOut/' + oname + extrastr
+    pname = '/home/mayank/temp/stephenOut/' + oname + extrastr
     if os.path.isfile(pname + '.mat') and not redo:
         continue
         
@@ -345,12 +385,12 @@ for ndx in range(len(valmovies)):
         continue
     
     predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
-#     PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cvc.FRAME_HEIGHT))
+    width = int(cap.get(cvc.FRAME_WIDTH))
     orig_crop_loc = conf.cropLoc[(height,width)]
     crop_loc = [x/4 for x in orig_crop_loc] 
     end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
@@ -370,7 +410,7 @@ print pp
 print predList[1].shape
 
 
-# In[1]:
+# In[ ]:
 
 import localSetup
 import PoseTools
@@ -414,7 +454,7 @@ for count in range(numex):
     ims[count,:,:] = self.xs[0,0,:,:]
 
 
-# In[3]:
+# In[ ]:
 
 diff = (predLocs[:,:,:,1]-predLocs[:,:,:,2])**2
 bname = odir + 'MRF_impact_dmaxMRFLabel_%d.png'
@@ -473,7 +513,7 @@ for ndx in range(1,20):
     fig.savefig(bname%ndx)
 
 
-# In[1]:
+# In[ ]:
 
 # classifying a particular frame
 import localSetup
@@ -498,7 +538,7 @@ sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
 
-# In[18]:
+# In[ ]:
 
 mov = '/groups/branson/home/kabram/bransonlab/PoseEstimationData/Stephen/7_7_13_47D05AD_81B12DBD_x_Chrimsonattp18/data/fly_0019/fly_0019_trial_002/C002H001S0001/C002H001S0001.avi'
 fnum = 200
@@ -542,7 +582,7 @@ plt.scatter(locx,locy,hold=True)
 selftr = pred[2][0,ftrloc[1],ftrloc[0],:]
 
 
-# In[19]:
+# In[ ]:
 
 from scipy.spatial import distance
 import sys
@@ -575,7 +615,7 @@ for count in range(numtr):
                         
 
 
-# In[20]:
+# In[ ]:
 
 oo = np.argsort(dmat.flatten())
 oo.shape
@@ -584,7 +624,7 @@ for ndx in range(5):
     print dmat[oi[ndx],oy[ndx],ox[ndx]]
 
 
-# In[21]:
+# In[ ]:
 
 ncl = 5
 fig = plt.figure(figsize = (12,12))
@@ -601,7 +641,7 @@ for ndx in range(ncl):
     ax.scatter(ox[ndx]*4,oy[ndx]*4,c='r')
 
 
-# In[1]:
+# In[ ]:
 
 #POSE EVAL initialize net for debugging
 import tensorflow as tf
@@ -661,7 +701,7 @@ baseNet.initializeRemainingVars(sess)
 prepareOpt(baseNet,baseNet.DBType.Train,feed_dict,sess,conf,phDict)
 
 
-# In[31]:
+# In[ ]:
 
 # Check pose eval accuracy interactively
 from matplotlib import cm
@@ -707,7 +747,7 @@ plt.scatter(dd[ini*41+sp,:,0],dd[ini*41+sp,:,1], hold=True,
             s=10, linewidths=0, edgecolors='face')
 
 
-# In[29]:
+# In[ ]:
 
 # distribution of labeled points
 from stephenHeadConfig import conf as conf
@@ -754,7 +794,7 @@ ax = plt.imshow(rimg)
 fig.savefig('/home/mayank/Dropbox/talks/labMeetingSep21_extra/joint_dist.png')
 
 
-# In[1]:
+# In[ ]:
 
 # Pose Eval training
 import poseEval
@@ -765,7 +805,7 @@ tf.reset_default_graph()
 poseEval.train(conf,restore=False)
 
 
-# In[2]:
+# In[ ]:
 
 # Run pose eval on worst base predictions 
 
@@ -875,7 +915,7 @@ for count in range(numex):
 print totacc/numex    
 
 
-# In[31]:
+# In[ ]:
 
 
 self.val_cursor.first()
@@ -888,7 +928,7 @@ for count in range(numex):
     ims[count,:,:] = self.xs[0,:,:] 
 
 
-# In[3]:
+# In[ ]:
 
 # Run pose eval on eval images with the same negs as training
 
@@ -971,7 +1011,7 @@ for count in range(5):
     vlocs[count,...] = rlocs
 
 
-# In[4]:
+# In[ ]:
 
 get_ipython().magic(u'pylab notebook')
 ex = np.random.randint(5)
@@ -989,7 +1029,7 @@ for count in range(5):
         
 
 
-# In[16]:
+# In[ ]:
 
 sigma = 5*0.5
 rlocs = np.round(np.random.normal(size=(1,5,2,12))*sigma)
@@ -1001,7 +1041,7 @@ print kk
 print kk.shape
 
 
-# In[25]:
+# In[ ]:
 
 print vpred.shape
 nn = vpred[:,:30,1].flatten()
@@ -1011,7 +1051,7 @@ pp = vpred[:,30:,1].flatten()
 plt.hist(pp)
 
 
-# In[48]:
+# In[ ]:
 
 # Run pose eval on worst base predictions 
 
@@ -1171,7 +1211,7 @@ print float(np.count_nonzero(ee[:nsel,1,1]>0))/nsel
 print float(np.count_nonzero(ee[:nsel,0,0]>0))/nsel
 
 
-# In[1]:
+# In[ ]:
 
 # Prepare for eval for movie frames i.e., next cell
 
@@ -1223,7 +1263,7 @@ feed_dict[phDict['phase_train']] = False
 feed_dict[phDict['dropout']] = 1.
 
 
-# In[2]:
+# In[ ]:
 
 # performance of pose eval on frames
 
@@ -1301,7 +1341,7 @@ print predLocs[0,...]
 #            dpi=200)
 
 
-# In[2]:
+# In[ ]:
 
 # performance of pose eval on frames
 get_ipython().magic(u'pylab notebook')
@@ -1419,7 +1459,7 @@ for pp in range(5):
 # ax.imshow(((x01[0,...,0].astype('double')-x02[0,...,0].astype('double')))/40+0.5,cmap='gray')
 
 
-# In[57]:
+# In[ ]:
 
 kk= alldd1-alldd2
 fig = plt.figure()
@@ -1436,7 +1476,7 @@ ax.set_aspect(100)
 imx.colorbar
 
 
-# In[3]:
+# In[ ]:
 
 # Prepare for eval for movie frames i.e., next cell
 
@@ -1489,7 +1529,7 @@ feed_dict[phDict['phase_train']] = False
 feed_dict[phDict['dropout']] = 1.
 
 
-# In[6]:
+# In[ ]:
 
 # performance of pose eval on frames
 get_ipython().magic(u'pylab notebook')
@@ -1588,7 +1628,7 @@ fig = plt.figure()
 imshow(x01[0,...,0],cmap='gray')
 
 
-# In[1]:
+# In[ ]:
 
 import localSetup
 import PoseTools
@@ -1662,7 +1702,7 @@ self.openDBs()
 self.createCursors()
 
 
-# In[28]:
+# In[ ]:
 
 self.updateFeedDict(self.DBType.Train,distort=False)
 
@@ -1696,7 +1736,7 @@ for ndx in range(self.xs.shape[0]):
     ax.scatter(self.locs[ndx,:,0],self.locs[ndx,:,1])
 
 
-# In[20]:
+# In[ ]:
 
 import copy
 import PoseTools
@@ -1724,7 +1764,7 @@ for ndx in range(self.xs.shape[0]):
     ax.scatter(self.locs[ndx,:,0],self.locs[ndx,:,1])
 
 
-# In[2]:
+# In[ ]:
 
 # Impact of dropout on base
 import localSetup
@@ -1799,12 +1839,13 @@ for ndx in range(5):
     ax.set_title('{:.2f},{:.2f}'.format(kk.max(),kk.min()))
 
 
-# In[2]:
+# In[ ]:
 
 # Pose Gen training
 import poseGen
 reload(poseGen)
 import stephenHeadConfig
+
 reload(stephenHeadConfig)
 from stephenHeadConfig import conf as conf
 import tensorflow as tf
@@ -1812,7 +1853,98 @@ tf.reset_default_graph()
 poseGen.train(conf,restore=False)
 
 
-# In[8]:
+# In[ ]:
+
+# test pose gen
+import poseGen
+reload(poseGen)
+import PoseTools
+from stephenHeadConfig import conf as conf
+import tensorflow as tf
+
+tf.reset_default_graph()
+
+phDict = poseGen.createGenPH(conf)
+feed_dict = poseGen.createFeedDict(phDict)
+feed_dict[phDict['phase_train']] = True
+feed_dict[phDict['dropout']] = 0.5
+feed_dict[phDict['y']] = np.zeros((conf.batch_size,conf.n_classes*2))
+baseNet = PoseTools.createNetwork(conf,1)
+l8 = poseGen.addDropoutLayer(baseNet,phDict['dropout'],conf)
+with tf.variable_scope('poseGen'):
+    out,out_m,layer_dict = poseGen.poseGenNet(phDict['locs'],phDict['scores'],l8,
+                                 conf,baseNet,phDict['phase_train'])
+
+genSaver = poseGen.createGenSaver(conf)
+y = phDict['y']
+loss = tf.nn.l2_loss(out-y)
+in_loss = tf.nn.l2_loss(out-tf.reshape(phDict['locs'],[-1,2*conf.n_classes]))
+baseNet.openDBs()
+baseNet.feed_dict[phDict['dropout']] = feed_dict[phDict['dropout']]
+
+
+txn = baseNet.env.begin() 
+valtxn = baseNet.valenv.begin()
+sess = tf.InteractiveSession()
+
+baseNet.createCursors()
+baseNet.restoreBase(sess,True)
+didRestore,startat = poseGen.restoreGen(sess,conf,genSaver,True)
+
+baseNet.initializeRemainingVars(sess)
+
+
+# In[ ]:
+
+import poseGen
+reload(poseGen)
+mpred,lpred = poseGen.prepareOpt(baseNet,l8,baseNet.DBType.Val,feed_dict,sess,conf,
+                                 phDict,distort=True)
+
+x = baseNet.xs
+l = baseNet.locs
+bout = sess.run(l8,feed_dict=baseNet.feed_dict)
+predlocs = PoseTools.getBasePredLocs(bout,conf)
+in_l = feed_dict[phDict['locs']] + mpred[:,np.newaxis,:]
+out_l,out_lm = sess.run([out,out_m],feed_dict=feed_dict)
+out_l = np.reshape(out_l,[conf.batch_size*10,5,2]) + out_lm[:,np.newaxis,:] + mpred[:,np.newaxis,:]
+
+ccc=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes))
+         
+idx = np.random.randint(conf.batch_size)
+
+for idx in range(conf.batch_size):
+    fig = plt.figure(figsize=[12,12])
+    ax = fig.add_subplot(3,4,1)
+    ax.imshow(x[idx,0,...],cmap='gray')
+    ax.scatter(l[idx,:,0],l[idx,:,1],c=ccc)
+    ax.set_title('Label')
+    
+    ax = fig.add_subplot(3,4,2)
+    ax.imshow(x[idx,0,...],cmap='gray')
+    ax.scatter(predlocs[idx,:,0],predlocs[idx,:,1],c=ccc)
+    ax.set_title('prediction')
+
+    for ix in range(10):
+
+        ax = fig.add_subplot(3,4,ix+3)
+        ax.imshow(x[idx,0,...],cmap='gray')
+        ax.scatter(out_l[idx*10+ix,:,0],out_l[idx*10+ix,:,1],c=ccc,
+                   edgecolors=None,marker='+',s=50)
+        ax.scatter(in_l[idx*10+ix,:,0],in_l[idx*10+ix,:,1],c=ccc,edgecolors='face',s=10)
+        ax.set_title('Dots:Inputs,+:Output')
+        
+    fig.savefig('/home/mayank/work/poseEstimation/results/headResults/poseGen/meanAndPointsGen{:d}.png'.format(idx+1))
+# fig = plt.figure()
+# for ndx in range(5):
+#     ax = fig.add_subplot(2,3,ndx+1)
+#     ax.imshow(bout[0,...,ndx])
+#     ax.scatter(l[0,ndx,0]/4,l[0,ndx,1]/4)
+#     ax.set_title('{:.2f}'.format(np.max(bout[0,...,ndx]) ))
+
+
+
+# In[ ]:
 
 # check gradients
 
@@ -1904,7 +2036,201 @@ for ndx,curg in enumerate(gg):
           vvar,gvar,vvar/gvar)
 
 
-# In[5]:
+# In[4]:
+
+# testing tfrecord
+
+# writing
+import myutils
+import PoseTools
+import os
+import tensorflow as tf
+
+def _int64_feature(value):
+    if not isinstance(value,(list,np.ndarray)):
+        value = [value]
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+
+def _float_feature(value):
+    if not isinstance(value,(list,np.ndarray)):
+        value = [value]
+    return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
+def _bytes_feature(value):
+    if not isinstance(value,list):
+        value = [value]
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
+
+
+# In[ ]:
+
+def convert_to(images, labels, name):
+    num_examples = labels.shape[0]
+    if images.shape[0] != num_examples:
+        raise ValueError("Images size %d does not match label size %d." %
+                         (images.shape[0], num_examples))
+    rows = images.shape[1]
+    cols = images.shape[2]
+    depth = images.shape[3]
+
+    filename = os.path.join('/tmp', name + '.tfrecords')
+    print('Writing', filename)
+    writer = tf.python_io.TFRecordWriter(filename)
+    for index in range(num_examples):
+        image_raw = images[index].tostring()
+        example = tf.train.Example(features=tf.train.Features(feature={
+            'height': _int64_feature(rows),
+            'width': _int64_feature(cols),
+            'depth': _int64_feature(depth),
+            'label': _int64_feature(int(labels[index])),
+            'locs': _float_feature(np.array([0,1.3,2.65,3,4,])),
+            'image_raw': _bytes_feature(image_raw)}))
+        writer.write(example.SerializeToString())
+
+
+mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
+cap,nframes = PoseTools.openMovie(mov)
+
+im = []
+for ndx in range(100):
+    im.append(myutils.readframe(cap,ndx))
+im = np.array(im)
+labels = np.arange(100)
+print im.shape
+convert_to(im,labels,'test1')
+
+
+# In[2]:
+
+import tensorflow as tf
+from stephenHeadConfig import conf as conf
+import multiResData
+reload( multiResData)
+
+# def read_and_decode(filename_queue):
+#     reader = tf.TFRecordReader()
+#     _, serialized_example = reader.read(filename_queue)
+#     features = tf.parse_single_example(
+#         serialized_example,
+#         features={'image_raw':tf.FixedLenFeature([], dtype=tf.string),
+#           'locs':tf.FixedLenFeature(shape=[conf.n_classes,2], dtype=tf.float32),
+#           'height':tf.FixedLenFeature([], dtype=tf.int64),
+#           'width':tf.FixedLenFeature([], dtype=tf.int64),
+#           'depth':tf.FixedLenFeature([], dtype=tf.int64),
+#                  })
+# #         features={'image_raw':tf.FixedLenFeature([], dtype=tf.string),
+# #           'locs':tf.FixedLenFeature(shape=[10,], dtype=tf.float32),
+# #          'label':tf.FixedLenFeature([], dtype=tf.int64, default_value=0)})
+# #         dense_keys=['image_raw', 'label'],
+# #         # Defaults are not specified since both keys are required.
+# #         dense_types=[tf.string, tf.int64])
+#     # Convert from a scalar string tensor (whose single string has
+#     image = tf.decode_raw(features['image_raw'], tf.uint8)
+
+#     image = tf.reshape(image, [512,512,1])
+# #     image.set_shape([my_cifar.n_input])
+
+#     # OPTIONAL: Could reshape into a 28x28 image and apply distortions
+#     # here.  Since we are not applying any distortions in this
+#     # example, and the next step expects the image to be flattened
+#     # into a vector, we don't bother.
+
+#     # Convert from [0, 255] -> [-0.5, 0.5] floats.
+# #     image = tf.cast(image, tf.float32)
+# #     image = tf.cast(image, tf.float32) * (1. / 255) - 0.5
+
+#     # Convert label from a scalar uint8 tensor to an int32 scalar.
+#     label = tf.cast(features['height'], tf.int32)
+#     locs = tf.cast(features['locs'], tf.float32)
+
+#     return image, label,locs
+
+filename_queue = tf.train.string_input_producer(['cacheHead/train_TF.tfrecords']) #  list of files to read
+
+imo,llo = multiResData.read_and_decode(filename_queue,conf)
+sess = tf.InteractiveSession()
+
+coord = tf.train.Coordinator()
+
+threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+
+# In[29]:
+
+# check if tfrecords are working or not
+import PoseTrain
+reload(PoseTrain)
+
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+self.feed_dict[self.ph['phase_train_base']] = True
+self.feed_dict[self.ph['keep_prob']] = 0.5
+doBatchNorm = self.conf.doBatchNorm
+
+self.openDBs()
+
+sess = tf.InteractiveSession()
+
+self.createCursors(sess)
+
+
+self.updateFeedDict(self.DBType.Val,sess=sess,distort=True)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.imshow(self.xs[0,0,...],cmap='gray')
+ax.scatter(self.locs[0,:,0],self.locs[0,:,1])
+
+
+# In[ ]:
+
+import PoseRegression
+reload(PoseRegression)
+from stephenHeadConfig import conf as conf
+import tensorflow as tf
+import os
+
+tf.reset_default_graph()
+pobj = PoseRegression.PoseRegression(conf)
+pobj.baseRegress(restore=True)
+
+
+# In[ ]:
+
+import PoseTools
+reload(PoseTools)
+from stephenHeadConfig import conf as conf
+
+locs = [[[254,93],[30,40]],[[80,70],[80,40]]]
+
+imsz = conf.imsz
+
+a,b,c = PoseTools.createRegLabelImages(locs,imsz,4,10)
+# plt.figure()
+# plt.imshow(a[0,:,:,0],interpolation='nearest')
+# plt.figure()
+# plt.imshow(b[0,:,:,0],interpolation='nearest')
+# plt.figure()
+# plt.imshow(c[0,:,:,0],interpolation='nearest')
+
+import tensorflow as tf
+sess = tf.InteractiveSession()
+gg = tf.constant(a[0,:,:,:])
+hh = tf.constant(b[0,:,:,:])
+ss = tf.constant(np.ones([128,128,2]))
+hh1 = tf.mul(hh-ss,tf.sqrt(tf.maximum(gg/2+0.5,0)))
+kk = tf.nn.l2_loss(hh1)
+kk1 = kk.eval()
+ll1 = hh1.eval()
+plt.figure()
+plt.imshow(ll1[...,0])
+print kk1
+vv = (b[0,:,:,:]-1)**2
+vv = np.sum( (vv*(a[0,:,:,:]/2+0.5)).flatten())
+print vv/2
+
+
+# In[7]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html

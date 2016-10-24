@@ -16,6 +16,7 @@ class myconfig(object):
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
     acName = 'AC'
+    regName = 'Reg'
     evalName = 'eval'
     genName = 'gen'
 
@@ -41,9 +42,9 @@ class myconfig(object):
     nfcfilt = 512
     doBatchNorm = True
     useMRF = False
-    useAC = True
-    useHoldout = True
+    useHoldout = False
     device = None
+    reg_lambda = 0.5
 
     # ----- Fine Network parameters
 
@@ -59,6 +60,9 @@ class myconfig(object):
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000 # without batch_norm
     baseIter4ACTrain = 5000 # without batch_norm
+    
+    # ------ Pose Generation Network Params
+    gen_minlen = 8
 
 
     # ----- Learning parameters
@@ -78,6 +82,7 @@ class myconfig(object):
     # -- March 30, 2016 Mayank
     # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
     # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
+    basereg_training_iters = 5000*mult_fac
     fine_training_iters = 3000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
@@ -110,15 +115,15 @@ class myconfig(object):
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead/')
-    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
+#    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
+    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephen_curatedData_withnewlabels.mat')
  
-#     cachedir = '/home/mayank/work/tensorflow/cacheHead/'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
     viddir = '/groups/branson/bransonlab/mayank/PoseEstimationData/Stephen'
     ptn = 'fly_000[0-9]'
-    trainfilename = 'train_lmdb'
-    valfilename = 'val_lmdb'
+    trainfilename = 'train_TF'
+    valfilename = 'val_TF'
     holdouttrain = 'holdouttrain_lmdb'
     holdouttest = 'holdouttest_lmdb'
     valdatafilename = 'valdata'
@@ -133,19 +138,19 @@ class myconfig(object):
     baseoutname = expname + baseName
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
-    acoutname = expname + acName
     evaloutname = expname + evalName
     genoutname = expname + genName
+    baseregoutname = expname + regName
     baseckptname = baseoutname + 'ckpt'
+    baseregckptname = baseregoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
-    acckptname = acoutname + 'ckpt'
     evalckptname = evaloutname + 'ckpt'
     genckptname = genoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
+    baseregdataname = baseregoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
-    acdataname = acoutname + 'traindata'
     evaldataname = evaloutname + 'traindata'
     gendataname = genoutname + 'traindata'
 

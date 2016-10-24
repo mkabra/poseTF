@@ -24,6 +24,7 @@ import pickle
 import h5py
 import errno
 import PoseTools
+import tensorflow as tf
 
 
 # In[ ]:
@@ -219,7 +220,7 @@ def createHoldoutData(conf):
 
 # In[ ]:
 
-def createDB(conf):
+## def createDB(conf):
 
     L = h5py.File(conf.labelfile,'r')
     pts = np.array(L['pts'])
@@ -294,4 +295,131 @@ def createDB(conf):
     print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
     
     
+
+
+# In[ ]:
+
+def _int64_feature(value):
+    if not isinstance(value,(list,np.ndarray)):
+        value = [value]
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+
+
+def _bytes_feature(value):
+    if not isinstance(value,list):
+        value = [value]
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
+
+def _float_feature(value):
+    if not isinstance(value,(list,np.ndarray)):
+        value = [value]
+    return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
+
+# In[ ]:
+
+def createTFRecord(conf):
+
+    L = h5py.File(conf.labelfile,'r')
+    pts = np.array(L['pts'])
+    ts = np.array(L['ts']).squeeze().astype('int')
+    expid = np.array(L['expidx']).squeeze().astype('int')
+    view = conf.view
+    count = 0; valcount = 0
+    
+    psz = conf.sel_sz
+    
+    createValdata(conf)
+    isval,localdirs,seldirs = loadValdata(conf)
+    
+    trainfilename =os.path.join(conf.cachedir,conf.trainfilename)
+    valfilename =os.path.join(conf.cachedir,conf.valfilename)
+    
+    env = tf.python_io.TFRecordWriter(trainfilename+'.tfrecords')
+    valenv = tf.python_io.TFRecordWriter(valfilename+'.tfrecords')
+
+    
+    for ndx,dirname in enumerate(localdirs):
+        if not seldirs[ndx]:
+            continue
+
+        expname = conf.getexpname(dirname)
+        frames = np.where(expid == (ndx + 1))[0]
+        curdir = os.path.dirname(localdirs[ndx])
+        cap = cv2.VideoCapture(localdirs[ndx])
+
+        curenv = valenv if isval.count(ndx) else env
+
+        for curl in frames:
+
+            fnum = ts[curl]
+            if fnum > cap.get(cvc.FRAME_COUNT):
+                if fnum > cap.get(cvc.FRAME_COUNT)+1:
+                    raise ValueError('Accessing frames beyond ' + 
+                                     'the length of the video for' + 
+                                     ' {} expid {:d} '.format(expname,ndx) + 
+                                     ' at t {:d}'.format(fnum)
+                                    )
+                continue
+            framein = myutils.readframe(cap,fnum-1)
+            cloc = conf.cropLoc[tuple(framein.shape[0:2])]
+            framein = PoseTools.cropImages(framein,conf)
+            framein = framein[:,:,0:1]
+
+            curloc = np.round(pts[curl,:,view,:]).astype('int')
+            curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
+            curloc[:,1] = curloc[:,1] - cloc[0]
+
+            rows = framein.shape[0]
+            cols = framein.shape[1]
+            if np.ndim(framein) > 2:
+                depth = framein.shape[2]
+            else:
+                depth = 1
+
+            image_raw = framein.tostring()
+            example = tf.train.Example(features=tf.train.Features(feature={
+                'height': _int64_feature(rows),
+                'width': _int64_feature(cols),
+                'depth': _int64_feature(depth),
+                'locs': _float_feature(curloc.flatten()),
+                'image_raw': _bytes_feature(image_raw)}))
+            curenv.write(example.SerializeToString())
+
+            if isval.count(ndx):
+                valcount+=1
+            else:
+                count+=1
+
+        cap.release() # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx,len(localdirs),count,valcount))
+    env.close() # close the database
+    valenv.close()
+    print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
+    
+    
+
+
+# In[1]:
+
+def read_and_decode(filename_queue,conf):
+    reader = tf.TFRecordReader()
+    _, serialized_example = reader.read(filename_queue)
+    features = tf.parse_single_example(
+        serialized_example,
+        features={'height':tf.FixedLenFeature([], dtype=tf.int64),
+          'width':tf.FixedLenFeature([], dtype=tf.int64),
+          'depth':tf.FixedLenFeature([], dtype=tf.int64),
+          'locs':tf.FixedLenFeature(shape=[conf.n_classes,2], dtype=tf.float32),
+          'image_raw':tf.FixedLenFeature([], dtype=tf.string),
+                 })
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
+#     height = tf.cast(features['height'],tf.int64)
+#     width = tf.cast(features['width'],tf.int64)
+#     depth = tf.cast(features['depth'],tf.int64)
+    image = tf.reshape(image,conf.imsz )
+    
+    locs = tf.cast(features['locs'], tf.float32)
+
+    return image, locs
 

@@ -170,7 +170,8 @@ for t = 1:Tfront,
       else
         scorescurr = permute(rds.scores(t,miny_side:maxy_side,minx_side:maxx_side,i),[2,3,1]);
 %         threshcurr = thresh_nonmax_side;
-        threshcurr = prctile(scorescurr(:),thresh_perc);
+        tscores = scorescurr(r_nonmax+1:end-r_nonmax,r_nonmax+1:end-r_nonmax); % safeguard against boundaries
+        threshcurr = prctile(tscores(:),thresh_perc);
         miny = miny_side;
         maxy = maxy_side;
         minx = minx_side;

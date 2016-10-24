@@ -222,6 +222,106 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     return out,out_dict
 
 
+def net_multi_conv_reg(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
+    imsz = conf.imsz; rescale = conf.rescale
+    pool_scale = conf.pool_scale
+    nfilt = conf.nfilt
+    
+    #     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
+    #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
+    #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
+    with tf.variable_scope('scale0'):
+        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase)
+    with tf.variable_scope('scale1'):
+        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase)
+    with tf.variable_scope('scale2'):
+        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase)
+
+    sz0 = int(math.ceil(float(imsz[0])/pool_scale/rescale))
+    sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
+    conv5_1_up = upscale('5_1',conv5_1,[sz0,sz1])
+    conv5_2_up = upscale('5_2',conv5_2,[sz0,sz1])
+
+    # crop lower res layers to match higher res size
+    conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
+    conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+    crop_0 = int((sz0-conv5_0_sz[1])/2)
+    crop_1 = int((sz1-conv5_0_sz[2])/2)
+
+    curloc = [0,crop_0,crop_1,0]
+    patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
+    conv5_1_up = tf.slice(conv5_1_up,curloc,patchsz)
+    conv5_2_up = tf.slice(conv5_2_up,curloc,patchsz)
+    conv5_1_final_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+#     print("Initial lower res layer size %s"%(', '.join(map(str,conv5_1_sz))))
+#     print("Initial higher res layer size %s"%(', '.join(map(str,conv5_0_sz))))
+#     print("Crop start lower res layer at %s"%(', '.join(map(str,curloc))))
+#     print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
+
+
+    conv5_cat = tf.concat(3,[conv5_0,conv5_1_up,conv5_2_up])
+    
+    # Reshape conv5 output to fit dense layer input
+#     conv6 = conv2d('conv6',conv5_cat,_weights['wd1'],_weights['bd1']) 
+#     conv6 = tf.nn.dropout(conv6,_dropout)
+#     conv7 = conv2d('conv7',conv6,_weights['wd2'],_weights['bd2']) 
+#     conv7 = tf.nn.dropout(conv7,_dropout)
+
+    with tf.variable_scope('layer6'):
+        conv6 = conv_relu(conv5_cat,
+                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
+                          0.005,1,doBatchNorm,trainPhase) 
+        if not doBatchNorm:
+            conv6 = tf.nn.dropout(conv6,_dropout,
+                              [conf.batch_size,1,1,conf.nfcfilt])
+
+    with tf.variable_scope('layer7'):
+        conv7 = conv_relu(conv6,[1,1,conf.nfcfilt,conf.nfcfilt],
+                          0.005,1,doBatchNorm,trainPhase) 
+        if not doBatchNorm:
+            conv7 = tf.nn.dropout(conv7,_dropout,
+                                  [conf.batch_size,1,1,conf.nfcfilt])
+
+# Output, class prediction
+#     out = tf.nn.bias_add(tf.nn.conv2d(
+#             conv7, _weights['wd3'], 
+#             strides=[1, 1, 1, 1], padding='SAME'),_weights['bd3'])
+
+    with tf.variable_scope('layer8'):
+        l8_weights = tf.get_variable("weights", [1,1,conf.nfcfilt,conf.n_classes],
+            initializer=tf.random_normal_initializer(stddev=0.01))
+        l8_biases = tf.get_variable("biases", conf.n_classes,
+            initializer=tf.constant_initializer(0))
+        out = tf.nn.conv2d(conv7, l8_weights,
+            strides=[1, 1, 1, 1], padding='SAME') + l8_biases
+
+    with tf.variable_scope('layer8_x'):
+        l8x_weights = tf.get_variable("weights", [1,1,conf.nfcfilt,conf.n_classes],
+            initializer=tf.random_normal_initializer(stddev=0.01))
+        l8x_biases = tf.get_variable("biases", conf.n_classes,
+            initializer=tf.constant_initializer(0))
+        out_x = tf.nn.conv2d(conv7, l8x_weights,
+            strides=[1, 1, 1, 1], padding='SAME') + l8x_biases
+
+    with tf.variable_scope('layer8_y'):
+        l8y_weights = tf.get_variable("weights", [1,1,conf.nfcfilt,conf.n_classes],
+            initializer=tf.random_normal_initializer(stddev=0.01))
+        l8y_biases = tf.get_variable("biases", conf.n_classes,
+            initializer=tf.constant_initializer(0))
+        out_y = tf.nn.conv2d(conv7, l8y_weights,
+            strides=[1, 1, 1, 1], padding='SAME') + l8y_biases
+        
+    out_dict = {'base_dict_0':base_dict_0,
+                'base_dict_1':base_dict_1,
+                'base_dict_2':base_dict_2,
+                'conv6':conv6,
+                'conv7':conv7,
+               }
+    
+    return out, out_x, out_y, out_dict
+
+
+
 def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes):
 #     imsz = conf.imsz
     # tf Graph input

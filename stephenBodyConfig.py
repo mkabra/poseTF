@@ -16,6 +16,7 @@ class myconfig(object):
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
     acName = 'AC'
+    regName = 'Reg'
 
     # ----- Network parameters
 
@@ -32,6 +33,7 @@ class myconfig(object):
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 1.5
+    label_reg_rad = 4
     fine_label_blur_rad = 1.5
     n_classes = 5 # 
     dropout = 0.5 # Dropout, probability to keep units
@@ -119,11 +121,14 @@ class myconfig(object):
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
     acoutname = expname + acName
+    baseregoutname = expname + regName
     baseckptname = baseoutname + 'ckpt'
+    baseregckptname = baseregoutname + 'ckpt'
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
     acckptname = acoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
+    baseregdataname = baseregoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
     acdataname = acoutname + 'traindata'

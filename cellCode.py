@@ -965,8 +965,14 @@ for ii in range(3):
 fig.savefig('/groups/branson/home/kabram/temp/headValResults.png')
 
 
-# In[1]:
+# In[5]:
 
-from cvc import cvc
-print cvc.frame_count
+import multiResData
+from stephenHeadConfig import conf as conf
+
+_,valmovies = multiResData.getMovieLists(conf)
+f = open('/home/mayank/Dropbox/temp/valfilelist.txt','w')
+for ndx in range(40,50):
+    f.write('{:}\n'.format(valmovies[ndx]))
+f.close()    
 
