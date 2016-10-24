@@ -5,10 +5,6 @@
 
 import tensorflow as tf
 import os,sys
-import caffe
-import lmdb
-import caffe.proto.caffe_pb2
-from caffe.io import datum_to_array
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np

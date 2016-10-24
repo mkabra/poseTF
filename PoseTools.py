@@ -106,28 +106,28 @@ def cropImages(framein,conf):
 
 # In[ ]:
 
-def readLMDB(cursor,num,imsz,dataMod):
-#     imsz = conf.imsz
-    images = np.zeros((num,1,imsz[0],imsz[1]))
-    locs = []
-    datum = caffe.proto.caffe_pb2.Datum()
+# def readLMDB(cursor,num,imsz,dataMod):
+# #     imsz = conf.imsz
+#     images = np.zeros((num,1,imsz[0],imsz[1]))
+#     locs = []
+#     datum = caffe.proto.caffe_pb2.Datum()
 
-#     print(images.shape)
-    for ndx in range(num):
-        if not cursor.next():
-            cursor.first()
-#             print('restarting at %d' % ndx)
+# #     print(images.shape)
+#     for ndx in range(num):
+#         if not cursor.next():
+#             cursor.first()
+# #             print('restarting at %d' % ndx)
             
-        value = cursor.value()
-        key = cursor.key()
-        datum.ParseFromString(value)
-        expname,curloc,t = dataMod.decodeID(cursor.key())
+#         value = cursor.value()
+#         key = cursor.key()
+#         datum.ParseFromString(value)
+#         expname,curloc,t = dataMod.decodeID(cursor.key())
 
-        curlabel = datum.label
-        data = caffe.io.datum_to_array(datum)
-        images[ndx,0,:,:] = data.squeeze()
-        locs.append(curloc)
-    return images,locs
+#         curlabel = datum.label
+#         data = caffe.io.datum_to_array(datum)
+#         images[ndx,0,:,:] = data.squeeze()
+#         locs.append(curloc)
+#     return images,locs
 
 
 
