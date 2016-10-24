@@ -6,7 +6,7 @@
 import numpy as np
 import scipy,re
 import math,h5py
-import caffe
+# import caffe
 from scipy import misc
 from scipy import ndimage
 import tensorflow as tf
@@ -204,30 +204,30 @@ def randomlyAdjust(img,conf):
 
 # In[ ]:
 
-def readOnceLMDB(cursor,num,imsz,dataMod,reset=False):
-    images = np.zeros((0,1,imsz[0],imsz[1]))
-    locs = []
-    datum = caffe.proto.caffe_pb2.Datum()
+# def readOnceLMDB(cursor,num,imsz,dataMod,reset=False):
+#     images = np.zeros((0,1,imsz[0],imsz[1]))
+#     locs = []
+#     datum = caffe.proto.caffe_pb2.Datum()
     
-    if reset:
-        cursor.first()
+#     if reset:
+#         cursor.first()
         
-    done = False
-    for ndx in range(num):
-        if not cursor.next():
-            done = True
-            break
+#     done = False
+#     for ndx in range(num):
+#         if not cursor.next():
+#             done = True
+#             break
             
-        value = cursor.value()
-        key = cursor.key()
-        datum.ParseFromString(value)
-        expname,curloc,t = dataMod.decodeID(cursor.key())
+#         value = cursor.value()
+#         key = cursor.key()
+#         datum.ParseFromString(value)
+#         expname,curloc,t = dataMod.decodeID(cursor.key())
 
-        curlabel = datum.label
-        data = caffe.io.datum_to_array(datum)
-        images = np.append(images,data.squeeze()[np.newaxis,:,:],0)
-        locs.append(curloc)
-    return images,locs,done
+#         curlabel = datum.label
+#         data = caffe.io.datum_to_array(datum)
+#         images = np.append(images,data.squeeze()[np.newaxis,:,:],0)
+#         locs.append(curloc)
+#     return images,locs,done
 
 
 
