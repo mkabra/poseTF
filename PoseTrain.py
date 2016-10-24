@@ -13,9 +13,9 @@ import tempfile,copy,re
 from enum import Enum
 import localSetup
 
-import caffe,lmdb
-import caffe.proto.caffe_pb2
-from caffe.io import datum_to_array
+# import caffe,lmdb
+# import caffe.proto.caffe_pb2
+# from caffe.io import datum_to_array
 
 import matplotlib
 import matplotlib.pyplot as plt
