@@ -232,12 +232,12 @@ pobj.acTrain(restore=True)
 import PoseTrain
 reload(PoseTrain)
 import tensorflow as tf
-from stephenHeadConfig import sideconf as conf
+from stephenHeadConfig import conf as conf
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-conf.useAC = False
-conf.useMRf = False
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+tf.reset_default_graph()
+conf.useMRf = True
 pobj = PoseTrain.PoseTrain(conf)
 
 pobj.fineTrain(restore=False)

@@ -74,8 +74,8 @@ def main(argv):
         if view ==1:
 
             from stephenHeadConfig import sideconf as conf
-            conf.useMRF = False
-            outtype = 1
+            conf.useMRF = True
+            outtype = 2
             extrastr = '_side'
             valmovies = smovies    
         else:

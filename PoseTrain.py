@@ -795,27 +795,23 @@ class PoseTrain(object):
         mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.createOptimizer()
-        assert not (self.conf.useMRF & self.conf.useAC), "Cannot use both MRF and AC"
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
-        elif self.conf.useAC:
-            predPair = [self.acPred,self.finePred]
         else:
             predPair = [self.basePred,self.finePred]
             
-        with self.env.begin() as txn,self.valenv.begin() as valtxn,tf.Session() as sess:
+        with tf.Session() as sess:
 
             self.restoreBase(sess,True)
             self.restoreMRF(sess,True)
-            self.restoreAC(sess,True)
             self.restoreFine(sess,restore)
             self.initializeRemainingVars(sess)
-            self.createCursors(txn,valtxn)
+            self.createCursors(sess)
             
             for step in range(self.finestartat,self.conf.fine_training_iters+1):
                 self.doOpt(sess,step,self.conf.fine_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train,distort=True)
+                    self.updateFeedDict(self.DBType.Train,distort=True,sess=sess)
                     train_loss = self.computeLoss(sess,[self.cost,mrfcost,basecost])
                     tt1 = self.computePredDist(sess,self.basePred)
                     tt2 = self.computePredDist(sess,self.mrfPred)
@@ -827,7 +823,7 @@ class PoseTrain(object):
                     val_loss = np.zeros([3,])
                     valDist = [0.,0.,0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val,distort=False)
+                        self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,mrfcost,basecost]))
                         tt1 = self.computePredDist(sess,self.basePred)
                         tt2 = self.computePredDist(sess,self.mrfPred)
