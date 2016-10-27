@@ -31,7 +31,7 @@ import tensorflow as tf
 
 def findLocalDirs(conf):
     L = h5py.File(conf.labelfile,'r')
-    localdirs = [u''.join(unichr(c) for c in L[jj[0]]) for jj in conf.getexplist(L)]
+    localdirs = [u''.join(unichr(c) for c in L[jj]) for jj in conf.getexplist(L)]
     seldirs = [True]*len(localdirs)
     L.close()
     return localdirs,seldirs
@@ -343,7 +343,6 @@ def createTFRecord(conf):
         if not seldirs[ndx]:
             continue
 
-        expname = conf.getexpname(dirname)
         frames = np.where(expid == (ndx + 1))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
@@ -383,6 +382,8 @@ def createTFRecord(conf):
                 'width': _int64_feature(cols),
                 'depth': _int64_feature(depth),
                 'locs': _float_feature(curloc.flatten()),
+                'expndx': _float_feature(ndx),
+                'ts': _float_feature(curl),
                 'image_raw': _bytes_feature(image_raw)}))
             curenv.write(example.SerializeToString())
 
@@ -395,6 +396,183 @@ def createTFRecord(conf):
         print('Done %d of %d movies, count:%d val:%d' % (ndx,len(localdirs),count,valcount))
     env.close() # close the database
     valenv.close()
+    print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
+    
+    
+
+
+# In[ ]:
+
+def createFullTFRecord(conf):
+
+    L = h5py.File(conf.labelfile,'r')
+    pts = np.array(L['pts'])
+    ts = np.array(L['ts']).squeeze().astype('int')
+    expid = np.array(L['expidx']).squeeze().astype('int')
+    view = conf.view
+    count = 0; valcount = 0
+    
+    psz = conf.sel_sz
+    
+    createValdata(conf)
+    isval,localdirs,seldirs = loadValdata(conf)
+    
+    trainfilename =os.path.join(conf.cachedir,conf.fulltrainfilename)
+    
+    env = tf.python_io.TFRecordWriter(trainfilename+'.tfrecords')
+    
+    for ndx,dirname in enumerate(localdirs):
+        if not seldirs[ndx]:
+            continue
+
+        frames = np.where(expid == (ndx + 1))[0]
+        curdir = os.path.dirname(localdirs[ndx])
+        cap = cv2.VideoCapture(localdirs[ndx])
+
+        curenv = env
+
+        for curl in frames:
+
+            fnum = ts[curl]
+            if fnum > cap.get(cvc.FRAME_COUNT):
+                if fnum > cap.get(cvc.FRAME_COUNT)+1:
+                    raise ValueError('Accessing frames beyond ' + 
+                                     'the length of the video for' + 
+                                     ' {} expid {:d} '.format(expname,ndx) + 
+                                     ' at t {:d}'.format(fnum)
+                                    )
+                continue
+            framein = myutils.readframe(cap,fnum-1)
+            cloc = conf.cropLoc[tuple(framein.shape[0:2])]
+            framein = PoseTools.cropImages(framein,conf)
+            framein = framein[:,:,0:1]
+
+            curloc = np.round(pts[curl,:,view,:]).astype('int')
+            curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
+            curloc[:,1] = curloc[:,1] - cloc[0]
+
+            rows = framein.shape[0]
+            cols = framein.shape[1]
+            if np.ndim(framein) > 2:
+                depth = framein.shape[2]
+            else:
+                depth = 1
+
+            image_raw = framein.tostring()
+            example = tf.train.Example(features=tf.train.Features(feature={
+                'height': _int64_feature(rows),
+                'width': _int64_feature(cols),
+                'depth': _int64_feature(depth),
+                'locs': _float_feature(curloc.flatten()),
+                'expndx': _float_feature(ndx),
+                'ts': _float_feature(curl),
+                'image_raw': _bytes_feature(image_raw)}))
+            curenv.write(example.SerializeToString())
+
+            count+=1
+
+        cap.release() # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx,len(localdirs),count,valcount))
+    env.close() # close the database
+    print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
+    
+    
+
+
+# In[ ]:
+
+def createTFRecordFromLbl(conf,split=True):
+
+    L = h5py.File(conf.labelfile,'r')
+    
+    
+    psz = conf.sel_sz
+    
+    createValdata(conf)
+    isval,localdirs,seldirs = loadValdata(conf)
+    
+    if split:
+        trainfilename =os.path.join(conf.cachedir,conf.trainfilename)
+        valfilename =os.path.join(conf.cachedir,conf.valfilename)
+
+        env = tf.python_io.TFRecordWriter(trainfilename+'.tfrecords')
+        valenv = tf.python_io.TFRecordWriter(valfilename+'.tfrecords')
+    else:
+        trainfilename =os.path.join(conf.cachedir,conf.fulltrainfilename)
+        env = tf.python_io.TFRecordWriter(trainfilename+'.tfrecords')
+        valenv = None
+        
+
+    pts = np.array(L['labeledpos'])
+    
+    view = conf.view
+    count = 0; valcount = 0
+    
+    
+    for ndx,dirname in enumerate(localdirs):
+        if not seldirs[ndx]:
+            continue
+
+        expname = conf.getexpname(dirname)
+        curpts = np.array(L[pts[ndx,0]])
+        frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
+        curdir = os.path.dirname(localdirs[ndx])
+        cap = cv2.VideoCapture(localdirs[ndx])
+
+        
+        curenv = valenv if isval.count(ndx) and split else env
+            
+
+        for fnum in frames:
+
+            if fnum > cap.get(cvc.FRAME_COUNT):
+                if fnum > cap.get(cvc.FRAME_COUNT)+1:
+                    raise ValueError('Accessing frames beyond ' + 
+                                     'the length of the video for' + 
+                                     ' {} expid {:d} '.format(expname,ndx) + 
+                                     ' at t {:d}'.format(fnum)
+                                    )
+                continue
+            framein = myutils.readframe(cap,fnum)
+            cloc = conf.cropLoc[tuple(framein.shape[0:2])]
+            framein = PoseTools.cropImages(framein,conf)
+            framein = framein[:,:,0:1]
+
+            nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0,0]
+            pts_st = int(view*nptsPerView)
+            selpts = pts_st + conf.selpts
+            curloc = curpts[fnum,:,selpts]
+            curloc[:,0] = curloc[:,0] - cloc[1] - 1 # ugh, the nasty x-y business.
+            curloc[:,1] = curloc[:,1] - cloc[0] - 1
+
+            rows = framein.shape[0]
+            cols = framein.shape[1]
+            if np.ndim(framein) > 2:
+                depth = framein.shape[2]
+            else:
+                depth = 1
+
+            image_raw = framein.tostring()
+            example = tf.train.Example(features=tf.train.Features(feature={
+                'height': _int64_feature(rows),
+                'width': _int64_feature(cols),
+                'depth': _int64_feature(depth),
+                'locs': _float_feature(curloc.flatten()),
+                'expndx': _float_feature(ndx),
+                'ts': _float_feature(fnum),
+                'image_raw': _bytes_feature(image_raw)}))
+            curenv.write(example.SerializeToString())
+
+            if isval.count(ndx) and split:
+                valcount+=1
+            else:
+                count+=1
+
+        cap.release() # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx,len(localdirs),count,valcount))
+    env.close() # close the database
+    if split:
+        valenv.close()
     print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
     
     

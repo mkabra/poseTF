@@ -35,73 +35,13 @@ reload(multiResData)
 multiResData.createDB(conf)
 
 
-# In[ ]:
-
-# all the f'ing imports
-import scipy.io as sio
-import os,sys
-sys.path.append('/home/mayank/work/pyutils')
-import myutils
-import re
-from stephenHeadConfig import conf as conf
-import shutil
-
-get_ipython().magic(u'matplotlib inline')
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
-import cv2
-import math
-import lmdb
-import caffe
-from random import randint,sample
-import pickle
-import h5py
-
-
-import mpld3
-mpld3.enable_notebook()
-
-import multiResData
-reload(multiResData)
-
-multiResData.createTFRecord(conf)
-
-
 # In[2]:
 
-# all the f'ing imports
-import scipy.io as sio
-import os,sys
-sys.path.append('/home/mayank/work/pyutils')
-import myutils
-import re
-import shutil
-
-get_ipython().magic(u'matplotlib inline')
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
-import cv2
-import math
-import lmdb
-import caffe
-from random import randint,sample
-import pickle
-import h5py
 from stephenHeadConfig import sideconf as conf
-
-
-import mpld3
-mpld3.enable_notebook()
-
 import multiResData
 reload(multiResData)
 
-# multiResData.createDB(conf)
-multiResData.createTFRecord(conf)
+multiResData.createFullTFRecord(conf)
 
 
 # In[ ]:
@@ -115,13 +55,6 @@ ll = ['/home/mayank/work/PoseEstimationData' + x[35:] for x in localdirs]
 ll[0]
 with open('cacheHead/valdata','wb') as f:
     pickle.dump([isval,ll,seldirs],f)
-
-
-# In[ ]:
-
-_,valmovies = multiResData.getMovieLists(conf)
-print valmovies[0]
-print valmovies[3]
 
 
 # In[1]:
@@ -155,26 +88,16 @@ with open(outfile,'w') as f:
     
 
 
-# In[ ]:
-
-import PoseTrain
-reload(PoseTrain)
-from stephenHeadConfig import conf
-
-pobj = PoseTrain.PoseTrain(conf)
-pobj.baseTrain(restore=True)
-
-
 # In[1]:
 
 import PoseTrain
 reload(PoseTrain)
-from stephenHeadConfig import conf as conf
+from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 
 tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
-pobj.baseTrain(restore=False)
+pobj.baseTrain(restore=False,trainType=1)
 
 
 # In[3]:
@@ -194,14 +117,14 @@ pobj.baseTrain(restore=False)
 
 import PoseTrain
 reload(PoseTrain)
-from stephenHeadConfig import conf as conf
+from stephenHeadConfig import sideconf as conf
 import tensorflow as tf
 import os
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
-pobj.mrfTrain(restore=False)
+pobj.mrfTrain(restore=True,trainType=1)
 
 
 # In[1]:
@@ -213,7 +136,7 @@ import tensorflow as tf
 
 tf.reset_default_graph()
 pobj = PoseTrain.PoseTrain(conf)
-pobj.mrfTrain(restore=False)
+pobj.mrfTrain(restore=True)
 
 
 # In[ ]:
@@ -227,7 +150,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.acTrain(restore=True)
 
 
-# In[ ]:
+# In[4]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -2228,6 +2151,11 @@ print kk1
 vv = (b[0,:,:,:]-1)**2
 vv = np.sum( (vv*(a[0,:,:,:]/2+0.5)).flatten())
 print vv/2
+
+
+# In[ ]:
+
+#profiling the code
 
 
 # In[7]:

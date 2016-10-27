@@ -66,17 +66,32 @@ def scaleImages(img,scale):
     xx = zz-mm[:,np.newaxis,np.newaxis,:]
     return xx
 
-def multiScaleImages(inImg, rescale, scale, l1_cropsz):
+def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
     # only crop the highest res image
-    if l1_cropsz > 0:
-        inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
-    else:
-        inImg_crop = inImg
+#     if l1_cropsz > 0:
+#         inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
+#     else:
+#         inImg_crop = inImg
             
-    x0_in = scaleImages(inImg_crop,rescale)
+    inImg = adjustContrast(inImg,conf)
+    x0_in = scaleImages(inImg,rescale)
     x1_in = scaleImages(inImg,rescale*scale)
     x2_in = scaleImages(x1_in,scale)
     return x0_in,x1_in,x2_in
+
+
+# In[ ]:
+
+def adjustContrast(inImg,conf):
+    if conf.adjustContrast:
+        clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(conf.clahegridsize,conf.clahegridsize))
+        simg = np.zeros(inImg.shape)
+        assert inImg.shape[3] == 1, 'cant adjust contrast on color images'
+        for ndx in range(inImg.shape[0]):
+            simg[ndx,:,:,0] = clahe.apply(inImg[ndx,...,0].astype('uint8')).astype('float')
+        return simg
+    else:
+        return inImg
 
 
 # In[ ]:
@@ -485,7 +500,23 @@ def compareConf(curconf,oldconf):
     for f in ff:
         if f[0:2] == '__' or f[0:3] == 'get':
             continue
-        if not hasattr(curconf,f) or not hasattr(oldconf,f) or getattr(curconf,f) != getattr(oldconf,f):
+        if hasattr(curconf,f) and hasattr(oldconf,f):
+            if type(getattr(curconf,f)) is np.ndarray:
+                print '%s'%(f)
+                print 'New:' , getattr(curconf,f)
+                print 'Old:' , getattr(oldconf,f)
+            
+            elif type(getattr(curconf,f)) is list:
+                if type(getattr(oldconf,f)) is list:
+                    if not cmp(getattr(curconf,f),getattr(oldconf,f)):
+                        print '%s doesnt match'%(f)
+                else:
+                    print '%s doesnt match'%(f)
+                
+            elif getattr(curconf,f) != getattr(oldconf,f):
+                print '%s doesnt match'%(f)
+                
+        else:
             print '%s doesnt match'%(f)
             
 
@@ -559,8 +590,11 @@ def createPredImage(predscores,n_classes):
 
 # In[ ]:
 
-def classifyMovie(conf,moviename,outtype,self,sess):
-    cap,nframes = openMovie(moviename)
+def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
+    cap = cv2.VideoCapture(moviename)
+    nframes = int(cap.get(cvc.FRAME_HEIGHT))
+    if maxframes > 0:
+        nframes = maxframes
     predLocs = np.zeros([nframes,conf.n_classes,2,2])
     predmaxscores = np.zeros([nframes,conf.n_classes,2])
     
@@ -584,20 +618,20 @@ def classifyMovie(conf,moviename,outtype,self,sess):
 #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
 #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
 
+    allf = np.zeros((bsize,)+conf.imsz+(1,))
     for curl in range(nbatches):
         
-        allf = np.zeros((bsize,)+conf.imsz+(1,))
         ndxst = curl*bsize
         ndxe = min(nframes,(curl+1)*bsize)
         ppe = min(ndxe-ndxst,bsize)
         for ii in range(ppe):
-            framein = myutils.readframe(cap,curl*bsize+ii)
+            success,framein = cap.read()
 
             framein = cropImages(framein,conf)
 #             framein = clahe.apply(framein[:,:,:1])
             allf[ii,...] = framein[...,0:1]
             
-        x0,x1,x2 = multiScaleImages(allf, conf.rescale,  conf.scale, conf.l1_cropsz)
+        x0,x1,x2 = multiScaleImages(allf, conf.rescale,  conf.scale, conf.l1_cropsz,conf)
 
         self.feed_dict[self.ph['x0']] = x0
         self.feed_dict[self.ph['x1']] = x1
@@ -639,7 +673,7 @@ def classifyMovie(conf,moviename,outtype,self,sess):
 
 # In[ ]:
 
-def createPredMovie(conf,predList,moviename,outmovie,outtype):
+def createPredMovie(conf,predList,moviename,outmovie,outtype,maxframes=-1):
     
     predLocs,predscores,predmaxscores = predList
 #     assert false, 'stop here'
@@ -647,19 +681,32 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype):
 
     cap = cv2.VideoCapture(moviename)
     nframes = int(cap.get(cvc.FRAME_COUNT))
+    if maxframes > 0:
+        nframes = maxframes
     
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0,1,conf.n_classes))
     
     fig = mpl.figure.Figure(figsize = (9,4))
     canvas = FigureCanvasAgg(fig)
+    
+    if conf.adjustContrast:
+        clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=conf.clahegridsize)
+    else:
+        clahe = None
+        
     for curl in range(nframes):
-        framein = myutils.readframe(cap,curl)
+        framein = cv2.read()
         framein = cropImages(framein,conf)
+        if framein.shape[2] > 1:
+            framein = framein[...,0]
+            
+        if conf.adjustContrast:
+            framein = clahe.apply(framein)
 
         fig.clf()
         ax1 = fig.add_subplot(1,2,1)
-        ax1.imshow(framein[:,:,0], cmap=cm.gray)
+        ax1.imshow(framein, cmap=cm.gray)
         ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
                     c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
                     s=np.clip(predmaxscores[curl,:,0]*100,20,40),

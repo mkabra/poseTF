@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[5]:
 
 import pawData
 reload(pawData)
@@ -10,7 +10,12 @@ reload(myutils)
 pawData.createDB()
 
 
-# In[1]:
+# In[ ]:
+
+
+
+
+# In[ ]:
 
 import sys
 sys.path.append('/home/mayank/work/pyutils')
@@ -28,12 +33,12 @@ reload(multiPawTools)
 pawMulti.train()
 
 
-# In[75]:
+# In[ ]:
 
 sess = tf.InteractiveSession()
 
 
-# In[6]:
+# In[ ]:
 
 import scipy.io as sio
 import os,sys
@@ -62,7 +67,7 @@ expid = L['expidx']
     
 
 
-# In[3]:
+# In[ ]:
 
 frames = np.where(expid[0,:]==4)[0]
 fnum = ts[0,frames]
@@ -84,7 +89,7 @@ print(ddff.max())
 cap.release()
 
 
-# In[4]:
+# In[ ]:
 
 import myutils
 reload(myutils)
@@ -99,7 +104,7 @@ print(cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES))
 print(stat)
 
 
-# In[5]:
+# In[ ]:
 
 import moviepy.video.io.ffmpeg_reader as freader
 reader = freader.FFMPEG_VideoReader('/home/mayank/Dropbox/AdamVideos/multiPoint/M118_20140730/M118_20140730_v002/movie_comb.avi')
@@ -109,14 +114,14 @@ fe = reader.get_frame((1998.-0.1)/reader.fps)
 type(f1)
 
 
-# In[6]:
+# In[ ]:
 
 import cv2
 cap = cv2.VideoCapture('/home/mayank/Dropbox/AdamVideos/movie_comb.avi')
           
 
 
-# In[7]:
+# In[ ]:
 
 import pawconfig as conf
 import scipy.io as sio
@@ -128,7 +133,7 @@ expid = L['expidx']
 expid[0,3]
 
 
-# In[1]:
+# In[ ]:
 
 import lmdb
 env = lmdb.open('cacheHead/val_lmdb', readonly=True)
@@ -136,12 +141,12 @@ txn = env.begin()
 print(env.stat())
 
 
-# In[9]:
+# In[ ]:
 
 env.close()
 
 
-# In[2]:
+# In[ ]:
 
 import caffe
 import numpy as np
@@ -153,7 +158,7 @@ cursor =txn.cursor()
 cursor.first()
 
 
-# In[6]:
+# In[ ]:
 
 import multiPawTools
 reload(multiPawTools)
@@ -161,7 +166,7 @@ import pawconfig as conf
 img,locs = multiPawTools.readLMDB(cursor,3,1)
 
 
-# In[7]:
+# In[ ]:
 
 from scipy import misc
 from scipy import ndimage
@@ -189,17 +194,17 @@ plt.show()
 print(blurL.max(),blurL.min())
 
 
-# In[10]:
+# In[ ]:
 
 print(blurL[ndx,5:12,35:42,0])
 
 
-# In[18]:
+# In[ ]:
 
 print(blurL.shape)
 
 
-# In[55]:
+# In[ ]:
 
 from scipy import misc
 sz = img.shape
@@ -215,12 +220,12 @@ plt.imshow(img[1,0,:,:])
 plt.show()
 
 
-# In[43]:
+# In[ ]:
 
 env.close()
 
 
-# In[1]:
+# In[ ]:
 
 import pawMulti
 reload(pawMulti)
@@ -239,7 +244,7 @@ weights = pawMulti.initNetConvWeights()
 pred = pawMulti.paw_net_multi_conv(x0,x1,x2,weights,dropout)
 
 
-# In[3]:
+# In[ ]:
 
 import numpy as np
 imsz = conf.imsz
@@ -252,12 +257,12 @@ print(out.shape)
 print(jj2.shape)
 
 
-# In[2]:
+# In[ ]:
 
 sess = tf.InteractiveSession()
 
 
-# In[16]:
+# In[ ]:
 
 import tensorflow as tf
 import numpy as np
@@ -278,7 +283,7 @@ print(jj)
 print(out[1])
 
 
-# In[13]:
+# In[ ]:
 
 sess.close()
 
@@ -373,7 +378,7 @@ out = sess.run([pred,cost], feed_dict={x0:x0_in,
                            y: labelims, keep_prob: 1.})
 
 
-# In[1]:
+# In[ ]:
 
 import matplotlib.pyplot as plt
 from IPython import display
@@ -397,7 +402,7 @@ for ndx in range(256):
     time.sleep(1)
 
 
-# In[28]:
+# In[ ]:
 
 import cv2
 import matplotlib.animation as manimation
@@ -457,13 +462,13 @@ os.system(mencoder_cmd)
 cap.release()
 
 
-# In[19]:
+# In[ ]:
 
 import pawData
 a,b,c = pawData.loadValdata()
 
 
-# In[1]:
+# In[ ]:
 
 import pawData
 import pawMulti
@@ -543,7 +548,7 @@ with tf.Session() as sess:
         movcount+=1
 
 
-# In[1]:
+# In[ ]:
 
 import tensorflow as tf
 
@@ -556,7 +561,7 @@ aa = mm.eval()
 print(aa)
 
 
-# In[1]:
+# In[ ]:
 
 import lmdb
 lmdbfilename= 'cacheHeadSide/train_lmdb'
@@ -567,7 +572,7 @@ txn = env.begin()
 print(txn.stat()['entries'])
 
 
-# In[2]:
+# In[ ]:
 
 import PoseTools
 import multiResData
@@ -578,7 +583,7 @@ print ll
 plt.imshow(ii[0,0,:,:])
 
 
-# In[11]:
+# In[ ]:
 
 import pickle
 
@@ -587,7 +592,7 @@ with open('cacheHead/headMRFtraindata','rb') as f:
     
 
 
-# In[37]:
+# In[ ]:
 
 print gg[0].keys()
 plt.clf()
@@ -597,7 +602,7 @@ plt.plot(x,gg[0]['val_dist'][5:], hold=True)
 plt.legend(('base','mrf'))
 
 
-# In[28]:
+# In[ ]:
 
 from janLegConfig import conf as conf
 # from stephenHeadConfig import sideconf as conf
@@ -614,14 +619,14 @@ for ndx in range(conf.n_classes):
     
 
 
-# In[26]:
+# In[ ]:
 
 np.set_printoptions(precision=2)
 # print jj[35:45,35:45,0,1]
 print np.array_str(jj[35:45,35:45,2,3],precision=2,suppress_small = True)
 
 
-# In[9]:
+# In[ ]:
 
 from stephenHeadConfig import conf as conf
 import multiResData
@@ -632,7 +637,7 @@ print a
 print a.index(88)
 
 
-# In[7]:
+# In[ ]:
 
 from stephenHeadConfig import conf as conf
 import multiResData
@@ -643,7 +648,7 @@ print isval.index(73)
 print len(isval)
 
 
-# In[4]:
+# In[ ]:
 
 from stephenHeadConfig import conf as conf
 import multiResData
@@ -652,7 +657,7 @@ _,x = multiResData.getMovieLists(conf)
 x
 
 
-# In[8]:
+# In[ ]:
 
 from stephenHeadConfig import conf as conf
 import multiResData
@@ -669,7 +674,7 @@ crop_loc = [x/4 for x in orig_crop_loc]
 print orig_crop_loc
 
 
-# In[8]:
+# In[ ]:
 
 from matplotlib import cm
 cmap = cm.get_cmap('jet')
@@ -682,7 +687,7 @@ for ndx in range(4):
 plt.imshow(ii)    
 
 
-# In[1]:
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -695,19 +700,19 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.mrfTrain(restore=False)
 
 
-# In[14]:
+# In[ ]:
 
 import multiResData
 from stephenHeadConfig import conf as conf
 _,valmovies = multiResData.getMovieLists(conf)
 
 
-# In[5]:
+# In[ ]:
 
 print valmovies[0][17:]
 
 
-# In[1]:
+# In[ ]:
 
 # create a list of movies for stephen -- May 23 2016
 import os
@@ -738,7 +743,7 @@ for ff in smovies+fmovies:
         print ff
 
 
-# In[3]:
+# In[ ]:
 
 import localSetup
 import PoseTools
@@ -825,7 +830,7 @@ print pp
 print predList[1].shape
 
 
-# In[1]:
+# In[ ]:
 
 # creating movie for lab talk 20160611
 
@@ -898,7 +903,7 @@ for ndx in [0,3,-3,-1]:
 
 
 
-# In[1]:
+# In[ ]:
 
 # Compute Errors for validation.
 import os
@@ -965,7 +970,7 @@ for ii in range(3):
 fig.savefig('/groups/branson/home/kabram/temp/headValResults.png')
 
 
-# In[5]:
+# In[ ]:
 
 import multiResData
 from stephenHeadConfig import conf as conf
@@ -975,4 +980,96 @@ f = open('/home/mayank/Dropbox/temp/valfilelist.txt','w')
 for ndx in range(40,50):
     f.write('{:}\n'.format(valmovies[ndx]))
 f.close()    
+
+
+# In[ ]:
+
+import h5py
+
+L = h5py.File('/home/mayank/temp/romainTest.lbl','r')
+
+
+
+# In[ ]:
+
+print L.keys()
+
+
+# In[ ]:
+
+print L['movieFilesAll'][0,:]
+
+
+# In[ ]:
+
+print [u''.join(unichr(c) for c in L[L['movieFilesAll'][2][0]])]
+
+
+# In[ ]:
+
+p1 = np.array(L['labeledpos'])
+print p1.shape
+print p1[0,0]
+print L[p1[0,0]]
+p2 = np.array(L[p1[0,0]])
+print p2.shape
+print np.invert( np.isnan(p2[1,:,0:5]))
+
+
+# In[ ]:
+
+curpts = p2
+frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
+print frames.shape
+
+
+# In[ ]:
+
+for ndx in frames[0:10]:
+    print ndx
+
+
+# In[ ]:
+
+xx= np.array(L['cfg']['NumLabelPoints'])
+kk= int(xx[0,0]*2) + np.arange(3,7)
+gg = p2[:,:,kk]
+print gg.shape
+
+
+# In[ ]:
+
+type([1,3,2]) is list
+
+
+# In[3]:
+
+import cv2
+import PoseTools
+from cvc import cvc
+import myutils
+
+moviename = '/home/mayank/Dropbox/MultiViewFlyLegTracking/trackingJun22-11-02/bias_video_cam_2_date_2016_06_22_time_11_02_28_v001.avi'
+nfr = 200
+
+aim1 = np.zeros([624,672,3,nfr])
+aim2 = np.zeros([624,672,3,nfr])
+cap = cv2.VideoCapture(moviename)
+for ndx in range(nfr):
+    s,i = cap.read()
+    aim1[...,ndx] = i
+cap.release()
+
+cap,nframes = PoseTools.openMovie(moviename)
+for ndx in range(nfr):
+    i = myutils.readframe(cap,ndx)
+    aim2[...,ndx] = i
+cap.release()
+print np.array_equal(aim1,aim2)
+
+
+# In[4]:
+
+from scipy import misc
+misc.imresize()
 

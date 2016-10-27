@@ -6,12 +6,13 @@
 import os
 import re
 import localSetup
+import numpy as np
 
 class myconfig(object): 
 
     # ----- Names
 
-    expname = 'head'
+    expname = 'romainLeg'
     baseName = 'Base'
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
@@ -36,7 +37,7 @@ class myconfig(object):
     dist2pos = 5
     label_blur_rad = 3 #1.5
     fine_label_blur_rad = 1.5
-    n_classes = 5 # 
+    n_classes = 18 # 
     dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
     nfcfilt = 512
@@ -94,13 +95,13 @@ class myconfig(object):
     numTest = 100
     
     # range for contrast, brightness and rotation adjustment
-    horzFlip = True
+    horzFlip = False
     vertFlip = False
-    brange = [-0.2,0.2] 
-    crange = [0.7,1.3]
+    brange = [0,0] #[-0.2,0.2] 
+    crange = [1,1] #[0.7,1.3]
     rrange = 30
     imax = 255.
-    adjustContrast = False
+    adjustContrast = True
     clahegridsize = 20
     # fine_batch_size = 8
 
@@ -108,22 +109,15 @@ class myconfig(object):
     # ----- Data parameters
 
     split = True
-    view = 1  # view = 0 is side view view = 1 is front view
-#    cropsz = 200 # cropping to be done based on imsz from now on.
+    view = 0  # view = 0 is side view view = 1 is front view
     l1_cropsz = 0
-#    imsz = (624,624) # This is after cropping. Orig is 1024x1024
-    imsz = (512,512) # This is after cropping. Orig is 1024x1024
-    map_size = 100000*psz**2*3
-    cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
+    imsz = (624,672) # This is after cropping. Orig is 1024x1024
+    cropLoc = {(624,672):[0,0],(762,768):[85,0]} # for front view crop the central part of the image
+    selpts = np.arange(0,18)
 
-    cachedir = os.path.join(localSetup.bdir,'cacheHead/')
-#    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
-    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephen_curatedData_withnewlabels.mat')
+    cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28AndJun22.lbl')
  
-#     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
-#     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
-    viddir = '/groups/branson/bransonlab/mayank/PoseEstimationData/Stephen'
-    ptn = 'fly_000[0-9]'
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
     valfilename = 'val_TF'
@@ -162,17 +156,16 @@ class myconfig(object):
     def getexpname(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-6]
+        expname = dir_parts[-1]
         return expname
 
     def getexplist(self,L):
-        fname = 'vid{:d}files'.format(self.view+1)
-        return L[fname]
+        return L['movieFilesAll'][self.view,:]
 
-conf = myconfig()
+bottomconf = myconfig()
 sideconf = myconfig()
-sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
+sideconf.cropLoc = {(288,592):[0,0]}
 # sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
-sideconf.cachedir = os.path.join(localSetup.bdir,'cacheHeadSide/')
+sideconf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegLeft')
 sideconf.view = 0
 

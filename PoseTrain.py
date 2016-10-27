@@ -49,10 +49,17 @@ class PoseTrain(object):
 #         vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.valfilename)
 #         self.env = lmdb.open(lmdbfilename, readonly = True)
 #         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
-        trainfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename) + '.tfrecords'
-        valfilename =os.path.join(self.conf.cachedir,self.conf.valfilename) + '.tfrecords'
-        self.train_queue = tf.train.string_input_producer([trainfilename])
-        self.val_queue = tf.train.string_input_producer([valfilename])
+        if self.trainType == 0:
+            trainfilename =os.path.join(self.conf.cachedir,self.conf.trainfilename) + '.tfrecords'
+            valfilename =os.path.join(self.conf.cachedir,self.conf.valfilename) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([trainfilename])
+            self.val_queue = tf.train.string_input_producer([valfilename])
+        else:
+            trainfilename =os.path.join(self.conf.cachedir,self.conf.fulltrainfilename) + '.tfrecords'
+            valfilename =os.path.join(self.conf.cachedir,self.conf.fulltrainfilename) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([trainfilename])
+            self.val_queue = tf.train.string_input_producer([valfilename])
+            
 
     def openHoldoutDBs(self):
         lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
@@ -137,7 +144,7 @@ class PoseTrain(object):
         self.readImages(dbType,distort,sess)
         x0,x1,x2 = PoseTools.multiScaleImages(self.xs.transpose([0,2,3,1]),
                                               conf.rescale, conf.scale,
-                                              conf.l1_cropsz)
+                                              conf.l1_cropsz,conf)
 
         labelims = PoseTools.createLabelImages(self.locs,
                                    self.conf.imsz,
@@ -269,24 +276,20 @@ class PoseTrain(object):
             layer1_2 = tf.stop_gradient(layers['base_dict_0']['conv2'])
             layer2_1 = tf.stop_gradient(layers['base_dict_1']['conv1'])
             layer2_2 = tf.stop_gradient(layers['base_dict_1']['conv2'])
-            layer7 = tf.stop_gradient(layers['conv7'])
         else:
             layer1_1 = layers['base_dict_0']['conv1']
             layer1_2 = layers['base_dict_0']['conv2']
             layer2_1 = layers['base_dict_1']['conv1']
             layer2_2 = layers['base_dict_1']['conv2']
-            layer7 = layers['conv7']
             
         curfine1_1 = CNB.extractPatches(layer1_1,pred,self.conf,1,4)
         curfine1_2 = CNB.extractPatches(layer1_2,pred,self.conf,2,2)
         curfine2_1 = CNB.extractPatches(layer2_1,pred,self.conf,2,2)
         curfine2_2 = CNB.extractPatches(layer2_2,pred,self.conf,4,1)
-        curfine7 = CNB.extractPatches(layer7,pred,self.conf,4,1)
         curfine1_1u = tf.unpack(tf.transpose(curfine1_1,[1,0,2,3,4]))
         curfine1_2u = tf.unpack(tf.transpose(curfine1_2,[1,0,2,3,4]))
         curfine2_1u = tf.unpack(tf.transpose(curfine2_1,[1,0,2,3,4]))
         curfine2_2u = tf.unpack(tf.transpose(curfine2_2,[1,0,2,3,4]))
-        curfine7u = tf.unpack(tf.transpose(curfine7,[1,0,2,3,4]))
         finepred = CNB.fineOut(curfine1_1u,curfine1_2u,curfine2_1u,curfine2_2u,
                                curfine7u,self.conf,doBatch,
                                self.ph['phase_train_fine'])    
@@ -648,11 +651,12 @@ class PoseTrain(object):
 
     
     
-    def baseTrain(self, restore=True, trainPhase=True):
+    def baseTrain(self, restore=True, trainPhase=True,trainType=0):
         self.createPH()
         self.createFeedDict()
         self.feed_dict[self.ph['phase_train_base']] = trainPhase
         self.feed_dict[self.ph['keep_prob']] = 0.5
+        self.trainType = trainType
         doBatchNorm = self.conf.doBatchNorm
         
         with tf.variable_scope('base'):
@@ -696,12 +700,13 @@ class PoseTrain(object):
             self.saveBase(sess,step)
     
     
-    def mrfTrain(self,restore=True):
+    def mrfTrain(self,restore=True,trainType=0):
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
         self.feed_dict[self.ph['keep_prob']] = 0.5
         self.feed_dict[self.ph['phase_train_base']] = False
+        self.trainType = trainType
         
         with tf.variable_scope('base'):
             self.createBaseNetwork(doBatchNorm)
@@ -767,13 +772,14 @@ class PoseTrain(object):
             
             
             
-    def fineTrain(self, restore=True,trainPhase=True):
+    def fineTrain(self, restore=True,trainPhase=True,trainType=0):
         self.createPH()
         self.createFeedDict()
         self.openDBs()
         self.feed_dict[self.ph['phase_train_fine']] = trainPhase
         self.feed_dict[self.ph['phase_train_base']] = False
         doBatchNorm = self.conf.doBatchNorm
+        self.trainType = trainType
         
         with tf.variable_scope('base'):
             self.createBaseNetwork(doBatchNorm)

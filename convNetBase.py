@@ -373,7 +373,7 @@ def fine_base(X,conf,insize,doBatchNorm,trainPhase):
 
     
 
-def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, fineIn7,
+def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,
                 conf,doBatchNorm,trainPhase):
 
 #     fsz = conf.fine_sz
@@ -389,15 +389,12 @@ def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2, fineIn7,
         fine2_1 = fine_base(fineIn2_1,conf,48,doBatchNorm,trainPhase)
     with tf.variable_scope('2_2'):
         fine2_2 = fine_base(fineIn2_2,conf,conf.nfilt,doBatchNorm,trainPhase)
-    with tf.variable_scope('7'):
-        fine7 = fine_base(fineIn7,conf,conf.nfcfilt,doBatchNorm,trainPhase)
 
     fsz = conf.fine_sz
     fine1_2_up = upscale('fine1_2',fine1_2,[fsz,fsz])
     fine2_1_up = upscale('fine2_1',fine2_1,[fsz,fsz])
     fine2_2_up = upscale('fine2_2',fine2_2,[fsz,fsz])
-    fine7_up   = upscale('fine7',fine7,[fsz,fsz])
-    fineSum = tf.add_n([fine1_1,fine1_2_up,fine2_1_up,fine2_2_up,fine7_up])
+    fineSum = tf.add_n([fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
 #     fineSum = tf.add_n([fine1_1,fine1_2,fine2_1,fine2_2,fine7])
     # for fine apparently adding is better than concatenating!!
 #     conv5_cat = tf.concat(3,[fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
