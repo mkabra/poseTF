@@ -610,10 +610,10 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
         
     bsize = conf.batch_size
     nbatches = int(math.ceil(float(nframes)/bsize))
-    framein = myutils.readframe(cap,1)
-    framein = cropImages(framein,conf)
-    framein = framein[np.newaxis,:,:,0:1]
-    x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
+#     framein = myutils.readframe(cap,1)
+#     framein = cropImages(framein,conf)
+#     framein = framein[np.newaxis,:,:,0:1]
+#     x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz,conf)
 #     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10,10))
 #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
 #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
@@ -791,4 +791,25 @@ def createPredMovieNoConf(conf,predList,moviename,outmovie,outtype):
     mencoder_cmd = "mencoder mf://" + tfilestr +     " -frames " + "{:d}".format(nframes) + " -mf type=png:fps=15 -o " +     outmovie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
     os.system(mencoder_cmd)
     cap.release()
+
+
+# In[ ]:
+
+def genDistortedImages(conf):
+    self = PoseTrain.PoseTrain(conf)
+    self.createPH()
+    self.createFeedDict()
+    self.trainType = 1
+    self.openDBs()
+    
+    with tf.Session() as sess:
+
+        self.createCursors(sess)
+        for count in range(np.random.randint(50)):
+            self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
+    
+    origImg = self.xs
+    distImg = self.feed_dict[self.ph['x0']]
+    return origImg,distImg,self.locs
+        
 

@@ -2158,7 +2158,7 @@ print vv/2
 #profiling the code
 
 
-# In[7]:
+# In[1]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html

@@ -99,7 +99,7 @@ class myconfig(object):
     vertFlip = False
     brange = [0,0] #[-0.2,0.2] 
     crange = [1,1] #[0.7,1.3]
-    rrange = 30
+    rrange = 0
     imax = 255.
     adjustContrast = True
     clahegridsize = 20

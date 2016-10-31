@@ -12,11 +12,6 @@ pawData.createDB()
 
 # In[ ]:
 
-
-
-
-# In[ ]:
-
 import sys
 sys.path.append('/home/mayank/work/pyutils')
 sys.path.append('/home/mayank/work/tensorflow')
@@ -1072,4 +1067,27 @@ print np.array_equal(aim1,aim2)
 
 from scipy import misc
 misc.imresize()
+
+
+# In[2]:
+
+from romainLegConfig import bottomconf as conf
+import PoseTools
+reload(PoseTools)
+
+o,d,l = PoseTools.genDistortedImages(conf)
+
+
+# In[4]:
+
+l.shape
+
+
+# In[6]:
+
+get_ipython().magic(u'pylab notebook')
+fig,ax = plt.subplots(1,2)
+ax[0].imshow(o[0,0,:,:],cmap='gray')
+ax[1].imshow(d[0,...,0],cmap='gray')
+ax[1].scatter(l[0,:,0],l[0,:,1])
 
