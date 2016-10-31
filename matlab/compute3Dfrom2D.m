@@ -188,7 +188,7 @@ for t = 1:Tfront,
       c = c + minx - 1;
       r = (r+offy)*scale;
       c = (c+offx)*scale;
-      idxcurr = scorescurr > threshcurr;
+      idxcurr = scorescurr >= threshcurr;
     
       k0 = numel(r);
       k = k0+min(numel(r),floor(nnz(idxcurr)/4));
