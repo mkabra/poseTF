@@ -196,22 +196,33 @@ class PoseTrain(object):
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
         mrf_weights = mrf_weights/n_classes
         
-        baseShape = tf.Tensor.get_shape(bpred).as_list()[1]
-        mrf_sz = mrf_weights.shape[0]
+        baseShape = tf.Tensor.get_shape(bpred).as_list()[1:3]
+        mrf_sz = mrf_weights.shape[0:2]
 
         bpred = tf.nn.relu((bpred+1)/2)
-        if mrf_sz > baseShape:
-            dd = int(math.ceil(float(mrf_sz-baseShape)/2))
-            print('Padding base prediction by %d. Filter shape:%d, Base shape:%d'%(dd,mrf_sz,baseShape))
-            bpred = tf.pad(bpred,[[0,0],[dd,dd],[dd,dd],[0,0]])
+        sliceEnd = [0,0]
+        pad = False
+        if mrf_sz[0] > baseShape[0]:
+            dd1 = int(math.ceil(float(mrf_sz[0]-baseShape[0])/2))
+            sliceEnd[0] = mrf_size[0]-dd1
             pad = True
-            sliceEnd = mrf_sz-dd
         else:
-            dd = 0
-            pad = False
-            sliceEnd = baseShape
+            dd1 = 0
+            sliceEnd[0] = baseShape[0]
+            
+        if mrf_sz[1] > baseShape[1]:
+            dd2 = int(math.ceil(float(mrf_sz[1]-baseShape[1])/2))
+            sliceEnd[1] = mrf_size[1]-dd2
+            pad = True
+        else:
+            dd2 = 0
+            sliceEnd[1] = baseShape[1]
+            
+        if pad:    
+            print('Padding base prediction by %d. Filter shape:%d, Base shape:%d'%(dd,mrf_sz,baseShape))
+            bpred = tf.pad(bpred,[[0,0],[dd1,dd1],[dd2,dd2],[0,0]])
 
-        ksz = mrf_weights.shape[0] # Kernel is square for time being
+        ksz = math.sqrt(mrf_weights.shape[0]*mrf_weights.shape[1])
         with tf.variable_scope('mrf'):
             conv_std = (1./n_classes)/ksz
             weights = tf.get_variable("weights", initializer=tf.constant(mrf_weights))
@@ -220,7 +231,7 @@ class PoseTrain(object):
             conv = tf.nn.conv2d(bpred, weights,
                                strides=[1, 1, 1, 1], padding='SAME')
             mrfout = conv+biases
-        self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
+        self.mrfPred = mrfout[:,dd1:sliceEnd[0],dd2:sliceEnd[1],:]
         
 #   BELOW is from Chris bregler's paper where they try to do MRF style inference.
 #   This didn't work so well and the performance was always worse than base.

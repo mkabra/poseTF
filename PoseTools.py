@@ -436,16 +436,40 @@ def getFineError(locs,pred,finepred,conf):
 
 def initMRFweights(conf):
     L = h5py.File(conf.labelfile,'r')
-    pts = np.array(L['pts'])
-    v = conf.view
+    
+    if 'pts' in L:
+        pts = np.array(L['pts'])
+        v = conf.view
+    else:
+        pp = np.array(L['labeledpos'])
+        nmovie = pp.shape[1]
+        pts = np.zeros([0,conf.n_classes,1,2])
+        v = 0
+        for ndx in range(nmovie):
+            curpts = np.array(L[pp[0,ndx]])
+            frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
+            nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0,0]
+            pts_st = int(conf.view*nptsPerView)
+            selpts = pts_st + conf.selpts
+            curlocs = curpts[:,:,selpts]
+            curlocs = curlocs[frames,:,:]
+            curlocs = curlocs.transpose([0,2,1])
+            pts = np.append(pts,curlocs[:,:,np.newaxis,:],axis=0)
+            
+            
     dx = np.zeros([pts.shape[0]])
     dy = np.zeros([pts.shape[0]])
     for ndx in range(pts.shape[0]):
         dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
         dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
     maxd = max(dx.max(),dy.max())
-    psz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale))
-#     psz = conf.mrf_psz
+    if hasattr(conf,'mrf_psz'):
+        psz = conf.mrf_psz
+        print('!!!Overriding MRF Size using conf.mrf_psz!!!')
+        print('!!!Overriding MRF Size using conf.mrf_psz!!!')
+        print('!!!Overriding MRF Size using conf.mrf_psz!!!')
+    else:
+        psz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale))
     bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
     
     for ndx in range(pts.shape[0]):
@@ -453,8 +477,8 @@ def initMRFweights(conf):
             for c2 in range(conf.n_classes):
                 d12x = pts[ndx,c1,v,0] - pts[ndx,c2,v,0]
                 d12y = pts[ndx,c1,v,1] - pts[ndx,c2,v,1]
-                d12x = int( (d12x/conf.rescale)/conf.pool_scale)
-                d12y = int( (d12y/conf.rescale)/conf.pool_scale)
+                d12x = max(-psz/2+1,min(psz/2-1,int( (d12x/conf.rescale)/conf.pool_scale)))
+                d12y = max(-psz/2+1,min(psz/2-1,int( (d12y/conf.rescale)/conf.pool_scale)))
                 bfilt[psz/2+d12y,psz/2+d12x,c1,c2] += 1
     bfilt = (bfilt/pts.shape[0])
     return bfilt
@@ -592,7 +616,7 @@ def createPredImage(predscores,n_classes):
 
 def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
     cap = cv2.VideoCapture(moviename)
-    nframes = int(cap.get(cvc.FRAME_HEIGHT))
+    nframes = int(cap.get(cvc.FRAME_COUNT))
     if maxframes > 0:
         nframes = maxframes
     predLocs = np.zeros([nframes,conf.n_classes,2,2])
@@ -626,6 +650,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
         ppe = min(ndxe-ndxst,bsize)
         for ii in range(ppe):
             success,framein = cap.read()
+            assert success, "Could not read frame"
 
             framein = cropImages(framein,conf)
 #             framein = clahe.apply(framein[:,:,:1])

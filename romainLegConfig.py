@@ -42,7 +42,7 @@ class myconfig(object):
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = False
+    useMRF = True
     useHoldout = False
     device = None
     reg_lambda = 0.5
@@ -55,8 +55,8 @@ class myconfig(object):
 
     # ----- MRF Network Parameters
 
-    #maxDPts = 104*2
-    #mrf_psz = (maxDPts/rescale)/pool_scale
+    maxDPts = 400
+    mrf_psz = (maxDPts/rescale)/pool_scale
     #Above should not be determined automatically
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000 # without batch_norm
