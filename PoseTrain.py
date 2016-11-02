@@ -219,7 +219,7 @@ class PoseTrain(object):
             sliceEnd[1] = baseShape[1]
             
         if pad:    
-            print('Padding base prediction by %d,%d. Filter shape:%d, Base shape:%d'%(dd1,dd2,mrf_sz[0],mr,baseShape))
+            print('Padding base prediction by %d,%d. Filter shape:%d, Base shape:%d'%(dd1,dd2,mrf_sz[0],mrf_sz[1],baseShape[0],baseShape[1]))
             bpred = tf.pad(bpred,[[0,0],[dd1,dd1],[dd2,dd2],[0,0]])
 
         ksz = math.sqrt(mrf_weights.shape[0]*mrf_weights.shape[1])
