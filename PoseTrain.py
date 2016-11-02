@@ -204,7 +204,7 @@ class PoseTrain(object):
         pad = False
         if mrf_sz[0] > baseShape[0]:
             dd1 = int(math.ceil(float(mrf_sz[0]-baseShape[0])/2))
-            sliceEnd[0] = mrf_size[0]-dd1
+            sliceEnd[0] = mrf_sz[0]-dd1
             pad = True
         else:
             dd1 = 0
@@ -212,7 +212,7 @@ class PoseTrain(object):
             
         if mrf_sz[1] > baseShape[1]:
             dd2 = int(math.ceil(float(mrf_sz[1]-baseShape[1])/2))
-            sliceEnd[1] = mrf_size[1]-dd2
+            sliceEnd[1] = mrf_sz[1]-dd2
             pad = True
         else:
             dd2 = 0
