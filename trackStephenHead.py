@@ -39,9 +39,9 @@ def main(argv):
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-only_detect",dest='detect',action="store_true",
-                        help="Do only the detection part of tracking")
+                        help="Do only the detection part of tracking which requires GPU")
     group.add_argument("-only_track",dest='track',action="store_true",
-                        help="Do only the tracking part of the tracking")
+                        help="Do only the tracking part of the tracking which requires MATLAB")
     
 
 
