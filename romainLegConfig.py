@@ -116,7 +116,7 @@ class myconfig(object):
     selpts = np.arange(0,18)
 
     cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
-    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28AndJun22.lbl')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28AndJun22_onlyBottom.lbl')
  
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
@@ -163,9 +163,12 @@ class myconfig(object):
         return L['movieFilesAll'][self.view,:]
 
 bottomconf = myconfig()
-sideconf = myconfig()
-sideconf.cropLoc = {(288,592):[0,0]}
-# sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
-sideconf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegLeft')
-sideconf.view = 0
+side1conf = myconfig()
+side1conf.cropLoc = {(592,288):[0,0]}
+side1conf.view = 0  # view = 0 is side view view = 1 is front view
+side1conf.imsz = (592,288) # This is after cropping. Orig is 1024x1024
+side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
+side1conf.selpts = np.arange(0,18)
+
+side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
 

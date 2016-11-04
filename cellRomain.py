@@ -12,11 +12,22 @@ reload(multiResData)
 multiResData.createTFRecordFromLbl(conf,split=False)
 
 
-# In[1]:
+# In[5]:
+
+import romainLegConfig
+reload(romainLegConfig)
+from romainLegConfig import side1conf as conf
+import multiResData
+reload(multiResData)
+
+multiResData.createTFRecordFromLbl(conf,split=False)
+
+
+# In[ ]:
 
 import PoseTrain
 reload(PoseTrain)
-from romainLegConfig import bottomconf as conf
+from romainLegConfig import side1conf as conf
 import tensorflow as tf
 
 tf.reset_default_graph()
@@ -24,7 +35,7 @@ pobj = PoseTrain.PoseTrain(conf)
 pobj.baseTrain(restore=False,trainType=1)
 
 
-# In[ ]:
+# In[1]:
 
 import PoseTrain
 reload(PoseTrain)
@@ -114,7 +125,7 @@ for ndx in range(len(valmovies)):
     if os.path.isfile(pname + '.mat') and not redo:
         continue
         
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess,maxframes=1000)
+    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)#,maxframes=1000)
 #     PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype,maxframes=1000)
 
 
@@ -166,4 +177,24 @@ import ipywidgets as widgets
 import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipykernel/.*')
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
+
+
+# In[ ]:
+
+get_ipython().magic(u'pylab notebook')
+import PoseTools
+reload(PoseTools)
+from romainLegConfig import side1conf as conf
+oimg,dimg,ll = PoseTools.genDistortedImages(conf)
+print oimg.shape
+
+
+# In[19]:
+
+for spt in range(8):
+    fix,ax = plt.subplots(1,2)
+
+    ax[0].imshow(oimg[spt,0,...],cmap='gray')
+    ax[1].imshow(dimg[spt,...,0],cmap='gray')
+    ax[1].scatter(ll[spt,:,0],ll[spt,:,1])
 
