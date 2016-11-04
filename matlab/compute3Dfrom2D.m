@@ -157,7 +157,8 @@ for t = 1:Tfront,
       if view == 1,    
         scorescurr = permute(rdf.scores(t,miny_front:maxy_front,minx_front:maxx_front,i),[2,3,1]);
 %         threshcurr = thresh_nonmax_front;
-        threshcurr = prctile(scorescurr(:),thresh_perc);
+        tscores = scorescurr(r_nonmax+1:end-r_nonmax,r_nonmax+1:end-r_nonmax); % safeguard against boundaries
+        threshcurr = prctile(tscores(:),thresh_perc);
         miny = miny_front;
         maxy = maxy_front;
         minx = minx_front;
