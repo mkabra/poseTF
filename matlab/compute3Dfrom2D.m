@@ -184,7 +184,14 @@ for t = 1:Tfront,
         ygrid = ygrid_side;
       end
 
-      [r,c] = nonmaxsuppts(scorescurr,r_nonmax,threshcurr);
+      tscorescurr = scorescurr;
+      minscores = min(scorescurr(:));
+      tscorescurr(1:r_nonmax,:) = minscores;
+      tscorescurr(end-r_nonmax+1:end,:) = minscores;
+      tscorescurr(:,1:r_nonmax) = minscores;
+      tscorescurr(:,end-r_nonmax+1:end) = minscores;
+      
+      [r,c] = nonmaxsuppts(tscorescurr,r_nonmax,threshcurr);
       r = r + miny - 1;
       c = c + minx - 1;
       r = (r+offy)*scale;

@@ -12,22 +12,22 @@ reload(multiResData)
 multiResData.createTFRecordFromLbl(conf,split=False)
 
 
-# In[5]:
+# In[3]:
 
 import romainLegConfig
 reload(romainLegConfig)
-from romainLegConfig import side1conf as conf
+from romainLegConfig import side2conf as conf
 import multiResData
 reload(multiResData)
 
 multiResData.createTFRecordFromLbl(conf,split=False)
 
 
-# In[ ]:
+# In[6]:
 
 import PoseTrain
 reload(PoseTrain)
-from romainLegConfig import side1conf as conf
+from romainLegConfig import side2conf as conf
 import tensorflow as tf
 
 tf.reset_default_graph()
@@ -39,7 +39,7 @@ pobj.baseTrain(restore=False,trainType=1)
 
 import PoseTrain
 reload(PoseTrain)
-from romainLegConfig import bottomconf as conf
+from romainLegConfig import side1conf as conf
 import tensorflow as tf
 
 tf.reset_default_graph()
@@ -102,9 +102,9 @@ from scipy import io
 import cv2
 from cvc import cvc
 
-from romainLegConfig import bottomconf as conf
-conf.useMRF = True
-outtype = 2
+from romainLegConfig import side2conf as conf
+conf.useMRF = False
+outtype = 1
 extrastr = ''
 redo = True
 
@@ -117,7 +117,7 @@ PoseTools.initNetwork(self,sess,outtype)
 
 # In[2]:
 
-valmovies = ['/home/mayank/Dropbox/MultiViewFlyLegTracking/trackingJun22-11-02/bias_video_cam_2_date_2016_06_22_time_11_02_28_v001.avi']
+valmovies = ['/home/mayank/Dropbox/MultiViewFlyLegTracking/trackingJun22-11-02/bias_video_cam_1_date_2016_06_22_time_11_02_13_v001.avi']
 for ndx in range(len(valmovies)):
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
@@ -125,7 +125,7 @@ for ndx in range(len(valmovies)):
     if os.path.isfile(pname + '.mat') and not redo:
         continue
         
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)#,maxframes=1000)
+    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess,maxframes=1000)
 #     PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype,maxframes=1000)
 
 
@@ -145,6 +145,11 @@ for ndx in range(len(valmovies)):
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
     print 'Done:%s'%oname
 
+
+
+# In[3]:
+
+get_ipython().magic(u'debug')
 
 
 # In[12]:
@@ -179,17 +184,17 @@ warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipyker
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
 
 
-# In[ ]:
+# In[4]:
 
 get_ipython().magic(u'pylab notebook')
 import PoseTools
 reload(PoseTools)
-from romainLegConfig import side1conf as conf
+from romainLegConfig import side2conf as conf
 oimg,dimg,ll = PoseTools.genDistortedImages(conf)
 print oimg.shape
 
 
-# In[19]:
+# In[5]:
 
 for spt in range(8):
     fix,ax = plt.subplots(1,2)

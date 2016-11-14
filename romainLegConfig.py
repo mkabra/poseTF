@@ -163,12 +163,22 @@ class myconfig(object):
         return L['movieFilesAll'][self.view,:]
 
 bottomconf = myconfig()
+
+
 side1conf = myconfig()
 side1conf.cropLoc = {(592,288):[0,0]}
 side1conf.view = 0  # view = 0 is side view view = 1 is front view
 side1conf.imsz = (592,288) # This is after cropping. Orig is 1024x1024
 side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
 side1conf.selpts = np.arange(0,18)
-
 side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
+
+
+side2conf = myconfig()
+side2conf.cropLoc = {(640,288):[0,0]}
+side2conf.view = 1
+side2conf.imsz = (640,288) 
+side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
+side2conf.selpts = np.arange(0,18)
+side2conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide2')
 
