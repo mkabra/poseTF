@@ -169,6 +169,12 @@ class myconfig(object):
         fname = 'vid{:d}files'.format(self.view+1)
         return L[fname]
 
+    def getflynum(self,dirname):
+        dirname = os.path.normpath(dirname)
+        dir_parts = dirname.split(os.sep)
+        flynum = float(dir_parts[-3][3:6])
+        return flynum
+
 conf = myconfig()
 sideconf = myconfig()
 sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
