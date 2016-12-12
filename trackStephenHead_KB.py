@@ -216,7 +216,6 @@ def main(argv):
 
                 cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
                 print cmd
-                exit(1)
                 call(cmd,shell=True)
                 
 if __name__ == "__main__":
