@@ -177,10 +177,17 @@ def main(argv):
                 oname_front = re.sub('!','__',conf.getexpname(fmovies[ndx]))
                 pname_side = os.path.join(args.outdir , oname_side + '_side.mat')
                 pname_front = os.path.join(args.outdir , oname_front + '_front.mat')
-                savefile = os.path.join(args.outdir , oname_side + '_3Dres.mat')
+                # 3d trajectories
+                basename_front,_ = os.path.splitext(fmovies[ndx])
+                basename_side,_ = os.path.splitext(smovies[ndx])
+                savefile = basename_side+'_3Dres.mat'
+                #savefile = os.path.join(args.outdir , oname_side + '_3Dres.mat')
+                trkfile_front = basename_front+'.trk'
+                trkfile_side = basename_side+'.trk'
 
-                if os.path.isfile(savefile) and not args.redo:
-                    print "%s exists, skipping tracking"%savefile
+                if os.path.isfile(savefile) and os.path.isfile(trkfile_front) and \
+                   os.path.isfile(trkfile_side) and not args.redo:
+                    print "%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side)
                     continue
 
                 flynum = conf.getflynum(smovies[ndx])
@@ -200,15 +207,16 @@ def main(argv):
                 
                 # make script to be qsubbed
                 scriptf = open(scriptfile,'w')
-                scriptf.write('if [ -d %s ]\n'%args.outdir);
-                scriptf.write('  then export MCR_CACHE_ROOT=%s/mcrcache%s\n'%(args.outdir,jobid));
-                scriptf.write('fi\n');
-                scriptf.write('%s "%s" "%s" "%s" "%s"\n'%(matscript,savefile,pname_front,pname_side,kinematfile))
+                scriptf.write('if [ -d %s ]\n'%args.outdir)
+                scriptf.write('  then export MCR_CACHE_ROOT=%s/mcrcache%s\n'%(args.outdir,jobid))
+                scriptf.write('fi\n')
+                scriptf.write('%s "%s" "%s" "%s" "%s" "%s" "%s"\n'%(matscript,savefile,pname_front,pname_side,kinematfile,trkfile_front,trkfile_side))
                 scriptf.close()
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
                 cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
                 print cmd
+                exit(1)
                 call(cmd,shell=True)
                 
 if __name__ == "__main__":

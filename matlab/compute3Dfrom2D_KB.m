@@ -1,10 +1,13 @@
-function compute3Dfrom2D(savefile,frontviewmatfile,sideviewmatfile,kinematfile)
+function compute3Dfrom2D_KB(savefile,frontviewmatfile,sideviewmatfile,kinematfile,...
+  frontviewtrkfile,sideviewtrkfile)
 
 fprintf('Running compute3Dfrom2D with inputs:\n');
 fprintf('Front tracked points: %s\n',frontviewmatfile);
 fprintf('Side tracked points: %s\n',sideviewmatfile);
 fprintf('Calibration info: %s\n',kinematfile);
-fprintf('Storing output to file: %s\n',savefile);
+fprintf('Storing output 3d trajectories to file: %s\n',savefile);
+fprintf('Storing front reprojection trajectories to file: %s\n',frontviewtrkfile);
+fprintf('Storing side reprojection trajectories to file: %s\n',sideviewtrkfile);
 
 offx_front = -1;
 offy_front = -1;
@@ -445,10 +448,10 @@ save(savefile,'pfrontbest','psidebest','Pbest','pfrontbest_re','psidebest_re',..
    
 %% convert
 
-[pf,nf] = fileparts(frontviewmatfile);
-[ps,ns] = fileparts(sideviewmatfile);
-frontviewtrkfile = fullfile(pf,[nf,'.trk']);
-sideviewtrkfile = fullfile(ps,[ns,'.trk']);
+% [pf,nf] = fileparts(frontviewmatfile);
+% [ps,ns] = fileparts(sideviewmatfile);
+% frontviewtrkfile = fullfile(pf,[nf,'.trk']);
+% sideviewtrkfile = fullfile(ps,[ns,'.trk']);
 
 fprintf('Saving 2d trx to %s and %s...\n',frontviewtrkfile,sideviewtrkfile);
 
