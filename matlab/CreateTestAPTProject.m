@@ -1,4 +1,27 @@
 function CreateTestAPTProject(fmoviefilelist,smoviefilelist,kinelistfile,savefile,varargin)
+% CreateTestAPTProject(fmoviefilelist,smoviefilelist,kinelistfile,savefile,...)
+% Creates an APT project with one video per fly from the input list of
+% videos.
+% Inputs:
+% fmoviefilelist: Text file containing a list of front-view videos, one
+% video per line
+% smoviefilelist: Text file containing a list of side-view videos, one
+% video per line. These videos should correspond line-by-line to those in
+% fmoviefilelist. 
+% kinelistfile: File containing look up information from fly number to
+% calibration mat file
+% savefile: Name of .lbl file to save project to. 
+% Optional inputs:
+% 'aptbasefile': path to lbl file containing a valid APT project. I set
+% things up so that it loads in an apt file and then changes the video
+% names so that I didn't have to get the project configuration right.
+% Default value: 'fly178.lbl'
+% 'nvideosperfly': number of videos to add to the project for each fly.
+% Default value: 1
+% 'projname': Name of the APT project. If not set, the name loaded from
+% 'aptbasefile' will be used. 
+% Example usage:
+% CreateTestAPTProject('../View1Vids.txt','../View2Vids.txt','/groups/huston/hustonlab/flp-chrimson_experiments/fly2DLT_lookupTableStephen.csv','test.lbl','nvideosperfly',1,'projname','test')
 
 [aptbasefile,nvideosperfly,projname] = myparse(varargin,...
 	'aptbasefile','fly178.lbl',...
