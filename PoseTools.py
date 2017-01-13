@@ -79,6 +79,18 @@ def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
     x2_in = scaleImages(x1_in,scale)
     return x0_in,x1_in,x2_in
 
+def multiScaleLabelImages(inImg, rescale, scale, l1_cropszf):
+    # only crop the highest res image
+#     if l1_cropsz > 0:
+#         inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
+#     else:
+#         inImg_crop = inImg
+            
+    x0_in = scaleImages(inImg,rescale)
+    x1_in = scaleImages(inImg,rescale*scale)
+    x2_in = scaleImages(x1_in,scale)
+    return x0_in,x1_in,x2_in
+
 
 # In[ ]:
 
@@ -255,7 +267,9 @@ def blurLabel(imsz,loc,scale,blur_rad):
     label = np.zeros([sz0,sz1])
     if not np.isnan(loc[0]):
         label[int(loc[0]/scale),int(loc[1]/scale)] = 1
-        blurL = ndimage.gaussian_filter(label,blur_rad)
+#         blurL = ndimage.gaussian_filter(label,blur_rad)
+        ksize = 2*3*blur_rad+1
+        blurL = cv2.GaussianBlur(label,(ksize,ksize),blur_rad)
         blurL = blurL/blurL.max()
     else:
         blurL = label
@@ -270,10 +284,24 @@ def createLabelImages(locs,imsz,scale,blur_rad):
     sz1 = int(math.ceil(float(imsz[1])/scale))
 
     labelims = np.zeros((len(locs),sz0,sz1,n_classes))
+    labelims1 = np.zeros((len(locs),sz0,sz1,n_classes))
+    ksize = 3*blur_rad
+    blurL = np.zeros([2*ksize+1,2*ksize+1])
+    blurL[ksize,ksize] = 1
+    blurL = cv2.GaussianBlur(blurL,(2*ksize+1,2*ksize+1),blur_rad)
+    blurL = blurL/blurL.max()
     for cls in range(n_classes):
         for ndx in range(len(locs)):
-            modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
-            labelims[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
+#             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
+#             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
+            modlocs0 = int(np.round(locs[ndx][cls][1]/scale))
+            modlocs1 = int(np.round(locs[ndx][cls][0]/scale))
+            l0 = max(0,modlocs0-ksize)
+            r0 = min(sz0,modlocs0+ksize+1)
+            l1 = max(0,modlocs1-ksize)
+            r1 = min(sz1,modlocs1+ksize+1)
+            labelims[ndx,l0:r0,l1:r1,cls] = blurL[(l0-modlocs0+ksize):(r0-modlocs0+ksize),
+                                                  (l1-modlocs1+ksize):(r1-modlocs1+ksize)]
  
     labelims = 2.0*(labelims-0.5)
     return labelims
@@ -509,7 +537,7 @@ def initMRFweightsIdentity(conf):
 # In[ ]:
 
 def getvars(vstr):
-    varlist = tf.all_variables()
+    varlist = tf.global_variables()
     blist = []
     for var in varlist:
         if re.match(vstr,var.name):
@@ -837,4 +865,27 @@ def genDistortedImages(conf):
     distImg = self.feed_dict[self.ph['x0']]
     return origImg,distImg,self.locs
         
+
+
+# In[ ]:
+
+def variable_summaries(var):
+    """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+    with tf.name_scope('summaries'):
+        mean = tf.reduce_mean(var)
+#         tf.summary.scalar('mean', mean)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+        tf.summary.scalar('stddev', stddev)
+#         tf.summary.scalar('max', tf.reduce_max(var))
+#         tf.summary.scalar('min', tf.reduce_min(var))
+#         tf.summary.histogram('histogram', var)
+
+
+# In[ ]:
+
+def analyzeGradients(exclude):
+    var = tf.global_variables()
+    for vv in var:
+        ("")
 

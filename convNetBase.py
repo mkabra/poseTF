@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 '''
 Mayank Jan 12 2016
@@ -108,21 +108,16 @@ def upscale(name,l_input,sz):
 #     return conv5, out_dict
 
 def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase):
+    inDim = X.get_shape()[3]
     with tf.variable_scope('layer1'):
-        conv1 = conv_relu(X,[5, 5, 1, 48],0.01,0,doBatchNorm,trainPhase)
+        conv1 = conv_relu(X,[5, 5, inDim, 48],0.01,0,doBatchNorm,trainPhase)
         pool1 = max_pool('pool1', conv1, k=3,s=2)
-        if not doBatchNorm:
-            norm1 = norm('norm1', pool1, lsize=2)
-        else:
-            norm1 = pool1
+        norm1 = norm('norm1', pool1, lsize=2)
     
     with tf.variable_scope('layer2'):
         conv2 = conv_relu(norm1,[3,3,48,nfilt],0.01,1,doBatchNorm,trainPhase)
         pool2 = max_pool('pool2', conv2, k=3,s=2)
-        if not doBatchNorm:
-            norm2 = norm('norm2', pool2, lsize=4)
-        else:
-            norm2 = pool2
+        norm2 = norm('norm2', pool2, lsize=4)
             
     with tf.variable_scope('layer3'):
         conv3 = conv_relu(norm2,[3,3,nfilt,nfilt],0.01,1,doBatchNorm,trainPhase)
@@ -322,19 +317,19 @@ def net_multi_conv_reg(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 
 
 
-def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes):
+def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes,inDim=1):
 #     imsz = conf.imsz
     # tf Graph input
     keep_prob = tf.placeholder(tf.float32,name='dropout') # dropout(keep probability)
     x0 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/rescale,
-                                     imsz[1]/rescale,1],name='x0')
+                                     imsz[1]/rescale,inDim],name='x0')
     x1 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/scale/rescale,
-                                     imsz[1]/scale/rescale,1],name='x1')
+                                     imsz[1]/scale/rescale,inDim],name='x1')
     x2 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/scale/scale/rescale,
-                                     imsz[1]/scale/scale/rescale,1],name='x2')
+                                     imsz[1]/scale/scale/rescale,inDim],name='x2')
 
     lsz0,lsz1 = findPredSize(imsz,rescale,pool_scale)
     y = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes],'limg')

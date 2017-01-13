@@ -368,6 +368,7 @@ def createTFRecord(conf):
             curloc = np.round(pts[curl,:,view,:]).astype('int')
             curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
             curloc[:,1] = curloc[:,1] - cloc[0]
+            curloc = curloc.clip(min=1)
 
             rows = framein.shape[0]
             cols = framein.shape[1]
@@ -450,6 +451,7 @@ def createFullTFRecord(conf):
             curloc = np.round(pts[curl,:,view,:]).astype('int')
             curloc[:,0] = curloc[:,0] - cloc[1]  # ugh, the nasty x-y business.
             curloc[:,1] = curloc[:,1] - cloc[0]
+            curloc = curloc.clip(min=0.1)
 
             rows = framein.shape[0]
             cols = framein.shape[1]
@@ -514,7 +516,7 @@ def createTFRecordFromLbl(conf,split=True):
             continue
 
         expname = conf.getexpname(dirname)
-        curpts = np.array(L[pts[ndx,0]])
+        curpts = np.array(L[pts[0,ndx]])
         frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
@@ -544,6 +546,8 @@ def createTFRecordFromLbl(conf,split=True):
             curloc = curpts[fnum,:,selpts]
             curloc[:,0] = curloc[:,0] - cloc[1] - 1 # ugh, the nasty x-y business.
             curloc[:,1] = curloc[:,1] - cloc[0] - 1
+            curloc = curloc.clip(min=0,max=[conf.imsz[1]+7,conf.imsz[0]+7])
+            
 
             rows = framein.shape[0]
             cols = framein.shape[1]
@@ -597,7 +601,7 @@ def read_and_decode(filename_queue,conf):
 #     depth = tf.cast(features['depth'],tf.int64)
     image = tf.reshape(image,conf.imsz )
     
-    locs = tf.cast(features['locs'], tf.float32)
+    locs = tf.cast(features['locs'], tf.float64)
 
     return image, locs
 

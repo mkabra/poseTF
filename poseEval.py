@@ -15,17 +15,482 @@ import tempfile
 import copy
 import re
 
-from batch_norm import batch_norm_2D
+from batch_norm import *
 import myutils
 import PoseTools
 import localSetup
 import operator
 import copy
+import convNetBase as CNB
+import multiResData
 
 
 # In[ ]:
 
-def poseEvalNet(lin,locs,conf,trainPhase,dropout):
+def conv_relu(X, kernel_shape, conv_std,bias_val,doBatchNorm,trainPhase,addSummary=True):
+    weights = tf.get_variable("weights", kernel_shape,
+        initializer=tf.random_normal_initializer(stddev=conv_std))
+    biases = tf.get_variable("biases", kernel_shape[-1],
+        initializer=tf.constant_initializer(bias_val))
+    if addSummary:
+        with tf.variable_scope('weights'):
+            PoseTools.variable_summaries(weights)
+#     PoseTools.variable_summaries(biases)
+    conv = tf.nn.conv2d(X, weights,
+        strides=[1, 1, 1, 1], padding='SAME')
+    if doBatchNorm:
+        conv = batch_norm(conv,trainPhase)
+    with tf.variable_scope('conv'):
+        PoseTools.variable_summaries(conv)
+    return tf.nn.relu(conv - biases)
+
+def max_pool(name, l_input, k,s):
+    return tf.nn.max_pool(
+        l_input, ksize=[1, k, k, 1], strides=[1, s, s, 1], 
+        padding='SAME', name=name)
+
+def createPlaceHolders(conf):
+#     imsz = conf.imsz
+    # tf Graph input
+    imsz = conf.imsz
+    rescale = conf.rescale
+    scale = conf.scale
+    pool_scale = conf.pool_scale
+    n_classes = conf.n_classes
+    imgDim = conf.imgDim
+    
+    keep_prob = tf.placeholder(tf.float32,name='dropout') # dropout(keep probability)
+    inScale = rescale*conf.eval_scale
+    
+    nex = conf.batch_size*(conf.eval_num_neg+1)
+    x0 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/inScale,
+                                     imsz[1]/inScale,imgDim],name='x0')
+    x1 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/scale/inScale,
+                                     imsz[1]/scale/inScale,imgDim],name='x1')
+    x2 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/scale/scale/inScale,
+                                     imsz[1]/scale/scale/inScale,imgDim],name='x2')
+
+    scores_scale = scale*scale*inScale
+    s0 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/scores_scale,
+                                     imsz[1]/scores_scale,n_classes],name='s0')
+    s1 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/scale/scores_scale,
+                                     imsz[1]/scale/scores_scale,n_classes],name='s1')
+    s2 = tf.placeholder(tf.float32, [nex,
+                                     imsz[0]/scale/scale/scores_scale,
+                                     imsz[1]/scale/scale/scores_scale,n_classes],name='s2')
+    
+    y = tf.placeholder(tf.float32, [nex,2],'out')
+    
+    X = [x0,x1,x2]
+    S = [s0,s1,s2]
+    phase_train = tf.placeholder(tf.bool,name='phase_train')
+    learning_rate = tf.placeholder(tf.float32,name='learning_rate')
+    
+    ph = {'X':X,'S':S,'y':y,'keep_prob':keep_prob,
+          'phase_train':phase_train,'learning_rate':learning_rate}
+    return ph
+
+
+def createFeedDict(ph):
+    feed_dict = { ph['X'][0]:[],
+                  ph['X'][1]:[],
+                  ph['X'][2]:[],
+                  ph['S'][0]:[],
+                  ph['S'][1]:[],
+                  ph['S'][2]:[],
+                  ph['y']:[],
+                  ph['learning_rate']:1,
+                  ph['phase_train']:False,
+                  ph['keep_prob']:1.
+                  }
+    
+    return feed_dict
+
+def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,doPool=True,addSummary=True):
+    inDimX = X.get_shape()[3]
+    with tf.variable_scope('layer1_X'):
+        conv1 = conv_relu(X,[5, 5, inDimX, 48],0.01,0,doBatchNorm,trainPhase,addSummary)
+    
+#     inDimS = S.get_shape()[3]
+#     with tf.variable_scope('layer1_S'):
+#         conv1s = conv_relu(S,[5, 5, inDimS, 48],0.01,0,doBatchNorm,trainPhase)
+            
+#     conv1_cat = tf.concat(3,[conv1x,conv1s])
+    if doPool:
+        pool1 = max_pool('pool1',conv1,k=3,s=2)
+    else:
+        pool1 = conv1
+            
+    with tf.variable_scope('layer2'):
+        conv2 = conv_relu(pool1,[3,3,48,nfilt],0.01,0,doBatchNorm,trainPhase,addSummary)
+    if doPool:
+        pool2 = max_pool('pool2',conv2,k=3,s=2)
+    else:
+        pool2 = conv2
+            
+    with tf.variable_scope('layer3'):
+        conv3 = conv_relu(pool2,[3,3,nfilt,nfilt],0.01,0,doBatchNorm,trainPhase,addSummary)
+    with tf.variable_scope('layer4'):
+        conv4 = conv_relu(conv3,[3,3,nfilt,nfilt],0.01,0,doBatchNorm,trainPhase,addSummary)
+    with tf.variable_scope('layer5'):
+        conv5 = conv_relu(conv4,[3,3,nfilt,nfilt/4],0.01,0,doBatchNorm,trainPhase,addSummary)
+        
+    out_dict = {'conv1':conv1,'conv2':conv2,'conv3':conv3,
+                'conv4':conv4,'conv5':conv5}
+    return conv5,out_dict
+        
+
+def net_multi_conv(ph,conf):
+    X = ph['X']
+    S = ph['S']
+    X0,X1,X2 = X
+    S0,S1,S2 = S
+    
+    trainPhase = ph['phase_train']
+    _dropout = ph['keep_prob']
+    
+    imsz = conf.imsz; rescale = conf.rescale
+    pool_scale = conf.pool_scale
+    nfilt = conf.nfilt
+    doBatchNorm = conf.doBatchNorm
+    
+    #     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
+    #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
+    #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
+    with tf.variable_scope('scale0'):
+        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase,True,True)
+    with tf.variable_scope('scale1'):
+        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase,True,False)
+    with tf.variable_scope('scale2'):
+        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase,True,False)
+    with tf.variable_scope('scale0_scores'):
+        conv5s_0,base_dict_s = net_multi_base_named(S0,nfilt,doBatchNorm,trainPhase,False,True)
+    with tf.variable_scope('scale1_scores'):
+        conv5s_1,base_dict_s = net_multi_base_named(S1,nfilt,doBatchNorm,trainPhase,False,False)
+    with tf.variable_scope('scale2_scores'):
+        conv5s_2,base_dict_s = net_multi_base_named(S2,nfilt,doBatchNorm,trainPhase,False,False)
+
+#     sz0 = int(math.ceil(float(imsz[0])/pool_scale/rescale/conf.eval_scale))
+#     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale/conf.eval_scale))
+    sz = tf.Tensor.get_shape(conv5_2).as_list()
+    sz0 = sz[1]
+    sz1 = sz[2]
+    conv5_0_down = CNB.upscale('5_0',conv5_0,[sz0,sz1])
+    conv5_1_down = CNB.upscale('5_1',conv5_1,[sz0,sz1])
+    conv5s_0_down = CNB.upscale('5s_0',conv5s_0,[sz0,sz1])
+    conv5s_1_down = CNB.upscale('5s_1',conv5s_1,[sz0,sz1])
+
+    # crop lower res layers to match higher res size
+#     conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
+#     conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+#     crop_0 = int((sz0-conv5_0_sz[1])/2)
+#     crop_1 = int((sz1-conv5_0_sz[2])/2)
+
+#     curloc = [0,crop_0,crop_1,0]
+#     patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
+#     conv5_1_up = tf.slice(conv5_1_up,curloc,patchsz)
+#     conv5_2_up = tf.slice(conv5_2_up,curloc,patchsz)
+#     conv5_1_final_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+
+    conv5_cat = tf.concat(3,[conv5_0_down,conv5_1_down,conv5_2,conv5s_0_down,conv5s_1_down,conv5s_2])
+    
+    nex = conf.batch_size*(conf.eval_num_neg+1)
+    conv5_reshape = tf.reshape(conv5_cat,[nex,-1])
+    conv5_dims = conv5_reshape.get_shape()[1].value
+    with tf.variable_scope('layer6'):
+#         weights = tf.get_variable("weights", [conv5_dims,conf.nfcfilt/2],
+#             initializer=tf.random_normal_initializer(stddev=0.005))
+        weights = tf.get_variable("weights", [conv5_dims,conf.nfcfilt/2],
+            initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("biases", conf.nfcfilt/2,
+            initializer=tf.constant_initializer(0))
+        with tf.variable_scope('weights'):
+            PoseTools.variable_summaries(weights)
+        with tf.variable_scope('biases'):
+            PoseTools.variable_summaries(biases)
+
+        conv6 = tf.nn.relu(batch_norm_2D(tf.matmul(conv5_reshape, weights),trainPhase)-biases)
+        with tf.variable_scope('conv'):
+            PoseTools.variable_summaries(conv6)
+
+    with tf.variable_scope('layer7'):
+#         weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/2],
+#             initializer=tf.random_normal_initializer(stddev=0.005))
+        weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/2],
+            initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("biases", conf.nfcfilt/2,
+            initializer=tf.constant_initializer(0))
+        
+        with tf.variable_scope('weights'):
+            PoseTools.variable_summaries(weights)
+        with tf.variable_scope('biases'):
+            PoseTools.variable_summaries(biases)
+
+        conv7 = tf.nn.relu(batch_norm_2D(tf.matmul(conv6, weights),trainPhase)-biases)
+        with tf.variable_scope('conv'):
+            PoseTools.variable_summaries(conv7)
+
+    with tf.variable_scope('layer8'):
+        l8_weights = tf.get_variable("weights", [conf.nfcfilt/2,2],
+            initializer=tf.random_normal_initializer(stddev=0.01))
+        l8_biases = tf.get_variable("biases", 2,
+            initializer=tf.constant_initializer(0))
+        out = tf.matmul(conv7, l8_weights) - l8_biases
+        with tf.variable_scope('weights'):
+            PoseTools.variable_summaries(l8_weights)
+        with tf.variable_scope('biases'):
+            PoseTools.variable_summaries(l8_biases)
+        with tf.variable_scope('out'):
+            PoseTools.variable_summaries(out)
+
+    out_dict = {'base_dict_0':base_dict_0,
+                'base_dict_1':base_dict_1,
+                'base_dict_2':base_dict_2,
+                'conv6':conv6,
+                'conv7':conv7,
+               }
+    
+    return out,out_dict
+
+def openDBs(conf,trainType=0):
+        if trainType == 0:
+            trainfilename =os.path.join(conf.cachedir,conf.trainfilename) + '.tfrecords'
+            valfilename =os.path.join(conf.cachedir,conf.valfilename) + '.tfrecords'
+            train_queue = tf.train.string_input_producer([trainfilename])
+            val_queue = tf.train.string_input_producer([valfilename])
+        else:
+            trainfilename =os.path.join(conf.cachedir,conf.fulltrainfilename) + '.tfrecords'
+            valfilename =os.path.join(conf.cachedir,conf.fulltrainfilename) + '.tfrecords'
+            train_queue = tf.train.string_input_producer([trainfilename])
+            val_queue = tf.train.string_input_producer([valfilename])
+        return [train_queue,val_queue]
+
+def createCursors(sess,queue,conf):
+            
+        train_queue,val_queue = queue
+        train_ims,train_locs = multiResData.read_and_decode(train_queue,conf)
+        val_ims,val_locs = multiResData.read_and_decode(val_queue,conf)
+        train_data = [train_ims,train_locs]
+        val_data = [val_ims,val_locs]
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=sess,coord=coord)
+        return [train_data,val_data]
+        
+
+def readImages(conf,dbType,distort,sess,data):
+    train_data,val_data = data
+    cur_data = val_data if (dbType=='val')             else train_data
+    xs = []; locs = []
+    
+    for ndx in range(conf.batch_size):
+        [curxs,curlocs] = sess.run(cur_data)
+        if np.ndim(curxs)<3:
+            xs.append(curxs[np.newaxis,:,:])
+        else:
+            xs.append(curxs)
+        locs.append(curlocs)
+    xs = np.array(xs)    
+    locs = np.array(locs)
+    locs = multiResData.sanitizelocs(locs)
+    if distort:
+        if conf.horzFlip:
+            xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+        if conf.vertFlip:
+            xs,locs = PoseTools.randomlyFlipUD(xs,locs)
+        xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
+        xs = PoseTools.randomlyAdjust(xs,conf)
+
+    return xs,locs
+
+
+# In[ ]:
+
+def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
+    xs,locs = readImages(conf,dbType,distort,sess,data)
+    labelims = PoseTools.createLabelImages(locs,
+                               conf.imsz,
+                               conf.rescale*conf.eval_scale,
+                               conf.label_blur_rad)
+    
+    nlocs = genNegSamples(labelims,locs,conf,nsamples=1,minlen=conf.eval_minlen,N=conf.N2move4neg)
+    
+   
+    alllocs = np.concatenate([locs[...,np.newaxis],nlocs],axis=-1)
+    alllocs = alllocs.transpose([0,3,1,2])
+    alllocs = alllocs.reshape((-1,)+alllocs.shape[2:])
+    
+    allxs = np.tile(xs[...,np.newaxis],4)
+    allxs = allxs.transpose([0,4,1,2,3])
+    allxs = np.reshape(allxs,[-1,allxs.shape[-3],allxs.shape[-2],allxs.shape[-1]])
+    
+    x0,x1,x2 = PoseTools.multiScaleImages(allxs.transpose([0,2,3,1]),
+                                          conf.rescale*conf.eval_scale,
+                                          conf.scale, conf.l1_cropsz,conf)
+
+
+    scores_scale = conf.rescale*conf.eval_scale*conf.scale*conf.scale
+    s0 = PoseTools.createLabelImages(alllocs,
+                               conf.imsz,
+                               scores_scale,
+                               conf.label_blur_rad)
+    s1 = PoseTools.createLabelImages(alllocs,
+                               conf.imsz,
+                               scores_scale*conf.scale,
+                               conf.label_blur_rad)
+    s2 = PoseTools.createLabelImages(alllocs,
+                               conf.imsz,
+                               scores_scale*conf.scale*conf.scale,
+                               conf.label_blur_rad)
+    
+#     s0,s1,s2 = PoseTools.multiScaleLabelImages(labelims,1,conf.scale,[])
+    
+    y = np.zeros([xs.shape[0],nlocs.shape[-1]+1,2])
+    y[:,:1,0] = 1. 
+    y[:,1:,1] = 1.
+    y = np.reshape(y,[-1,y.shape[-1]])
+ 
+    feed_dict[ph['X'][0]] = x0
+    feed_dict[ph['X'][1]] = x1
+    feed_dict[ph['X'][2]] = x2
+    feed_dict[ph['S'][0]] = s0
+    feed_dict[ph['S'][1]] = s1
+    feed_dict[ph['S'][2]] = s2
+    feed_dict[ph['y']] = y
+    return alllocs
+
+
+# In[ ]:
+
+def restoreEval(sess,evalsaver,restore,conf,feed_dict):
+    outfilename = os.path.join(conf.cachedir,conf.evaloutname)
+    latest_ckpt = tf.train.get_checkpoint_state(conf.cachedir,
+                                        latest_filename = conf.evalckptname)
+    if not latest_ckpt or not restore:
+        evalstartat = 0
+        sess.run(tf.variables_initializer(PoseTools.getvars('eval')),feed_dict=feed_dict)
+        print("Not loading Eval variables. Initializing them")
+    else:
+        evalsaver.restore(sess,latest_ckpt.model_checkpoint_path)
+        matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
+        evalstartat = int(matchObj.group(1))+1
+        print("Loading eval variables from %s"%latest_ckpt.model_checkpoint_path)
+    return  evalstartat
+    
+
+def saveEval(sess,evalsaver,step,conf):
+    outfilename = os.path.join(conf.cachedir,conf.evaloutname)
+    evalsaver.save(sess,outfilename,global_step=step,
+               latest_filename = conf.evalckptname)
+    print('Saved state to %s-%d' %(outfilename,step))
+
+def createEvalSaver(conf):
+    evalsaver = tf.train.Saver(var_list = PoseTools.getvars('eval'),
+                                    max_to_keep=conf.maxckpt)
+    return evalsaver
+
+def initializeRemainingVars(sess,feed_dict):
+    varlist = tf.global_variables()
+    for var in varlist:
+        try:
+            sess.run(tf.assert_variables_initialized([var]))
+        except tf.errors.FailedPreconditionError:
+            sess.run(tf.variables_initializer([var]))
+            print('Initializing variable:%s'%var.name)
+
+
+
+# In[ ]:
+
+def poseEvalNetInit(conf):
+    
+    ph = createPlaceHolders(conf)
+    feed_dict = createFeedDict(ph)
+    with tf.variable_scope('eval'):
+        out,out_dict = net_multi_conv(ph,conf)
+    trainType = 0
+    queue = openDBs(conf,trainType=trainType)
+    if trainType == 1:
+        print "Training with all the data!"
+        print "Validation data is same as training data!!!! "
+    return ph,feed_dict,out,queue,out_dict
+    
+
+
+# In[ ]:
+
+def poseEvalTrain(conf,restore=True):
+    ph,feed_dict,out,queue,_ = poseEvalNetInit(conf)
+    feed_dict[ph['phase_train']] = True
+    feed_dict[ph['keep_prob']] = 1.
+    evalSaver = createEvalSaver(conf) 
+    pwts = conf.eval_num_neg
+    weights = ph['y'][:,0]*(pwts-1)+1
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(out,ph['y'])
+    loss = tf.reduce_mean(tf.mul(weights,cross_entropy))
+    correct_pred = tf.equal(tf.argmax(out,1),tf.argmax(ph['y'],1))
+    accuracy = tf.reduce_mean(tf.cast(correct_pred,tf.float32))
+    
+    tf.summary.scalar('cross_entropy',loss)
+    
+    opt = tf.train.AdamOptimizer(learning_rate=                       ph['learning_rate']).minimize(loss)
+    
+    merged = tf.summary.merge_all()
+    
+    
+    with tf.Session() as sess:
+        train_writer = tf.summary.FileWriter(conf.cachedir + '/eval_train_summary',sess.graph)
+        test_writer = tf.summary.FileWriter(conf.cachedir + '/eval_test_summary',sess.graph)
+        data = createCursors(sess,queue,conf)
+        updateFeedDict(conf,'train',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
+        evalstartat = restoreEval(sess,evalSaver,restore,conf,feed_dict)
+        initializeRemainingVars(sess,feed_dict)
+        for step in range(evalstartat,conf.eval_training_iters+1):
+            excount = step*conf.batch_size
+            cur_lr = conf.eval_learning_rate
+                        #* conf.gamma**math.floor(excount/conf.step_size)
+            feed_dict[ph['learning_rate']] = cur_lr
+            feed_dict[ph['keep_prob']] = 1.
+            feed_dict[ph['phase_train']] = True
+            updateFeedDict(conf,'train',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
+            train_summary,_ = sess.run([merged,opt], feed_dict=feed_dict)
+            train_writer.add_summary(train_summary,step)
+
+            if step % conf.display_step == 0:
+                updateFeedDict(conf,'train',sess=sess,distort=True,data=data,feed_dict=feed_dict,ph=ph)
+                feed_dict[ph['keep_prob']] = 1.
+                feed_dict[ph['phase_train']] = False
+                train_loss,train_acc = sess.run([loss,accuracy],feed_dict=feed_dict)
+                numrep = int(conf.numTest/conf.batch_size)+1
+                val_loss = 0.
+                val_acc = 0.
+                for rep in range(numrep):
+                    updateFeedDict(conf,'val',distort=False,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
+                    vloss,vacc = sess.run([loss,accuracy],feed_dict=feed_dict)
+                    val_loss += vloss
+                    val_acc += vacc
+                val_loss = val_loss/numrep
+                val_acc = val_acc/numrep
+                test_summary,_ = sess.run([merged,loss],feed_dict=feed_dict)
+                test_writer.add_summary(test_summary,step)
+                print 'Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
+                    val_acc,val_loss,train_acc,train_loss,step)
+            if step % conf.save_step == 0:
+                saveEval(sess,evalSaver,step,conf)
+        print("Optimization Done!")
+        saveEval(sess,evalSaver,step,conf)
+        train_writer.close()
+        test_writer.close()
+        
+
+
+# In[ ]:
+
+def poseEvalNetTiny(lin,locs,conf,trainPhase,dropout):
 
     lin_sz = tf.Tensor.get_shape(lin).as_list()
     lin_numel = reduce(operator.mul, lin_sz[1:], 1)
@@ -104,60 +569,15 @@ def createEvalPH(conf):
 
 # In[ ]:
 
-def createFeedDict(phDict):
-    feed_dict = {phDict['lin']:[],
-                 phDict['locs']:[],
-                 phDict['y']:[],
-                 phDict['learning_rate']:1.,
-                 phDict['phase_train']:False,
-                 phDict['dropout']:1.
-                }
-    return feed_dict
-
-
-# In[ ]:
-
-def createEvalSaver(conf):
-    evalSaver = tf.train.Saver(var_list = PoseTools.getvars('poseEval'),max_to_keep=conf.maxckpt)
-    return evalSaver
-
-
-# In[ ]:
-
-def loadEval(sess,conf,iterNum):
-    outfilename = os.path.join(conf.cachedir,conf.evaloutname)
-    ckptfilename = '%s-%d'%(outfilename,iterNum)
-    print('Loading base from %s'%(ckptfilename))
-    self.basesaver.restore(sess,ckptfilename)
-
-
-# In[ ]:
-
-def restoreEval(sess,conf,evalSaver,restore=True):
-    outfilename = os.path.join(conf.cachedir,conf.evaloutname)
-    latest_ckpt = tf.train.get_checkpoint_state(conf.cachedir,
-                                        latest_filename = conf.evalckptname)
-    if not latest_ckpt or not restore:
-        startat = 0
-        sess.run(tf.initialize_variables(PoseTools.getvars('poseEval')))
-        print("Not loading eval variables. Initializing them")
-        didRestore = False
-    else:
-        evalSaver.restore(sess,latest_ckpt.model_checkpoint_path)
-        matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
-        startat = int(matchObj.group(1))+1
-        print("Loading eval variables from %s"%latest_ckpt.model_checkpoint_path)
-        didRestore = True
-        
-    return didRestore,startat
-
-
-# In[ ]:
-
-def saveEval(sess,step,evalSaver,conf):
-    outfilename = os.path.join(conf.cachedir,conf.evaloutname)
-    evalSaver.save(sess,outfilename,global_step=step,
-               latest_filename = conf.evalckptname)
+# def createFeedDict(phDict):
+#     feed_dict = {phDict['lin']:[],
+#                  phDict['locs']:[],
+#                  phDict['y']:[],
+#                  phDict['learning_rate']:1.,
+#                  phDict['phase_train']:False,
+#                  phDict['dropout']:1.
+#                 }
+#     return feed_dict
 
 
 # In[ ]:
@@ -212,17 +632,17 @@ def genGaussianPosSamples(bout,l7out,locs,conf,nsamples=10,maxlen = 4):
 
 # In[ ]:
 
-def genGaussianNegSamples(bout,l7out,locs,conf,nsamples=10,minlen = 8):
-    scale = conf.rescale*conf.pool_scale
-    sigma = minlen*scale
-    sz = (np.array(l7out.shape[1:3])-1)*scale
+def genGaussianNegSamples(bout,locs,conf,nsamples=10,minlen = 8):
+    sigma = minlen
+#     sz = (np.array(bout.shape[1:3])-1)*scale
+    sz = np.array(bout.shape[1:3])-1
     bsize = conf.batch_size
     rlocs = np.round(np.random.normal(size=locs.shape+(5*nsamples,))*sigma)
     # remove rlocs that are small.
     dlocs = np.sqrt( (rlocs**2).sum(2)).sum(1)
     clocs = np.zeros(locs.shape+(nsamples,))
     for ii in range(dlocs.shape[0]):
-        ndx = np.where(dlocs[ii,:]> (minlen*conf.n_classes*scale) )[0][:nsamples]
+        ndx = np.where(dlocs[ii,:]> (minlen*conf.n_classes) )[0][:nsamples]
         clocs[ii,:,:,:] = rlocs[ii,:,:,ndx].transpose([1,2,0])
 
     rlocs = locs[...,np.newaxis] + clocs
@@ -240,20 +660,21 @@ def genGaussianNegSamples(bout,l7out,locs,conf,nsamples=10,minlen = 8):
 
 # In[ ]:
 
-def genMovedNegSamples(bout,l7out,locs,conf,nsamples=10,minlen=8):
+def genMovedNegSamples(bout,locs,conf,nsamples=10,minlen=8):
     # Add same x and y to locs
     
-    minlen = float(minlen)*1.25
+    minlen = float(minlen)/2
     maxlen = 2*minlen
     rlocs = np.zeros(locs.shape + (nsamples,))
-    sz = (np.array(l7out.shape[1:3])-1)*conf.rescale*conf.pool_scale
+#     sz = (np.array(bout.shape[1:3])-1)*conf.rescale*conf.pool_scale
+    sz = np.array(bout.shape[1:3])-1
 
     for curi in range(locs.shape[0]):
         rx = np.round(np.random.rand(nsamples)*(maxlen-minlen) + minlen)*            np.sign(np.random.rand(nsamples)-0.5)
         ry = np.round(np.random.rand(nsamples)*(maxlen-minlen) + minlen)*            np.sign(np.random.rand(nsamples)-0.5)
 
-        rlocs[curi,:,0,:] = locs[curi,:,0,np.newaxis] + rx*conf.rescale*conf.pool_scale
-        rlocs[curi,:,1,:] = locs[curi,:,1,np.newaxis] + ry*conf.rescale*conf.pool_scale
+        rlocs[curi,:,0,:] = locs[curi,:,0,np.newaxis] + rx
+        rlocs[curi,:,1,:] = locs[curi,:,1,np.newaxis] + ry
     
     # sanitize the locs
     rlocs[rlocs<0] = 0
@@ -268,22 +689,22 @@ def genMovedNegSamples(bout,l7out,locs,conf,nsamples=10,minlen=8):
 
 # In[ ]:
 
-def genOneMovedNegSamples(bout,l7out,locs,conf,nsamples=10,minlen=8):
+def genNMovedNegSamples(bout,locs,N,conf,nsamples=10,minlen=8):
     # Move one of the points.
-    minlen = 1.5*float(minlen)
+    minlen = float(minlen)
     maxlen = 2*minlen
     
     rlocs = np.tile(locs[...,np.newaxis],[1,1,1,nsamples])
-    sz = (np.array(l7out.shape[1:3])-1)*conf.rescale*conf.pool_scale
+    sz = np.array(bout.shape[1:3])-1
 
     for curi in range(locs.shape[0]):
         for curs in range(nsamples):
-            rx = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                np.sign(np.random.rand()-0.5)
-            ry = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                np.sign(np.random.rand()-0.5)
-            rand_point = np.random.randint(conf.n_classes)
-            
-            rlocs[curi,rand_point,0,curs] = locs[curi,rand_point,0] + rx*conf.rescale*conf.pool_scale
-            rlocs[curi,rand_point,1,curs] = locs[curi,rand_point,1] + ry*conf.rescale*conf.pool_scale
+            for rand_point in np.random.randint(conf.n_classes,size=[3,]):
+                rx = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                    np.sign(np.random.rand()-0.5)
+                ry = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                    np.sign(np.random.rand()-0.5)
+
+                rlocs[curi,rand_point,0,curs] = locs[curi,rand_point,0] + rx
+                rlocs[curi,rand_point,1,curs] = locs[curi,rand_point,1] + ry
     
     # sanitize the locs
     rlocs[rlocs<0] = 0
@@ -298,13 +719,12 @@ def genOneMovedNegSamples(bout,l7out,locs,conf,nsamples=10,minlen=8):
 
 # In[ ]:
 
-def genNegSamples(bout,l7out,locs,conf,nsamples=10):
-    minlen = 5
+def genNegSamples(bout,locs,conf,nsamples=10,minlen=8,N=1):
     rlocs = np.concatenate([
 #                           genRandomNegSamples(bout,l7out,locs,conf,nsamples),
-                          genGaussianNegSamples(bout,l7out,locs,conf,nsamples,minlen),
-                          genMovedNegSamples(bout,l7out,locs,conf,nsamples,minlen), 
-                          genOneMovedNegSamples(bout,l7out,locs,conf,nsamples,minlen)], 
+                          genGaussianNegSamples(bout,locs,conf,nsamples,minlen),
+                          genMovedNegSamples(bout,locs,conf,nsamples,minlen), 
+                          genNMovedNegSamples(bout,locs,N,conf,nsamples,minlen)], 
                           axis=3)
 #     rlabels = genLabels(rlocs,locs,conf)
     return rlocs#,rlabels

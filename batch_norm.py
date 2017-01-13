@@ -61,7 +61,7 @@ def batch_norm(x, phase_train, scope='batch_norm'):
 #              beta, gamma, 1e-3)
 #     return normed
 
-def batch_norm_2DD(x, phase_train, scope='batch_norm'):
+def batch_norm_2D(x, phase_train, scope='batch_norm'):
     """
     Batch normalization on convolutional maps.
     Args:
@@ -97,6 +97,7 @@ def batch_norm_2DD(x, phase_train, scope='batch_norm'):
             normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
         return normed            
 
-def batch_norm_2D(x, phase_train, scope='batch_norm'):
-    return x
+# why did this ever exist?    
+# def batch_norm_2D(x, phase_train, scope='batch_norm'):
+#     return x
 

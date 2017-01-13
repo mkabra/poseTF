@@ -1091,3 +1091,31 @@ ax[0].imshow(o[0,0,:,:],cmap='gray')
 ax[1].imshow(d[0,...,0],cmap='gray')
 ax[1].scatter(l[0,:,0],l[0,:,1])
 
+
+# In[1]:
+
+import tensorflow as tf
+
+x0 = tf.placeholder(tf.float32, [None, 
+                                 50,
+                                 50,1],name='x0')
+
+
+# In[5]:
+
+print x0.get_shape()[3]
+
+
+# In[6]:
+
+vv = [1,2,3]
+v1,v2,v3 = vv
+print v2
+
+
+# In[12]:
+
+xx = np.random.random([5,100,100,1])
+yy = np.tile(xx,3)
+print yy.shape
+

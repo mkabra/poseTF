@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[8]:
+# In[2]:
 
 import romainLegConfig
 reload(romainLegConfig)
@@ -9,7 +9,7 @@ from romainLegConfig import bottomconf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=False)
+multiResData.createTFRecordFromLbl(conf,split=True)
 
 
 # In[3]:

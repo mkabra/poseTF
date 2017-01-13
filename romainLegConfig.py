@@ -25,6 +25,7 @@ class myconfig(object):
 
     scale = 2
     rescale = 1  # how much to downsize the base image.
+    eval_scale = 1
     numscale = 3
     pool_scale = 4
     # sel_sz determines the patch size used for the final decision
@@ -72,8 +73,13 @@ class myconfig(object):
     mrf_learning_rate = 0.00001
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
+    eval_learning_rate = 0.000001
 
-    batch_size = 8
+    batch_size = 2
+    eval_num_neg = 3
+    N2move4neg = 3
+    eval_minlen = 25
+    
     mult_fac = 16/batch_size
     base_training_iters = 5000*mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
@@ -87,7 +93,7 @@ class myconfig(object):
     fine_training_iters = 3000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
-    eval_training_iters = 500*mult_fac
+    eval_training_iters = 5000*mult_fac
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
     step_size = 200000
@@ -109,14 +115,15 @@ class myconfig(object):
     # ----- Data parameters
 
     split = True
-    view = 0  # view = 0 is side view view = 1 is front view
+    view = 0  
     l1_cropsz = 0
     imsz = (624,672) # This is after cropping. Orig is 1024x1024
-    cropLoc = {(624,672):[0,0],(762,768):[85,0]} # for front view crop the central part of the image
+    cropLoc = {(624,672):[0,0],(762,768):[85,0],(628,672):[0,0]} # for front view crop the central part of the image
     selpts = np.arange(0,18)
+    imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
-    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28AndJun22_onlyBottom.lbl')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28Jun22Sep16Sep15Sep13_onlyBottom.lbl')
  
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
@@ -124,13 +131,12 @@ class myconfig(object):
     holdouttrain = 'holdouttrain_lmdb'
     holdouttest = 'holdouttest_lmdb'
     valdatafilename = 'valdata'
-    valratio = 0.3
+    valratio = 0.34
     holdoutratio = 0.8
 
 
     # ----- Save parameters
-
-    save_step = 500
+    save_step = 100
     maxckpt = 20
     baseoutname = expname + baseName
     fineoutname = expname + fineName
@@ -172,6 +178,7 @@ side1conf.imsz = (592,288) # This is after cropping. Orig is 1024x1024
 side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
 side1conf.selpts = np.arange(0,18)
 side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
+side1conf.eval_scale = 2
 
 
 side2conf = myconfig()
@@ -181,4 +188,5 @@ side2conf.imsz = (640,288)
 side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
 side2conf.selpts = np.arange(0,18)
 side2conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide2')
+side2conf.eval_scale = 2
 
