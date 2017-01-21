@@ -115,6 +115,7 @@ class myconfig(object):
     imsz = (512,512) # This is after cropping. Orig is 1024x1024
     map_size = 100000*psz**2*3
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
+    selpts = np.arange(0,5)
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead/')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')

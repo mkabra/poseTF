@@ -67,7 +67,7 @@ end
 J.movieFilesAll = movf;
 J.labeledpos = lpos;
 J.labeledposMarked = lmarked;
-
+J.cfg = P.cfg;
 
 %%
 
