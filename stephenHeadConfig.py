@@ -6,6 +6,7 @@
 import os
 import re
 import localSetup
+import numpy as np
 
 class myconfig(object): 
 
