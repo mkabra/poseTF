@@ -166,8 +166,10 @@ class myconfig(object):
         return expname
 
     def getexplist(self,L):
-        fname = 'vid{:d}files'.format(self.view+1)
-        return L[fname]
+#         fname = 'vid{:d}files'.format(self.view+1)
+#         return L[fname]
+        return L['movieFilesAll'][self.view,:]
+    
 
 conf = myconfig()
 sideconf = myconfig()
