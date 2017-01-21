@@ -527,7 +527,7 @@ def createTFRecordFromLbl(conf,split=True):
 
         for fnum in frames:
 
-            if fnum > cap.get(cvc.FRAME_COUNT):
+            if fnum >= cap.get(cvc.FRAME_COUNT):
                 if fnum > cap.get(cvc.FRAME_COUNT)+1:
                     raise ValueError('Accessing frames beyond ' + 
                                      'the length of the video for' + 
@@ -535,7 +535,6 @@ def createTFRecordFromLbl(conf,split=True):
                                      ' at t {:d}'.format(fnum)
                                     )
                 continue
-                fnum = fn
             framein = myutils.readframe(cap,fnum)
             cloc = conf.cropLoc[tuple(framein.shape[0:2])]
             framein = PoseTools.cropImages(framein,conf)
