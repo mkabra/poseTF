@@ -347,7 +347,7 @@ class PoseTrain(object):
             self.basestartat = 0
             self.basetrainData = {'train_err':[], 'val_err':[], 'step_no':[],
                                   'train_dist':[], 'val_dist':[] }
-            sess.run(tf.initialize_variables(PoseTools.getvars('base')))
+            sess.run(tf.initialize_variables(PoseTools.getvars('base')),feed_dict=self.feed_dict)
             print("Not loading base variables. Initializing them")
             return False
         else:
@@ -681,9 +681,10 @@ class PoseTrain(object):
 #                  self.valenv.begin() as valtxn,\
         with tf.Session() as sess:
                     
+            self.createCursors(sess)
+            self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
             self.restoreBase(sess,restore)
             self.initializeRemainingVars(sess)
-            self.createCursors(sess)
             
             for step in range(self.basestartat,self.conf.base_training_iters+1):
                 self.feed_dict[self.ph['keep_prob']] = 0.5
