@@ -535,6 +535,7 @@ def createTFRecordFromLbl(conf,split=True):
                                      ' at t {:d}'.format(fnum)
                                     )
                 continue
+                fnum = fn
             framein = myutils.readframe(cap,fnum)
             cloc = conf.cropLoc[tuple(framein.shape[0:2])]
             framein = PoseTools.cropImages(framein,conf)

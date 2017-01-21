@@ -59,6 +59,7 @@ for ndx = 1:numel(dd)
       fprintf('Marked and labels dont match for %d,%d\n',ndx,nexp);
     end
   end
+  movf = [movf;K];
   lpos = [lpos; P.labeledpos];
   lmarked = [lmarked; P.labeledposMarked];
   

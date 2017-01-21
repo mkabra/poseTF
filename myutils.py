@@ -48,7 +48,7 @@ def padgrab(inmat,padv,*args):
 # because of course, videos have to be a pain in the a$$
 
 def readframe(cap, position):
-  assert position < cap.get(cvc.FRAME_COUNT), "incorrect frame access" 
+  assert position <= cap.get(cvc.FRAME_COUNT), "incorrect frame access" 
   positiontoset = position
   pos = -1
   cap.set(cvc.FRAME_POSITION, position)
