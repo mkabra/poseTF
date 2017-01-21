@@ -118,7 +118,7 @@ class myconfig(object):
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead/')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
-    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephen_curatedData_withnewlabels.mat')
+    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound1_Janelia.lbl')
  
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
@@ -168,12 +168,6 @@ class myconfig(object):
     def getexplist(self,L):
         fname = 'vid{:d}files'.format(self.view+1)
         return L[fname]
-
-    def getflynum(self,dirname):
-        dirname = os.path.normpath(dirname)
-        dir_parts = dirname.split(os.sep)
-        flynum = float(dir_parts[-3][3:6])
-        return flynum
 
 conf = myconfig()
 sideconf = myconfig()

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[3]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipyker
 warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
 
 
-# In[ ]:
+# In[1]:
 
 import poseEval
 reload(poseEval)
@@ -25,7 +25,7 @@ tf.reset_default_graph()
 poseEval.poseEvalTrain(conf,restore=False)
 
 
-# In[6]:
+# In[2]:
 
 # Gradient analysis
 import poseEval
@@ -34,7 +34,7 @@ from poseEval import *
 import tensorflow as tf
 from romainLegConfig import bottomconf as conf
 
-useNet = False
+useNet = True
 restore = True
 
 tf.reset_default_graph()
@@ -54,7 +54,7 @@ merged = tf.summary.merge_all()
 
 
 sess =  tf.InteractiveSession()
-data = createCursors(sess,queue,conf)
+data,coord,threads = createCursors(sess,queue,conf)
 updateFeedDict(conf,'train',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
 if useNet:
     evalstartat = restoreEval(sess,evalSaver,restore,conf,feed_dict)
@@ -67,18 +67,30 @@ feed_dict[ph['phase_train']] = False
 
 
 
-# In[7]:
+# In[3]:
+
+# Interactive plots from
+# http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
+get_ipython().magic(u'pylab notebook')
+import ipywidgets as widgets
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/ipykernel/.*')
+warnings.filterwarnings('ignore', category=DeprecationWarning, module='.*/widgets/.*')
 
 for ndx in range(np.random.randint(50)):
     alllocs = updateFeedDict(conf,'val',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
 if useNet:
     oo,cc = sess.run([out,cross_entropy],feed_dict=feed_dict)
 else:
-    oo = np.zeros([8,2])
+    oo = feed_dict[ph['y']]
     cc = np.zeros([8,])
 
 ims = feed_dict[ph['X'][0]]
 
+tt = oo.reshape(8,18)
+tt = tt.clip(min=0,max=1)
+vv = feed_dict[ph['y']].reshape(8,18)
+pp = np.abs(tt-vv)
 nc = 2; nr = 4
 fig = plt.figure(figsize=[12,25])
 mrk = ['o','*','+']
@@ -86,10 +98,45 @@ ss = [30,100,50]
 for idx in range(ims.shape[0]):
     ax = fig.add_subplot(nr,nc,idx+1)
     ax.imshow(ims[idx,:,:,0],cmap='gray')
+    tstr = []
     for jj in range(3):
+        sz = ss[jj]*(3*pp[idx,jj*6:(jj+1)*6]+0.5)
         ax.scatter(alllocs[idx,jj*6:(jj+1)*6,0],alllocs[idx,jj*6:(jj+1)*6,1],
-                   c=np.linspace(0,1,6),cmap=cm.jet,marker=mrk[jj],s=ss[jj])
-    ax.set_title('{:.4f} -- {:.4f},{:.4f}'.format(cc[idx],oo[idx,0],oo[idx,1]))
+                   c=np.linspace(0,1,6),cmap=cm.jet,marker=mrk[jj],s=sz)
+        tstr.append(','.join('{:.2f}'.format(a) for a in tt[idx,jj*6:(jj+1)*6]))
+        tstr.append(','.join('{:.2f}'.format(a) for a in vv[idx,jj*6:(jj+1)*6]))
+    ax.set_title('\n'.join(tstr))
+
+
+# In[4]:
+
+# measure different accuracies
+
+pp = np.zeros([800,18])
+ii = np.zeros([800,18])
+count = 100
+for ndx in range(count):
+    alllocs = updateFeedDict(conf,'val',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
+    oo,cc = sess.run([out,cross_entropy],feed_dict=feed_dict)
+    oo = oo.reshape(8,18)
+    vv = feed_dict[ph['y']].reshape(8,18)
+    pp[ndx*8:(ndx+1)*8,:] = oo-vv
+    ii[ndx*8:(ndx+1)*8,:] = oo
+ 
+
+
+# In[5]:
+
+kk = np.abs(pp).mean(axis=0)
+print kk
+
+
+# In[6]:
+
+plt.figure()
+plt.hist(pp.flatten())
+plt.figure()
+plt.hist(ii.flatten())
 
 
 # In[ ]:

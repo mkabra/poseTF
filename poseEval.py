@@ -84,7 +84,7 @@ def createPlaceHolders(conf):
                                      imsz[0]/scale/scale/scores_scale,
                                      imsz[1]/scale/scale/scores_scale,n_classes],name='s2')
     
-    y = tf.placeholder(tf.float32, [nex,2],'out')
+    y = tf.placeholder(tf.float32, [nex*n_classes,],'out')
     
     X = [x0,x1,x2]
     S = [s0,s1,s2]
@@ -221,9 +221,9 @@ def net_multi_conv(ph,conf):
     with tf.variable_scope('layer7'):
 #         weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/2],
 #             initializer=tf.random_normal_initializer(stddev=0.005))
-        weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/2],
+        weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/4],
             initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable("biases", conf.nfcfilt/2,
+        biases = tf.get_variable("biases", conf.nfcfilt/4,
             initializer=tf.constant_initializer(0))
         
         with tf.variable_scope('weights'):
@@ -236,9 +236,9 @@ def net_multi_conv(ph,conf):
             PoseTools.variable_summaries(conv7)
 
     with tf.variable_scope('layer8'):
-        l8_weights = tf.get_variable("weights", [conf.nfcfilt/2,2],
+        l8_weights = tf.get_variable("weights", [conf.nfcfilt/4,conf.n_classes],
             initializer=tf.random_normal_initializer(stddev=0.01))
-        l8_biases = tf.get_variable("biases", 2,
+        l8_biases = tf.get_variable("biases", conf.n_classes,
             initializer=tf.constant_initializer(0))
         out = tf.matmul(conv7, l8_weights) - l8_biases
         with tf.variable_scope('weights'):
@@ -247,6 +247,9 @@ def net_multi_conv(ph,conf):
             PoseTools.variable_summaries(l8_biases)
         with tf.variable_scope('out'):
             PoseTools.variable_summaries(out)
+        nex = conf.batch_size*(conf.eval_num_neg+1)
+        out = tf.reshape(out,[nex*conf.n_classes]) 
+        #this should keep all the outputs of an example together
 
     out_dict = {'base_dict_0':base_dict_0,
                 'base_dict_1':base_dict_1,
@@ -279,7 +282,7 @@ def createCursors(sess,queue,conf):
         val_data = [val_ims,val_locs]
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess,coord=coord)
-        return [train_data,val_data]
+        return [train_data,val_data],coord,threads
         
 
 def readImages(conf,dbType,distort,sess,data):
@@ -320,11 +323,19 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     nlocs = genNegSamples(labelims,locs,conf,nsamples=1,minlen=conf.eval_minlen,N=conf.N2move4neg)
     
    
-    alllocs = np.concatenate([locs[...,np.newaxis],nlocs],axis=-1)
+#     alllocs = np.concatenate([locs[...,np.newaxis],nlocs],axis=-1)
+    alllocs = nlocs
+    dd = alllocs-locs[...,np.newaxis] # distance of neg points to actual locations
+    ddist = np.sqrt(np.sum(dd**2,axis=2))
+    ind_labels = (ddist )/conf.eval_minlen
+    ind_labels = ind_labels.clip(min=0,max=1)
+    ind_labels = np.transpose(ind_labels,[0,2,1])
+    ind_labels = ind_labels.reshape((-1,))
+#     ind_labels = np.concatenate([ind_labels,1-ind_labels],axis=1)
     alllocs = alllocs.transpose([0,3,1,2])
     alllocs = alllocs.reshape((-1,)+alllocs.shape[2:])
     
-    allxs = np.tile(xs[...,np.newaxis],4)
+    allxs = np.tile(xs[...,np.newaxis],conf.eval_num_neg+1)
     allxs = allxs.transpose([0,4,1,2,3])
     allxs = np.reshape(allxs,[-1,allxs.shape[-3],allxs.shape[-2],allxs.shape[-1]])
     
@@ -349,10 +360,10 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     
 #     s0,s1,s2 = PoseTools.multiScaleLabelImages(labelims,1,conf.scale,[])
     
-    y = np.zeros([xs.shape[0],nlocs.shape[-1]+1,2])
-    y[:,:1,0] = 1. 
-    y[:,1:,1] = 1.
-    y = np.reshape(y,[-1,y.shape[-1]])
+#     y = np.zeros([xs.shape[0],nlocs.shape[-1]+1,2])
+#     y[:,:1,0] = 1. 
+#     y[:,1:,1] = 1.
+#     y = np.reshape(y,[-1,y.shape[-1]])
  
     feed_dict[ph['X'][0]] = x0
     feed_dict[ph['X'][1]] = x1
@@ -360,7 +371,7 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     feed_dict[ph['S'][0]] = s0
     feed_dict[ph['S'][1]] = s1
     feed_dict[ph['S'][2]] = s2
-    feed_dict[ph['y']] = y
+    feed_dict[ph['y']] = ind_labels
     return alllocs
 
 
@@ -429,13 +440,22 @@ def poseEvalTrain(conf,restore=True):
     feed_dict[ph['keep_prob']] = 1.
     evalSaver = createEvalSaver(conf) 
     pwts = conf.eval_num_neg
-    weights = ph['y'][:,0]*(pwts-1)+1
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(out,ph['y'])
-    loss = tf.reduce_mean(tf.mul(weights,cross_entropy))
-    correct_pred = tf.equal(tf.argmax(out,1),tf.argmax(ph['y'],1))
-    accuracy = tf.reduce_mean(tf.cast(correct_pred,tf.float32))
+    
+    # For classification
+#     weights = ph['y'][:,0]*(pwts-1)+1
+#     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(out,ph['y'])
+#     loss = tf.reduce_mean(cross_entropy)
+#     correct_pred = tf.cast(tf.equal(tf.argmax(out,1),tf.argmax(ph['y'],1)),tf.float32)
+#     correct_pred_weighted = tf.mul(correct_pred)
+#     accuracy_weighted = tf.reduce_sum(correct_pred_weighted)/tf.reduce_sum(weights)
+
+    # for regression.
+    loss = tf.nn.l2_loss(out-ph['y'])
+    correct_pred = tf.cast(tf.equal(out>0.5,ph['y']>0.5),tf.float32)
+    accuracy = tf.reduce_mean(correct_pred)
     
     tf.summary.scalar('cross_entropy',loss)
+    tf.summary.scalar('accuracy',accuracy)
     
     opt = tf.train.AdamOptimizer(learning_rate=                       ph['learning_rate']).minimize(loss)
     
@@ -445,7 +465,7 @@ def poseEvalTrain(conf,restore=True):
     with tf.Session() as sess:
         train_writer = tf.summary.FileWriter(conf.cachedir + '/eval_train_summary',sess.graph)
         test_writer = tf.summary.FileWriter(conf.cachedir + '/eval_test_summary',sess.graph)
-        data = createCursors(sess,queue,conf)
+        data,coord,threads = createCursors(sess,queue,conf)
         updateFeedDict(conf,'train',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
         evalstartat = restoreEval(sess,evalSaver,restore,conf,feed_dict)
         initializeRemainingVars(sess,feed_dict)
@@ -468,13 +488,16 @@ def poseEvalTrain(conf,restore=True):
                 numrep = int(conf.numTest/conf.batch_size)+1
                 val_loss = 0.
                 val_acc = 0.
+#                 val_acc_wt = 0.
                 for rep in range(numrep):
                     updateFeedDict(conf,'val',distort=False,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
                     vloss,vacc = sess.run([loss,accuracy],feed_dict=feed_dict)
                     val_loss += vloss
                     val_acc += vacc
+#                     val_acc_wt += vacc_wt
                 val_loss = val_loss/numrep
                 val_acc = val_acc/numrep
+#                 val_acc_wt /= numrep
                 test_summary,_ = sess.run([merged,loss],feed_dict=feed_dict)
                 test_writer.add_summary(test_summary,step)
                 print 'Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
@@ -485,6 +508,8 @@ def poseEvalTrain(conf,restore=True):
         saveEval(sess,evalSaver,step,conf)
         train_writer.close()
         test_writer.close()
+        coord.request_stop()
+        coord.join(threads)
         
 
 
@@ -699,7 +724,8 @@ def genNMovedNegSamples(bout,locs,N,conf,nsamples=10,minlen=8):
 
     for curi in range(locs.shape[0]):
         for curs in range(nsamples):
-            for rand_point in np.random.randint(conf.n_classes,size=[3,]):
+            curN = np.random.randint(conf.n_classes)
+            for rand_point in np.random.choice(conf.n_classes,size=[curN,],replace=False):
                 rx = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                    np.sign(np.random.rand()-0.5)
                 ry = np.round(np.random.rand()*(maxlen-minlen) + minlen)*                    np.sign(np.random.rand()-0.5)
 
@@ -722,8 +748,8 @@ def genNMovedNegSamples(bout,locs,N,conf,nsamples=10,minlen=8):
 def genNegSamples(bout,locs,conf,nsamples=10,minlen=8,N=1):
     rlocs = np.concatenate([
 #                           genRandomNegSamples(bout,l7out,locs,conf,nsamples),
-                          genGaussianNegSamples(bout,locs,conf,nsamples,minlen),
-                          genMovedNegSamples(bout,locs,conf,nsamples,minlen), 
+#                           genGaussianNegSamples(bout,locs,conf,nsamples,minlen),
+#                           genMovedNegSamples(bout,locs,conf,nsamples,minlen), 
                           genNMovedNegSamples(bout,locs,N,conf,nsamples,minlen)], 
                           axis=3)
 #     rlabels = genLabels(rlocs,locs,conf)

@@ -1,14 +1,14 @@
 
 # coding: utf-8
 
-# In[18]:
+# In[1]:
 
 import tensorflow as tf
 
-efile = '/home/mayank/work/poseEstimation/cache/romainLegBottom/eval_train_summary/events.out.tfevents.1483696542.mayankWS'
+efile = '/home/mayank/work/poseEstimation/cache/romainLegBottom/eval_test_summary/events.out.tfevents.1484832405.mayankWS'
 
 
-# In[23]:
+# In[2]:
 
 
 vals = []
@@ -26,10 +26,24 @@ for aa in tf.train.summary_iterator(efile):
         vals[ndx].append(bb.simple_value)
 
 
-# In[30]:
+# In[3]:
 
-for ndx in range(20):
+for n in names:
+    print n
+
+
+# In[4]:
+
+for ndx in range(50,len(names)):
     plt.figure()
     plt.plot(vals[ndx])
     plt.title(names[ndx])
+
+
+# In[8]:
+
+ndx = 51
+plt.figure()
+plt.plot(vals[ndx][2:])
+plt.title(names[ndx])
 

@@ -73,12 +73,12 @@ class myconfig(object):
     mrf_learning_rate = 0.00001
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
-    eval_learning_rate = 0.000001
+    eval_learning_rate = 0.00001
 
-    batch_size = 2
-    eval_num_neg = 3
+    batch_size = 8
+    eval_num_neg = 0
     N2move4neg = 3
-    eval_minlen = 25
+    eval_minlen = 30
     
     mult_fac = 16/batch_size
     base_training_iters = 5000*mult_fac
@@ -93,7 +93,7 @@ class myconfig(object):
     fine_training_iters = 3000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
-    eval_training_iters = 5000*mult_fac
+    eval_training_iters = 2000*mult_fac
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
     step_size = 200000
@@ -136,7 +136,7 @@ class myconfig(object):
 
 
     # ----- Save parameters
-    save_step = 100
+    save_step = 500
     maxckpt = 20
     baseoutname = expname + baseName
     fineoutname = expname + fineName
