@@ -366,36 +366,6 @@ class PoseTrain(object):
             print("Loading base variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
             
-    def restoreAC(self,sess,restore):
-        outfilename = os.path.join(self.conf.cachedir,self.conf.acoutname)
-        traindatafilename = os.path.join(self.conf.cachedir,self.conf.acdataname)
-        latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
-                                            latest_filename = self.conf.acckptname)
-        if not latest_ckpt or not restore:
-            self.acstartat = 0
-            self.actrainData = {'train_err':[],'val_err':[],'step_no':[],
-                                'train_base_err':[],'val_base_err':[],
-                                 'train_dist':[],'val_dist':[],
-                                'train_base_dist':[],'val_base_dist':[]}
-            sess.run(tf.initialize_variables(PoseTools.getvars('AC_')))
-            print("Not loading AC variables. Initializing them")
-            return False
-        else:
-            self.acsaver.restore(sess,latest_ckpt.model_checkpoint_path)
-            matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
-            self.acstartat = int(matchObj.group(1))+1
-            with open(traindatafilename,'rb') as tdfile:
-                inData = pickle.load(tdfile)
-                if not isinstance(inData,dict):
-                    self.actrainData, loadconf = inData
-                    print('Parameters that dont match for AC:')
-                    PoseTools.compareConf(self.conf, loadconf)
-                else:
-                    print("No config was stored for AC. Not comparing conf")
-                    self.actrainData = inData
-            print("Loading AC variables from %s"%latest_ckpt.model_checkpoint_path)
-            return True
-            
     def restoreMRF(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.mrfdataname)
@@ -735,7 +705,7 @@ class PoseTrain(object):
 #         self.env.begin() as txn,self.valenv.begin() as valtxn,
         with tf.Session() as sess:
             
-            self.restoreBase(sess)
+            self.restoreBase(sess,restore=True)
             self.restoreMRF(sess,restore)
             self.initializeRemainingVars(sess)
             self.createCursors(sess)
