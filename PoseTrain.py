@@ -735,7 +735,7 @@ class PoseTrain(object):
 #         self.env.begin() as txn,self.valenv.begin() as valtxn,
         with tf.Session() as sess:
             
-            self.loadBase(sess,self.conf.baseIter4MRFTrain)
+            self.restoreBase(sess)
             self.restoreMRF(sess,restore)
             self.initializeRemainingVars(sess)
             self.createCursors(sess)
