@@ -602,19 +602,6 @@ class PoseTrain(object):
         self.basetrainData['train_dist'].append(trainDist[0])        
         self.basetrainData['val_dist'].append(valDist[0])        
 
-    def updateACLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
-                                                      trainDist[1],valDist[1])
-        self.actrainData['train_err'].append(train_loss[0])        
-        self.actrainData['val_err'].append(val_loss[0])        
-        self.actrainData['train_base_err'].append(train_loss[1])        
-        self.actrainData['val_base_err'].append(val_loss[1])        
-        self.actrainData['train_dist'].append(trainDist[0])        
-        self.actrainData['val_dist'].append(valDist[0])        
-        self.actrainData['train_base_dist'].append(trainDist[1])        
-        self.actrainData['val_base_dist'].append(valDist[1])        
-        self.actrainData['step_no'].append(step)        
-
     def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
         print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
                                                       trainDist[1],valDist[1])
