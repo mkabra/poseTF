@@ -92,7 +92,7 @@ with open(outfile,'w') as f:
 
 import PoseTrain
 reload(PoseTrain)
-from stephenHeadConfig import sideconf as conf
+from stephenHeadConfig import conf as conf
 import tensorflow as tf
 
 tf.reset_default_graph()

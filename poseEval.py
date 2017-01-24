@@ -327,7 +327,7 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     alllocs = nlocs
     dd = alllocs-locs[...,np.newaxis] # distance of neg points to actual locations
     ddist = np.sqrt(np.sum(dd**2,axis=2))
-    ind_labels = (ddist )/conf.eval_minlen
+    ind_labels = (ddist - conf.eval_minlen/2 )/conf.eval_minlen
     ind_labels = ind_labels.clip(min=0,max=1)
     ind_labels = np.transpose(ind_labels,[0,2,1])
     ind_labels = ind_labels.reshape((-1,))

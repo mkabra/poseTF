@@ -347,7 +347,7 @@ class PoseTrain(object):
             self.basestartat = 0
             self.basetrainData = {'train_err':[], 'val_err':[], 'step_no':[],
                                   'train_dist':[], 'val_dist':[] }
-            sess.run(tf.initialize_variables(PoseTools.getvars('base')),feed_dict=self.feed_dict)
+            sess.run(tf.variables_initializer(PoseTools.getvars('base')),feed_dict=self.feed_dict)
             print("Not loading base variables. Initializing them")
             return False
         else:
@@ -407,7 +407,7 @@ class PoseTrain(object):
                                 'train_base_err':[],'val_base_err':[],
                                  'train_dist':[],'val_dist':[],
                                 'train_base_dist':[],'val_base_dist':[]}
-            sess.run(tf.initialize_variables(PoseTools.getvars('mrf')))
+            sess.run(tf.variables_initializer(PoseTools.getvars('mrf')))
             print("Not loading mrf variables. Initializing them")
             return False
         else:
@@ -538,7 +538,7 @@ class PoseTrain(object):
             pickle.dump([self.jointtrainData,self.conf],tdfile)
 
     def initializeRemainingVars(self,sess):
-        varlist = tf.all_variables()
+        varlist = tf.global_variables()
         for var in varlist:
             try:
                 sess.run(tf.assert_variables_initialized([var]))

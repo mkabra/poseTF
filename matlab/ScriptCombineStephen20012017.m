@@ -10,6 +10,7 @@ P = load('/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/just
 % corresponds to side view
 
 
+local = true;
 J = struct;
 
 nexp = numel(Q.vid1files);
@@ -18,8 +19,13 @@ lpos = cell(nexp,1);
 lmarked = cell(nexp,1);
 lothers = cell(nexp,1);
 for ndx = 1:nexp
-  v1f = ['/groups/branson/bransonlab/mayank/' Q.vid1files{ndx}(19:end)];
-  v2f = ['/groups/branson/bransonlab/mayank/' Q.vid2files{ndx}(19:end)];
+  if ~local,
+    v1f = ['/groups/branson/bransonlab/mayank/' Q.vid1files{ndx}(19:end)];
+    v2f = ['/groups/branson/bransonlab/mayank/' Q.vid2files{ndx}(19:end)];
+  else
+    v1f = Q.vid1files{ndx};
+    v2f = Q.vid2files{ndx};
+  end
   movf{ndx,1} = v1f;
   movf{ndx,2} = v2f;
   
@@ -39,7 +45,7 @@ for ndx = 1:nexp
   if fid>0,fclose(fid); end
 end
 
-%
+%%
 for ndx = 1:numel(dd)
   P = load(fullfile(ldir,dd(ndx).name),'-mat');
   nexp = numel(P.labeledpos);  
@@ -66,6 +72,7 @@ for ndx = 1:numel(dd)
   
 end
 
+%%
 J.movieFilesAll = movf;
 J.labeledpos = lpos;
 J.labeledposMarked = lmarked;
@@ -79,3 +86,37 @@ figure; imshow(ii);
 hold on;
 scatter(Q.pts(1,1,:,1),Q.pts(2,1,:,1),'.');
 hold off;
+
+%%
+
+pp = [];
+for ndx = 1:numel(J.labeledpos)
+  ff = ~isnan(J.labeledpos{ndx}(1,1,:));
+  pp = cat(3,pp,J.labeledpos{ndx}(:,:,ff));
+  
+end
+
+
+%%
+f = figure;
+
+nc = 5; nr = 4;
+for ndx = 6:10
+  for zz = 1
+    subplot(nc,nr,ndx);
+    rpt = squeeze(pp(8,zz,:));
+    hist(squeeze(pp(ndx,zz,:))-rpt);
+  end  
+end
+
+
+%% label for 318
+
+kk = [];
+for ndx = 1:numel(Q.expdirs)
+%   if ~isempty(strfind(Q.expdirs{ndx},'138'));
+%     kk(end+1) = ndx;
+%   end
+  fprintf('%s\n',Q.expdirs{ndx}(46:end));
+end
+

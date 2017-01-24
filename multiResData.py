@@ -527,7 +527,7 @@ def createTFRecordFromLbl(conf,split=True):
 
         for fnum in frames:
 
-            if fnum >= cap.get(cvc.FRAME_COUNT):
+            if fnum > cap.get(cvc.FRAME_COUNT):
                 if fnum > cap.get(cvc.FRAME_COUNT)+1:
                     raise ValueError('Accessing frames beyond ' + 
                                      'the length of the video for' + 
