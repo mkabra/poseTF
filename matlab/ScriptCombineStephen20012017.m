@@ -10,7 +10,7 @@ P = load('/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/just
 % corresponds to side view
 
 
-local = true;
+local = false;
 J = struct;
 
 nexp = numel(Q.vid1files);
@@ -60,7 +60,7 @@ for ndx = 1:numel(dd)
           K{ne,vv} = ['/groups/huston/hustonlab/' kk(4:end)];
         end
     end    
-    l1 = any(~isnan(squeeze(P.labeledpos{ne}(:,1,:))),1);
+    l1 = any(~isnan(P.labeledpos{ne}(:,:,:)),1);
     l2 = all(P.labeledposMarked{ne},1);
     if ~all(l1==l2),
       fprintf('Marked and labels dont match for %d,%d\n',ndx,nexp);
@@ -101,11 +101,10 @@ end
 f = figure;
 
 nc = 5; nr = 4;
-for ndx = 6:10
-  for zz = 1
+for ndx = 1:10
+  for zz = 2
     subplot(nc,nr,ndx);
-    rpt = squeeze(pp(8,zz,:));
-    hist(squeeze(pp(ndx,zz,:))-rpt);
+    hist(squeeze(pp(ndx,zz,:)));
   end  
 end
 

@@ -517,7 +517,8 @@ def createTFRecordFromLbl(conf,split=True):
 
         expname = conf.getexpname(dirname)
         curpts = np.array(L[pts[0,ndx]])
-        frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
+        zz = curpts.reshape([curpts.shape[0],-1])
+        frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=1)))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
 

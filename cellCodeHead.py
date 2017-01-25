@@ -345,6 +345,72 @@ import re
 import tensorflow as tf
 from scipy import io
 from matplotlib import cm
+from stephenHeadConfig import conf as conf
+import PoseTrain
+import sys
+
+
+# conf = sideconf
+conf.batch_size = 1
+conf.useMRF = False
+outtype = 1
+
+tf.reset_default_graph()
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+self.feed_dict[self.ph['phase_train_base']] = False
+self.feed_dict[self.ph['keep_prob']] = 0.5
+self.trainType = 1
+doBatchNorm = self.conf.doBatchNorm
+
+sess = tf.InteractiveSession()
+
+with tf.variable_scope('base'):
+    self.createBaseNetwork(doBatchNorm)
+self.openDBs()
+self.createBaseSaver()
+
+
+self.createCursors(sess)
+self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
+self.restoreBase(sess,restore=True)
+self.initializeRemainingVars(sess)
+
+
+numex = 4086
+all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
+ims = np.zeros((numex,)+conf.imsz)
+predLocs = np.zeros([numex,conf.n_classes,2,2])
+predDists = np.zeros([numex,])
+
+for count in range(numex):
+    self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
+    curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
+    all_preds[count,:,:,:,0] = curpred[0]
+    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    predLocs[count,:,:,1] = self.locs[0,:,:]
+    ims[count,:,:] = self.xs[0,0,:,:]
+    tt1 = self.computePredDist(sess,self.basePred)
+    predDists[count] = tt1.mean()
+    if count%20==19:
+        sys.stdout.write('.')
+    if count%200==199:
+        sys.stdout.write('\n')
+
+
+# In[ ]:
+
+import localSetup
+import PoseTools
+reload(PoseTools)
+import multiResData
+reload(multiResData)
+import os
+import re
+import tensorflow as tf
+from scipy import io
+from matplotlib import cm
 from stephenHeadConfig import sideconf as conf
 odir = 'results/headResults/MRF_side/'
 
@@ -1030,8 +1096,8 @@ baseNet.initializeRemainingVars(sess)
 
 
 self.openDBs()
-self.createCursors()
-numex = self.valenv.stat()['entries']
+self.createCursors(sess)
+numex = 4086
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[1,])
 ims = np.zeros((numex,)+conf.imsz)
 predLocs = np.zeros([numex,conf.n_classes,2,2])
@@ -1046,7 +1112,7 @@ totacc = 0
 feed_dict[phDict['phase_train']] = False
 feed_dict[phDict['dropout']] = 1.
 for count in range(5):
-    self.updateFeedDict(self.DBType.Val) #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
+    self.updateFeedDict(self.DBType.Train,sess=sess,distort=False) #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
     curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
     all_preds[count,:,:,:,0] = curpred[0]
     predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
