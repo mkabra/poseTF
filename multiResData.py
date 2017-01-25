@@ -518,7 +518,7 @@ def createTFRecordFromLbl(conf,split=True):
         expname = conf.getexpname(dirname)
         curpts = np.array(L[pts[0,ndx]])
         zz = curpts.reshape([curpts.shape[0],-1])
-        frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=1)))[0]
+        frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=(1,2))))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
 
@@ -593,16 +593,20 @@ def read_and_decode(filename_queue,conf):
         features={'height':tf.FixedLenFeature([], dtype=tf.int64),
           'width':tf.FixedLenFeature([], dtype=tf.int64),
           'depth':tf.FixedLenFeature([], dtype=tf.int64),
+#           'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+#           'ts': tf.FixedLenFeature([], dtype=tf.float32),
           'locs':tf.FixedLenFeature(shape=[conf.n_classes,2], dtype=tf.float32),
-          'image_raw':tf.FixedLenFeature([], dtype=tf.string),
+          'image_raw':tf.FixedLenFeature([], dtype=tf.string)
                  })
     image = tf.decode_raw(features['image_raw'], tf.uint8)
-#     height = tf.cast(features['height'],tf.int64)
-#     width = tf.cast(features['width'],tf.int64)
-#     depth = tf.cast(features['depth'],tf.int64)
+    height = tf.cast(features['height'],tf.int64)
+    width = tf.cast(features['width'],tf.int64)
+    depth = tf.cast(features['depth'],tf.int64)
     image = tf.reshape(image,conf.imsz )
     
     locs = tf.cast(features['locs'], tf.float64)
+    expndx = tf.constant([0]);#tf.cast(features['expndx'],tf.float64)
+    ts = tf.constant([0]); #tf.cast(features['ts'],tf.float64)
 
-    return image, locs
+    return image, locs, [expndx,ts]
 

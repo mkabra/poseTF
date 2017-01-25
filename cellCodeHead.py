@@ -333,7 +333,7 @@ print pp
 print predList[1].shape
 
 
-# In[ ]:
+# In[11]:
 
 import localSetup
 import PoseTools
@@ -397,6 +397,134 @@ for count in range(numex):
         sys.stdout.write('.')
     if count%200==199:
         sys.stdout.write('\n')
+
+
+# In[1]:
+
+import localSetup
+import PoseTools
+reload(PoseTools)
+import multiResData
+reload(multiResData)
+import os
+import re
+import tensorflow as tf
+from scipy import io
+from matplotlib import cm
+from stephenHeadConfig import conf as conf
+import PoseTrain
+import sys
+import math
+
+
+# conf = sideconf
+conf.batch_size = 4
+conf.useMRF = False
+outtype = 1
+
+tf.reset_default_graph()
+self = PoseTrain.PoseTrain(conf)
+self.createPH()
+self.createFeedDict()
+self.feed_dict[self.ph['phase_train_base']] = False
+self.feed_dict[self.ph['keep_prob']] = 0.5
+self.trainType = 1
+doBatchNorm = self.conf.doBatchNorm
+
+sess = tf.InteractiveSession()
+
+with tf.variable_scope('base'):
+    self.createBaseNetwork(doBatchNorm)
+self.openDBs()
+self.createBaseSaver()
+
+
+self.createCursors(sess)
+self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
+self.restoreBase(sess,restore=True)
+self.initializeRemainingVars(sess)
+
+
+numex = 40
+all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
+ims = np.zeros((numex,)+conf.imsz)
+predLocs = np.zeros([numex,conf.n_classes,2,2])
+predDists = np.zeros([numex,])
+info = []
+
+bs = conf.batch_size
+for count in range(int(math.floor(numex/bs))):
+    self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
+    curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
+    all_preds[count*bs:(count+1)*bs,:,:,:,0] = curpred[0]
+    predLocs[count*bs:(count+1)*bs,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[:,:,:]
+    predLocs[count*bs:(count+1)*bs,:,:,1] = self.locs[:,:,:]
+    ims[count*bs:(count+1)*bs,:,:] = self.xs[:,0,:,:]
+    tt1 = self.computePredDist(sess,self.basePred)
+    predDists[count*bs:(count+1)*bs] = tt1.mean(axis=1)
+    info = info+self.info
+    if count%20==19:
+        sys.stdout.write('.')
+    if count%200==199:
+        sys.stdout.write('\n')
+print 'Done'
+
+
+# In[2]:
+
+import pickle
+all_preds,predLocs,predDists = pickle.load(open('stephenRound1TrainingData','rb'))
+
+
+# In[13]:
+
+import pickle
+
+
+pickle.dump([all_preds,predLocs,predDists],open('stephenRound1TrainingData','wb'))
+
+
+# In[4]:
+
+fig = plt.figure()
+plt.hist(predDists)
+
+
+# In[24]:
+
+print all_preds.shape
+
+
+# In[27]:
+
+kk[-20:]
+
+
+# In[29]:
+
+kk = np.where(predDists>40)[0]
+curk = 3904
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.imshow(ims[curk,:,:],cmap='gray')
+ax.scatter(predLocs[curk,:,0,0],predLocs[curk,:,1,0], #hold=True,
+            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            s=40, linewidths=0, edgecolors='face')
+ax.scatter(predLocs[curk,:,0,1],predLocs[curk,:,1,1], marker = '*', #hold=True,
+            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            s=80, linewidths=0, edgecolors='face')
+ax.set_title('{}'.format(curk))
+print predLocs[curk,:,:,:]
+
+fig = plt.figure()
+for ndx in range(5):
+    ax = fig.add_subplot(2,3,ndx+1)
+    ax.imshow(all_preds[curk,:,:,ndx,0])
+
+
+# In[12]:
+
+predLocs.shape
 
 
 # In[ ]:

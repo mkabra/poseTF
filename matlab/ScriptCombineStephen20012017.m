@@ -119,3 +119,15 @@ for ndx = 1:numel(Q.expdirs)
   fprintf('%s\n',Q.expdirs{ndx}(46:end));
 end
 
+%%
+
+ts = [];
+expidx = [];
+for ndx = 1:numel(J.labeledpos)
+  ff = find(~isnan(J.labeledpos{ndx}(1,1,:)));
+  nn = numel(ff);
+  expidx(end+1:end+nn) = ndx;
+  ts(end+1:end+nn) = ff;
+  
+end
+

@@ -73,10 +73,10 @@ class PoseTrain(object):
 #             valtxn = self.valenv.begin()
 #         self.train_cursor = txn.cursor(); 
 #         self.val_cursor = valtxn.cursor()
-        train_ims,train_locs = multiResData.read_and_decode(self.train_queue,self.conf)
-        val_ims,val_locs = multiResData.read_and_decode(self.val_queue,self.conf)
-        self.train_data = [train_ims,train_locs]
-        self.val_data = [val_ims,val_locs]
+        train_ims,train_locs,train_info = multiResData.read_and_decode(self.train_queue,self.conf)
+        val_ims,val_locs,val_info = multiResData.read_and_decode(self.val_queue,self.conf)
+        self.train_data = [train_ims,train_locs,train_info]
+        self.val_data = [val_ims,val_locs,val_info]
         coord = tf.train.Coordinator()
         self.threads = tf.train.start_queue_runners(sess=sess,coord=coord)
         
@@ -91,14 +91,15 @@ class PoseTrain(object):
 #         xs, locs = PoseTools.readLMDB(curcursor,
 #                          conf.batch_size,conf.imsz,multiResData)
         cur_data = self.val_data if (dbType==self.DBType.Val)                 else self.train_data
-        xs = []; locs = []
+        xs = []; locs = []; info = []
         for ndx in range(conf.batch_size):
-            [curxs,curlocs] = sess.run(cur_data)
+            [curxs,curlocs,curinfo] = sess.run(cur_data)
             if np.ndim(curxs)<3:
                 xs.append(curxs[np.newaxis,:,:])
             else:
                 xs.append(curxs)
             locs.append(curlocs)
+            info.append(curinfo)
         xs = np.array(xs)    
         locs = np.array(locs)
         locs = multiResData.sanitizelocs(locs)
@@ -112,6 +113,7 @@ class PoseTrain(object):
         
         self.xs = xs
         self.locs = locs
+        self.info = info
         
     def createPH(self):
         x0,x1,x2,y,keep_prob = CNB.createPlaceHolders(self.conf.imsz,
