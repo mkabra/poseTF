@@ -10,12 +10,12 @@ reload(myutils)
 pawData.createDB()
 
 
-# In[4]:
+# In[6]:
 
 kk = np.zeros([3,5,2])
 kk[:,:,:] = np.nan
 print kk
-np.any(np.isnan(kk),axis=)
+np.any(np.isnan(kk),axis=(0,1))
 
 
 # In[ ]:

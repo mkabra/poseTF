@@ -399,7 +399,7 @@ for count in range(numex):
         sys.stdout.write('\n')
 
 
-# In[1]:
+# In[31]:
 
 import localSetup
 import PoseTools
@@ -435,6 +435,7 @@ sess = tf.InteractiveSession()
 
 with tf.variable_scope('base'):
     self.createBaseNetwork(doBatchNorm)
+self.cost = tf.reduce_sum( (self.basePred-self.ph['y'])**2,axis=[1,2,3])/2
 self.openDBs()
 self.createBaseSaver()
 
@@ -445,21 +446,23 @@ self.restoreBase(sess,restore=True)
 self.initializeRemainingVars(sess)
 
 
-numex = 40
+numex = 4086
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
 ims = np.zeros((numex,)+conf.imsz)
 predLocs = np.zeros([numex,conf.n_classes,2,2])
 predDists = np.zeros([numex,])
+loss = np.zeros([numex,])
 info = []
 
 bs = conf.batch_size
 for count in range(int(math.floor(numex/bs))):
     self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
-    curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
-    all_preds[count*bs:(count+1)*bs,:,:,:,0] = curpred[0]
-    predLocs[count*bs:(count+1)*bs,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[:,:,:]
+    curpred,ll = sess.run([self.basePred,self.cost],feed_dict = self.feed_dict)
+    all_preds[count*bs:(count+1)*bs,:,:,:,0] = curpred
+    predLocs[count*bs:(count+1)*bs,:,:,0] = PoseTools.getBasePredLocs(curpred,conf)[:,:,:]
     predLocs[count*bs:(count+1)*bs,:,:,1] = self.locs[:,:,:]
     ims[count*bs:(count+1)*bs,:,:] = self.xs[:,0,:,:]
+    loss[count*bs:(count+1)*bs] = ll
     tt1 = self.computePredDist(sess,self.basePred)
     predDists[count*bs:(count+1)*bs] = tt1.mean(axis=1)
     info = info+self.info
@@ -470,40 +473,23 @@ for count in range(int(math.floor(numex/bs))):
 print 'Done'
 
 
-# In[2]:
-
-import pickle
-all_preds,predLocs,predDists = pickle.load(open('stephenRound1TrainingData','rb'))
-
-
-# In[13]:
-
-import pickle
-
-
-pickle.dump([all_preds,predLocs,predDists],open('stephenRound1TrainingData','wb'))
-
-
-# In[4]:
+# In[32]:
 
 fig = plt.figure()
 plt.hist(predDists)
+fig = plt.figure()
+plt.scatter(predDists,loss)
 
 
-# In[24]:
-
-print all_preds.shape
-
-
-# In[27]:
+# In[6]:
 
 kk[-20:]
 
 
-# In[29]:
+# In[35]:
 
-kk = np.where(predDists>40)[0]
-curk = 3904
+kk = np.where(loss>300)[0]
+curk = np.random.choice(kk)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.imshow(ims[curk,:,:],cmap='gray')
@@ -519,12 +505,27 @@ print predLocs[curk,:,:,:]
 fig = plt.figure()
 for ndx in range(5):
     ax = fig.add_subplot(2,3,ndx+1)
-    ax.imshow(all_preds[curk,:,:,ndx,0])
+    pp = all_preds[curk,:,:,ndx,0]
+    pp[0,0] = -1
+    pp[0,1] = 1
+    ax.imshow(pp,interpolation='Nearest')
 
 
 # In[12]:
 
 predLocs.shape
+
+
+# In[17]:
+
+import pickle
+[tdata,sconf] = pickle.load(open('/home/mayank/work/poseEstimation/cacheHead/headBasetraindata','rb'))
+
+
+# In[23]:
+
+fig = plt.figure()
+plt.plot(tdata['train_err'][5:])
 
 
 # In[ ]:
@@ -2352,7 +2353,7 @@ print vv/2
 #profiling the code
 
 
-# In[1]:
+# In[3]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
