@@ -90,7 +90,7 @@ class myconfig(object):
     eval_training_iters = 500*mult_fac
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
-    step_size = 25000
+    step_size = 100000
     display_step = 30
     numTest = 100
     
