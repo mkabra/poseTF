@@ -75,7 +75,7 @@ class myconfig(object):
 
     batch_size = 4
     mult_fac = 16/batch_size
-    base_training_iters = 5000*mult_fac
+    base_training_iters = 10000*mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
     

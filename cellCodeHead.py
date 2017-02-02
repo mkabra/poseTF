@@ -473,12 +473,13 @@ for count in range(int(math.floor(numex/bs))):
 print 'Done'
 
 
-# In[32]:
+# In[37]:
 
 fig = plt.figure()
 plt.hist(predDists)
 fig = plt.figure()
 plt.scatter(predDists,loss)
+fig.savefig('temp/lossVsDist_headFrontBase.png')
 
 
 # In[6]:
@@ -486,13 +487,13 @@ plt.scatter(predDists,loss)
 kk[-20:]
 
 
-# In[35]:
+# In[41]:
 
 kk = np.where(loss>300)[0]
 curk = np.random.choice(kk)
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.imshow(ims[curk,:,:],cmap='gray')
+ax.imshow(ims[curk,:,:],cmap='gray',vmin=0,vmax=255)
 ax.scatter(predLocs[curk,:,0,0],predLocs[curk,:,1,0], #hold=True,
             c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
             s=40, linewidths=0, edgecolors='face')
@@ -500,7 +501,7 @@ ax.scatter(predLocs[curk,:,0,1],predLocs[curk,:,1,1], marker = '*', #hold=True,
             c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
             s=80, linewidths=0, edgecolors='face')
 ax.set_title('{}'.format(curk))
-print predLocs[curk,:,:,:]
+# print predLocs[curk,:,:,:]
 
 fig = plt.figure()
 for ndx in range(5):
