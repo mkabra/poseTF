@@ -517,13 +517,18 @@ for ndx in range(5):
 predLocs.shape
 
 
-# In[17]:
+# In[50]:
 
 import pickle
-[tdata,sconf] = pickle.load(open('/home/mayank/work/poseEstimation/cacheHead/headBasetraindata','rb'))
+[tdata,sconf] = pickle.load(open('/home/mayank/work/poseEstimation/cacheHead/headBasetraindata_20170202','rb'))
 
 
-# In[23]:
+# In[51]:
+
+print len(tdata['train_err'])
+
+
+# In[52]:
 
 fig = plt.figure()
 plt.plot(tdata['train_err'][5:])
