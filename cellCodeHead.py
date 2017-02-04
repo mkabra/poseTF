@@ -399,7 +399,7 @@ for count in range(numex):
         sys.stdout.write('\n')
 
 
-# In[31]:
+# In[1]:
 
 import localSetup
 import PoseTools
@@ -473,23 +473,20 @@ for count in range(int(math.floor(numex/bs))):
 print 'Done'
 
 
-# In[37]:
+# In[3]:
 
+import datetime
 fig = plt.figure()
 plt.hist(predDists)
 fig = plt.figure()
 plt.scatter(predDists,loss)
-fig.savefig('temp/lossVsDist_headFrontBase.png')
+ts = datetime.datetime.now().strftime('%Y%m%d%H%M')
+fig.savefig('temp/lossVsDist_headFrontBase'+ts+'.png')
 
 
-# In[6]:
+# In[8]:
 
-kk[-20:]
-
-
-# In[41]:
-
-kk = np.where(loss>300)[0]
+kk = np.where(loss>150)[0]
 curk = np.random.choice(kk)
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -512,9 +509,80 @@ for ndx in range(5):
     ax.imshow(pp,interpolation='Nearest')
 
 
-# In[12]:
+# In[16]:
 
-predLocs.shape
+import h5py
+import multiResData
+L = h5py.File(conf.labelfile,'r')
+pts = np.array(L['labeledpos'])
+localdirs =  [u''.join(unichr(c) for c in L[jj]) for jj in L['movieFilesAll'][0,:]]
+len(localdirs)
+
+
+# In[112]:
+
+olocs = []
+expidx = []
+ts = []
+for ndx,dirname in enumerate(localdirs):
+    
+    curpts = np.array(L[pts[0,ndx]])
+    curdir = os.path.dirname(localdirs[ndx])
+    cloc = conf.cropLoc[(512,768)]
+    
+    frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=(1,2))))[0]
+    for fnum in frames:
+        nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0,0]
+        pts_st = int(conf.view*nptsPerView)
+        selpts = pts_st + conf.selpts
+        curloc = curpts[fnum,:,selpts]
+        curloc[:,0] = curloc[:,0] - cloc[1] - 1 
+        curloc[:,1] = curloc[:,1] - cloc[0] - 1
+        curloc = curloc.clip(min=0,max=[conf.imsz[1]+7,conf.imsz[0]+7])
+        olocs.append(curloc)
+        expidx.append(ndx)
+        ts.append(fnum)
+    
+
+
+# In[116]:
+
+olocs = np.array(olocs)
+olocs = np.round(olocs)
+expidx = np.array(expidx)
+ts = np.array(ts)
+print olocs.shape,expidx.shape,ts.shape
+kk = np.where(loss>150)[0]
+curk = np.random.choice(kk)
+curl = predLocs[curk,:,:,1]
+d2curk = np.sum(np.abs( olocs+1-curl),axis=(1,2))
+ff = np.argmin(d2curk)
+print curk, ff, d2curk[ff]
+print curl
+print olocs[ff,:,:]+1
+curl[:,0] = 512-curl[:,0]
+d2curk = np.sum(np.abs( olocs+1-curl),axis=(1,2))
+ff = np.argmin(d2curk)
+print curk, ff, d2curk[ff]
+print curl
+print olocs[ff,:,:]+1
+
+
+# In[123]:
+
+kk = np.where(loss>150)[0]
+print kk
+curk = np.random.choice(kk)
+curl = predLocs[curk,:,:,1]
+d2curk = np.sum(np.abs( olocs[curk+4,:,:]+1-curl),axis=(1,0))
+print d2curk
+print olocs[curk+4,:,:]
+print curl
+curl[:,0] = 512-curl[:,0]
+d2curk = np.sum(np.abs( olocs[curk+4,:,:]+1-curl),axis=(1,0))
+print d2curk
+print olocs[curk+4,:,:]
+print curl
 
 
 # In[50]:
@@ -523,9 +591,9 @@ import pickle
 [tdata,sconf] = pickle.load(open('/home/mayank/work/poseEstimation/cacheHead/headBasetraindata_20170202','rb'))
 
 
-# In[51]:
+# In[53]:
 
-print len(tdata['train_err'])
+print len(tdata['train_err'])*30
 
 
 # In[52]:
@@ -2359,7 +2427,7 @@ print vv/2
 #profiling the code
 
 
-# In[3]:
+# In[5]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
