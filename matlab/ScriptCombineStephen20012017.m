@@ -60,11 +60,11 @@ for ndx = 1:numel(dd)
           K{ne,vv} = ['/groups/huston/hustonlab/' kk(4:end)];
         end
     end    
-    l1 = any(~isnan(P.labeledpos{ne}(:,:,:)),1);
-    l2 = all(P.labeledposMarked{ne},1);
-    if ~all(l1==l2),
-      fprintf('Marked and labels dont match for %d,%d\n',ndx,nexp);
-    end
+%     l1 = any(~isnan(P.labeledpos{ne}(:,:,:)),2);
+%     l2 = all(P.labeledposMarked{ne},1);
+%     if ~all(l1==l2),
+%       fprintf('Marked and labels dont match for %d,%d\n',ndx,nexp);
+%     end
   end
   movf = [movf;K];
   lpos = [lpos; P.labeledpos];
@@ -131,3 +131,14 @@ for ndx = 1:numel(J.labeledpos)
   
 end
 
+
+%%
+
+dx = []; dy = [];
+for ndx= 1:size(qq,3)
+  dx(ndx) = max(qq(:,1,ndx))-min(qq(:,1,ndx));
+  dy(ndx) = max(qq(:,2,ndx))-min(qq(:,2,ndx));
+end
+
+prctile(dx,99)
+prctile(dy,99)

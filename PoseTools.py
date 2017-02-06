@@ -490,7 +490,7 @@ def initMRFweights(conf):
     for ndx in range(pts.shape[0]):
         dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
         dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
-    maxd = max(dx.max(),dy.max())
+    maxd = max( (numpy.percentile(dx,99), numpy.percentile(dy,99)))
     if hasattr(conf,'mrf_psz'):
         psz = conf.mrf_psz
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')

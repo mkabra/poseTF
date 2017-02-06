@@ -179,4 +179,5 @@ sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
 # sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
 sideconf.cachedir = os.path.join(localSetup.bdir,'cacheHeadSide/')
 sideconf.view = 0
+sideconf.mrf_psz = 
 
