@@ -475,7 +475,7 @@ def initMRFweights(conf):
         v = 0
         for ndx in range(nmovie):
             curpts = np.array(L[pp[0,ndx]])
-            frames = np.where(np.invert( np.isnan(curpts[:,0,0])))[0]
+            frames = np.where(np.invert( np.any(np.isnan(curpts),axis=(1,2))))[0]
             nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0,0]
             pts_st = int(conf.view*nptsPerView)
             selpts = pts_st + conf.selpts
