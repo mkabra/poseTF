@@ -276,8 +276,8 @@ def openDBs(conf,trainType=0):
 def createCursors(sess,queue,conf):
             
         train_queue,val_queue = queue
-        train_ims,train_locs = multiResData.read_and_decode(train_queue,conf)
-        val_ims,val_locs = multiResData.read_and_decode(val_queue,conf)
+        train_ims,train_locs,temp = multiResData.read_and_decode(train_queue,conf)
+        val_ims,val_locs,temp = multiResData.read_and_decode(val_queue,conf)
         train_data = [train_ims,train_locs]
         val_data = [val_ims,val_locs]
         coord = tf.train.Coordinator()

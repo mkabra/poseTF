@@ -173,6 +173,14 @@ class myconfig(object):
 #         fname = 'vid{:d}files'.format(self.view+1)
 #         return L[fname]
         return L['movieFilesAll'][self.view,:]
+
+    def getflynum(self,dirname):
+        dirname = os.path.normpath(dirname)
+        dir_parts = dirname.split(os.sep)
+        flynum = float(dir_parts[-3][3:6])
+        return flynum
+
+
     
 
 conf = myconfig()

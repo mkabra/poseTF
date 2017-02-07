@@ -25,7 +25,7 @@ tf.reset_default_graph()
 poseEval.poseEvalTrain(conf,restore=False)
 
 
-# In[2]:
+# In[1]:
 
 # Gradient analysis
 import poseEval
@@ -67,7 +67,7 @@ feed_dict[ph['phase_train']] = False
 
 
 
-# In[3]:
+# In[2]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
@@ -108,7 +108,7 @@ for idx in range(ims.shape[0]):
     ax.set_title('\n'.join(tstr))
 
 
-# In[4]:
+# In[3]:
 
 # measure different accuracies
 
@@ -125,13 +125,13 @@ for ndx in range(count):
  
 
 
-# In[5]:
+# In[4]:
 
 kk = np.abs(pp).mean(axis=0)
 print kk
 
 
-# In[6]:
+# In[5]:
 
 plt.figure()
 plt.hist(pp.flatten())
