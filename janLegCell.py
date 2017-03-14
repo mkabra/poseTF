@@ -170,8 +170,8 @@ self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 numex = self.valenv.stat()['entries']
 val_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
 val_maxsc = np.zeros([numex,conf.n_classes])

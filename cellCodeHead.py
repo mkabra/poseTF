@@ -627,8 +627,8 @@ self = PoseTools.createNetwork(conf,outtype)
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 numex = self.valenv.stat()['entries']
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[2,])
 ims = np.zeros((numex,)+conf.imsz)
@@ -778,8 +778,8 @@ selftr = pred[2][0,ftrloc[1],ftrloc[0],:]
 
 from scipy.spatial import distance
 import sys
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 
 numtr = self.env.stat()['entries']
 tr_preds = np.zeros([numtr,]+self.basePred.get_shape().as_list()[1:]+[2,])
@@ -880,11 +880,11 @@ correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(out,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 baseNet = PoseTools.createNetwork(conf,1)
 l7 = baseNet.baseLayers['conv7']
-baseNet.openDBs()
+baseNet.open_dbs()
 txn = baseNet.env.begin()
 valtxn = baseNet.valenv.begin()
 sess = tf.InteractiveSession()
-baseNet.createCursors(txn,valtxn)
+baseNet.create_cursors(txn, valtxn)
 
 
 baseNet.restoreBase(sess,True)
@@ -1051,8 +1051,8 @@ didRestore,startat = restoreEval(sess,conf,evalSaver,restore=True)
 baseNet.initializeRemainingVars(sess)
 
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 numex = self.valenv.stat()['entries']
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[1,])
 ims = np.zeros((numex,)+conf.imsz)
@@ -1174,8 +1174,8 @@ didRestore,startat = restoreEval(sess,conf,evalSaver,restore=True)
 baseNet.initializeRemainingVars(sess)
 
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 numex = self.valenv.stat()['entries']
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[1,])
 ims = np.zeros((numex,)+conf.imsz)
@@ -1298,8 +1298,8 @@ didRestore,startat = restoreEval(sess,conf,evalSaver,restore=True)
 baseNet.initializeRemainingVars(sess)
 
 
-self.openDBs()
-self.createCursors(sess)
+self.open_dbs()
+self.create_cursors(sess)
 numex = 4086
 all_preds = np.zeros([numex,]+self.basePred.get_shape().as_list()[1:]+[1,])
 ims = np.zeros((numex,)+conf.imsz)
@@ -1890,8 +1890,8 @@ print predList[1].shape
 
 # In[ ]:
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 
 
 # In[ ]:
@@ -1986,8 +1986,8 @@ PoseTools.initNetwork(self,sess,outtype)
 from scipy import io
 import cv2
 
-self.openDBs()
-self.createCursors()
+self.open_dbs()
+self.create_cursors()
 
 l7 = self.baseLayers['conv7']
 with tf.variable_scope('base/layer8') as scope:
@@ -2071,7 +2071,7 @@ genSaver = poseGen.createGenSaver(conf)
 y = phDict['y']
 loss = tf.nn.l2_loss(out-y)
 in_loss = tf.nn.l2_loss(out-tf.reshape(phDict['locs'],[-1,2*conf.n_classes]))
-baseNet.openDBs()
+baseNet.open_dbs()
 baseNet.feed_dict[phDict['dropout']] = feed_dict[phDict['dropout']]
 
 
@@ -2079,7 +2079,7 @@ txn = baseNet.env.begin()
 valtxn = baseNet.valenv.begin()
 sess = tf.InteractiveSession()
 
-baseNet.createCursors()
+baseNet.create_cursors()
 baseNet.restoreBase(sess,True)
 didRestore,startat = poseGen.restoreGen(sess,conf,genSaver,True)
 
@@ -2164,14 +2164,14 @@ genSaver = createGenSaver(conf)
 y = phDict['y']
 loss = tf.nn.l2_loss(out-y)
 train_step = tf.train.AdamOptimizer(1e-2).minimize(loss)
-baseNet.openDBs()
+baseNet.open_dbs()
 baseNet.feed_dict[phDict['dropout']] = feed_dict[phDict['dropout']]
 
 txn = baseNet.env.begin()
 valtxn = baseNet.valenv.begin()
 sess = tf.InteractiveSession()
 
-baseNet.createCursors()
+baseNet.create_cursors()
 baseNet.restoreBase(sess,True)
 didRestore,startat = restoreGen(sess,conf,genSaver,restore)
 baseNet.initializeRemainingVars(sess)

@@ -22,10 +22,10 @@ from cvc import cvc
 import math
 import sys
 import copy
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+# from matplotlib import cm
+# from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 
 # In[ ]:
@@ -190,20 +190,39 @@ def randomlyRotate(img,locs,conf):
     num = img.shape[0]
     rows,cols = img.shape[2:]
     for ndx in range(num):
-        rangle = (np.random.rand()*2-1)*conf.rrange
-        ii = copy.deepcopy(img[ndx,...]).transpose([1,2,0])
-        M = cv2.getRotationMatrix2D((cols/2,rows/2),rangle,1)
-        ii = cv2.warpAffine(ii,M,(cols,rows))
-        if ii.ndim==2:
-            ii = ii[...,np.newaxis]
-        ii = ii.transpose([2,0,1])
-        img[ndx,...] = ii
-        ll = copy.deepcopy(locs[ndx,...])
-        ll = ll - [cols/2,rows/2]
-        ang = np.deg2rad(rangle)
-        R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
-        lr = np.dot(ll,R) + [cols/2,rows/2]
+        origLocs = copy.deepcopy(locs[ndx,...])
+        origIm = copy.deepcopy(img[ndx,...])
+        sane = False
+        doRotate = True
+        
+        count = 0
+        while not sane:
+            rangle = (np.random.rand()*2-1)*conf.rrange
+            count += 1
+            if count>5:
+                rangle = 0
+                sane = True
+                doRotate = False
+            ll = copy.deepcopy(origLocs)
+            ll = ll - [cols/2,rows/2]
+            ang = np.deg2rad(rangle)
+            R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
+            lr = np.dot(ll,R) + [cols/2,rows/2]
+            if np.all(lr.flatten()>0) and np.all(lr[:,0] <= cols) and np.all(lr[:,1] <= rows):
+                sane = True
+            elif doRotate:
+                continue
+                    
+#             else:
+#                 print 'not sane {}'.format(count)
+            ii = copy.deepcopy(origIm).transpose([1,2,0])
+            M = cv2.getRotationMatrix2D((cols/2,rows/2),rangle,1)
+            ii = cv2.warpAffine(ii,M,(cols,rows))
+            if ii.ndim==2:
+                ii = ii[...,np.newaxis]
+            ii = ii.transpose([2,0,1])
         locs[ndx,...] = lr
+        img[ndx,...] = ii
         
     return img,locs
 

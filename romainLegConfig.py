@@ -19,7 +19,9 @@ class myconfig(object):
     acName = 'AC'
     regName = 'Reg'
     evalName = 'eval'
+    eval2Name = 'eval2'
     genName = 'gen'
+    shapeName = 'shape'
 
     # ----- Network parameters
 
@@ -66,6 +68,8 @@ class myconfig(object):
     # ------ Pose Generation Network Params
     gen_minlen = 8
 
+    # ------ Pose Eval 2
+    poseEval2_psz = 128
 
     # ----- Learning parameters
 
@@ -74,6 +78,8 @@ class myconfig(object):
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
     eval_learning_rate = 0.00001
+    eval2_learning_rate = 0.01
+    shape_learning_rate = 0.001
 
     batch_size = 8
     eval_num_neg = 0
@@ -94,9 +100,12 @@ class myconfig(object):
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
     eval_training_iters = 2000*mult_fac
+    eval2_training_iters = 5000*mult_fac
+    shape_training_iters = 5000*mult_fac
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
-    step_size = 200000
+    step_size = 60000
+    eval2_step_size = 40000
     display_step = 30
     numTest = 100
     
@@ -104,13 +113,22 @@ class myconfig(object):
     horzFlip = False
     vertFlip = False
     brange = [0,0] #[-0.2,0.2] 
-    crange = [1,1] #[0.7,1.3]
-    rrange = 0
+    crange = [0.9,1.1] #[0.7,1.3]
+    rrange = 45
     imax = 255.
     adjustContrast = True
     clahegridsize = 20
     # fine_batch_size = 8
 
+    # Shape Parameters
+    shape_n_orts = 8 # number of orientation bins for shape output
+    shape_n_rad = 1 # number of orientation bins for shape output
+    shape_selpt1 = [0]
+    shape_selpt2 = [range(18)]
+    # for ndx in range(n_classes):
+    #     shape_selpt2.append(range(n_classes))
+    # shape_selpt2 = [[6,12]]
+    shape_psz = 128
 
     # ----- Data parameters
 
@@ -118,12 +136,12 @@ class myconfig(object):
     view = 0  
     l1_cropsz = 0
     imsz = (624,672) # This is after cropping. Orig is 1024x1024
-    cropLoc = {(624,672):[0,0],(762,768):[85,0],(628,672):[0,0]} # for front view crop the central part of the image
+    cropLoc = {(624,672):[0,0],(762,768):[85,0],(628,672):[0,0],(648,768):[0,0]} # for front view crop the central part of the image
     selpts = np.arange(0,18)
     imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
-    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28Jun22Sep16Sep15Sep13_onlyBottom.lbl')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28Jun22Sep16Sep15Sep13Aug26Sep07_onlyBottom.lbl')
  
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
@@ -131,7 +149,7 @@ class myconfig(object):
     holdouttrain = 'holdouttrain_lmdb'
     holdouttest = 'holdouttest_lmdb'
     valdatafilename = 'valdata'
-    valratio = 0.34
+    valratio = 0.38
     holdoutratio = 0.8
 
 
@@ -142,6 +160,7 @@ class myconfig(object):
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName
     evaloutname = expname + evalName
+    eval2outname = expname + eval2Name
     genoutname = expname + genName
     baseregoutname = expname + regName
     baseckptname = baseoutname + 'ckpt'
@@ -149,13 +168,19 @@ class myconfig(object):
     fineckptname = fineoutname + 'ckpt'
     mrfckptname = mrfoutname + 'ckpt'
     evalckptname = evaloutname + 'ckpt'
+    eval2ckptname = eval2outname + 'ckpt'
     genckptname = genoutname + 'ckpt'
     basedataname = baseoutname + 'traindata'
     baseregdataname = baseregoutname + 'traindata'
     finedataname = fineoutname + 'traindata'
     mrfdataname = mrfoutname + 'traindata'
     evaldataname = evaloutname + 'traindata'
+    eval2dataname = eval2outname + 'traindata'
     gendataname = genoutname + 'traindata'
+    shapeoutname = expname + shapeName
+    shapeckptname = shapeoutname + 'ckpt'
+    shapedataname = shapeoutname + 'traindata'
+
 
     # ----- project specific functions
 
@@ -169,23 +194,30 @@ class myconfig(object):
         return L['movieFilesAll'][self.view,:]
 
 bottomconf = myconfig()
+bottomconf.brange = [0,0] 
+bottomconf.crange = [0.9,1.1]
+bottomconf.rrange = 45
 
 
 side1conf = myconfig()
-side1conf.cropLoc = {(592,288):[0,0]}
-side1conf.view = 0  # view = 0 is side view view = 1 is front view
-side1conf.imsz = (592,288) # This is after cropping. Orig is 1024x1024
-side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
+side1conf.cropLoc = {(592,288):[0,0],(672,256):[0,0],(672,320):[0,0]}
+side1conf.view = 0  
+side1conf.imsz = (592,256) 
+side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07.lbl')
 side1conf.selpts = np.arange(0,18)
 side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
 side1conf.eval_scale = 2
+side1conf.brange = [-0.2,0.2] 
+side1conf.crange = [0.7,1.3]
+side1conf.rrange = 45
+
 
 
 side2conf = myconfig()
-side2conf.cropLoc = {(640,288):[0,0]}
+side2conf.cropLoc = {(640,288):[0,0],(672,256):[0,0],(654,288):[0,0]}    
 side2conf.view = 1
-side2conf.imsz = (640,288) 
-side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22.lbl')
+side2conf.imsz = (640,256) 
+side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07.lbl')
 side2conf.selpts = np.arange(0,18)
 side2conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide2')
 side2conf.eval_scale = 2

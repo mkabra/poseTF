@@ -142,3 +142,14 @@ end
 
 prctile(dx,99)
 prctile(dy,99)
+
+%%
+
+p1 = 1;
+p2 = 7;
+ss1 = pp(:,:,p1);
+ss2 = pp(:,:,p2);
+ss = bsxfun(@minus,pp,ss1);
+
+gg = sqrt( sum( (ss).^2,2));
+figure; hist(gg(:,:,p2),30)

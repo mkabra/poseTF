@@ -286,12 +286,12 @@ def train(conf,restore=True):
     loss = ind_loss + mean_loss
     in_loss = tf.nn.l2_loss(phDict['y']-tf.reshape(phDict['locs'],[-1,2*conf.n_classes]))
     train_step = tf.train.AdamOptimizer(1e-5).minimize(loss)
-    baseNet.openDBs()
+    baseNet.open_dbs()
     baseNet.feed_dict[phDict['dropout']] = feed_dict[phDict['dropout']]
     
     with baseNet.env.begin() as txn,baseNet.valenv.begin() as valtxn,tf.Session() as sess:
 
-        baseNet.createCursors()
+        baseNet.create_cursors()
         baseNet.restoreBase(sess,True)
         didRestore,startat = restoreGen(sess,conf,genSaver,restore)
         baseNet.initializeRemainingVars(sess)

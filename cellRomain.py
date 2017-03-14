@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[2]:
+# In[11]:
 
 import romainLegConfig
 reload(romainLegConfig)
@@ -10,6 +10,41 @@ import multiResData
 reload(multiResData)
 
 multiResData.createTFRecordFromLbl(conf,split=True)
+
+
+# In[1]:
+
+import romainLegConfig
+reload(romainLegConfig)
+from romainLegConfig import side1conf as conf
+import multiResData
+reload(multiResData)
+
+multiResData.createTFRecordFromLbl(conf,split=True)
+
+
+# In[13]:
+
+import romainLegConfig
+reload(romainLegConfig)
+from romainLegConfig import bottomconf as conf
+import multiResData
+reload(multiResData)
+
+isval,localdirs,seldirs = multiResData.loadValdata(conf)
+print isval
+for ll in localdirs:
+    print ll
+
+
+# In[9]:
+
+import os
+import pickle
+isval = [7,2,6]
+outfile = os.path.join(conf.cachedir,conf.valdatafilename)
+with open(outfile,'w') as f:
+    pickle.dump([isval,localdirs,seldirs],f)
 
 
 # In[3]:
@@ -202,4 +237,10 @@ for spt in range(8):
     ax[0].imshow(oimg[spt,0,...],cmap='gray')
     ax[1].imshow(dimg[spt,...,0],cmap='gray')
     ax[1].scatter(ll[spt,:,0],ll[spt,:,1])
+
+
+# In[2]:
+
+import sys
+print sys.version
 

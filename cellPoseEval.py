@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[3]:
+# In[4]:
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
@@ -125,6 +125,13 @@ for ndx in range(count):
  
 
 
+# In[10]:
+
+qq = np.zeros([800,18])
+ff = np.round(qq).astype('int')
+ff[1:5,1:5]
+
+
 # In[4]:
 
 kk = np.abs(pp).mean(axis=0)
@@ -208,4 +215,44 @@ for b in bb:
 # In[ ]:
 
 plt.hist(rr)
+
+
+# In[83]:
+
+from romainLegConfig import bottomconf as conf
+import h5py
+
+L = h5py.File(conf.labelfile,'r')
+pts = np.array(L['labeledpos'])
+curpts = np.array(L[pts[0,0]])
+frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=(1,2))))[0]
+loc = curpts[frames[0],:,:]
+
+print loc.shape    
+
+
+# In[84]:
+
+jj = curpts[frames,:,:]
+print jj.shape
+
+
+# In[101]:
+
+kk = np.logspace(4,10,3,base=2)
+kk = np.concatenate([[0,],kk,[np.inf,]])
+# kk = np.insert(kk,0,0)
+# kk = np.insert(kk,np.inf,-1)
+print kk
+jj = np.random.random(8)*1200
+hh = np.digitize(jj,kk)
+print hh
+print jj
+
+
+# In[104]:
+
+pp = np.random.random([5,12])
+pp = np.reshape(pp,[6,-1])
+pp.shape
 

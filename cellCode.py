@@ -925,7 +925,7 @@ conf.useAC = False
 conf.batch_size = 1;
 outtype = 3 
 self = PoseTools.createNetwork(conf,outtype)
-self.openDBs()
+self.open_dbs()
 
 sess = tf.InteractiveSession()
 PoseTools.initNetwork(self,sess,outtype)
