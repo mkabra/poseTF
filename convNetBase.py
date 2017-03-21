@@ -59,8 +59,8 @@ def upscale(name,l_input,sz):
 #     rescale = conf.rescale
 #     pool_scale = conf.pool_scale
     
-# #     sz5 = int(math.ceil(conf.shape_psz/rescale/pool_scale))
-#     sz5 = conf.shape_psz
+# #     sz5 = int(math.ceil(conf.psz/rescale/pool_scale))
+#     sz5 = conf.psz
 #     weights = {
 #         'base0': initBaseWeights(nfilt),
 #         'base1': initBaseWeights(nfilt),
@@ -134,7 +134,6 @@ def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase):
         
 
 def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
-    # type: (object, object, object, object, object, object, object) -> object
     imsz = conf.imsz; rescale = conf.rescale
     pool_scale = conf.pool_scale
     nfilt = conf.nfilt
@@ -181,7 +180,7 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 
     with tf.variable_scope('layer6'):
         conv6 = conv_relu(conv5_cat,
-                         [conf.shape_psz,conf.shape_psz,conf.numscale*nfilt,conf.nfcfilt],
+                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
                           0.005,1,doBatchNorm,trainPhase) 
         if not doBatchNorm:
             conv6 = tf.nn.dropout(conv6,_dropout,
@@ -265,7 +264,7 @@ def net_multi_conv_reg(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 
     with tf.variable_scope('layer6'):
         conv6 = conv_relu(conv5_cat,
-                         [conf.shape_psz,conf.shape_psz,conf.numscale*nfilt,conf.nfcfilt],
+                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
                           0.005,1,doBatchNorm,trainPhase) 
         if not doBatchNorm:
             conv6 = tf.nn.dropout(conv6,_dropout,
