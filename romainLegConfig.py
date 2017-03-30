@@ -29,13 +29,15 @@ class myconfig(object):
     rescale = 1  # how much to downsize the base image.
     eval_scale = 1
     numscale = 3
-    pool_scale = 4
+    pool_size = 3
+    pool_stride = 2
+    pool_scale = (pool_stride)**2
     # sel_sz determines the patch size used for the final decision
     # i.e., patch seen by the fc6 layer
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/2/2/2
+    sel_sz = 512/2/2
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5
@@ -43,7 +45,7 @@ class myconfig(object):
     n_classes = 18 # 
     dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
-    nfcfilt = 512
+    nfcfilt = 256
     doBatchNorm = True
     useMRF = True
     useHoldout = False
@@ -73,6 +75,7 @@ class myconfig(object):
 
     # ----- Learning parameters
 
+    batch_size = 8
     base_learning_rate = 0.0003 #0.0001 --without batch norm
     mrf_learning_rate = 0.00001
     ac_learning_rate = 0.0003
@@ -80,8 +83,6 @@ class myconfig(object):
     eval_learning_rate = 0.00001
     eval2_learning_rate = 0.01
     shape_learning_rate = 0.001
-
-    batch_size = 8
     eval_num_neg = 0
     N2move4neg = 3
     eval_minlen = 30
@@ -118,6 +119,8 @@ class myconfig(object):
     imax = 255.
     adjustContrast = True
     clahegridsize = 20
+    normalize_mean_img = True
+
     # fine_batch_size = 8
 
     # Shape Parameters
@@ -133,15 +136,15 @@ class myconfig(object):
     # ----- Data parameters
 
     split = True
-    view = 0  
+    view = 2
     l1_cropsz = 0
-    imsz = (624,672) # This is after cropping. Orig is 1024x1024
+    imsz = (624,672)
     cropLoc = {(624,672):[0,0],(762,768):[85,0],(628,672):[0,0],(648,768):[0,0]} # for front view crop the central part of the image
     selpts = np.arange(0,18)
     imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
-    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Apr28Jun22Sep16Sep15Sep13Aug26Sep07_onlyBottom.lbl')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05.lbl')
  
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
@@ -197,13 +200,19 @@ bottomconf = myconfig()
 bottomconf.brange = [0,0] 
 bottomconf.crange = [0.9,1.1]
 bottomconf.rrange = 45
+# bottomconf.pool_size = 5
+# bottomconf.pool_stride = 3
+# bottomconf.pool_scale = (bottomconf.pool_stride) ** 2
+
+# bottomconf.scale = 3
+# bottomconf.psz = 576
 
 
 side1conf = myconfig()
 side1conf.cropLoc = {(592,288):[0,0],(672,256):[0,0],(672,320):[0,0]}
 side1conf.view = 0  
 side1conf.imsz = (592,256) 
-side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07.lbl')
+side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05_fixed.lbl')
 side1conf.selpts = np.arange(0,18)
 side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
 side1conf.eval_scale = 2
@@ -217,8 +226,11 @@ side2conf = myconfig()
 side2conf.cropLoc = {(640,288):[0,0],(672,256):[0,0],(654,288):[0,0]}    
 side2conf.view = 1
 side2conf.imsz = (640,256) 
-side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07.lbl')
+side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05.lbl')
 side2conf.selpts = np.arange(0,18)
 side2conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide2')
 side2conf.eval_scale = 2
+side2conf.brange = [-0.2,0.2]
+side2conf.crange = [0.7,1.3]
+side2conf.rrange = 45
 

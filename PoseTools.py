@@ -53,17 +53,22 @@ import copy
 
 # In[ ]:
 
-def scaleImages(img,scale):
+def scaleImages(img,scale,conf):
     sz = img.shape
     simg = np.zeros((sz[0],sz[1]/scale,sz[2]/scale,sz[3]))
     for ndx in range(sz[0]):
-        for chn in range(sz[3]):
-            simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],1./scale)
+        if sz[3] == 1:
+            simg[ndx,:,:,0] = misc.imresize(img[ndx,:,:,0],1./scale)
+        else:
+            simg[ndx,:,:,:] = misc.imresize(img[ndx,:,:,:],1./scale)
 
 #     return simg
     zz = simg.astype('float')
-    mm = zz.mean(1).mean(1)
-    xx = zz-mm[:,np.newaxis,np.newaxis,:]
+    if conf.normalize_mean_img:
+        mm = zz.mean(1).mean(1)
+        xx = zz-mm[:,np.newaxis,np.newaxis,:]
+    else:
+        xx = zz
     return xx
 
 def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
@@ -74,9 +79,9 @@ def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
 #         inImg_crop = inImg
             
     inImg = adjustContrast(inImg,conf)
-    x0_in = scaleImages(inImg,rescale)
-    x1_in = scaleImages(inImg,rescale*scale)
-    x2_in = scaleImages(x1_in,scale)
+    x0_in = scaleImages(inImg,rescale,conf)
+    x1_in = scaleImages(inImg,rescale*scale,conf)
+    x2_in = scaleImages(x1_in,scale,conf)
     return x0_in,x1_in,x2_in
 
 def multiScaleLabelImages(inImg, rescale, scale, l1_cropszf):
@@ -197,6 +202,7 @@ def randomlyRotate(img,locs,conf):
         
         count = 0
         while not sane:
+            valid = np.invert(np.isnan(origLocs[:,0]))
             rangle = (np.random.rand()*2-1)*conf.rrange
             count += 1
             if count>5:
@@ -208,7 +214,7 @@ def randomlyRotate(img,locs,conf):
             ang = np.deg2rad(rangle)
             R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
             lr = np.dot(ll,R) + [cols/2,rows/2]
-            if np.all(lr.flatten()>0) and np.all(lr[:,0] <= cols) and np.all(lr[:,1] <= rows):
+            if np.all(lr[valid,:].flatten()>0) and np.all(lr[valid,0] <= cols) and np.all(lr[valid,1] <= rows):
                 sane = True
             elif doRotate:
                 continue
@@ -311,6 +317,8 @@ def createLabelImages(locs,imsz,scale,blur_rad):
     blurL = blurL/blurL.max()
     for cls in range(n_classes):
         for ndx in range(len(locs)):
+            if np.isnan(locs[ndx][cls][0]):
+                continue
 #             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
 #             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
             modlocs0 = int(np.round(locs[ndx][cls][1]/scale))

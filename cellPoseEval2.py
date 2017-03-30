@@ -70,7 +70,7 @@ accuracy = tf.reduce_mean(correct_pred)
 #     tf.summary.scalar('cross_entropy',loss)
 #     tf.summary.scalar('accuracy',accuracy)
 
-opt = tf.train.AdamOptimizer(learning_rate=                   ph['learning_rate']).minimize(loss)
+opt = tf.train.AdamOptimizer(learning_rate=ph['learning_rate']).minimize(loss)
 
 merged = tf.summary.merge_all()
 

@@ -112,7 +112,8 @@ def create_place_holders(conf):
     n_out = 0
     for selpt2 in conf.shape_selpt2:
         n_out += len(selpt2)
-    y = tf.placeholder(tf.float32, [nex, conf.shape_n_orts*n_out], 'out')
+    n_bins = len(conf.shape_r_bins)-1
+    y = tf.placeholder(tf.float32, [nex, conf.shape_n_orts*n_out*n_bins], 'out')
 
     X = [x0, x1, x2]
 
@@ -180,7 +181,8 @@ def net_multi_conv(ph, conf):
     base_dict_array = []
     out_array = []
     for ndx,selpt in enumerate(conf.shape_selpt1):
-        n_out = conf.shape_n_orts * len(conf.shape_selpt2[ndx])
+        n_bins = len(conf.shape_r_bins)-1
+        n_out = conf.shape_n_orts * len(conf.shape_selpt2[ndx])*n_bins
 
         with tf.variable_scope('scale0_{}'.format(ndx)):
             conv5_0, base_dict_0 = net_multi_base_named(X0[ndx], n_filter, do_batch_norm, train_phase, True)
@@ -258,6 +260,7 @@ def read_images(conf, db_type, distort, sess, data):
         if np.ndim(cur_xs) < 3:
             xs.append(cur_xs[np.newaxis, :, :])
         else:
+            cur_xs = np.transpose(cur_xs,[2,0,1])
             xs.append(cur_xs)
         locs.append(cur_locs)
         count += 1
@@ -297,7 +300,7 @@ def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
         cur_locs[:,:,0] = np.clip(cur_locs[:,:,0],0,conf.imsz[0])
         cur_locs[:,:,1] = np.clip(cur_locs[:,:,1],0,conf.imsz[1])
         sel_locs.append(cur_locs)
-        ind_labels = shape_from_locs(cur_locs)
+        ind_labels = shape_from_locs(cur_locs,conf)
         labels = []
         curlabels = ind_labels[:, sel_pt1, sel_pt2[ndx], ...]
         labels.append(curlabels.reshape([curlabels.shape[0],-1]))
@@ -345,10 +348,10 @@ def dist_from_locs(locs):
     return yy
 
 
-def shape_from_locs(locs):
+def shape_from_locs(locs,conf):
     # shape context kinda labels
-    n_angle = 8
-    r_bins = np.array([0, np.inf])
+    n_angle = conf.shape_n_orts
+    r_bins = np.array(conf.shape_r_bins)
     n_radius = len(r_bins) - 1
     n_pts = locs.shape[1]
     bsz = locs.shape[0]
@@ -372,13 +375,15 @@ def shape_from_locs(locs):
 
 
 def extract_patches(img, locs, psz):
-    zz = []
+    zz = np.zeros([img.shape[0],psz,psz,img.shape[-1]])
     pad_arg = [(psz, psz), (psz, psz), (0, 0)]
-    locs = np.round(locs).astype('int')
+    int_locs = np.round(locs).astype('int')
     for ndx in range(img.shape[0]):
+        if np.isnan(locs[ndx,0]):
+            continue
         p_img = np.pad(img[ndx, ...], pad_arg, 'constant')
-        zz.append(p_img[(locs[ndx, 1] + psz - psz / 2):(locs[ndx, 1] + psz + psz / 2),
-                  (locs[ndx, 0] + psz - psz / 2):(locs[ndx, 0] + psz + psz / 2), :]);
+        zz[ndx,...]= p_img[(int_locs[ndx, 1] + psz - psz / 2):(int_locs[ndx, 1] + psz + psz / 2),
+                  (int_locs[ndx, 0] + psz - psz / 2):(int_locs[ndx, 0] + psz + psz / 2), :]
     return np.array(zz)
 
 
@@ -461,7 +466,7 @@ def print_gradients(sess, feed_dict, loss):
 def pose_shape_net_init(conf):
     ph = create_place_holders(conf)
     feed_dict = create_feed_dict(ph, conf)
-    init_shape_prior(conf)
+    # init_shape_prior(conf)
     with tf.variable_scope('shape'):
         out, out_dict = net_multi_conv(ph, conf)
     # change 3 22022017
@@ -479,7 +484,7 @@ def print_shape_accuracy(correct_pred,conf):
     for ndx in range(len(conf.shape_selpt1)):
         n = len(conf.shape_selpt2[ndx])
         n_o = conf.shape_n_orts
-        n_r = conf.shape_n_rad
+        n_r = len(conf.shape_r_bins)-1
         start = ptsDone * n_o * n_r
         ptsDone += n
         stop = ptsDone * n_o * n_r
@@ -565,8 +570,8 @@ def pose_shape_train(conf, restore=True):
                 save_shape(sess, shape_saver, step, conf)
         print("Optimization Done!")
         save_shape(sess, shape_saver, step, conf)
-        train_writer.close()
-        test_writer.close()
+        # train_writer.close()
+        # test_writer.close()
         coord.request_stop()
         coord.join(threads)
 

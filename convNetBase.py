@@ -107,16 +107,16 @@ def upscale(name,l_input,sz):
 #                }
 #     return conv5, out_dict
 
-def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase):
+def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size):
     inDim = X.get_shape()[3]
     with tf.variable_scope('layer1'):
         conv1 = conv_relu(X,[5, 5, inDim, 48],0.01,0,doBatchNorm,trainPhase)
-        pool1 = max_pool('pool1', conv1, k=3,s=2)
+        pool1 = max_pool('pool1', conv1, k=pool_size,s=pool_stride)
         norm1 = norm('norm1', pool1, lsize=2)
     
     with tf.variable_scope('layer2'):
         conv2 = conv_relu(norm1,[3,3,48,nfilt],0.01,1,doBatchNorm,trainPhase)
-        pool2 = max_pool('pool2', conv2, k=3,s=2)
+        pool2 = max_pool('pool2', conv2, k=pool_size,s=pool_stride)
         norm2 = norm('norm2', pool2, lsize=4)
             
     with tf.variable_scope('layer3'):
@@ -138,16 +138,18 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     imsz = conf.imsz; rescale = conf.rescale
     pool_scale = conf.pool_scale
     nfilt = conf.nfilt
+    pool_stride = conf.pool_stride
+    pool_size = conf.pool_size
     
     #     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
     #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
     #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
     with tf.variable_scope('scale0'):
-        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase)
+        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
     with tf.variable_scope('scale1'):
-        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase)
+        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
     with tf.variable_scope('scale2'):
-        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase)
+        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
 
     sz0 = int(math.ceil(float(imsz[0])/pool_scale/rescale))
     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
@@ -171,7 +173,7 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 #     print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
 
 
-    conv5_cat = tf.concat(3,[conv5_0,conv5_1_up,conv5_2_up])
+    conv5_cat = tf.concat([conv5_0,conv5_1_up,conv5_2_up],3)
     
     # Reshape conv5 output to fit dense layer input
 #     conv6 = conv2d('conv6',conv5_cat,_weights['wd1'],_weights['bd1']) 
@@ -181,7 +183,7 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 
     with tf.variable_scope('layer6'):
         conv6 = conv_relu(conv5_cat,
-                         [conf.shape_psz,conf.shape_psz,conf.numscale*nfilt,conf.nfcfilt],
+                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
                           0.005,1,doBatchNorm,trainPhase) 
         if not doBatchNorm:
             conv6 = tf.nn.dropout(conv6,_dropout,
@@ -255,7 +257,7 @@ def net_multi_conv_reg(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 #     print("Final size of lower res layer %s"%(', '.join(map(str,conv5_1_final_sz))))
 
 
-    conv5_cat = tf.concat(3,[conv5_0,conv5_1_up,conv5_2_up])
+    conv5_cat = tf.concat([conv5_0,conv5_1_up,conv5_2_up],3)
     
     # Reshape conv5 output to fit dense layer input
 #     conv6 = conv2d('conv6',conv5_cat,_weights['wd1'],_weights['bd1']) 
@@ -423,7 +425,7 @@ def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,tra
                 strides=[1, 1, 1, 1], padding='SAME')
             fineLast.append(conv + biases)
 
-    out = tf.concat(3,fineLast)
+    out = tf.concat(fineLast,3)
     return out
 
 def extractPatches(layer,out,conf,scale,outscale):
@@ -437,7 +439,7 @@ def extractPatches(layer,out,conf,scale,outscale):
     for inum in range(conf.batch_size):
         curpatches = []
         for ndx in range(conf.n_classes):
-            curloc = tf.concat(0,[tf.squeeze(maxloc[:,inum,ndx]),[0]])
+            curloc = tf.concat([tf.squeeze(maxloc[:,inum,ndx]),[0]],0)
             curpatches.append(tf.slice(padlayer[inum,:,:,:],curloc,patchsz))
         patches.append(tf.pack(curpatches))
     return tf.pack(patches)

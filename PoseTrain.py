@@ -97,6 +97,7 @@ class PoseTrain(object):
             if np.ndim(curxs)<3:
                 xs.append(curxs[np.newaxis,:,:])
             else:
+                curxs = np.transpose(curxs,[2,0,1])
                 xs.append(curxs)
             locs.append(curlocs)
             info.append(curinfo)
@@ -515,7 +516,7 @@ class PoseTrain(object):
             try:
                 sess.run(tf.assert_variables_initialized([var]))
             except tf.errors.FailedPreconditionError:
-                sess.run(tf.initialize_variables([var]))
+                sess.run(tf.variables_initializer([var]))
                 print('Initializing variable:%s'%var.name)
                 
                 
@@ -524,7 +525,7 @@ class PoseTrain(object):
     
     
     def createOptimizer(self):
-        self.opt = tf.train.AdamOptimizer(learning_rate=                           self.ph['learning_rate']).minimize(self.cost)
+        self.opt = tf.train.AdamOptimizer(learning_rate= self.ph['learning_rate']).minimize(self.cost)
         self.read_time = 0.
         self.opt_time = 0.
 
@@ -653,7 +654,9 @@ class PoseTrain(object):
                     self.feed_dict[self.ph['keep_prob']] = 1.
                     train_loss = self.computeLoss(sess,[self.cost])
                     tt1 = self.computePredDist(sess,self.basePred)
-                    trainDist = [tt1.mean()]
+                    nantt1 = np.invert(np.isnan(tt1.flatten()))
+                    nantt1_mean = tt1.flatten()[nantt1].mean()
+                    trainDist = [nantt1_mean]
                     numrep = int(self.conf.numTest/self.conf.batch_size)+1
                     val_loss = np.zeros([2,])
                     valDist = [0.]
@@ -661,7 +664,9 @@ class PoseTrain(object):
                         self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
                         val_loss += np.array(self.computeLoss(sess,[self.cost]))
                         tt1 = self.computePredDist(sess,self.basePred)
-                        valDist = [valDist[0]+tt1.mean()]
+                        nantt1 = np.invert(np.isnan(tt1.flatten()))
+                        nantt1_mean = tt1.flatten()[nantt1].mean()
+                        valDist = [valDist[0]+nantt1_mean]
                     val_loss = val_loss/numrep
                     valDist = [valDist[0]/numrep]
                     self.updateBaseLoss(step,train_loss,val_loss,trainDist,valDist)
