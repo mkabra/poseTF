@@ -27,6 +27,8 @@ class myconfig(object):
     rescale = 1  # how much to downsize the base image.
     numscale = 3
     pool_scale = 4
+    pool_size = 3
+    pool_stride = 2
     # sel_sz determines the patch size used for the final decision
     # i.e., patch seen by the fc6 layer
     # ideally as large as possible but limited by
