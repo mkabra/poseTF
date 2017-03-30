@@ -7,7 +7,8 @@ offx_side = -1;
 offy_side = -1;
 scale_front = 4;
 scale_side = 4;
-
+front_thresh = 0.30;
+side_thresh = 0.30;
 
 %% load in tracking results
 
@@ -107,7 +108,7 @@ SHOWGMM = false;
 
 thresh_nonmax_front = 0;
 thresh_nonmax_side = 0;
-thresh_perc = 99.9;
+thresh_perc = 99.5;
 r_nonmax = 2;
 
 [dx,dy] = meshgrid(-r_nonmax:r_nonmax,-r_nonmax:r_nonmax);
@@ -325,7 +326,7 @@ Kneighbor = 10;
 % Kneighbor = 1;
 discountneighbor = .05;
 
-Psample = zeros([3,K+2*Kneighbor,nlandmarks,T]);
+Psample = nan([3,K+2*Kneighbor,nlandmarks,T]);
 psample_front = nan([2,K+2*Kneighbor,nlandmarks,T]);
 psample_side = nan([2,K+2*Kneighbor,nlandmarks,T]);
 w = zeros([K+2*Kneighbor,nlandmarks,T]);
@@ -385,8 +386,8 @@ w = bsxfun(@rdivide,w,z);
 
 %% choose trajectory
 
-dampen = .5;
-poslambdafixed = 100;
+dampen = .9;
+poslambdafixed = 1000;%100; before 20170322 -- Mayank
 Pbest = nan(3,nlandmarks,T);
 cost = nan(1,nlandmarks);
 poslambda = nan(1,nlandmarks);

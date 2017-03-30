@@ -1,6 +1,6 @@
-Qmv = load('/home/mayank/Dropbox/MultiViewFlyLegTracking/multiview labeling/romainJun22NewLabels.lbl','-mat');
-Qs1 = load('/home/mayank/Dropbox/MultiViewFlyLegTracking/trackingApril28-14-53/track_date_2016_04_28_time_14_53_16.lbl','-mat');
-Qs2 = load('/home/mayank/Dropbox/MultiViewFlyLegTracking/trackingApril28-15-23/track_date_2016_04_28_time_15_23.lbl','-mat');
+Qmv = load('/localhome/kabram/Dropbox (HHMI)/MultiViewFlyLegTracking/multiview labeling/romainJun22NewLabels.lbl','-mat');
+Qs1 = load('/localhome/kabram/Dropbox (HHMI)/MultiViewFlyLegTracking/older stuff/trackingApril28-14-53/track_date_2016_04_28_time_14_53_16.lbl','-mat');
+Qs2 = load('/localhome/kabram/Dropbox (HHMI)/MultiViewFlyLegTracking/older stuff/trackingApril28-15-23/track_date_2016_04_28_time_15_23.lbl','-mat');
 
 %%
 
@@ -16,13 +16,13 @@ Q.labeledpos{3,1} = Qs2.labeledpos{3}(1:18,:,:);
 Q.cfg.NumLabelPoints = 19;
 
 for ndx = 1:3
-  Q.movieFilesAll{ndx,1} = fullfile('/home/mayank/Dropbox',Q.movieFilesAll{ndx,1}(33:end));
+  Q.movieFilesAll{ndx,1} = fullfile('/localhome/kabram/Dropbox (HHMI)/',Q.movieFilesAll{ndx,1}(33:end));
   xx = Q.labeledpos{ndx}(:,1,:);
   infx = squeeze(any(isinf(xx),1));
   Q.labeledpos{ndx}(:,:,infx) = nan;
 end
 
-save('/home/mayank/work/poseEstimation/RomainLeg/Apr28AndJun22.lbl','-struct','Q','-v7.3');
+save('/groups/branson/bransonlab/mayank/PoseTF/RomainLeg/Apr28AndJun22.lbl','-struct','Q','-v7.3');
 
 %%
 
