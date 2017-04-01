@@ -30,6 +30,9 @@ def main(argv):
     parser.add_argument("-r",dest="redo",
                       help="if specified will recompute everything",
                       action="store_true")
+    parser.add_argument("-rt",dest="redo_tracking",
+                      help="if specified will only recompute tracking",
+                      action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
                         help="GPU to use [optional]")
     parser.add_argument("-makemovie",dest='makemovie',
@@ -46,6 +49,8 @@ def main(argv):
     args = parser.parse_args()
     if args.redo is None:
         args.redo = False
+    if args.redo_tracking is None:
+        args.redo_tracking = False
         
     if args.detect is False and args.track is False: 
         args.detect = True
@@ -143,9 +148,10 @@ def main(argv):
         script_path = os.path.realpath(__file__)
         [script_dir,script_name] = os.path.split(script_path)
         matdir = os.path.join(script_dir,'matlab')
+		redo_tracking = args.redo or args.redo_tracking
         matlab_cmd = "addpath %s; GMMTrack2DTo3D('%s','%s','%s','%s',%d);exit;" %(matdir,args.ffilename,
                                                               args.sfilename,args.dltfilename,
-                                                              args.outdir,args.redo)
+                                                              args.outdir,redo_tracking)
         matlab_cmd = 'matlab -nodesktop -nosplash -r "%s" ' % matlab_cmd
         print 'Executing matlab command:%s'%matlab_cmd
         call(matlab_cmd,shell=True)

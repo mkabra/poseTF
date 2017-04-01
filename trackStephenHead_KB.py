@@ -14,8 +14,10 @@ import stat
 
 def main(argv):
 
-    defaulttrackerpath = "/groups/branson/home/bransonk/tracking/code/poseTF/matlab/compute3Dfrom2D/for_redistribution_files_only/run_compute3Dfrom2D.sh"
-    defaultmcrpath = "/groups/branson/bransonlab/projects/olympiad/MCR/v91"
+#    defaulttrackerpath = "/groups/branson/home/bransonk/tracking/code/poseTF/matlab/compute3Dfrom2D/for_redistribution_files_only/run_compute3Dfrom2D.sh"
+    defaulttrackerpath = "/groups/branson/bransonlab/mayank/PoseTF/matlab/compiled/run_compute3Dfrom2D_compiled.sh"
+#    defaultmcrpath = "/groups/branson/bransonlab/projects/olympiad/MCR/v91"
+    defaultmcrpath = "/groups/branson/bransonlab/mayank/MCR/v92"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s",dest="sfilename",
@@ -32,6 +34,9 @@ def main(argv):
                       required=True)
     parser.add_argument("-r",dest="redo",
                       help="if specified will recompute everything",
+                      action="store_true")
+    parser.add_argument("-rt",dest="redo_tracking",
+                      help="if specified will only recompute tracking",
                       action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
                         help="GPU to use [optional]")
@@ -58,6 +63,8 @@ def main(argv):
     args = parser.parse_args()
     if args.redo is None:
         args.redo = False
+    if args.redo_tracking is None:
+        args.redo_tracking= False
         
     if args.detect is False and args.track is False: 
         args.detect = True
@@ -185,8 +192,9 @@ def main(argv):
                 trkfile_front = basename_front+'.trk'
                 trkfile_side = basename_side+'.trk'
 
+                redo_tracking = args.redo or args.redo_tracking
                 if os.path.isfile(savefile) and os.path.isfile(trkfile_front) and \
-                   os.path.isfile(trkfile_side) and not args.redo:
+                   os.path.isfile(trkfile_side) and not redo_tracking:
                     print "%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side)
                     continue
 
