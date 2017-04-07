@@ -1,8 +1,13 @@
-Q = load('../headTracking/FlyHeadStephenCuratedData.mat');
+Q = load('/groups/branson/bransonlab/mayank/PoseTF/headTracking/FlyHeadStephenCuratedData.mat');
 
-ldir = '/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/justHead/';
+local = false;
+if ~local
+  ldir = '/localhome/kabram/Dropbox (HHMI)/PoseEstimation/Stephen/18012017_trainingData/justHead/';
+else
+  ldir = '/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/justHead/';
+end
 dd = dir([ldir '*.lbl']);
-P = load('/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/justHead/fly90.lbl','-mat');
+P = load(fullfile(ldir,'fly90.lbl'),'-mat');
 
 
 %%
@@ -10,7 +15,6 @@ P = load('/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/just
 % corresponds to side view
 
 
-local = false;
 J = struct;
 
 nexp = numel(Q.vid1files);
@@ -26,10 +30,12 @@ for ndx = 1:nexp
     v1f = Q.vid1files{ndx};
     v2f = Q.vid2files{ndx};
   end
+  
   movf{ndx,1} = v1f;
   movf{ndx,2} = v2f;
   
-  [rfn,nframes,fid,hinfo] = get_readframe_fcn(Q.vid1files{ndx});
+  [rfn,nframes,fid,hinfo] = get_readframe_fcn(v1f);
+  nframes = int64(hinfo.nframes);
   curidx = find(Q.expidx==ndx);
   pside = permute(Q.pts(:,1,:,curidx),[3,1,4,2]);  
   pfront = permute(Q.pts(:,2,:,curidx),[3,1,4,2]);
@@ -59,6 +65,14 @@ for ndx = 1:numel(dd)
         else
           K{ne,vv} = ['/groups/huston/hustonlab/' kk(4:end)];
         end
+        
+        if strfind(K{ne,vv},'/fly_450_to_452_26_9_16/')
+          K{ne,vv} = [K{ne,vv}(1:50) 'fly_450_to_452_26_9_16norpAkirPONMNchr' K{ne,vv}(73:end)];
+        end
+        if strfind(K{ne,vv},'/fly_453_to_457_27_9_16/')
+          K{ne,vv} = [K{ne,vv}(1:50) 'fly_453_to_457_27_9_16_norpAkirPONMNchr'  K{ne,vv}(73:end)];
+        end
+
     end    
 %     l1 = any(~isnan(P.labeledpos{ne}(:,:,:)),2);
 %     l2 = all(P.labeledposMarked{ne},1);
@@ -71,6 +85,7 @@ for ndx = 1:numel(dd)
   lmarked = [lmarked; P.labeledposMarked];
   
 end
+
 
 %%
 J.movieFilesAll = movf;
