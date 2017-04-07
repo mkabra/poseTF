@@ -40,9 +40,27 @@ for ndx = 1:numel(A.annolist)
       cc(curpt.id+1,1) = curpt.x;
       cc(curpt.id+1,2) = curpt.y;
     end
-    cc = cc/scale;
-    zz(end+1,:,:) = cc;
+    centerx = A.annolist(ndx).annorect(pt).objpos.x;
+    centery = A.annolist(ndx).annorect(pt).objpos.y;
+    bsz = round(400*scale)/2;
+    top = round(centery - bsz);
+    bot = round(centery + bsz);
+    left = round(centerx - bsz);
+    right = round(centerx + bsz);
+    
+    psz_orig = right-left;
+    cur_locs = bsxfun(@minus,cc,[left, top]) / psz_orig * 256;
+%     cc = cc/scale;
+    zz(end+1,:,:) = cur_locs;
   end
 end
 
 %%
+
+zz = permute(zz,[2 3 1]);
+l = struct;
+l.labeledpos{1} = zz;
+l.cfg.NumLabelPoints = 16;
+save('/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1_modified.lbl','-struct','l','-v7.3');
+%%
+
