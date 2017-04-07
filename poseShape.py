@@ -286,7 +286,7 @@ def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
     #     global shape_prior
 
 
-    shape_perturb_rad = 10
+    shape_perturb_rad = conf.shape_perturb_rad
 
     sel_pt1 = conf.shape_selpt1
     sel_pt2 = conf.shape_selpt2
@@ -374,6 +374,7 @@ def shape_from_locs(locs,conf):
     return yy
 
 
+
 def extract_patches(img, locs, psz):
     zz = np.zeros([img.shape[0],psz,psz,img.shape[-1]])
     pad_arg = [(psz, psz), (psz, psz), (0, 0)]
@@ -401,7 +402,7 @@ def init_shape_prior(conf):
         pts = np.zeros([0, conf.n_classes, 2])
         for ndx in range(n_movie):
             cur_pts = np.array(labels[pp[0, ndx]])
-            frames = np.where(np.invert(np.any(np.isnan(cur_pts), axis=(1, 2))))[0]
+            frames = np.where(np.invert(np.all(np.isnan(cur_pts), axis=(1, 2))))[0]
             n_pts_per_view = np.array(labels['cfg']['NumLabelPoints'])[0, 0]
             pts_st = int(conf.view * n_pts_per_view)
             sel_pts = pts_st + conf.selpts
@@ -409,7 +410,7 @@ def init_shape_prior(conf):
             cur_locs = cur_locs[frames, :, :]
             cur_locs = cur_locs.transpose([0, 2, 1])
             pts = np.append(pts, cur_locs[:, :, :], axis=0)
-    shape_prior = np.mean(shape_from_locs(pts) > 0, axis=0)
+    shape_prior = np.mean(shape_from_locs(pts,conf) > 0, axis=0)
     return shape_prior
 
 
@@ -504,15 +505,15 @@ def pose_shape_train(conf, restore=True):
 
     np.set_printoptions(precision=3,suppress=True)
     # for weighted..
-    # y_re = tf.reshape(ph['y'], [conf.batch_size, 8, conf.n_classes])
-    # sel_pt1 = conf.shape_selpt1
-    # sel_pt2 = conf.shape_selpt2
-    # shape_prior = init_shape_prior(conf)
-    # wt_den = shape_prior[sel_pt1, :, :, 0].transpose([1, 0])
-    # wt = tf.reduce_max(y_re / (wt_den + 0.1), axis=(1, 2))
-    # loss = tf.reduce_sum(tf.reduce_sum((out - ph['y']) ** 2, axis=1) * wt)
+    y_re = tf.reshape(ph['y'], [conf.batch_size, 1,1,conf.shape_n_orts,len(conf.shape_r_bins)-1])
+    sel_pt1 = conf.shape_selpt1[0]
+    sel_pt2 = conf.shape_selpt2[0][0]
+    shape_prior = init_shape_prior(conf)
+    wt_den = shape_prior[sel_pt1:sel_pt1+1, sel_pt2:sel_pt2+1, ...]
+    wt = tf.reduce_max(y_re / (wt_den + 0.1), axis=(1, 2,3,4))
+    loss = tf.reduce_sum(tf.reduce_sum((out - ph['y']) ** 2, axis=1) * wt)
 
-    loss = tf.nn.l2_loss(out-ph['y'])
+    # loss = tf.nn.l2_loss(out-ph['y'])
     correct_pred = tf.cast(tf.equal(out > 0.5, ph['y'] > 0.5), tf.float32)
     accuracy = tf.reduce_mean(correct_pred)
 

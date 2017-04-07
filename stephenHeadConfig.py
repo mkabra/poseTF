@@ -75,7 +75,7 @@ class myconfig(object):
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
 
-    batch_size = 4
+    batch_size = 8
     mult_fac = 16/batch_size
     base_training_iters = 15000*mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
@@ -122,6 +122,7 @@ class myconfig(object):
     map_size = 100000*psz**2*3
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
     selpts = np.arange(0,5)
+    imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead/')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
@@ -182,7 +183,9 @@ class myconfig(object):
     def getflynum(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        flynum = float(dir_parts[-3][3:6])
+        # flynum = float(dir_parts[-3][3:6])
+        aa = re.search('fly_*(\d+)',dir_parts[-3])
+        flynum = float(aa.groups()[0])
         return flynum
 
 

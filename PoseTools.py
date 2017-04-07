@@ -67,8 +67,14 @@ def scaleImages(img,scale,conf):
     if conf.normalize_mean_img:
         mm = zz.mean(1).mean(1)
         xx = zz-mm[:,np.newaxis,np.newaxis,:]
+        if conf.imgDim == 3:
+            if conf.perturb_color:
+                for dim in range(3):
+                    to_add = ((np.random.rand(conf.batch_size)-0.5)*conf.imax)/8
+                    xx[:,:,:,dim] += to_add[:,np.newaxis,np.newaxis]
     else:
         xx = zz
+
     return xx
 
 def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
