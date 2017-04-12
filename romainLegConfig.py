@@ -88,7 +88,7 @@ class myconfig(object):
     eval_minlen = 30
     
     mult_fac = 16/batch_size
-    base_training_iters = 5000*mult_fac
+    base_training_iters = 10000*mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
     
@@ -144,7 +144,7 @@ class myconfig(object):
     imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cache','romainLegBottom')
-    labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05.lbl')
+    labelfile = os.path.join(localSetup.bdir,'RomainLeg','RomainCombined_fixed_fixedbabloo_20170410.lbl')
  
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
@@ -212,7 +212,7 @@ side1conf = myconfig()
 side1conf.cropLoc = {(592,288):[0,0],(672,256):[0,0],(672,320):[0,0]}
 side1conf.view = 0  
 side1conf.imsz = (592,256) 
-side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05_fixed.lbl')
+# side1conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05_fixed.lbl')
 side1conf.selpts = np.arange(0,18)
 side1conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide1')
 side1conf.eval_scale = 2
@@ -226,7 +226,7 @@ side2conf = myconfig()
 side2conf.cropLoc = {(640,288):[0,0],(672,256):[0,0],(654,288):[0,0]}    
 side2conf.view = 1
 side2conf.imsz = (640,256) 
-side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05.lbl')
+# side2conf.labelfile = os.path.join(localSetup.bdir,'RomainLeg','Jun22Sep16Sep15Sep13Aug26Sep07Sep05.lbl')
 side2conf.selpts = np.arange(0,18)
 side2conf.cachedir = os.path.join(localSetup.bdir,'cache','romainLegSide2')
 side2conf.eval_scale = 2

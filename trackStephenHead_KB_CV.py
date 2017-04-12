@@ -15,8 +15,8 @@ import stat
 def main(argv):
     print argv
 
-    defaulttrackerpath = "/groups/branson/home/bransonk/tracking/code/poseTF/matlab/compute3Dfrom2D/for_redistribution_files_only/run_compute3Dfrom2D.sh"
-    defaultmcrpath = "/groups/branson/bransonlab/projects/olympiad/MCR/v91"
+    defaulttrackerpath = "/groups/branson/bransonlab/mayank/PoseTF/matlab/compiled/run_compute3Dfrom2D_compiled.sh"
+    defaultmcrpath = "/groups/branson/bransonlab/mayank/MCR/v92"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s",dest="sfilename",

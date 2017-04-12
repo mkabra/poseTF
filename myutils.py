@@ -17,6 +17,7 @@ import math
 import cv2
 import copy
 from cvc import cvc
+import sys
 
 
 # In[ ]:
@@ -56,6 +57,8 @@ def readframe(cap, position):
   while pos < position:
     pos = cap.get(cvc.FRAME_POSITION)
     ret, image = cap.read()
+    if not ret:
+        raise ValueError('Opencv couldnt read the frame {}'.format(position))
     if pos == position:
       return image
     elif pos > position:
@@ -63,7 +66,27 @@ def readframe(cap, position):
       cap.set(cvc.FRAME_POSITION, positiontoset)
       pos = -1
     count +=1
-    
+
+# def readframet(cap, position):
+#   assert position < cap.get(cvc.FRAME_COUNT), "incorrect frame access"
+#   fps = cap.get(cvc.FRAME_FPS)
+#   tpos = float(position)*1000/fps
+#   positiontoset = tpos
+#   pos = -1
+#   cap.set(cvc.FRAME_MSEC, tpos)
+#   count = 1
+#   while pos < tpos:
+#       pos = cap.get(cvc.FRAME_MSEC)
+#       ret, image = cap.read()
+#       if pos == tpos:
+#           return image
+#       elif pos > tpos:
+#           positiontoset -= 1
+#           cap.set(cvc.FRAME_MSEC, positiontoset)
+#           pos = -1
+#       count += 1
+
+
 # def readframe(cap,fno):
 #     cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,fno)
 #     dump,frame = cap.read()

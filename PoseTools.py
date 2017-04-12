@@ -22,6 +22,7 @@ from cvc import cvc
 import math
 import sys
 import copy
+from scipy import io
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 # from matplotlib import cm
@@ -323,7 +324,7 @@ def createLabelImages(locs,imsz,scale,blur_rad):
     blurL = blurL/blurL.max()
     for cls in range(n_classes):
         for ndx in range(len(locs)):
-            if np.isnan(locs[ndx][cls][0]):
+            if np.isnan(locs[ndx][cls][0]) or np.isinf(locs[ndx][cls][0]):
                 continue
 #             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
 #             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
@@ -518,18 +519,18 @@ def initMRFweights(conf):
             pts = np.append(pts,curlocs[:,:,np.newaxis,:],axis=0)
             
             
-    dx = np.zeros([pts.shape[0]])
-    dy = np.zeros([pts.shape[0]])
-    for ndx in range(pts.shape[0]):
-        dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
-        dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
-    maxd = max( (np.percentile(dx,99), np.percentile(dy,99)))
     if hasattr(conf,'mrf_psz'):
         psz = conf.mrf_psz
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
     else:
+        dx = np.zeros([pts.shape[0]])
+        dy = np.zeros([pts.shape[0]])
+        for ndx in range(pts.shape[0]):
+            dx[ndx] = pts[ndx, :, v, 0].max() - pts[ndx, :, v, 0].min()
+            dy[ndx] = pts[ndx, :, v, 1].max() - pts[ndx, :, v, 1].min()
+        maxd = max((np.percentile(dx, 99), np.percentile(dy, 99)))
         psz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale))
     bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
     
@@ -538,6 +539,10 @@ def initMRFweights(conf):
             for c2 in range(conf.n_classes):
                 d12x = pts[ndx,c1,v,0] - pts[ndx,c2,v,0]
                 d12y = pts[ndx,c1,v,1] - pts[ndx,c2,v,1]
+                if np.isinf(d12y) or np.isinf(d12y):
+                    continue
+                if np.isnan(d12y) or np.isnan(d12y):
+                    continue
                 d12x = max(-psz/2+1,min(psz/2-1,int( (d12x/conf.rescale)/conf.pool_scale)))
                 d12y = max(-psz/2+1,min(psz/2-1,int( (d12y/conf.rescale)/conf.pool_scale)))
                 bfilt[psz/2+d12y,psz/2+d12x,c1,c2] += 1
@@ -755,6 +760,68 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
 
     cap.release()
     return predLocs,predscores,predmaxscores
+
+
+def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1):
+    cap = cv2.VideoCapture(movie_name)
+    nframes = int(cap.get(cvc.FRAME_COUNT))
+    if maxframes > 0:
+        nframes = maxframes
+    predLocs = np.zeros([nframes, conf.n_classes, 2, 2])
+    predmaxscores = np.zeros([nframes, conf.n_classes, 2])
+
+    if self.conf.useMRF:
+        predPair = [self.mrfPred, self.finePred]
+    else:
+        predPair = [self.basePred, self.finePred]
+
+    bsize = conf.batch_size
+    nbatches = int(math.ceil(float(nframes) / bsize))
+    #     framein = myutils.readframe(cap,1)
+    #     framein = cropImages(framein,conf)
+    #     framein = framein[np.newaxis,:,:,0:1]
+    #     x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz,conf)
+    #     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10,10))
+    #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+    #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+
+    allf = np.zeros((bsize,) + conf.imsz + (1,))
+    for curl in range(nbatches):
+
+        ndxst = curl * bsize
+        ndxe = min(nframes, (curl + 1) * bsize)
+        ppe = min(ndxe - ndxst, bsize)
+        for ii in range(ppe):
+            success, framein = cap.read()
+            assert success, "Could not read frame"
+
+            framein = cropImages(framein, conf)
+            #             framein = clahe.apply(framein[:,:,:1])
+            allf[ii, ...] = framein[..., 0:1]
+
+        x0, x1, x2 = multiScaleImages(allf, conf.rescale, conf.scale, conf.l1_cropsz, conf)
+
+        self.feed_dict[self.ph['x0']] = x0
+        self.feed_dict[self.ph['x1']] = x1
+        self.feed_dict[self.ph['x2']] = x2
+        pred_int = sess.run(predPair[0],feed_dict=self.feed_dict)
+        self.feed_dict[self.ph['fine_pred_in']] = pred_int
+        self.feed_dict[self.ph['fine_pred_locs_in']] = locs[ndxst:ndxe,...]
+        pred = sess.run(predPair, self.feed_dict)
+
+
+        baseLocs, fineLocs = getFinePredLocs(pred[0], pred[1], conf)
+        predLocs[ndxst:ndxe, :, 0, :] = fineLocs[:ppe, :, :]
+        predLocs[ndxst:ndxe, :, 1, :] = baseLocs[:ppe, :, :]
+        for ndx in range(conf.n_classes):
+            predmaxscores[ndxst:ndxe, :, 0] = pred[0][:ppe, :, :, ndx].max()
+            predmaxscores[ndxst:ndxe, :, 1] = pred[1][:ppe, :, :, ndx].max()
+        sys.stdout.write('.')
+        if curl % 20 == 19:
+            sys.stdout.write('\n')
+
+    cap.release()
+    return predLocs, predmaxscores
 
 
 # In[ ]:

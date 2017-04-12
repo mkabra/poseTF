@@ -44,7 +44,7 @@ class myconfig(object):
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = False
+    useMRF = True
     useHoldout = False
     device = None
     reg_lambda = 0.5
@@ -77,7 +77,7 @@ class myconfig(object):
 
     batch_size = 8
     mult_fac = 16/batch_size
-    base_training_iters = 15000*mult_fac
+    base_training_iters = 10000*mult_fac #15000
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
     
@@ -97,7 +97,7 @@ class myconfig(object):
     numTest = 100
     
     # range for contrast, brightness and rotation adjustment
-    horzFlip = True
+    horzFlip = False
     vertFlip = False
     brange = [-0.2,0.2] 
     crange = [0.7,1.3]
