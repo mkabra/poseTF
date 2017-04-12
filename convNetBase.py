@@ -427,20 +427,3 @@ def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,tra
     out = tf.concat(fineLast,3)
     return out
 
-def extractPatches(layer,out,conf,scale,outscale):
-    hsz = conf.fine_sz/scale/2
-    padsz = tf.constant([[0,0],[hsz, hsz],[hsz,hsz],[0,0]])
-    patchsz = tf.to_int32([conf.fine_sz/scale,conf.fine_sz/scale,-1])
-
-    patches = []
-    maxloc = PoseTools.argmax2d(out)*outscale
-    padlayer = tf.pad(layer,padsz)
-    for inum in range(conf.batch_size):
-        curpatches = []
-        for ndx in range(conf.n_classes):
-            curloc = tf.concat([tf.squeeze(maxloc[:,inum,ndx]),[0]],0)
-            curpatches.append(tf.slice(padlayer[inum,:,:,:],curloc,patchsz))
-        patches.append(tf.pack(curpatches))
-    return tf.pack(patches)
-        
-
