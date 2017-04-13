@@ -6,7 +6,12 @@
 '''
 Mayank Feb 3 2016
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys
 import tempfile,copy,re
@@ -91,7 +96,7 @@ def trainBase(conf,resume=True):
             # Keep training until reach max iterations
             for step in range(startat,training_iters):
                 excount = step*batch_size
-                cur_lr = learning_rate *                         conf.gamma**math.floor(excount/conf.step_size)
+                cur_lr = learning_rate *                         conf.gamma**math.floor(old_div(excount,conf.step_size))
                 
                 r_start = time.clock()
                 batch_xs, locs = multiPawTools.readLMDB(train_cursor,
@@ -123,7 +128,7 @@ def trainBase(conf,resume=True):
                                                      x2:x2_in,
                                                y: labelims, keep_prob: 1.})
                     train_loss /= batch_size
-                    numrep = int(conf.numTest/conf.batch_size)+1
+                    numrep = int(old_div(conf.numTest,conf.batch_size))+1
                     acc = 0; loss = 0
                     for rep in range(numrep):
                         val_xs, locs = multiPawTools.readLMDB(val_cursor,
@@ -138,10 +143,10 @@ def trainBase(conf,resume=True):
                                                          x1:x1_in,
                                                          x2:x2_in,
                                                    y: labelims, keep_prob: 1.})
-                    loss = (loss/numrep)/batch_size
-                    print "Iter " + str(step)
-                    print "  Training Loss= " + "{:.6f}".format(train_loss) +                          ", Minibatch Loss= " + "{:.6f}".format(loss) 
-                    print "  Read Time:" + "{:.2f}, ".format(read_time/(step+1)) +                           "Proc Time:" + "{:.2f}, ".format(proc_time/(step+1)) +                           "Opt Time:" + "{:.2f}".format(opt_time/(step+1)) 
+                    loss = old_div((old_div(loss,numrep)),batch_size)
+                    print("Iter " + str(step))
+                    print("  Training Loss= " + "{:.6f}".format(train_loss) +                          ", Minibatch Loss= " + "{:.6f}".format(loss)) 
+                    print("  Read Time:" + "{:.2f}, ".format(old_div(read_time,(step+1))) +                           "Proc Time:" + "{:.2f}, ".format(old_div(proc_time,(step+1))) +                           "Opt Time:" + "{:.2f}".format(old_div(opt_time,(step+1)))) 
                     trainData['train_err'].append(train_loss)        
                     trainData['val_err'].append(loss)        
                     trainData['step_no'].append(step)        
@@ -155,7 +160,7 @@ def trainBase(conf,resume=True):
                     tdfile.close()
                     
                 step += 1
-            print "Optimization Finished!"
+            print("Optimization Finished!")
             saver.save(sess,outfilename,global_step=step,
                        latest_filename = conf.ckptbasename)
             print('Saved state to %s-%d' %(outfilename,step))
@@ -261,7 +266,7 @@ def trainFine(conf,jointTrain=False,resume=True):
         # Keep training until reach max iterations
         for step in range(startat,training_iters):
             excount = step*batch_size
-            cur_lr = learning_rate *                     conf.gamma**math.floor(excount/conf.step_size)
+            cur_lr = learning_rate *                     conf.gamma**math.floor(old_div(excount,conf.step_size))
 
             batch_xs, locs = multiPawTools.readLMDB(train_cursor,
                                     batch_size,imsz,multiResData)
@@ -284,7 +289,7 @@ def trainFine(conf,jointTrain=False,resume=True):
                     y: labelims, keep_prob: 1.,locs_ph:np.array(locs)}
                 train_loss = sess.run([cost,costBase], feed_dict=feed_dict)
 
-                numrep = int(conf.numTest/conf.batch_size)+1
+                numrep = int(old_div(conf.numTest,conf.batch_size))+1
                 acc = 0; loss = 0
                 for rep in range(numrep):
                     val_xs, locs = multiPawTools.readLMDB(val_cursor,
@@ -298,9 +303,9 @@ def trainFine(conf,jointTrain=False,resume=True):
                     feed_dict={x0: x0_in,x1: x1_in,x2: x2_in,
                         y: labelims, keep_prob:1.,locs_ph:np.array(locs)}
                     loss += sess.run(cost, feed_dict=feed_dict)
-                loss = (loss/numrep)/batch_size
-                print "Iter " + str(step) +                 "  Minibatch Loss= " + "{:.3f}".format(loss) +                  ", Training Loss= " + "{:.3f}".format(train_loss[0]/batch_size) +                  ", Base Training Loss= " + "{:.3f}".format(train_loss[1]/batch_size)
-                trainData['train_err'].append(train_loss[0]/batch_size)
+                loss = old_div((old_div(loss,numrep)),batch_size)
+                print("Iter " + str(step) +                 "  Minibatch Loss= " + "{:.3f}".format(loss) +                  ", Training Loss= " + "{:.3f}".format(old_div(train_loss[0],batch_size)) +                  ", Base Training Loss= " + "{:.3f}".format(old_div(train_loss[1],batch_size)))
+                trainData['train_err'].append(old_div(train_loss[0],batch_size))
                 trainData['val_err'].append(loss)
                 trainData['step_no'].append(step)
 
@@ -319,7 +324,7 @@ def trainFine(conf,jointTrain=False,resume=True):
 
             step += 1
             
-        print "Optimization Finished!"
+        print("Optimization Finished!")
         saver1.save(sess,outfilename,global_step=step,
                    latest_filename = conf.ckptfinename)
         print('Saved state to %s-%d' %(outfilename,step))
@@ -335,7 +340,7 @@ def trainFine(conf,jointTrain=False,resume=True):
 def extractPatches(layer,out,conf,scale,outscale):
     hsz = conf.fine_sz/scale/2
     padsz = tf.constant([[0,0],[hsz, hsz],[hsz,hsz],[0,0]])
-    patchsz = tf.to_int32([conf.fine_sz/scale,conf.fine_sz/scale,-1])
+    patchsz = tf.to_int32([old_div(conf.fine_sz,scale),old_div(conf.fine_sz,scale),-1])
 
     patches = []
     maxloc = multiPawTools.argmax2d(out)*outscale
@@ -398,7 +403,7 @@ def predictMovie(model_file,inmovie,outmovie):
             plt.clf()
             plt.axis('off')
             framein = myutils.readframe(cap,fnum)
-            framein = framein[:,0:(framein.shape[1]/2),0:1]
+            framein = framein[:,0:(old_div(framein.shape[1],2)),0:1]
             out = predict(copy.copy(framein),sess,pred,pholders)
             plt.imshow(framein[:,:,0])
             maxndx = np.argmax(out[0,:,:,0])

@@ -1,9 +1,14 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[5]:
 
 # all the f'ing imports
+from builtins import chr
+from builtins import range
+from past.utils import old_div
 import scipy.io as sio
 import os,sys
 sys.path.append('/home/mayank/work/pyutils')
@@ -191,11 +196,11 @@ for idx in range(zz.shape[0]):
         mrfloc = mrfloc * conf.pool_scale 
         all_locs[ondx,1,:] = predloc
         maxndx = np.argmax(finepred[img][0,:,:,ondx])
-        finepredloc = (np.array(np.unravel_index(maxndx,finepred[img].shape[1:3]))-conf.fine_sz/2)
+        finepredloc = (np.array(np.unravel_index(maxndx,finepred[img].shape[1:3]))-old_div(conf.fine_sz,2))
         all_locs[ondx,2,:]= predloc+finepredloc
 
 
-    plt.scatter(labels[img][0,:,0]/conf.rescale,labels[img][0,:,1]/conf.rescale,
+    plt.scatter(old_div(labels[img][0,:,0],conf.rescale),old_div(labels[img][0,:,1],conf.rescale),
                 c=np.linspace(0,1,conf.n_classes),hold=True,cmap=cm.jet,
                 linewidths=0,edgecolors='face',s=5)
     plt.scatter(all_locs[:,0,1],all_locs[:,0,0],
@@ -225,19 +230,19 @@ smovies = []
 for ndx,ff  in enumerate(sdir):
     kk = glob.glob(ff+'/*_c.avi')
     if len(kk) is not 1:
-        print ff
+        print(ff)
         continue
     smovies.append(kk[0])
     kk = glob.glob(fdir[ndx]+'/*_c.avi')
     fmovies += kk
         
-print smovies[0:3]
-print fmovies[0:3]
-print len(smovies)
-print len(fmovies)
+print(smovies[0:3])
+print(fmovies[0:3])
+print(len(smovies))
+print(len(fmovies))
 for ff in smovies+fmovies:
     if not os.path.isfile(ff):
-        print ff
+        print(ff)
 
 
 # In[1]:
@@ -315,8 +320,8 @@ for ndx in range(len(valmovies)):
     height = int(cap.get(cvc.FRAME_HEIGHT))
     width = int(cap.get(cvc.FRAME_WIDTH))
     orig_crop_loc = conf.cropLoc[(height,width)]
-    crop_loc = [x/4 for x in orig_crop_loc] 
-    end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+    crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+    end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
     pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
     predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -325,12 +330,12 @@ for ndx in range(len(valmovies)):
     predLocs[:,:,:,1] += orig_crop_loc[0]
     
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
-    print 'Done:%s'%oname
+    print('Done:%s'%oname)
 
 
 
-print pp
-print predList[1].shape
+print(pp)
+print(predList[1].shape)
 
 
 # In[11]:
@@ -435,7 +440,7 @@ sess = tf.InteractiveSession()
 
 with tf.variable_scope('base'):
     self.createBaseNetwork(doBatchNorm)
-self.cost = tf.reduce_sum( (self.basePred-self.ph['y'])**2,axis=[1,2,3])/2
+self.cost = old_div(tf.reduce_sum( (self.basePred-self.ph['y'])**2,axis=[1,2,3]),2)
 self.openDBs()
 self.createBaseSaver()
 
@@ -455,7 +460,7 @@ loss = np.zeros([numex,])
 info = []
 
 bs = conf.batch_size
-for count in range(int(math.floor(numex/bs))):
+for count in range(int(math.floor(old_div(numex,bs)))):
     self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
     curpred,ll = sess.run([self.basePred,self.cost],feed_dict = self.feed_dict)
     all_preds[count*bs:(count+1)*bs,:,:,:,0] = curpred
@@ -470,7 +475,7 @@ for count in range(int(math.floor(numex/bs))):
         sys.stdout.write('.')
     if count%200==199:
         sys.stdout.write('\n')
-print 'Done'
+print('Done')
 
 
 # In[3]:
@@ -492,10 +497,10 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.imshow(ims[curk,:,:],cmap='gray',vmin=0,vmax=255)
 ax.scatter(predLocs[curk,:,0,0],predLocs[curk,:,1,0], #hold=True,
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=40, linewidths=0, edgecolors='face')
 ax.scatter(predLocs[curk,:,0,1],predLocs[curk,:,1,1], marker = '*', #hold=True,
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=80, linewidths=0, edgecolors='face')
 ax.set_title('{}'.format(curk))
 # print predLocs[curk,:,:,:]
@@ -515,7 +520,7 @@ import h5py
 import multiResData
 L = h5py.File(conf.labelfile,'r')
 pts = np.array(L['labeledpos'])
-localdirs =  [u''.join(unichr(c) for c in L[jj]) for jj in L['movieFilesAll'][0,:]]
+localdirs =  [u''.join(chr(c) for c in L[jj]) for jj in L['movieFilesAll'][0,:]]
 len(localdirs)
 
 
@@ -551,38 +556,38 @@ olocs = np.array(olocs)
 olocs = np.round(olocs)
 expidx = np.array(expidx)
 ts = np.array(ts)
-print olocs.shape,expidx.shape,ts.shape
+print(olocs.shape,expidx.shape,ts.shape)
 kk = np.where(loss>150)[0]
 curk = np.random.choice(kk)
 curl = predLocs[curk,:,:,1]
 d2curk = np.sum(np.abs( olocs+1-curl),axis=(1,2))
 ff = np.argmin(d2curk)
-print curk, ff, d2curk[ff]
-print curl
-print olocs[ff,:,:]+1
+print(curk, ff, d2curk[ff])
+print(curl)
+print(olocs[ff,:,:]+1)
 curl[:,0] = 512-curl[:,0]
 d2curk = np.sum(np.abs( olocs+1-curl),axis=(1,2))
 ff = np.argmin(d2curk)
-print curk, ff, d2curk[ff]
-print curl
-print olocs[ff,:,:]+1
+print(curk, ff, d2curk[ff])
+print(curl)
+print(olocs[ff,:,:]+1)
 
 
 # In[123]:
 
 kk = np.where(loss>150)[0]
-print kk
+print(kk)
 curk = np.random.choice(kk)
 curl = predLocs[curk,:,:,1]
 d2curk = np.sum(np.abs( olocs[curk+4,:,:]+1-curl),axis=(1,0))
-print d2curk
-print olocs[curk+4,:,:]
-print curl
+print(d2curk)
+print(olocs[curk+4,:,:])
+print(curl)
 curl[:,0] = 512-curl[:,0]
 d2curk = np.sum(np.abs( olocs[curk+4,:,:]+1-curl),axis=(1,0))
-print d2curk
-print olocs[curk+4,:,:]
-print curl
+print(d2curk)
+print(olocs[curk+4,:,:])
+print(curl)
 
 
 # In[50]:
@@ -593,7 +598,7 @@ import pickle
 
 # In[53]:
 
-print len(tdata['train_err'])*30
+print(len(tdata['train_err'])*30)
 
 
 # In[52]:
@@ -660,8 +665,8 @@ oo = dd.argsort()
 # # bname = odir + 'MRF_impact_maxImprovement_%d.png'
 # oo = (ddm-ddb).argsort()
 # bname = odir + 'MRF_impact_minImprovement_%d.png'
-print dd[oo[-4:-1]]
-print dd[oo[:3]]
+print(dd[oo[-4:-1]])
+print(dd[oo[:3]])
 nc = 2
 nr = 3
 for ndx in range(1,20):
@@ -683,21 +688,21 @@ for ndx in range(1,20):
     ax3 = fig.add_subplot(nc,nr,4)
     ax3.imshow(ims[curi,:,:],cmap=cm.gray)
     ax3.scatter(predLocs[curi,:,0,2],predLocs[curi,:,1,2], #hold=True,
-                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                 s=10, linewidths=0, edgecolors='face')
     ax3.axis('off')
     ax3.set_title('Label')
     ax3 = fig.add_subplot(nc,nr,5)
     ax3.imshow(ims[curi,:,:],cmap=cm.gray)
     ax3.scatter(predLocs[curi,:,0,1],predLocs[curi,:,1,1], #hold=True,
-                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                 s=10, linewidths=0, edgecolors='face')
     ax3.axis('off')
     ax3.set_title('MRF')
     ax3 = fig.add_subplot(nc,nr,6)
     ax3.imshow(ims[curi,:,:],cmap=cm.gray)
     ax3.scatter(predLocs[curi,:,0,0],predLocs[curi,:,1,0], #hold=True,
-                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                 s=10, linewidths=0, edgecolors='face')
     ax3.axis('off')
     ax3.set_title('Base (object detector)')
@@ -744,14 +749,14 @@ self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
 self.feed_dict[self.ph['x2']] = x2
 pred = sess.run(predPair,self.feed_dict)
-print fnum
+print(fnum)
 locx = 480
 locy = 465
 
 cloc = conf.cropLoc[im.shape[0:2]]
-print cloc
-ftrloc = ((locx-cloc[0])/conf.pool_scale,(locy-cloc[1])/conf.pool_scale)
-print ftrloc
+print(cloc)
+ftrloc = (old_div((locx-cloc[0]),conf.pool_scale),old_div((locy-cloc[1]),conf.pool_scale))
+print(ftrloc)
 
 predImg = PoseTools.createPredImage(pred[0][0,:,:,:]*2-1,conf.n_classes)
 fig = plt.figure(figsize = (12,4))
@@ -765,8 +770,8 @@ ax2 = fig.add_subplot(1,3,3,sharex=ax1,sharey=ax1)
 chn = 2
 sish(pred[1][0,:,:,chn],ax2)
 ax2.scatter(ftrloc[0],ftrloc[1])
-print pred[0][0,:,:,chn].max(), pred[0][0,:,:,chn].min()
-print pred[1][0,:,:,chn].max(), pred[1][0,:,:,chn].min()
+print(pred[0][0,:,:,chn].max(), pred[0][0,:,:,chn].min())
+print(pred[1][0,:,:,chn].max(), pred[1][0,:,:,chn].min())
 plt.show()
 fig = plt.figure(figsize = (5,5))
 ish(im)
@@ -813,7 +818,7 @@ oo = np.argsort(dmat.flatten())
 oo.shape
 [oi,oy,ox] = np.unravel_index(oo,dmat.shape)
 for ndx in range(5):
-    print dmat[oi[ndx],oy[ndx],ox[ndx]]
+    print(dmat[oi[ndx],oy[ndx],ox[ndx]])
 
 
 # In[ ]:
@@ -912,7 +917,7 @@ for ii in range(20):
     ss = tf.nn.softmax(out)
     [pred,cout,sout,cpred] = sess.run([out,cc,ss,correct_prediction],feed_dict = feed_dict)
     tot = tot + np.count_nonzero(cpred)
-print tot/20/88
+print(tot/20/88)
 
 
 # In[ ]:
@@ -926,16 +931,16 @@ from poseEval import *
 prepareOpt(baseNet,baseNet.DBType.Val,feed_dict,sess,conf,phDict)
 locs = baseNet.locs
 dd = feed_dict[phDict['locs']]
-print dd.shape
+print(dd.shape)
 
 sp = np.random.randint(41)
 ini = np.random.randint(8)
-print sp,ini
+print(sp,ini)
 ins = baseNet.xs
 plt.gray()
 plt.imshow(ins[ini,0,:,:])
 plt.scatter(dd[ini*41+sp,:,0],dd[ini*41+sp,:,1], hold=True,
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=10, linewidths=0, edgecolors='face')
 
 
@@ -950,7 +955,7 @@ L = h5py.File(conf.labelfile,'r')
 pts = np.array(L['pts'])[:,:,v,:]
 v = conf.view
 mm = pts.mean(axis=1)
-print mm.shape
+print(mm.shape)
 zz = pts-mm[:,np.newaxis,...]
 smin = zz.min(axis=(0,1))
 smax = zz.max(axis=(0,1))
@@ -961,8 +966,8 @@ zz = zz-smin
 for ndx in range(pts.shape[0]):
     for c1 in range(conf.n_classes):
         bfilt[ int(zz[ndx,c1,1])+1,int(zz[ndx,c1,0])+1,c1] += 1
-bfilt = (bfilt/pts.shape[0])
-bfilt = bfilt/bfilt.max()
+bfilt = (old_div(bfilt,pts.shape[0]))
+bfilt = old_div(bfilt,bfilt.max())
 
 
 fig = plt.figure()
@@ -1104,7 +1109,7 @@ for count in range(numex):
     
     evalScores[count,:,:] = sess.run(out,feed_dict=feed_dict)
     totacc = totacc + sess.run(accuracy,feed_dict=feed_dict)
-print totacc/numex    
+print(old_div(totacc,numex))    
 
 
 # In[ ]:
@@ -1207,7 +1212,7 @@ for count in range(5):
 
 get_ipython().magic(u'pylab notebook')
 ex = np.random.randint(5)
-print ex
+print(ex)
 for count in range(5):
     fig = plt.figure(figsize=(12,8))
     for ndx in range(10):
@@ -1215,7 +1220,7 @@ for count in range(5):
         ax.cla()
         ax.imshow(ims[ex,:,:],cmap='gray')
         ax.scatter(vlocs[ex,count*10+ndx,:,0],vlocs[ex,count*10+ndx,:,1],
-                    c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                    c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                     s=60, linewidths=1, edgecolors='face',alpha=1,marker='+')
         ax.set_title('{:.2f},{:.2f}'.format(vpred[ex,count*10+ndx,0],vpred[ex,count*10+ndx,1]))
         
@@ -1227,18 +1232,18 @@ sigma = 5*0.5
 rlocs = np.round(np.random.normal(size=(1,5,2,12))*sigma)
 # remove rlocs that are small.
 dlocs = np.sqrt( (rlocs**2).sum(2))
-print dlocs.shape
+print(dlocs.shape)
 kk = np.any(dlocs>5,1)
-print kk
-print kk.shape
+print(kk)
+print(kk.shape)
 
 
 # In[ ]:
 
-print vpred.shape
+print(vpred.shape)
 nn = vpred[:,:30,1].flatten()
 plt.hist(nn)
-print nn[::5000]
+print(nn[::5000])
 pp = vpred[:,30:,1].flatten()
 plt.hist(pp)
 
@@ -1350,7 +1355,7 @@ for count in range(5):
     
     evalScores[count,:,:] = sess.run(out,feed_dict=feed_dict)
     totacc = totacc + sess.run(accuracy,feed_dict=feed_dict)
-print totacc/numex    
+print(old_div(totacc,numex))    
 
 
 # In[ ]:
@@ -1372,10 +1377,10 @@ for ndx in range(16):
     ax.cla()
     ax.imshow(ims[curidx,:,:],cmap='gray')
     ax.scatter(predLocs[curidx,:,0,0],predLocs[curidx,:,1,0],
-                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                 s=60, linewidths=1, edgecolors='face',alpha=1,marker='+')
     ax.scatter(predLocs[curidx,:,0,1],predLocs[curidx,:,1,1],
-                c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                 s=20, linewidths=0, edgecolors='face')
     ax.set_title('Lab(o):{:.2f}, Pred(+):{:.2f}'.format(evalScores[curidx,1,1],evalScores[curidx,0,1]))
     for pp in range(5):
@@ -1399,8 +1404,8 @@ ee = evalScores[oo,:,:]
 nsel = 7
 plt.scatter(ee[:nsel,0,1],dd[:nsel])
 plt.scatter(ee[:nsel,1,1],dd[:nsel],c=[0,1,0],hold=True)
-print float(np.count_nonzero(ee[:nsel,1,1]>0))/nsel
-print float(np.count_nonzero(ee[:nsel,0,0]>0))/nsel
+print(old_div(float(np.count_nonzero(ee[:nsel,1,1]>0)),nsel))
+print(old_div(float(np.count_nonzero(ee[:nsel,0,0]>0)),nsel))
 
 
 # In[ ]:
@@ -1522,13 +1527,13 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.imshow(np.flipud(ims[curidx,:,:]),cmap='gray')
 ax.scatter(predLocs[curidx,:,0,0],predLocs[curidx,:,1,0], 
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=10, linewidths=0, edgecolors='face',alpha=0.4)
 ax.scatter(predLocs[curidx,:,0,1],predLocs[curidx,:,1,1],
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=10, linewidths=0, edgecolors='face')
 ax.set_title('Dark (Labeled):{:.2f}, Light (Predicted):{:.2f}'.format(evalScores[curidx,1,1],evalScores[curidx,0,1]))
-print predLocs[0,...]
+print(predLocs[0,...])
 # plt.savefig('/home/mayank/work/poseEstimation/results/poseEval/fly245_failures{}'.format(fnum+1),
 #            dpi=200)
 
@@ -1615,7 +1620,7 @@ for ss in swapdim:
 
 alllocs = alllocs.transpose([0,3,1,2])
 alllocs = alllocs.reshape((-1,)+alllocs.shape[2:])
-print alllocs
+print(alllocs)
 alllocs_m = alllocs.mean(1)
 alllocs = alllocs-alllocs_m[:,np.newaxis,:]
 
@@ -1635,10 +1640,10 @@ fig = plt.figure(figsize=(12,8))
 ax = fig.add_subplot(231)
 ax.imshow(x01[0,:,:,0],cmap='gray')
 ax.scatter(predLocs[curidx,:,0,0],predLocs[curidx,:,1,0], 
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=40, linewidths=1, edgecolors='face',marker='+')
 ax.scatter(predLocs[curidx,:,0,1],predLocs[curidx,:,1,1],
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=20, linewidths=0, edgecolors='face')
 ax.set_title('o(Lab):{:.2f}, +(Pred):{:.2f}'.format(evalScores[curidx,1,1],evalScores[curidx,0,1]))
 for pp in range(5):
@@ -1659,9 +1664,9 @@ ax = fig.add_subplot(111)
 ax.imshow(kk[0,...,0],interpolation='nearest')
 ax.set_aspect(100)
 vvl7 = l7out.var(1).var(1).squeeze()
-print vvl7.shape
-print alldd1.shape
-gg = kk[...,0]/vvl7
+print(vvl7.shape)
+print(alldd1.shape)
+gg = old_div(kk[...,0],vvl7)
 ax = fig.add_subplot(111)
 imx = ax.imshow(gg[0,...],interpolation='nearest')
 ax.set_aspect(100)
@@ -1754,8 +1759,8 @@ predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
 # predLocs[count,:,:,1] =  np.array([[276,300-4*0],[208-4*0,284+4*0],[271-4*0,255-4*0],[238-4*0,258+4*0],[236+4*0,324+4*0]])
 predLocs[count,:,:,1] = [[394,358],[ 332,336], [407,321], [351,294], [357,374]]
 predLocs[count,:,:,1] -= [128,0]
-print predLocs[...,0]
-print predLocs[...,1]
+print(predLocs[...,0])
+print(predLocs[...,1])
 
 l7 = baseNet.baseLayers['conv7']
 [bout,l7out] = sess.run([baseNet.basePred,l7],feed_dict=baseNet.feed_dict)
@@ -1806,10 +1811,10 @@ fig2 = plt.figure(figsize=(12,8))
 ax = fig2.add_subplot(231)
 ax.imshow(x01[0,:,:,0],cmap='gray')
 ax.scatter(predLocs[curidx,:,0,0],predLocs[curidx,:,1,0], 
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=40, linewidths=1, edgecolors='face',marker='+')
 ax.scatter(predLocs[curidx,:,0,1],predLocs[curidx,:,1,1],
-            c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+            c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
             s=20, linewidths=0, edgecolors='face')
 ax.set_title('o(Lab):{:.2f}, +(Pred):{:.2f}'.format(ssImg[rr,rr],evalScores[curidx,0,1]))
 for pp in range(5):
@@ -1870,8 +1875,8 @@ for ndx in range(len(valmovies)):
     height = int(cap.get(cvc.FRAME_HIEGHT))
     width = int(cap.get(cvc.FRAME_WIDTH))
     orig_crop_loc = conf.cropLoc[(height,width)]
-    crop_loc = [x/4 for x in orig_crop_loc] 
-    end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+    crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+    end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
     pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
     predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -1880,12 +1885,12 @@ for ndx in range(len(valmovies)):
     predLocs[:,:,:,1] += orig_crop_loc[0]
     
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
-    print 'Done:%s'%oname
+    print('Done:%s'%oname)
 
 
 
-print pp
-print predList[1].shape
+print(pp)
+print(predList[1].shape)
 
 
 # In[ ]:
@@ -2101,7 +2106,7 @@ in_l = feed_dict[phDict['locs']] + mpred[:,np.newaxis,:]
 out_l,out_lm = sess.run([out,out_m],feed_dict=feed_dict)
 out_l = np.reshape(out_l,[conf.batch_size*10,5,2]) + out_lm[:,np.newaxis,:] + mpred[:,np.newaxis,:]
 
-ccc=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes))
+ccc=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes))
          
 idx = np.random.randint(conf.batch_size)
 
@@ -2184,8 +2189,8 @@ for vv in tf.all_variables():
         uu.append(vv.eval())
 for ndx in range(len(uu)):
     vvar = uu[ndx].std()
-    print '{:30}:{:.2e}'.format(posevars[ndx].name,
-          vvar)
+    print('{:30}:{:.2e}'.format(posevars[ndx].name,
+          vvar))
 
 prepareOpt(baseNet,l8,baseNet.DBType.Train,feed_dict,sess,conf,
            phDict,distort=True)
@@ -2203,8 +2208,8 @@ gg = sess.run(ll,feed_dict=feed_dict)
 for ndx,curg in enumerate(gg):
     gvar = curg.std()
     vvar = uu[ndx].std()
-    print '{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
-          vvar,gvar,vvar/gvar)
+    print('{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
+          vvar,gvar,old_div(vvar,gvar)))
     
 for step in range(25):
     prepareOpt(baseNet,l8,baseNet.DBType.Train,feed_dict,sess,conf,
@@ -2224,8 +2229,8 @@ gg = sess.run(ll,feed_dict=feed_dict)
 for ndx,curg in enumerate(gg):
     gvar = curg.std()
     vvar = uu[ndx].std()
-    print '{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
-          vvar,gvar,vvar/gvar)
+    print('{:30}:{:.2e},{:.2e},{:.2e}'.format(posevars[ndx].name,
+          vvar,gvar,old_div(vvar,gvar)))
 
 
 # In[4]:
@@ -2266,7 +2271,7 @@ def convert_to(images, labels, name):
     depth = images.shape[3]
 
     filename = os.path.join('/tmp', name + '.tfrecords')
-    print('Writing', filename)
+    print(('Writing', filename))
     writer = tf.python_io.TFRecordWriter(filename)
     for index in range(num_examples):
         image_raw = images[index].tostring()
@@ -2288,7 +2293,7 @@ for ndx in range(100):
     im.append(myutils.readframe(cap,ndx))
 im = np.array(im)
 labels = np.arange(100)
-print im.shape
+print(im.shape)
 convert_to(im,labels,'test1')
 
 
@@ -2410,16 +2415,16 @@ sess = tf.InteractiveSession()
 gg = tf.constant(a[0,:,:,:])
 hh = tf.constant(b[0,:,:,:])
 ss = tf.constant(np.ones([128,128,2]))
-hh1 = tf.mul(hh-ss,tf.sqrt(tf.maximum(gg/2+0.5,0)))
+hh1 = tf.mul(hh-ss,tf.sqrt(tf.maximum(old_div(gg,2)+0.5,0)))
 kk = tf.nn.l2_loss(hh1)
 kk1 = kk.eval()
 ll1 = hh1.eval()
 plt.figure()
 plt.imshow(ll1[...,0])
-print kk1
+print(kk1)
 vv = (b[0,:,:,:]-1)**2
-vv = np.sum( (vv*(a[0,:,:,:]/2+0.5)).flatten())
-print vv/2
+vv = np.sum( (vv*(old_div(a[0,:,:,:],2)+0.5)).flatten())
+print(old_div(vv,2))
 
 
 # In[ ]:

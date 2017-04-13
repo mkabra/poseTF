@@ -1,8 +1,11 @@
+from __future__ import division
 
 # coding: utf-8
 
 # In[ ]:
 
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import localSetup
@@ -76,7 +79,7 @@ class myconfig(object):
     fine_learning_rate = 0.0003
 
     batch_size = 8
-    mult_fac = 16/batch_size
+    mult_fac = old_div(16,batch_size)
     base_training_iters = 10000*mult_fac #15000
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank

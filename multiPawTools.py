@@ -1,8 +1,11 @@
+from __future__ import division
 
 # coding: utf-8
 
 # In[ ]:
 
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import scipy
 import math
@@ -22,7 +25,7 @@ def scalepatches(patch,scale,num,rescale):
     curpatch = patch
     for ndx in range(num-1):
         sz = curpatch.shape
-        crop = int((1-1.0/scale)/2*sz[0])
+        crop = int((1-old_div(1.0,scale))/2*sz[0])
 #         print(ndx,crop)
         
         spatch = curpatch[crop:-crop,crop:-crop,:]
@@ -43,7 +46,7 @@ def readLMDB(cursor,num,imsz,dataMod):
 
 #     print(images.shape)
     for ndx in range(num):
-        if not cursor.next():
+        if not next(cursor):
             cursor.first()
 #             print('restarting at %d' % ndx)
             
@@ -63,14 +66,14 @@ def readLMDB(cursor,num,imsz,dataMod):
 # In[ ]:
 
 def blurLabel(imsz,loc,scale,blur_rad):
-    sz0 = int(math.ceil(float(imsz[0])/scale))
-    sz1 = int(math.ceil(float(imsz[1])/scale))
+    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
+    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
 
     label = np.zeros([sz0,sz1])
     if not np.isnan(loc[0]):
-        label[int(loc[0]/scale),int(loc[1]/scale)] = 1
+        label[int(old_div(loc[0],scale)),int(old_div(loc[1],scale))] = 1
         blurL = ndimage.gaussian_filter(label,blur_rad)
-        blurL = blurL/blurL.max()
+        blurL = old_div(blurL,blurL.max())
     else:
         blurL = label
     return blurL
@@ -80,10 +83,10 @@ def blurLabel(imsz,loc,scale,blur_rad):
 
 def scaleImages(img,scale):
     sz = img.shape
-    simg = np.zeros((sz[0],sz[1]/scale,sz[2]/scale,sz[3]))
+    simg = np.zeros((sz[0],old_div(sz[1],scale),old_div(sz[2],scale),sz[3]))
     for ndx in range(sz[0]):
         for chn in range(sz[3]):
-            simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],1./scale)
+            simg[ndx,:,:,chn] = misc.imresize(img[ndx,:,:,chn],old_div(1.,scale))
     return simg
 
 def multiScaleImages(inImg,rescale,scale):
@@ -97,8 +100,8 @@ def multiScaleImages(inImg,rescale,scale):
 
 def createLabelImages(locs,imsz,scale,blur_rad):
     n_classes = len(locs[0])
-    sz0 = int(math.ceil(float(imsz[0])/scale))
-    sz1 = int(math.ceil(float(imsz[1])/scale))
+    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
+    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
 
     labelims = np.zeros((len(locs),sz0,sz1,n_classes))
     for cls in range(n_classes):
@@ -115,9 +118,9 @@ def createLabelImages(locs,imsz,scale,blur_rad):
 def createFineLabelTensor(conf):
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
     timg = np.zeros((tsz,tsz))
-    timg[tsz/2,tsz/2] = 1
+    timg[old_div(tsz,2),old_div(tsz,2)] = 1
     blurL = ndimage.gaussian_filter(timg,conf.fine_label_blur_rad)
-    blurL = blurL/blurL.max()
+    blurL = old_div(blurL,blurL.max())
     blurL = 2.0*(blurL-0.5)
     return tf.constant(blurL)
 
@@ -125,7 +128,7 @@ def createFineLabelTensor(conf):
 # In[ ]:
 
 def extractFineLabelTensor(labelT,sz,dd,fsz):
-    return tf.slice(labelT,dd+sz/2-fsz/2,[fsz,fsz])
+    return tf.slice(labelT,dd+old_div(sz,2)-old_div(fsz,2),[fsz,fsz])
 
 
 # In[ ]:
@@ -133,15 +136,15 @@ def extractFineLabelTensor(labelT,sz,dd,fsz):
 def createFineLabelImages(locs,pred,conf,labelT):
     maxlocs = argmax2d(pred)*conf.pool_scale
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
-    hsz = conf.fine_sz/2
+    hsz = old_div(conf.fine_sz,2)
     limgs = []
     for inum in range(conf.batch_size):
         curlimgs = []
         for ndx in range(conf.n_classes):
-            dx = maxlocs[1,inum,ndx]-tf.to_int32(locs[inum,ndx,0]/conf.rescale)
-            dy = maxlocs[0,inum,ndx]-tf.to_int32(locs[inum,ndx,1]/conf.rescale)
+            dx = maxlocs[1,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,0],conf.rescale))
+            dy = maxlocs[0,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,1],conf.rescale))
             dd = tf.pack([dx,dy])
-            dd = tf.maximum(tf.to_int32(hsz-tsz/2),tf.minimum(tf.to_int32(tsz/2-hsz-1),dd))
+            dd = tf.maximum(tf.to_int32(hsz-old_div(tsz,2)),tf.minimum(tf.to_int32(old_div(tsz,2)-hsz-1),dd))
             curlimgs.append(extractFineLabelTensor(labelT,tsz,dd,conf.fine_sz))
         limgs.append(tf.pack(curlimgs))
     return tf.transpose(tf.pack(limgs),[0,2,3,1])
@@ -187,7 +190,7 @@ def getFineError(locs,pred,finepred,conf):
             predloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
             predloc = predloc * conf.pool_scale * conf.rescale
             maxndx = np.argmax(finepred[ndx,:,:,cls])
-            finepredloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-conf.fine_sz/2)*conf.rescale
+            finepredloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-old_div(conf.fine_sz,2))*conf.rescale
             baselocerr[ndx,cls,0]= float(predloc[1])-locs[ndx][cls][0]
             baselocerr[ndx,cls,1]= float(predloc[0])-locs[ndx][cls][1]
             finelocerr[ndx,cls,0]= float(predloc[1]+finepredloc[1])-locs[ndx][cls][0]

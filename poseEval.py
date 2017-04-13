@@ -1,8 +1,12 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys
 import matplotlib
@@ -23,6 +27,7 @@ import operator
 import copy
 import convNetBase as CNB
 import multiResData
+from functools import reduce
 
 
 # In[ ]:
@@ -64,8 +69,8 @@ def createPlaceHolders(conf):
     
     nex = conf.batch_size*(conf.eval_num_neg+1)
     x0 = tf.placeholder(tf.float32, [nex,
-                                     imsz[0]/inScale,
-                                     imsz[1]/inScale,imgDim],name='x0')
+                                     old_div(imsz[0],inScale),
+                                     old_div(imsz[1],inScale),imgDim],name='x0')
     x1 = tf.placeholder(tf.float32, [nex,
                                      imsz[0]/scale/inScale,
                                      imsz[1]/scale/inScale,imgDim],name='x1')
@@ -75,8 +80,8 @@ def createPlaceHolders(conf):
 
     scores_scale = scale*scale*inScale
     s0 = tf.placeholder(tf.float32, [nex,
-                                     imsz[0]/scores_scale,
-                                     imsz[1]/scores_scale,n_classes],name='s0')
+                                     old_div(imsz[0],scores_scale),
+                                     old_div(imsz[1],scores_scale),n_classes],name='s0')
     s1 = tf.placeholder(tf.float32, [nex,
                                      imsz[0]/scale/scores_scale,
                                      imsz[1]/scale/scores_scale,n_classes],name='s1')
@@ -138,7 +143,7 @@ def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,doPool=True,addSummary=T
     with tf.variable_scope('layer4'):
         conv4 = conv_relu(conv3,[3,3,nfilt,nfilt],0.01,0,doBatchNorm,trainPhase,addSummary)
     with tf.variable_scope('layer5'):
-        conv5 = conv_relu(conv4,[3,3,nfilt,nfilt/4],0.01,0,doBatchNorm,trainPhase,addSummary)
+        conv5 = conv_relu(conv4,[3,3,nfilt,old_div(nfilt,4)],0.01,0,doBatchNorm,trainPhase,addSummary)
         
     out_dict = {'conv1':conv1,'conv2':conv2,'conv3':conv3,
                 'conv4':conv4,'conv5':conv5}
@@ -205,9 +210,9 @@ def net_multi_conv(ph,conf):
     with tf.variable_scope('layer6'):
 #         weights = tf.get_variable("weights", [conv5_dims,conf.nfcfilt/2],
 #             initializer=tf.random_normal_initializer(stddev=0.005))
-        weights = tf.get_variable("weights", [conv5_dims,conf.nfcfilt/2],
+        weights = tf.get_variable("weights", [conv5_dims,old_div(conf.nfcfilt,2)],
             initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable("biases", conf.nfcfilt/2,
+        biases = tf.get_variable("biases", old_div(conf.nfcfilt,2),
             initializer=tf.constant_initializer(0))
         with tf.variable_scope('weights'):
             PoseTools.variable_summaries(weights)
@@ -221,9 +226,9 @@ def net_multi_conv(ph,conf):
     with tf.variable_scope('layer7'):
 #         weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/2],
 #             initializer=tf.random_normal_initializer(stddev=0.005))
-        weights = tf.get_variable("weights", [conf.nfcfilt/2,conf.nfcfilt/4],
+        weights = tf.get_variable("weights", [old_div(conf.nfcfilt,2),old_div(conf.nfcfilt,4)],
             initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable("biases", conf.nfcfilt/4,
+        biases = tf.get_variable("biases", old_div(conf.nfcfilt,4),
             initializer=tf.constant_initializer(0))
         
         with tf.variable_scope('weights'):
@@ -236,7 +241,7 @@ def net_multi_conv(ph,conf):
             PoseTools.variable_summaries(conv7)
 
     with tf.variable_scope('layer8'):
-        l8_weights = tf.get_variable("weights", [conf.nfcfilt/4,conf.n_classes],
+        l8_weights = tf.get_variable("weights", [old_div(conf.nfcfilt,4),conf.n_classes],
             initializer=tf.random_normal_initializer(stddev=0.01))
         l8_biases = tf.get_variable("biases", conf.n_classes,
             initializer=tf.constant_initializer(0))
@@ -327,7 +332,7 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     alllocs = nlocs
     dd = alllocs-locs[...,np.newaxis] # distance of neg points to actual locations
     ddist = np.sqrt(np.sum(dd**2,axis=2))
-    ind_labels = (ddist - conf.eval_minlen/2 )/conf.eval_minlen
+    ind_labels = old_div((ddist - old_div(conf.eval_minlen,2) ),conf.eval_minlen)
     ind_labels = ind_labels.clip(min=0,max=1)
     ind_labels = np.transpose(ind_labels,[0,2,1])
     ind_labels = ind_labels.reshape((-1,))
@@ -426,8 +431,8 @@ def poseEvalNetInit(conf):
     trainType = 0
     queue = openDBs(conf,trainType=trainType)
     if trainType == 1:
-        print "Training with all the data!"
-        print "Validation data is same as training data!!!! "
+        print("Training with all the data!")
+        print("Validation data is same as training data!!!! ")
     return ph,feed_dict,out,queue,out_dict
     
 
@@ -485,7 +490,7 @@ def poseEvalTrain(conf,restore=True):
                 feed_dict[ph['keep_prob']] = 1.
                 feed_dict[ph['phase_train']] = False
                 train_loss,train_acc = sess.run([loss,accuracy],feed_dict=feed_dict)
-                numrep = int(conf.numTest/conf.batch_size)+1
+                numrep = int(old_div(conf.numTest,conf.batch_size))+1
                 val_loss = 0.
                 val_acc = 0.
 #                 val_acc_wt = 0.
@@ -495,13 +500,13 @@ def poseEvalTrain(conf,restore=True):
                     val_loss += vloss
                     val_acc += vacc
 #                     val_acc_wt += vacc_wt
-                val_loss = val_loss/numrep
-                val_acc = val_acc/numrep
+                val_loss = old_div(val_loss,numrep)
+                val_acc = old_div(val_acc,numrep)
 #                 val_acc_wt /= numrep
                 test_summary,_ = sess.run([merged,loss],feed_dict=feed_dict)
                 test_writer.add_summary(test_summary,step)
-                print 'Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
-                    val_acc,val_loss,train_acc,train_loss,step)
+                print('Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
+                    val_acc,val_loss,train_acc,train_loss,step))
             if step % conf.save_step == 0:
                 saveEval(sess,evalSaver,step,conf)
         print("Optimization Done!")
@@ -688,7 +693,7 @@ def genGaussianNegSamples(bout,locs,conf,nsamples=10,minlen = 8):
 def genMovedNegSamples(bout,locs,conf,nsamples=10,minlen=8):
     # Add same x and y to locs
     
-    minlen = float(minlen)/2
+    minlen = old_div(float(minlen),2)
     maxlen = 2*minlen
     rlocs = np.zeros(locs.shape + (nsamples,))
 #     sz = (np.array(bout.shape[1:3])-1)*conf.rescale*conf.pool_scale
@@ -759,7 +764,7 @@ def genNegSamples(bout,locs,conf,nsamples=10,minlen=8,N=1):
 # In[ ]:
 
 def genData(l7out,inlocs,conf):
-    locs = np.round(inlocs/(conf.rescale*conf.pool_scale))
+    locs = np.round(old_div(inlocs,(conf.rescale*conf.pool_scale)))
     dd = np.zeros(locs.shape[0:2]+l7out.shape[-1:]+locs.shape[-1:])
     for curi in range(locs.shape[0]):
         for pp in range(locs.shape[1]):
@@ -882,9 +887,9 @@ def train(conf,restore=True):
                     test_acc += sess.run(accuracy, feed_dict = feed_dict)
                     tout = sess.run(correct_prediction, feed_dict=feed_dict)
                     labels = feed_dict[phDict['y']]
-                    pos_acc += float(np.count_nonzero(tout[labels[:,1]>0.5]))/nsamples
+                    pos_acc += old_div(float(np.count_nonzero(tout[labels[:,1]>0.5])),nsamples)
                     for nt in range(ntypes):
-                        nacc[nt] += float(np.count_nonzero(tout[n_inters+nt*nsamples]))/nsamples
+                        nacc[nt] += old_div(float(np.count_nonzero(tout[n_inters+nt*nsamples])),nsamples)
                     
                     tdd = feed_dict[phDict['lin']]
                     tlocs = feed_dict[phDict['locs']]
@@ -923,14 +928,14 @@ def train(conf,restore=True):
                     nclose += np.count_nonzero(d2locs<25)
                     er_locs = ~corrpred[0::2]
                     in_locs = np.append(in_locs,d2locs[er_locs])
-                print "Iter:{:d}, train:{:.4f} test:{:.4f} acc:{:.2f} posacc:{:.2f}".format(step,
-                                                 train_cross_ent,test_cross_ent/nrep,
-                                                 test_acc/nrep,pos_acc/nrep/conf.batch_size/npos)
-                print "Neg:{}".format(nacc/nrep/conf.batch_size)
-                print "Pred Acc Pos:{},Pred Acc Pred:{},numclose:{}".format(float(pred_acc_pos)/nrep/conf.batch_size,
+                print("Iter:{:d}, train:{:.4f} test:{:.4f} acc:{:.2f} posacc:{:.2f}".format(step,
+                                                 train_cross_ent,old_div(test_cross_ent,nrep),
+                                                 old_div(test_acc,nrep),pos_acc/nrep/conf.batch_size/npos))
+                print("Neg:{}".format(nacc/nrep/conf.batch_size))
+                print("Pred Acc Pos:{},Pred Acc Pred:{},numclose:{}".format(float(pred_acc_pos)/nrep/conf.batch_size,
                                                                             float(pred_acc_pred)/nrep/conf.batch_size,
-                                                                            float(nclose)/nrep/conf.batch_size)
-                print 'Distance of incorrect predictions:{}'.format(in_locs)
+                                                                            float(nclose)/nrep/conf.batch_size))
+                print('Distance of incorrect predictions:{}'.format(in_locs))
                 
             if step % 100 == 0:
                 saveEval(sess,step,evalSaver,conf)

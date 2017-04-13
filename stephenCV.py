@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 from multiResData import *
 import h5py
@@ -59,7 +63,7 @@ def trainfold(view,curfold,curgpu,batch_size):
         ##
 
         folds = 5
-        lbls_fold = int(np.sum(num_labels)/folds)
+        lbls_fold = int(old_div(np.sum(num_labels),folds))
 
         imbalance = True
         while imbalance:
@@ -75,8 +79,8 @@ def trainfold(view,curfold,curgpu,batch_size):
                         fly_fold[ndx] = curfold
                         per_fold[curfold] += fly_labels[ndx]
                         done = True
-            imbalance = (per_fold.max()-per_fold.min())>(lbls_fold/3)
-        print per_fold
+            imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,3))
+        print(per_fold)
 
         ##
 
@@ -107,7 +111,7 @@ def trainfold(view,curfold,curgpu,batch_size):
     _,localdirs,seldirs = multiResData.loadValdata(conf)
     for ndx,curl in enumerate(localdirs):
         if not os.path.exists(curl):
-            print curl + ' {} doesnt exist!!!!'.format(ndx)
+            print(curl + ' {} doesnt exist!!!!'.format(ndx))
             return
 
 
@@ -141,7 +145,7 @@ def update_dirnames(conf):
 
     for ndx,curl in enumerate(localdirs):
         if not os.path.exists(curl):
-            print curl + ' {} doesnt exist!!!!'.format(ndx)
+            print(curl + ' {} doesnt exist!!!!'.format(ndx))
     return localdirs
 
 

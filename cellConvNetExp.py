@@ -1,8 +1,10 @@
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[1]:
 
+from builtins import range
 import tensorflow as tf
 from numpy import linalg as LA
 
@@ -14,7 +16,7 @@ lr = 0.01
 scale = 0.2
 c1 = np.random.randn(indim[0])
 c2 = np.random.randn(indim[0])
-print(LA.norm(c1.flatten()),LA.norm(c2.flatten()))
+print((LA.norm(c1.flatten()),LA.norm(c2.flatten())))
 print(np.dot(c1.flatten(),c2.flatten()))
 sess = tf.InteractiveSession()
 
@@ -59,7 +61,7 @@ for ndx in range(niter):
     feed_dict={Xph:s, label_ph:l}
     curloss = sess.run(loss,feed_dict=feed_dict)
     if ndx%50 == 0:
-        print(ndx,curloss)
+        print((ndx,curloss))
     
     
 
@@ -79,7 +81,7 @@ c1 = np.random.randn(indim[0])
 c2 = np.random.randn(indim[0])
 rdir = np.random.randn(indim[0])
 tres = np.dot(rdir,c2-c1)
-print(LA.norm(c1.flatten()),LA.norm(c2.flatten()))
+print((LA.norm(c1.flatten()),LA.norm(c2.flatten())))
 print(np.dot(c1.flatten(),c2.flatten()))
 print(np.dot(rdir.flatten(),c2.flatten()))
 print(np.dot(rdir.flatten(),c1.flatten()))
@@ -125,7 +127,7 @@ for ndx in range(niter):
     feed_dict={Xph:s, label_ph:l}
     curloss = sess.run(loss,feed_dict=feed_dict)
     if ndx%50 == 0:
-        print(ndx,curloss)
+        print((ndx,curloss))
     
     
 

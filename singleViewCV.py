@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 # from multiResData import *
 import h5py
@@ -114,7 +118,7 @@ def createvaldataJan(conf):
     ##
 
     folds = 3
-    lbls_fold = int(np.sum(num_labels)/folds)
+    lbls_fold = int(old_div(np.sum(num_labels),folds))
 
     imbalance = True
     while imbalance:
@@ -130,8 +134,8 @@ def createvaldataJan(conf):
                     fly_fold[ndx] = curfold
                     per_fold[curfold] += fly_labels[ndx]
                     done = True
-        imbalance = (per_fold.max()-per_fold.min())>(lbls_fold/3)
-    print per_fold
+        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,3))
+    print(per_fold)
 
 ##
     for ndx in range(folds):
@@ -179,7 +183,7 @@ def createvaldataRoian(conf):
     ##
 
     folds = 3
-    lbls_fold = int(np.sum(num_labels)/folds)
+    lbls_fold = int(old_div(np.sum(num_labels),folds))
 
     imbalance = True
     while imbalance:
@@ -195,8 +199,8 @@ def createvaldataRoian(conf):
                     fly_fold[ndx] = curfold
                     per_fold[curfold] += fly_labels[ndx]
                     done = True
-        imbalance = (per_fold.max()-per_fold.min())>(lbls_fold/2)
-    print per_fold
+        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,2))
+    print(per_fold)
 
 ##
     allisval = []
@@ -248,7 +252,7 @@ def createvaldataJay():
     ##
 
     folds = 3
-    lbls_fold = int(np.sum(num_labels)/folds)
+    lbls_fold = int(old_div(np.sum(num_labels),folds))
 
     imbalance = True
     while imbalance:
@@ -264,8 +268,8 @@ def createvaldataJay():
                     fly_fold[ndx] = curfold
                     per_fold[curfold] += fly_labels[ndx]
                     done = True
-        imbalance = (per_fold.max()-per_fold.min())>(lbls_fold/1.8)
-    print per_fold
+        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,1.8))
+    print(per_fold)
 
 ##
     allisval = []
@@ -313,7 +317,7 @@ def trainfold(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
         _, localdirs, seldirs = multiResData.loadValdata(conf)
         for ndx, curl in enumerate(localdirs):
             if not os.path.exists(curl):
-                print curl + ' {} doesnt exist!!!!'.format(ndx)
+                print(curl + ' {} doesnt exist!!!!'.format(ndx))
                 return
 
         multiResData.createTFRecordFromLbl(conf,True)
@@ -351,7 +355,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
     isval,localdirs,seldirs = multiResData.loadValdata(conf)
     for ndx,curl in enumerate(localdirs):
         if not os.path.exists(curl):
-            print curl + ' {} doesnt exist!!!!'.format(ndx)
+            print(curl + ' {} doesnt exist!!!!'.format(ndx))
             return
 
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
@@ -368,7 +372,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
         oname = re.sub('!','__',conf.getexpname(localdirs[ndx]))
         pname = os.path.join(outdir , oname)
 
-        print oname
+        print(oname)
 
         # detect
         if redo or not os.path.isfile(pname + '.mat'):
@@ -379,8 +383,8 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
             height = int(cap.get(cvc.FRAME_HEIGHT))
             width = int(cap.get(cvc.FRAME_WIDTH))
             orig_crop_loc = conf.cropLoc[(height,width)]
-            crop_loc = [x/4 for x in orig_crop_loc]
-            end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+            crop_loc = [old_div(x,4) for x in orig_crop_loc]
+            end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
             pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
             predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -389,7 +393,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
             predLocs[:,:,:,1] += orig_crop_loc[0]
 
             io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
-            print 'Detecting:%s'%oname
+            print('Detecting:%s'%oname)
 
 
 def createCVMat(conffile):
@@ -458,16 +462,16 @@ def duplicatesJan():
     import collections
     localdirs,seldirs = multiResData.findLocalDirs(conf)
     gg = [conf.getexpname(x) for x in localdirs]
-    mm = [item for item, count in collections.Counter(gg).items() if count > 1]
+    mm = [item for item, count in list(collections.Counter(gg).items()) if count > 1]
     L = h5py.File(conf.labelfile)
     pts = L['labeledpos']
     for ndx in range(len(mm)):
         aa = [idx for idx, x in enumerate(gg) if x == mm[ndx]]
-        print mm[ndx]
+        print(mm[ndx])
         for curndx in aa:
             curpts = np.array(L[pts[0, curndx]])
             frames = np.where(np.invert( np.all(np.isnan(curpts[:,:,:]),axis=(1,2))))[0]
-            print curndx,frames.size
+            print(curndx,frames.size)
 ##
 
 

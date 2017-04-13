@@ -2,6 +2,11 @@
 
 # In[2]:
 
+from __future__ import division
+from __future__ import print_function
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os
 import sys
@@ -313,8 +318,8 @@ def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
     for ndx, count in enumerate(sel_pt1):
         cur_locs = sel_locs[ndx]
         feed_dict[ph['X'][0][ndx]] = extract_patches(x0, cur_locs[:, count, :], psz)
-        feed_dict[ph['X'][1][ndx]] = extract_patches(x1, (cur_locs[:, count, :]) / conf.scale, psz)
-        feed_dict[ph['X'][2][ndx]] = extract_patches(x2, (cur_locs[:, count, :]) / (conf.scale ** 2), psz)
+        feed_dict[ph['X'][1][ndx]] = extract_patches(x1, old_div((cur_locs[:, count, :]), conf.scale), psz)
+        feed_dict[ph['X'][2][ndx]] = extract_patches(x2, old_div((cur_locs[:, count, :]), (conf.scale ** 2)), psz)
     feed_dict[ph['y']] = labels
     return locs, xs
 
@@ -383,8 +388,8 @@ def extract_patches(img, locs, psz):
         if np.isnan(locs[ndx,0]):
             continue
         p_img = np.pad(img[ndx, ...], pad_arg, 'constant')
-        zz[ndx,...]= p_img[(int_locs[ndx, 1] + psz - psz / 2):(int_locs[ndx, 1] + psz + psz / 2),
-                  (int_locs[ndx, 0] + psz - psz / 2):(int_locs[ndx, 0] + psz + psz / 2), :]
+        zz[ndx,...]= p_img[(int_locs[ndx, 1] + psz - old_div(psz, 2)):(int_locs[ndx, 1] + psz + old_div(psz, 2)),
+                  (int_locs[ndx, 0] + psz - old_div(psz, 2)):(int_locs[ndx, 0] + psz + old_div(psz, 2)), :]
     return np.array(zz)
 
 
@@ -455,11 +460,11 @@ def print_gradients(sess, feed_dict, loss):
     grads_std = [g.std() for g in grads]
     wts_std = [w.std() for w in wts]
 
-    grads_by_wts = [s / w for s, w in zip(grads_std, wts_std)]
+    grads_by_wts = [old_div(s, w) for s, w in zip(grads_std, wts_std)]
 
     bb = [[r, n.name] for r, n in zip(grads_by_wts, aa)]
     for b, k, g in zip(bb, grads_std, wts_std):
-        print b, k, g
+        print(b, k, g)
 
 
 # In[ ]:
@@ -475,8 +480,8 @@ def pose_shape_net_init(conf):
     train_type = 0
     queue = open_dbs(conf, train_type=train_type)
     if train_type == 1:
-        print "Training with all the data!"
-        print "Validation data is same as training data!!!! "
+        print("Training with all the data!")
+        print("Validation data is same as training data!!!! ")
     return ph, feed_dict, out, queue, out_dict
 
 def print_shape_accuracy(correct_pred,conf):
@@ -491,8 +496,8 @@ def print_shape_accuracy(correct_pred,conf):
         stop = ptsDone * n_o * n_r
         cur_acc = correct_pred[:,start:stop].reshape(correct_pred.shape[0],n,n_o,n_r)
 
-        print '{}:'.format(conf.shape_selpt1[ndx])
-        print cur_acc.mean(axis=0).squeeze()
+        print('{}:'.format(conf.shape_selpt1[ndx]))
+        print(cur_acc.mean(axis=0).squeeze())
 
 
 
@@ -510,7 +515,7 @@ def pose_shape_train(conf, restore=True):
     sel_pt2 = conf.shape_selpt2[0][0]
     shape_prior = init_shape_prior(conf)
     wt_den = shape_prior[sel_pt1:sel_pt1+1, sel_pt2:sel_pt2+1, ...]
-    wt = tf.reduce_max(y_re / (wt_den + 0.1), axis=(1, 2,3,4))
+    wt = tf.reduce_max(old_div(y_re, (wt_den + 0.1)), axis=(1, 2,3,4))
     loss = tf.reduce_sum(tf.reduce_sum((out - ph['y']) ** 2, axis=1) * wt)
 
     # loss = tf.nn.l2_loss(out-ph['y'])
@@ -532,7 +537,7 @@ def pose_shape_train(conf, restore=True):
         shape_start_at = restore_shape(sess, shape_saver, restore, conf, feed_dict)
         for step in range(shape_start_at, conf.shape_training_iters + 1):
             ex_count = step * conf.batch_size
-            cur_lr = conf.shape_learning_rate * conf.gamma ** math.floor(ex_count / conf.step_size)
+            cur_lr = conf.shape_learning_rate * conf.gamma ** math.floor(old_div(ex_count, conf.step_size))
             feed_dict[ph['learning_rate']] = cur_lr
             feed_dict[ph['phase_train']] = True
             update_feed_dict(conf, 'train', distort=True, sess=sess, data=data, feed_dict=feed_dict, ph=ph)
@@ -543,7 +548,7 @@ def pose_shape_train(conf, restore=True):
                 update_feed_dict(conf, 'train', sess=sess, distort=True, data=data, feed_dict=feed_dict, ph=ph)
                 feed_dict[ph['phase_train']] = False
                 train_loss, train_acc = sess.run([loss, accuracy], feed_dict=feed_dict)
-                num_rep = int(conf.numTest / conf.batch_size) + 1
+                num_rep = int(old_div(conf.numTest, conf.batch_size)) + 1
                 val_loss = 0.
                 val_acc = 0.
                 c_pred = []
@@ -560,9 +565,9 @@ def pose_shape_train(conf, restore=True):
                 #                 val_acc_wt /= num_rep
                 test_summary, _ = sess.run([merged, loss], feed_dict=feed_dict)
                 #                 test_writer.add_summary(test_summary,step)
-                print 'Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(val_acc, val_loss,
+                print('Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(val_acc, val_loss,
                                                                                   train_acc, train_loss,
-                                                                                  step)
+                                                                                  step))
                 c_pred = np.concatenate(c_pred,axis=0)
                 if step%(conf.display_step*10) == 0:
                     print_shape_accuracy(c_pred, conf)
@@ -660,7 +665,7 @@ def gen_gaussian_neg_samples(bout, locs, conf, nsamples=10, minlen=8):
 def gen_moved_neg_samples(bout, locs, conf, nsamples=10, min_len=8):
     # Add same x and y to locs
 
-    min_len = float(min_len) / 2
+    min_len = old_div(float(min_len), 2)
     max_len = 2 * min_len
     r_locs = np.zeros(locs.shape + (nsamples,))
     #     sz = (np.array(bout.shape[1:3])-1)*conf.rescale*conf.pool_scale

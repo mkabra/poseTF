@@ -4,6 +4,7 @@
 # In[1]:
 
 # constant for different versions of opencv
+from builtins import object
 import cv2
 class cvc(object):
     (major,minor,_) = cv2.__version__.split('.')

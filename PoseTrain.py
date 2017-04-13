@@ -6,7 +6,13 @@
 '''
 Mayank Feb 3 2016
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import tensorflow as tf
 import os,sys,shutil
 import tempfile,copy,re
@@ -222,16 +228,16 @@ class PoseTrain(object):
         n_classes = self.conf.n_classes
         bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
-        mrf_weights = mrf_weights/n_classes
+        mrf_weights = old_div(mrf_weights,n_classes)
         
         baseShape = tf.Tensor.get_shape(bpred).as_list()[1:3]
         mrf_sz = mrf_weights.shape[0:2]
 
-        bpred = tf.nn.relu((bpred+1)/2)
+        bpred = tf.nn.relu(old_div((bpred+1),2))
         sliceEnd = [0,0]
         pad = False
         if mrf_sz[0] > baseShape[0]:
-            dd1 = int(math.ceil(float(mrf_sz[0]-baseShape[0])/2))
+            dd1 = int(math.ceil(old_div(float(mrf_sz[0]-baseShape[0]),2)))
             sliceEnd[0] = mrf_sz[0]-dd1
             pad = True
         else:
@@ -239,7 +245,7 @@ class PoseTrain(object):
             sliceEnd[0] = baseShape[0]
             
         if mrf_sz[1] > baseShape[1]:
-            dd2 = int(math.ceil(float(mrf_sz[1]-baseShape[1])/2))
+            dd2 = int(math.ceil(old_div(float(mrf_sz[1]-baseShape[1]),2)))
             sliceEnd[1] = mrf_sz[1]-dd2
             pad = True
         else:
@@ -252,7 +258,7 @@ class PoseTrain(object):
 
         ksz = math.sqrt(mrf_weights.shape[0]*mrf_weights.shape[1])
         with tf.variable_scope('mrf'):
-            conv_std = (1./n_classes)/ksz
+            conv_std = old_div((old_div(1.,n_classes)),ksz)
             weights = tf.get_variable("weights", initializer=tf.constant(mrf_weights))
             biases = tf.get_variable("biases", n_classes,
                                      initializer=tf.constant_initializer(0))
@@ -296,7 +302,7 @@ class PoseTrain(object):
     def extractPatches(self,layer, out, locs, conf, scale, outscale):
         hsz = conf.fine_sz / scale / 2
         padsz = tf.constant([[0, 0], [hsz, hsz], [hsz, hsz], [0, 0]])
-        patchsz = tf.to_int32([conf.fine_sz / scale, conf.fine_sz / scale, -1])
+        patchsz = tf.to_int32([old_div(conf.fine_sz, scale), old_div(conf.fine_sz, scale), -1])
 
         patches = []
         # maxloc = PoseTools.argmax2d(out) * outscale
@@ -576,7 +582,7 @@ class PoseTrain(object):
 
     def doOpt(self,sess,step,learning_rate):
         excount = step*self.conf.batch_size
-        cur_lr = learning_rate * self.conf.gamma**math.floor(excount/self.conf.step_size)
+        cur_lr = learning_rate * self.conf.gamma**math.floor(old_div(excount,self.conf.step_size))
         self.feed_dict[self.ph['learning_rate']] = cur_lr
         self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
@@ -590,7 +596,7 @@ class PoseTrain(object):
 
     def doOptFine(self, sess, step, learning_rate):
         excount = step * self.conf.batch_size
-        cur_lr = learning_rate * self.conf.gamma ** math.floor(excount / self.conf.step_size)
+        cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(excount, self.conf.step_size))
         self.feed_dict[self.ph['learning_rate']] = cur_lr
         self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
@@ -605,7 +611,7 @@ class PoseTrain(object):
     def computeLoss(self,sess,costfcns):
         self.feed_dict[self.ph['keep_prob']] = 1.
         loss = sess.run(costfcns,self.feed_dict)
-        loss = [x/self.conf.batch_size for x in loss]
+        loss = [old_div(x,self.conf.batch_size) for x in loss]
         return loss
     
     def computePredDist(self,sess,predfcn):
@@ -624,7 +630,7 @@ class PoseTrain(object):
         return fine_dist
 
     def updateBaseLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]))
 #         nstep = step-self.basestartat
 #         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
 #               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
@@ -635,8 +641,8 @@ class PoseTrain(object):
         self.basetrainData['val_dist'].append(valDist[0])        
 
     def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
-                                                      trainDist[1],valDist[1])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
+                                                      trainDist[1],valDist[1]))
         self.mrftrainData['train_err'].append(train_loss[0])        
         self.mrftrainData['val_err'].append(val_loss[0])        
         self.mrftrainData['train_base_err'].append(train_loss[1])        
@@ -648,7 +654,7 @@ class PoseTrain(object):
         self.mrftrainData['step_no'].append(step)        
 
     def updateFineLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " (MRF:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[1],val_loss[1],trainDist[1],valDist[1]) +              " (Base:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[2],val_loss[2],trainDist[2],valDist[2])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " (MRF:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[1],val_loss[1],trainDist[1],valDist[1]) +              " (Base:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[2],val_loss[2],trainDist[2],valDist[2]))
         self.finetrainData['train_err'].append(train_loss[0])        
         self.finetrainData['val_err'].append(val_loss[0])        
         self.finetrainData['train_mrf_err'].append(train_loss[1])        
@@ -664,7 +670,7 @@ class PoseTrain(object):
         self.finetrainData['val_base_dist'].append(valDist[2])        
 
     def updateJointLoss(self,step,train_loss,val_loss):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (Fine:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[2],val_loss[2]) +              " (Base:{:.1f},{:.1f})".format(train_loss[3],val_loss[3])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (Fine:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[2],val_loss[2]) +              " (Base:{:.1f},{:.1f})".format(train_loss[3],val_loss[3]))
         self.jointtrainData['train_err'].append(train_loss)        
         self.jointftrainData['val_err'].append(val_loss[0])        
         self.jointtrainData['train_fine_err'].append(train_loss[1])        
@@ -718,7 +724,7 @@ class PoseTrain(object):
                         nantt1 = np.invert(np.isnan(tt1.flatten()))
                         nantt1_mean = tt1.flatten()[nantt1].mean()
                         trainDist = [nantt1_mean]
-                        numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                        numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                         val_loss = np.zeros([2,])
                         valDist = [0.]
                         for rep in range(numrep):
@@ -728,8 +734,8 @@ class PoseTrain(object):
                             nantt1 = np.invert(np.isnan(tt1.flatten()))
                             nantt1_mean = tt1.flatten()[nantt1].mean()
                             valDist = [valDist[0]+nantt1_mean]
-                        val_loss = val_loss/numrep
-                        valDist = [valDist[0]/numrep]
+                        val_loss = old_div(val_loss,numrep)
+                        valDist = [old_div(valDist[0],numrep)]
                         self.updateBaseLoss(step,train_loss,val_loss,trainDist,valDist)
                     if step % self.conf.save_step == 0:
                         self.saveBase(sess,step)
@@ -754,7 +760,7 @@ class PoseTrain(object):
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
 # the labels shouldn't be zero because the prediction is an output of
 # exp. And it seems a lot of effort is wasted to make the prediction goto
 # zero rather than match the location.
@@ -789,7 +795,7 @@ class PoseTrain(object):
                     tt2 = self.computePredDist(sess,self.basePred)
                     trainDist = [tt1.mean(),tt2.mean()]
 
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([2,])
                     valDist = [0.,0.]
                     for rep in range(numrep):
@@ -799,8 +805,8 @@ class PoseTrain(object):
                         tt2 = self.computePredDist(sess,self.basePred)
                         valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
                         
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
+                    val_loss = old_div(val_loss,numrep)
+                    valDist = [old_div(valDist[0],numrep),old_div(valDist[1],numrep)]
                     self.updateMRFLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveMRF(sess,step)
@@ -829,7 +835,7 @@ class PoseTrain(object):
         self.createMRFSaver()
         self.createFineSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
         # the labels shouldn't be zero because the prediction is an output of
         # exp. And it seems a lot of effort is wasted to make the prediction goto
         # zero rather than match the location.
@@ -862,7 +868,7 @@ class PoseTrain(object):
 
                     trainDist = [tt3.mean(),tt2.mean(),tt1.mean()]
 
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([3,])
                     valDist = [0.,0.,0.]
                     for rep in range(numrep):
@@ -875,8 +881,8 @@ class PoseTrain(object):
                                    valDist[1]+tt2.mean(),
                                    valDist[2]+tt1.mean()]
                         
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep,valDist[1]/numrep,valDist[2]/numrep]
+                    val_loss = old_div(val_loss,numrep)
+                    valDist = [old_div(valDist[0],numrep),old_div(valDist[1],numrep),old_div(valDist[2],numrep)]
                     self.updateFineLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveFine(sess,step)
@@ -904,7 +910,7 @@ class PoseTrain(object):
         self.createFineSaver()
         self.createJointSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
         # the labels shouldn't be zero because the prediction is an output of
         # exp. And it seems a lot of effort is wasted to make the prediction goto
         # zero rather than match the location.
@@ -930,12 +936,12 @@ class PoseTrain(object):
                 if step % self.conf.display_step == 0:
                     self.updateFeedDict(self.DBType.Train)
                     train_loss = self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost])
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([2,])
                     for rep in range(numrep):
                         self.updateFeedDict(self.DBType.Val)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost]))
-                    val_loss = val_loss/numrep
+                    val_loss = old_div(val_loss,numrep)
                     self.updateJointLoss(step,train_loss,val_loss)
                 if step % self.conf.save_step == 0:
                     self.saveJoint(sess,step)
