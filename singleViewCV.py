@@ -45,7 +45,9 @@ def main(argv):
     parser.add_argument("-cname",dest="confname",
                       help="config name")
     parser.add_argument("-outtype",dest="outtype",
-                      help="out type: 2 for mrf, 1 for pd")
+                      help="out type: 2 for mrf, 1 for pd",type=int)
+    parser.add_argument("-extra_str",dest="extra_str",
+                      help="extra str to attach to output files")
 
     args = parser.parse_args(argv[1:])
 
@@ -83,7 +85,8 @@ def main(argv):
     if args.detect:
         classifyfold(conffile=args.configfile,curfold=curfold,
                      curgpu=curgpu,batch_size=batch_size,redo=args.redo,
-                     outdir=args.outdir,confname=args.confname,outtype=args.outtype)
+                     outdir=args.outdir,confname=args.confname,
+                     outtype=args.outtype,extra_str=args.extra_str)
 
 def createvaldataJan(conf):
     from janLegConfig import conf
@@ -326,7 +329,9 @@ def trainfold(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
     tf.reset_default_graph()
     self.mrfTrain(restore=True,trainType=0)
 
-def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',outtype = 2):
+def classifyfold(conffile,curfold,curgpu,batch_size,
+                 redo,outdir,confname='conf',outtype = 2,
+                 extra_str=None):
 
     imp_mod = importlib.import_module(conffile)
     conf = imp_mod.__dict__[confname]
@@ -368,10 +373,12 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
         oname = re.sub('!','__',conf.getexpname(localdirs[ndx]))
         pname = os.path.join(outdir , oname)
 
+        if extra_str is not None:
+            oname += '_'+extra_str
         print oname
 
         # detect
-        if redo or not os.path.isfile(pname + '.mat'):
+        if redo or not (os.path.isfile(pname + '.mat') or os.path.isfile(pname + '.h5')):
 
             predList = PoseTools.classifyMovie(conf,localdirs[ndx],outtype,self,sess)
 
@@ -388,7 +395,12 @@ def classifyfold(conffile,curfold,curgpu,batch_size,redo,outdir,confname='conf',
             predLocs[:,:,:,0] += orig_crop_loc[1]
             predLocs[:,:,:,1] += orig_crop_loc[0]
 
-            io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
+            with h5py.File(pname+'.h5','w') as f:
+                f.create_dataset('locs',data=predLocs)
+                f.create_dataset('scores', data=predScores)
+                f.create_dataset('expname', data=localdirs[ndx])
+
+            # io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
             print 'Detecting:%s'%oname
 
 
