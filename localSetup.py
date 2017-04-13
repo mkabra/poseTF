@@ -13,6 +13,8 @@ if re.search('verman-ws1.hhmi.org',socket.gethostname()):
 elif re.search('bransonk-ws',socket.gethostname()):
     sys.path.append('/groups/branson/home/kabram/bransonlab/pose_estimation/caffe/python')
     bdir = '/groups/branson/bransonlab/mayank/PoseTF/'
+elif re.search('Keller-W12', socket.gethostname()):
+    bdir = 'D:\mayank\data'
 else:
     sys.path.append('/home/mayank/work/caffe/python')
     bdir = '/home/mayank/work/poseEstimation/'
