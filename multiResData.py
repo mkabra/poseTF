@@ -348,6 +348,7 @@ def createTFRecord(conf):
         if not seldirs[ndx]:
             continue
 
+        expname = conf.getexpname(dirname)
         frames = np.where(expid == (ndx + 1))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
@@ -431,6 +432,7 @@ def createFullTFRecord(conf):
         if not seldirs[ndx]:
             continue
 
+        expname = conf.getexpname(dirname)
         frames = np.where(expid == (ndx + 1))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])

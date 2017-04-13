@@ -12,18 +12,52 @@ import PoseTrain
 import multiResData
 from stephenHeadConfig import sideconf as sideconf
 from stephenHeadConfig import conf as frontconf
+import argparse
 
 
 def main(argv):
-    view = int(argv[1])
-    curfold = int(argv[2])
-    curgpu = argv[3]
-    if len(argv)>=5:
-        batch_size = int(argv[4])
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-fold",dest="fold",
+                      help="fold number",type=int,
+                      required=True)
+    parser.add_argument("-gpu",dest='gpunum',
+                        help="GPU to use",required=True)
+    parser.add_argument("-view",dest='view',type=int,
+                        help="View,0 is side, 1 is front",required=True)
+    parser.add_argument("-bs",dest='batch_size',type=int,
+                        help="batch_size to use [optional]")
+    parser.add_argument("-train",dest='train',action="store_true",
+                        help="Train")
+    parser.add_argument("-detect",dest='detect',action="store_true",
+                        help="Detect")
+    parser.add_argument("-fine_train",dest='fine_train',action="store_true",
+                        help="Fine Train")
+    parser.add_argument("-r",dest="redo",
+                      help="if specified will recompute everything for detecting",
+                      action="store_true")
+    parser.add_argument("-o",dest="outdir",
+                      help="temporary output directory to store intermediate computations")
+    parser.add_argument("-cname",dest="confname",
+                      help="config name")
+
+    args = parser.parse_args(argv[1:])
+
+    view = args.view
+    curfold = args.fold
+    curgpu = args.gpu
+    if args.batch_size is not None:
+        batch_size = args.batch_size
     else:
         batch_size = -1
 
-    trainfold(view=view,curfold=curfold,curgpu=curgpu,batch_size=batch_size)
+    if args.train:
+        trainfold(view=view,curfold=curfold,curgpu=curgpu,batch_size=batch_size)
+
+
+    if args.fine_train:
+        trainfold_fine(view=view, curfold=curfold, curgpu=curgpu, batch_size=batch_size)
+
 
 def trainfold(view,curfold,curgpu,batch_size):
     if view == 0:
@@ -36,60 +70,6 @@ def trainfold(view,curfold,curgpu,batch_size):
 
     createvaldata = False
     conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
-
-    if createvaldata:
-        ##
-        L  = h5py.File(conf.labelfile)
-        localdirs,seldirs = findLocalDirs(conf)
-
-        ##
-        pts = L['labeledpos']
-        nmov = len(localdirs)
-        fly_num = np.zeros([nmov,])
-        num_labels = np.zeros([nmov,])
-        for ndx in range(nmov):
-            f_str = re.search('fly_*(\d*)',localdirs[ndx])
-            fly_num[ndx] = int(f_str.groups()[0])
-            curpts = np.array(L[pts[0,ndx]])
-            frames = np.where(np.invert(np.all(np.isnan(curpts[:, :, :]), axis=(1, 2))))[0]
-            num_labels[ndx] = len(frames)
-        ##
-
-        ufly,uidx = np.unique(fly_num,return_inverse=True)
-        fly_labels = np.zeros([len(ufly)])
-        for ndx in range(len(ufly)):
-            fly_labels[ndx] = np.sum(num_labels[uidx==ndx])
-
-        ##
-
-        folds = 5
-        lbls_fold = int(old_div(np.sum(num_labels),folds))
-
-        imbalance = True
-        while imbalance:
-            per_fold = np.zeros([folds])
-            fly_fold = np.zeros(len(ufly))
-            for ndx in range(len(ufly)):
-                done = False
-                curfold = np.random.randint(folds)
-                while not done:
-                    if per_fold[curfold]>lbls_fold:
-                        curfold = (curfold+1)%folds
-                    else:
-                        fly_fold[ndx] = curfold
-                        per_fold[curfold] += fly_labels[ndx]
-                        done = True
-            imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,3))
-        print(per_fold)
-
-        ##
-
-        for ndx in range(folds):
-            curvaldatafilename = os.path.join(conf.cachedir,conf.valdatafilename + '_fold_{}'.format(ndx))
-            fly_val = np.where(fly_fold==ndx)[0]
-            isval = np.where(np.in1d(uidx,fly_val))[0].tolist()
-            with open(curvaldatafilename,'w') as f:
-                pickle.dump([isval,localdirs,seldirs],f)
 
     ##
 
@@ -125,8 +105,105 @@ def trainfold(view,curfold,curgpu,batch_size):
     self.mrfTrain(restore=True,trainType=0)
 
 
+def trainfold_fine(view,curfold,curgpu,batch_size):
+    if view == 0:
+        conf = sideconf
+    else:
+        conf = frontconf
+
+    if batch_size>0:
+        conf.batch_size = batch_size
+
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+    ##
+
+    ext = '_fold_{}'.format(curfold)
+    conf.valdatafilename = conf.valdatafilename + ext
+    conf.trainfilename = conf.trainfilename + ext
+    conf.valfilename = conf.valfilename + ext
+    conf.fulltrainfilename += ext
+    conf.baseoutname = conf.baseoutname + ext
+    conf.mrfoutname += ext
+    conf.fineoutname += ext
+    conf.baseckptname += ext
+    conf.mrfckptname += ext
+    conf.fineckptname += ext
+    conf.basedataname += ext
+    conf.finedataname += ext
+    conf.mrfdataname += ext
+
+    _,localdirs,seldirs = multiResData.loadValdata(conf)
+    for ndx,curl in enumerate(localdirs):
+        if not os.path.exists(curl):
+            print(curl + ' {} doesnt exist!!!!'.format(ndx))
+            return
+
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
+    tf.reset_default_graph()
+    self = PoseTrain.PoseTrain(conf)
+    self.fineTrain(restore=True,trainPhase=True,trainType=0)
+
+
+
 if __name__ == "__main__":
     main(sys.argv)
+
+
+def create_val_data(conf):
+    ##
+    L  = h5py.File(conf.labelfile)
+    localdirs,seldirs = findLocalDirs(conf)
+
+    ##
+    pts = L['labeledpos']
+    nmov = len(localdirs)
+    fly_num = np.zeros([nmov,])
+    num_labels = np.zeros([nmov,])
+    for ndx in range(nmov):
+        f_str = re.search('fly_*(\d*)',localdirs[ndx])
+        fly_num[ndx] = int(f_str.groups()[0])
+        curpts = np.array(L[pts[0,ndx]])
+        frames = np.where(np.invert(np.all(np.isnan(curpts[:, :, :]), axis=(1, 2))))[0]
+        num_labels[ndx] = len(frames)
+    ##
+
+    ufly,uidx = np.unique(fly_num,return_inverse=True)
+    fly_labels = np.zeros([len(ufly)])
+    for ndx in range(len(ufly)):
+        fly_labels[ndx] = np.sum(num_labels[uidx==ndx])
+
+    ##
+
+    folds = 5
+    lbls_fold = int(old_div(np.sum(num_labels),folds))
+
+    imbalance = True
+    while imbalance:
+        per_fold = np.zeros([folds])
+        fly_fold = np.zeros(len(ufly))
+        for ndx in range(len(ufly)):
+            done = False
+            curfold = np.random.randint(folds)
+            while not done:
+                if per_fold[curfold]>lbls_fold:
+                    curfold = (curfold+1)%folds
+                else:
+                    fly_fold[ndx] = curfold
+                    per_fold[curfold] += fly_labels[ndx]
+                    done = True
+        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,3))
+    print(per_fold)
+
+    ##
+
+    for ndx in range(folds):
+        curvaldatafilename = os.path.join(conf.cachedir,conf.valdatafilename + '_fold_{}'.format(ndx))
+        fly_val = np.where(fly_fold==ndx)[0]
+        isval = np.where(np.in1d(uidx,fly_val))[0].tolist()
+        with open(curvaldatafilename,'w') as f:
+            pickle.dump([isval,localdirs,seldirs],f)
+
 
 def update_dirnames(conf):
 ##

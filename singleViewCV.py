@@ -211,8 +211,8 @@ def createvaldataRoian(conf):
         curvaldatafilename = os.path.join(conf.cachedir,conf.valdatafilename + '_fold_{}'.format(ndx))
         fly_val = np.where(fly_fold==ndx)[0]
         isval = []
-        for ndx in range(len(fly_val)):
-            isval += [i for i, x in enumerate(fly_id) if x == ufly[fly_val[ndx]]]
+        for indx in range(len(fly_val)):
+            isval += [i for i, x in enumerate(fly_id) if x == ufly[fly_val[indx]]]
         allisval.append(isval)
         with open(curvaldatafilename,'w') as f:
             pickle.dump([isval,localdirs,seldirs],f)
@@ -283,8 +283,8 @@ def createvaldataJay():
         curvaldatafilenamef = os.path.join(frontconf.cachedir,frontconf.valdatafilename + '_fold_{}'.format(ndx))
         fly_val = np.where(fly_fold==ndx)[0]
         isval = []
-        for ndx in range(len(fly_val)):
-            isval += [i for i, x in enumerate(fly_id) if x == ufly[fly_val[ndx]]]
+        for indx in range(len(fly_val)):
+            isval += [i for i, x in enumerate(fly_id) if x == ufly[fly_val[indx]]]
         allisval.append(isval)
         with open(curvaldatafilename,'w') as f:
             pickle.dump([isval,localdirs,seldirs],f)
@@ -333,6 +333,46 @@ def trainfold(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
     tf.reset_default_graph()
     self.mrfTrain(restore=True,trainType=0)
 
+def trainfold_fine(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
+
+    imp_mod = importlib.import_module(conffile)
+    conf = imp_mod.__dict__[confname]
+    if batch_size>0:
+        conf.batch_size = batch_size
+
+    ##
+
+    ext = '_fold_{}'.format(curfold)
+    conf.valdatafilename = conf.valdatafilename + ext
+    conf.trainfilename = conf.trainfilename + ext
+    conf.valfilename = conf.valfilename + ext
+    conf.fulltrainfilename += ext
+    conf.baseoutname = conf.baseoutname + ext
+    conf.mrfoutname += ext
+    conf.fineoutname += ext
+    conf.baseckptname += ext
+    conf.mrfckptname += ext
+    conf.fineckptname += ext
+    conf.basedataname += ext
+    conf.finedataname += ext
+    conf.mrfdataname += ext
+
+    _,localdirs,seldirs = multiResData.loadValdata(conf)
+    for ndx,curl in enumerate(localdirs):
+        if not os.path.exists(curl):
+            print(curl + ' {} doesnt exist!!!!'.format(ndx))
+            return
+
+
+    if not os.path.exists(os.path.join(conf.cachedir,conf.trainfilename+'.tfrecords')):
+        multiResData.createTFRecordFromLbl(conf,True)
+    os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
+    tf.reset_default_graph()
+    self = PoseTrain.PoseTrain(conf)
+    self.fineTrain(restore=True,trainPhase=True,trainType=0)
+
+
+
 def classifyfold(conffile,curfold,curgpu,batch_size,
                  redo,outdir,confname='conf',outtype = 2,
                  extra_str=None):
@@ -375,11 +415,11 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
             continue
         mname,_ = os.path.splitext(os.path.basename(localdirs[ndx]))
         oname = re.sub('!','__',conf.getexpname(localdirs[ndx]))
-        pname = os.path.join(outdir , oname)
 
         if extra_str is not None:
             oname += '_'+extra_str
-        print oname
+        print(oname)
+        pname = os.path.join(outdir , oname)
 
         # detect
         if redo or not (os.path.isfile(pname + '.mat') or os.path.isfile(pname + '.h5')):
@@ -405,7 +445,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
                 f.create_dataset('expname', data=localdirs[ndx])
 
             # io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
-            print 'Detecting:%s'%oname
+            print('Detecting:%s'%oname)
 
 
 def createCVMat(conffile):
@@ -463,7 +503,6 @@ def checkDB(conffile,confname='conf'):
     plt.imshow(xs[selex,0,...],cmap='gray')
     locs = self.locs
     plt.scatter(locs[selex,:,0],locs[selex,:,1])
-    gg = 30
 ##
 if __name__ == "__main__":
     main(sys.argv)
