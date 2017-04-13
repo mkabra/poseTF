@@ -2,6 +2,9 @@
 
 # In[ ]:
 
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import localSetup
@@ -61,7 +64,7 @@ class myconfig(object):
     # ----- MRF Network Parameters
 
     maxDPts = 400
-    mrf_psz = (maxDPts / rescale) / pool_scale
+    mrf_psz = old_div((old_div(maxDPts, rescale)), pool_scale)
     # Above should not be determined automatically
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000  # without batch_norm
@@ -87,7 +90,7 @@ class myconfig(object):
     N2move4neg = 3
     eval_minlen = 30
 
-    mult_fac = 16 / batch_size
+    mult_fac = old_div(16, batch_size)
     base_training_iters = 5000 * mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank

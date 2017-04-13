@@ -1,9 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[13]:
 
 #!/usr/bin/python
+from builtins import range
+from past.utils import old_div
 import os
 import re
 import glob
@@ -13,7 +17,7 @@ from subprocess import call
 import stat
 
 def main(argv):
-    print argv
+    print(argv)
 
     defaulttrackerpath = "/groups/branson/bransonlab/mayank/PoseTF/matlab/compiled/run_compute3Dfrom2D_compiled.sh"
     defaultmcrpath = "/groups/branson/bransonlab/mayank/MCR/v92"
@@ -76,14 +80,14 @@ def main(argv):
         fmovies = text_file.readlines()
     fmovies = [x.rstrip() for x in fmovies]
 
-    print smovies
-    print fmovies
-    print len(smovies)
-    print len(fmovies)
+    print(smovies)
+    print(fmovies)
+    print(len(smovies))
+    print(len(fmovies))
 
     if args.track:
         if len(smovies) != len(fmovies):
-            print "Side and front movies must match"
+            print("Side and front movies must match")
             raise exit(0)
 
         # read in dltfile
@@ -92,7 +96,7 @@ def main(argv):
         for l in f:
             lparts = l.split(',')
             if len(lparts) != 2:
-                print "Error splitting dlt file line %s into two parts"%l
+                print("Error splitting dlt file line %s into two parts"%l)
                 raise exit(0)
             dltdict[float(lparts[0])] = lparts[1].strip()
         f.close()
@@ -113,7 +117,7 @@ def main(argv):
 
         for ff in smovies+fmovies:
             if not os.path.isfile(ff):
-                print "Movie %s not found"%(ff)
+                print("Movie %s not found"%(ff))
                 raise exit(0)
         if args.gpunum is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(args.gpunum)
@@ -166,12 +170,12 @@ def main(argv):
             oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
             pname = os.path.join(args.outdir , oname + extrastr)
 
-            print oname
+            print(oname)
 
             flynum = conf.getflynum(smovies[ndx])
             # print "Parsed fly number as %d"%flynum
-            if not dltdict.has_key(flynum):
-                print 'No dlt file, skipping'
+            if flynum not in dltdict:
+                print('No dlt file, skipping')
                 continue
 
             # detect
@@ -187,8 +191,8 @@ def main(argv):
                 height = int(cap.get(cvc.FRAME_HEIGHT))
                 width = int(cap.get(cvc.FRAME_WIDTH))
                 orig_crop_loc = conf.cropLoc[(height,width)]
-                crop_loc = [x/4 for x in orig_crop_loc] 
-                end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
                 pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
                 predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -197,7 +201,7 @@ def main(argv):
                 predLocs[:,:,:,1] += orig_crop_loc[0]
 
                 io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
-                print 'Detecting:%s'%oname
+                print('Detecting:%s'%oname)
 
             # track
             if args.track and view == 1:
@@ -216,12 +220,12 @@ def main(argv):
 
                 if os.path.isfile(savefile) and os.path.isfile(trkfile_front) and \
                    os.path.isfile(trkfile_side) and not args.redo:
-                    print "%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side)
+                    print("%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side))
                     continue
 
                 flynum = conf.getflynum(smovies[ndx])
                 #print "Parsed fly number as %d"%flynum
-                if not dltdict.has_key(flynum):
+                if flynum not in dltdict:
                     continue
                 kinematfile = os.path.abspath(dltdict[flynum])
 
@@ -246,7 +250,7 @@ def main(argv):
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
                 cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
-                print cmd
+                print(cmd)
                 call(cmd,shell=True)
                 
 if __name__ == "__main__":

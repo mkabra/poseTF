@@ -37,7 +37,6 @@ if __name__ == '__main__':
 
 # In[13]:
 
-22222222222222222222222222222222errrrrrrrrrrrrrr
 get_ipython().magic(u'matplotlib inline')
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 

@@ -1,8 +1,12 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys
 import lmdb
@@ -22,6 +26,7 @@ import PoseTools
 import localSetup
 import operator
 import copy
+from functools import reduce
 
 
 # In[ ]:
@@ -216,8 +221,8 @@ def genFewMovedNegSamples(locs,conf,nmove=1):
 
 def genLocs(locs,predlocs,conf):
     dlocs = np.apply_over_axes(np.sum,(locs-predlocs)**2,axes=[1,2])
-    dlocs = np.sqrt(dlocs)/conf.n_classes
-    close = np.reshape(dlocs < (conf.gen_minlen/2),[-1])
+    dlocs = old_div(np.sqrt(dlocs),conf.n_classes)
+    close = np.reshape(dlocs < (old_div(conf.gen_minlen,2)),[-1])
     newlocs = copy.deepcopy(predlocs)
     newlocs[close,...] = genFewMovedNegSamples(newlocs[close,...],conf,nmove=3)
     return newlocs
@@ -249,10 +254,10 @@ def prepareOpt(baseNet,l8,dbtype,feed_dict,sess,conf,phDict,distort,nsamples=10)
     
     scores = np.zeros(locs.shape[0:2])
     scale = conf.rescale*conf.pool_scale
-    rlocs = (np.round(newlocs/scale)).astype('int')
+    rlocs = (np.round(old_div(newlocs,scale))).astype('int')
     for ndx in range(predlocs.shape[0]):
         for cls in range(conf.n_classes):
-            bndx = int(math.floor(ndx/nsamples))
+            bndx = int(math.floor(old_div(ndx,nsamples)))
             scores[ndx,cls] = bout[bndx,rlocs[ndx,cls,1],rlocs[ndx,cls,0],cls]
 
     feed_dict[phDict['y']] = np.reshape(dlocs,[-1,2*conf.n_classes])
@@ -281,7 +286,7 @@ def train(conf,restore=True):
     genSaver = createGenSaver(conf)
     y = phDict['y']
     y_m = phDict['y_m']
-    ind_loss = tf.nn.l2_loss(out-y)/conf.n_classes
+    ind_loss = old_div(tf.nn.l2_loss(out-y),conf.n_classes)
     mean_loss = tf.nn.l2_loss(out_m-y_m)
     loss = ind_loss + mean_loss
     in_loss = tf.nn.l2_loss(phDict['y']-tf.reshape(phDict['locs'],[-1,2*conf.n_classes]))
@@ -306,8 +311,8 @@ def train(conf,restore=True):
                            sess,conf,phDict,distort=False)
                 feed_dict[phDict['phase_train']] = False
                 train_loss = sess.run([loss,in_loss,out,out_m,ind_loss,mean_loss], feed_dict=feed_dict)
-                train_mean_loss = np.sum((train_loss[3]-feed_dict[phDict['y_m']])**2 )/2
-                train_ind_loss = np.sum((train_loss[2]-feed_dict[phDict['y']])**2 )/2
+                train_mean_loss = old_div(np.sum((train_loss[3]-feed_dict[phDict['y_m']])**2 ),2)
+                train_ind_loss = old_div(np.sum((train_loss[2]-feed_dict[phDict['y']])**2 ),2)
                 test_loss = 0
                 test_in_loss = 0
                 test_ind_loss = 0 
@@ -321,16 +326,16 @@ def train(conf,restore=True):
                     tloss = sess.run([loss,in_loss,out,out_m], feed_dict=feed_dict)
                     test_loss += tloss[0]
                     test_in_loss += tloss[1]
-                    test_mean_loss += np.sum((tloss[3]-feed_dict[phDict['y_m']])**2 )/2
-                    test_ind_loss += np.sum((tloss[2]-feed_dict[phDict['y']])**2 )/2
+                    test_mean_loss += old_div(np.sum((tloss[3]-feed_dict[phDict['y_m']])**2 ),2)
+                    test_ind_loss += old_div(np.sum((tloss[2]-feed_dict[phDict['y']])**2 ),2)
 
-                print "Iter:{:d}, train:{:.4f},mean:{:.4f},ind:{:.4f} test:{:.4f},mean:{:.4f},ind:{:.4f} ".format(step, 
-                      np.sqrt(train_loss[0]/conf.batch_size),
-                      np.sqrt(train_mean_loss/conf.batch_size),
-                      np.sqrt((train_ind_loss/conf.batch_size)/conf.n_classes),
-                      np.sqrt((test_loss/nrep)/conf.batch_size),
-                      np.sqrt((test_mean_loss/nrep)/conf.batch_size),
-                      np.sqrt(((test_ind_loss/nrep)/conf.batch_size)/conf.n_classes))
+                print("Iter:{:d}, train:{:.4f},mean:{:.4f},ind:{:.4f} test:{:.4f},mean:{:.4f},ind:{:.4f} ".format(step, 
+                      np.sqrt(old_div(train_loss[0],conf.batch_size)),
+                      np.sqrt(old_div(train_mean_loss,conf.batch_size)),
+                      np.sqrt(old_div((old_div(train_ind_loss,conf.batch_size)),conf.n_classes)),
+                      np.sqrt(old_div((old_div(test_loss,nrep)),conf.batch_size)),
+                      np.sqrt(old_div((old_div(test_mean_loss,nrep)),conf.batch_size)),
+                      np.sqrt(old_div((old_div((old_div(test_ind_loss,nrep)),conf.batch_size)),conf.n_classes))))
                 
             if step % 100 == 0:
                 saveGen(sess,step,genSaver,conf)

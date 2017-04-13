@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 ################################################################################
 #Michael Guerzhoy, 2016
 #AlexNet implementation in TensorFlow, with weights
@@ -11,6 +13,11 @@
 #
 ################################################################################
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 from numpy import *
 import os
 from pylab import *
@@ -22,7 +29,7 @@ from scipy.misc import imread
 from scipy.misc import imresize
 import matplotlib.image as mpimg
 from scipy.ndimage import filters
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from numpy import random
 
 
@@ -40,7 +47,7 @@ ydim = train_y.shape[1]
 ################################################################################
 #Read Image
 
-x_dummy = (random.random((1,)+ xdim)/255.).astype(float32)
+x_dummy = (old_div(random.random((1,)+ xdim),255.)).astype(float32)
 i = x_dummy.copy()
 i[0,:,:,:] = (imread("poodle.png")[:,:,:3]).astype(float32)
 i = i-mean(i)
@@ -197,5 +204,5 @@ output = sess.run(prob)
 
 inds = argsort(output)[0,:]
 for i in range(5):
-    print class_names[inds[-1-i]], output[0, inds[-1-i]]
+    print(class_names[inds[-1-i]], output[0, inds[-1-i]])
 

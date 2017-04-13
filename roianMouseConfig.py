@@ -1,8 +1,11 @@
+from __future__ import division
 
 # coding: utf-8
 
 # In[ ]:
 
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import localSetup
@@ -31,7 +34,7 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/3
+    sel_sz = old_div(512,3)
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5
@@ -62,7 +65,7 @@ class myconfig(object):
     fine_learning_rate = 0.0003
 
     batch_size = 8
-    mult_fac = 16/batch_size
+    mult_fac = old_div(16,batch_size)
     base_training_iters = 10000*mult_fac
     fine_training_iters = 3000*mult_fac
     mrf_training_iters = 3000*mult_fac

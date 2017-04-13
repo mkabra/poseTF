@@ -1,8 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[20]:
 
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import poseEval2 
 reload(poseEval2)
 import romainLegConfig
@@ -115,7 +120,7 @@ qqtrain = np.mean(np.sign(lltrain-0.5)==np.sign(ootrain-0.5),axis=0)
 vvtrain = np.mean(lltrain,axis=0)
 iitrain = np.mean(ootrain>0.5,axis=0)
 imstrain = ims
-print vvtrain
+print(vvtrain)
 
 count = 50
 ll = np.zeros((count,)+feed_dict[ph['y']].shape)
@@ -132,7 +137,7 @@ for ndx in range(count):
     ims.append(feed_dict[ph['X'][0][0]])
     alllocs.append(locs)
 
-print acc/count 
+print(old_div(acc,count)) 
 ims = np.array(ims)
 ims = np.reshape(ims,[count*8,128,128])
 locsval = np.array(alllocs).reshape(count*8,18,2)
@@ -146,8 +151,8 @@ qqval = np.mean(np.sign(llval-0.5)==np.sign(ooval-0.5),axis=0)
 vvval = np.mean(llval,axis=0)
 iival = np.mean(ooval>0.5,axis=0)
 imsval = ims
-print
-print vvval
+print()
+print(vvval)
 
 
 # In[8]:
@@ -200,27 +205,27 @@ for ndx in range(20):
 
 # In[4]:
 
-print vvval
-print
-print qqval
-print
-print iival
-print 
-print vvtrain
-print 
+print(vvval)
+print()
+print(qqval)
+print()
+print(iival)
+print() 
+print(vvtrain)
+print() 
 rates = np.zeros([2,2,8])
 for lndx in range(2):
     for ondx in range(2):
         hh1 = np.sign(llval-0.5)== np.sign(lndx-0.5)
         hh2 = np.sign(ooval-0.5)== np.sign(ondx-0.5)
         zzval = np.mean(hh1&hh2,axis=0)
-        print np.sign(lndx-0.5),np.sign(ondx-0.5), zzval[:3]
+        print(np.sign(lndx-0.5),np.sign(ondx-0.5), zzval[:3])
         rates[lndx,ondx,:] = zzval
         
-prec = rates[1,1,:]/(rates[1,1,:]+rates[0,1,:])
-rec = rates[1,1,:]/(rates[1,1,:]+rates[1,0,:])
+prec = old_div(rates[1,1,:],(rates[1,1,:]+rates[0,1,:]))
+rec = old_div(rates[1,1,:],(rates[1,1,:]+rates[1,0,:]))
 fsc = 2*prec*rec/(prec+rec)
-print fsc[:3]
+print(fsc[:3])
 
 
 # In[17]:
@@ -264,8 +269,8 @@ for ndx in range(20):
     ax.set_title('{},{:.2f}\n{:.0f},{:.0f}'.format(llval[curid,selpt],
                 ooval[curid,selpt],aacur[curid],ddcur[curid]))
     ax.scatter(kk[curid,0]+64,kk[curid,1]+64)
-print ppval.shape
-print nnval.shape
+print(ppval.shape)
+print(nnval.shape)
     
     
 
@@ -273,7 +278,7 @@ print nnval.shape
 # In[16]:
 
 ndx = 15-1
-print ooval[cnnval[ndx],:]
+print(ooval[cnnval[ndx],:])
 
 
 # In[ ]:
@@ -332,13 +337,13 @@ kk = sess.run(aa,feed_dict=feed_dict)
 ss = [g.std() for g in gg]
 ww = [g.std() for g in kk]
 
-rr = [s/w for s,w in zip(ss,ww)]
+rr = [old_div(s,w) for s,w in zip(ss,ww)]
 
 
 
 bb = [[r,n.name] for r,n in zip(rr,aa)]
 for b,k,g in zip(bb,ss,ww):
-    print b,k,g
+    print(b,k,g)
 
 
 # In[29]:
@@ -354,27 +359,27 @@ kk = sess.run(aa,feed_dict=feed_dict)
 ss = [g.std() for g in gg]
 ww = [g.std() for g in kk]
 
-rr = [s/w for s,w in zip(ss,ww)]
+rr = [old_div(s,w) for s,w in zip(ss,ww)]
 
 
 
 bb = [[r,n.name] for r,n in zip(rr,aa)]
 for b,k,g in zip(bb,ss,ww):
-    print b,k,g
+    print(b,k,g)
 
 
 # In[41]:
 
 aas = []
-for k in out_dict['base_dict_array'][0][0].keys():
+for k in list(out_dict['base_dict_array'][0][0].keys()):
     aas.append(out_dict['base_dict_array'][0][0][k])
     
 gg = sess.run(aas,feed_dict=feed_dict)    
 
-kk = out_dict['base_dict_array'][0][0].keys()
+kk = list(out_dict['base_dict_array'][0][0].keys())
 for k,g in zip(kk,gg):
-    f = float(np.count_nonzero(g.flatten()))/g.size
-    print k,f
+    f = old_div(float(np.count_nonzero(g.flatten())),g.size)
+    print(k,f)
 
 
 # In[ ]:
@@ -400,17 +405,17 @@ for ndx in range(20):
 qq = np.mean(np.sign(ll-0.5)==np.sign(oo-0.5),axis=0)
 vv = np.mean(ll,axis=0)
 ii = np.mean(oo>0.5,axis=0)
-print qq[:,:]
-print
-print vv[:,:]
-print
-print ii[:,:]
-print
-print qq+vv
-print
-print np.mean( (np.sign(ll-0.5)>0) &(np.sign(oo-0.5)>0),axis=0)
-print
-print np.mean( (np.sign(ll-0.5)<0) &(np.sign(oo-0.5)<0),axis=0)
+print(qq[:,:])
+print()
+print(vv[:,:])
+print()
+print(ii[:,:])
+print()
+print(qq+vv)
+print()
+print(np.mean( (np.sign(ll-0.5)>0) &(np.sign(oo-0.5)>0),axis=0))
+print()
+print(np.mean( (np.sign(ll-0.5)<0) &(np.sign(oo-0.5)<0),axis=0))
 
 lla = ll.reshape([50,8,8,4])
 ooa = oo.reshape([50,8,8,4])
@@ -419,11 +424,11 @@ ooa = np.sum(ooa,axis=3)
 qq = np.mean(np.sign(lla-0.5)==np.sign(ooa-0.5),axis=(0,1))
 vv = np.mean(lla,axis=(0,1))
 ii = np.mean(ooa>0.5,axis=(0,1))
-print qq
-print
-print vv
-print
-print ii
+print(qq)
+print()
+print(vv)
+print()
+print(ii)
 
 
 # In[9]:
@@ -440,17 +445,17 @@ ff = np.mean(ll,axis=(0,1))
 ff = np.mean(np.sign(ff)==np.sign(ll),axis=(0,1))
 ff = ff.reshape([18,8,4])
 spt = 6
-print qq[spt,:,:]
-print vv[spt,:,:]
-print ii[spt,:,:]
-print ff[spt,:,:]
+print(qq[spt,:,:])
+print(vv[spt,:,:])
+print(ii[spt,:,:])
+print(ff[spt,:,:])
 
 qq = np.mean(lla==ooa,axis=(0,1))
 vv = np.mean(lla,axis=(0,1))
 ii = np.mean(ooa,axis=(0,1))
-print qq[spt,:]
-print vv[spt,:]
-print ii[spt,:]
+print(qq[spt,:])
+print(vv[spt,:])
+print(ii[spt,:])
 
 
 # In[ ]:
@@ -476,13 +481,13 @@ plt.scatter(locs[sim,:,0],locs[sim,:,1])
 iii = inCur[sim,:].reshape([8,4])
 jjj = outCur[sim,:].reshape([8,4])
 plt.title('{}'.format(sim))
-print iii[:,:]
-print 
-print jjj[:,:]
+print(iii[:,:])
+print() 
+print(jjj[:,:])
 ddd = np.sqrt(((locs[sim,0,:] - locs[sim,6,:])**2).sum())
 vvv = locs[sim,spt,:]-locs[sim,0,:]
 aaa = np.arctan2(vvv[1],vvv[0])*180/np.pi
-print ddd,aaa
+print(ddd,aaa)
 fig = plt.figure()
 for ndx in range(3):
     ax = fig.add_subplot(1,3,ndx+1)
@@ -496,7 +501,7 @@ pt = 3
 im = 3
 
 y = feed_dict[ph['y']]
-print y[im,:].reshape([3,6])
+print(y[im,:].reshape([3,6]))
 
 plt.figure()
 plt.imshow(xs[im,0,...],cmap='gray')
@@ -512,7 +517,7 @@ plt.imshow(Z[im,...,0],cmap='gray')
 Z = feed_dict[ph['X'][2][pt]]
 plt.figure()
 plt.imshow(Z[im,...,0],cmap='gray')
-print feed_dict[ph['S'][0][pt]][im,...].reshape(18,2)
+print(feed_dict[ph['S'][0][pt]][im,...].reshape(18,2))
 
 
 # In[ ]:
@@ -565,8 +570,8 @@ x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
                                       conf.rescale,conf.scale, conf.l1_cropsz,conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
-    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,(alllocs[:,ndx,:])/conf.scale,psz)
-    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,(alllocs[:,ndx,:])/(conf.scale**2),psz)
+    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)
+    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,old_div((alllocs[:,ndx,:]),(conf.scale**2)),psz)
     feed_dict[ph['S'][0][ndx]] = np.reshape(locs-locs[:,ndx:ndx+1,:],[conf.batch_size,2*conf.n_classes])
 feed_dict[ph['y']] = ind_labels
 curout2 = sess.run(out,feed_dict=feed_dict)
@@ -583,8 +588,8 @@ x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
                                       conf.rescale,conf.scale, conf.l1_cropsz,conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
-    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,(alllocs[:,ndx,:])/conf.scale,psz)
-    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,(alllocs[:,ndx,:])/(conf.scale**2),psz)
+    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)
+    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,old_div((alllocs[:,ndx,:]),(conf.scale**2)),psz)
     feed_dict[ph['S'][0][ndx]] = np.reshape(nlocs-nlocs[:,ndx:ndx+1,:],[conf.batch_size,2*conf.n_classes])
 feed_dict[ph['y']] = ind_labels
 curout3 = sess.run(out,feed_dict=feed_dict)
@@ -601,8 +606,8 @@ x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
                                       conf.rescale,conf.scale, conf.l1_cropsz,conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
-    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,(alllocs[:,ndx,:])/conf.scale,psz)
-    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,(alllocs[:,ndx,:])/(conf.scale**2),psz)
+    feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)
+    feed_dict[ph['X'][2][ndx]] = extract_patches(x2,old_div((alllocs[:,ndx,:]),(conf.scale**2)),psz)
     feed_dict[ph['S'][0][ndx]] = np.reshape(locs-locs[:,ndx:ndx+1,:],[conf.batch_size,2*conf.n_classes])
 feed_dict[ph['y']] = ind_labels
 
@@ -611,34 +616,34 @@ curout4 = sess.run(out,feed_dict=feed_dict)
 
 # In[ ]:
 
-print alllocs.shape
-print y[3,:]
-print ind_labels[3,:]
+print(alllocs.shape)
+print(y[3,:])
+print(ind_labels[3,:])
 
 
 # In[ ]:
 
-print np.random.randint(3)
+print(np.random.randint(3))
 
 
 # In[ ]:
 
-print y[3,:]
+print(y[3,:])
 
 
 # In[ ]:
 
 for im in range(8):
 
-    print y[im,:].reshape([3,6])
-    print 
-    print curout1[im,:].reshape([3,6])
-    print 
-    print curout2[im,:].reshape([3,6])
-    print 
-    print curout3[im,:].reshape([3,6])
-    print 
-    print curout4[im,:].reshape([3,6])
+    print(y[im,:].reshape([3,6]))
+    print() 
+    print(curout1[im,:].reshape([3,6]))
+    print() 
+    print(curout2[im,:].reshape([3,6]))
+    print() 
+    print(curout3[im,:].reshape([3,6]))
+    print() 
+    print(curout4[im,:].reshape([3,6]))
 
     plt.figure()
     plt.imshow(xs[im,0,...],cmap='gray')
@@ -693,7 +698,7 @@ selpt1 = 6
 selpt2 = selpt1-6
 shp = shape_from_locs(alllocs)
 ptchs = extract_patches(allxs,alllocs[:,selpt1,:],128) 
-print ptchs.shape
+print(ptchs.shape)
 
 
 # In[32]:
@@ -704,13 +709,13 @@ for ndx1 in range(12):
     lbls = shp[:,ndx1,ndx2,:]
     mm = np.mean(lbls,axis=0)
     kk[ndx1] = np.count_nonzero(mm>0.1)
-print kk    
-print mm.shape
+print(kk)    
+print(mm.shape)
 
 
 # In[46]:
 
-print lbls.mean(axis=0)
+print(lbls.mean(axis=0))
 
 
 # In[45]:

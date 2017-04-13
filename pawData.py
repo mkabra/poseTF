@@ -1,8 +1,12 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import range
+from past.utils import old_div
 import scipy.io as sio
 import os,sys
 sys.path.append('/home/mayank/work/pyutils')
@@ -53,7 +57,7 @@ def createValdata(force):
     L = sio.loadmat(conf.labelfile)
     nexps = len(L['expdirs'][0])
     print(nexps)
-    isval = sample(range(nexps),int(nexps*conf.valratio))
+    isval = sample(list(range(nexps)),int(nexps*conf.valratio))
     localdirs,seldirs = findLocalDirs()
     with open(outfile,'w') as f:
         pickle.dump([isval,localdirs,seldirs],f)
@@ -96,10 +100,10 @@ def getpatch(cap,fnum,curloc):
             raise ValueError('Accessing frames beyond the length of the video')
         return curp
     framein = myutils.readframe(cap,fnum-1)
-    framein = framein[:,0:(framein.shape[1]/2),:]
+    framein = framein[:,0:(old_div(framein.shape[1],2)),:]
 
-    testp = myutils.padgrab(framein,0,curloc[1]-psz/2,curloc[1]+psz/2,
-                           curloc[0]-psz/2,curloc[0]+psz/2,0,framein.shape[2])
+    testp = myutils.padgrab(framein,0,curloc[1]-old_div(psz,2),curloc[1]+old_div(psz,2),
+                           curloc[0]-old_div(psz,2),curloc[0]+old_div(psz,2),0,framein.shape[2])
     curp = np.array(scalepatches(testp,conf.scale,conf.numscale,conf.rescale))
     return curp
 
@@ -177,7 +181,7 @@ def createDB():
                     continue
                 
                 framein = myutils.readframe(cap,fnum-1)
-                framein = framein[:,0:(framein.shape[1]/2),0:1]
+                framein = framein[:,0:(old_div(framein.shape[1],2)),0:1]
 
                 datum = createDatum(framein,1)
                 str_id = createID(expname,curloc,fnum)
@@ -298,8 +302,8 @@ def addRandomNeg():
             for curl in frames:
 
                 fnum = ts[0,curl]
-                width = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)/2
-                height = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)/2
+                width = old_div(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH),2)
+                height = old_div(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT),2)
                 posloc = pts[0,:,curl]
 
                 trycount = 0

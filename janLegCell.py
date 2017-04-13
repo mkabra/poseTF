@@ -1,8 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import input
+from builtins import range
+from past.utils import old_div
 import h5py
 import numpy as np
 L = h5py.File(conf.labelfile)
@@ -129,8 +134,8 @@ for ndx in [0,3,-3,-1]:
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     orig_crop_loc = conf.cropLoc[(height,width)]
-    crop_loc = [x/4 for x in orig_crop_loc] 
-    end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+    crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+    end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
     pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
     predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -139,12 +144,12 @@ for ndx in [0,3,-3,-1]:
     predLocs[:,:,:,1] += orig_crop_loc[0]
     
     io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
-    print 'Done:%s'%oname
+    print('Done:%s'%oname)
 
 
 
-print pp
-print predList[1].shape
+print(pp)
+print(predList[1].shape)
 
 
 # In[1]:
@@ -265,7 +270,7 @@ cur_maxsc = tr_maxsc
 diff = (cur_pred_locs[:,:,:,0]-cur_pred_locs[:,:,:,1])**2
 dd = np.clip(np.sqrt(np.squeeze(np.apply_over_axes(np.sum,diff,[2,]))),0,500)
 # plt.scatter(dd[:,p1],cur_maxsc[:,p1],marker='.')
-print np.count_nonzero(cur_maxsc[:,p1]>tr),cur_maxsc.shape[0]
+print(np.count_nonzero(cur_maxsc[:,p1]>tr),cur_maxsc.shape[0])
 
 
 
@@ -277,7 +282,7 @@ p2 = 1
 dmat = distance.pdist(tr_l7[:,:,p1],'cityblock')
 dmat = distance.squareform(dmat)
 dmatp2 = distance.cdist(tr_l7[:,:,p1],tr_l7[:,:,p2],'cityblock')
-print dmat.shape,dmatp2.shape
+print(dmat.shape,dmatp2.shape)
 
 
 # In[ ]:
@@ -301,7 +306,7 @@ for ndx in range(13):
     i_idx = np.where(cur_maxsc[:,p1]<tr)[0]
     # print i_idx
     ndxx = i_idx[ndx]
-    print dd[ndxx,p1],cur_maxsc[ndxx,p1]
+    print(dd[ndxx,p1],cur_maxsc[ndxx,p1])
     remp = np.setdiff1d(np.arange(conf.n_classes),p1)
     fig.clf()
     ax1 = fig.add_subplot(nr,nc,1)
@@ -310,10 +315,10 @@ for ndx in range(13):
     ax1.scatter(tr_pred_locs[ndxx,p2,0,1],tr_pred_locs[ndxx,p2,1,1],c='b')
     ax2 = fig.add_subplot(nr,nc,2)
     ax2.imshow(tr_preds[ndxx,:,:,p1,0],cmap='jet',vmax=1.,vmin=-1.)
-    ax2.scatter(tr_pred_locs[ndxx,p1,0,1]/4,tr_pred_locs[ndxx,p1,1,1]/4,c='r')
+    ax2.scatter(old_div(tr_pred_locs[ndxx,p1,0,1],4),old_div(tr_pred_locs[ndxx,p1,1,1],4),c='r')
     ax2 = fig.add_subplot(nr,nc,3)
     ax2.imshow(tr_preds[ndxx,:,:,p2,0],cmap='jet',vmax=1.,vmin=-1.)
-    ax2.scatter(tr_pred_locs[ndxx,p2,0,1]/4,tr_pred_locs[ndxx,p2,1,1]/4,c='r')
+    ax2.scatter(old_div(tr_pred_locs[ndxx,p2,0,1],4),old_div(tr_pred_locs[ndxx,p2,1,1],4),c='r')
 
     ord_tr = dmatp2[ndxx,:].argsort()
     pstr = 'Ex:%d'%(ndxx)
@@ -326,15 +331,15 @@ for ndx in range(13):
         ax2.scatter(tr_pred_locs[id_tr,p2,0,1], tr_pred_locs[id_tr,p2,1,1],c='b')
         ax2 = fig.add_subplot(nr,nc,(ii+1)*nc+2)
         ax2.imshow(tr_preds[id_tr,:,:,p1,0], cmap='jet',vmax=1.,vmin=-1.)
-        ax2.scatter(tr_pred_locs[id_tr,p1,0,1]/4, tr_pred_locs[id_tr,p1,1,1]/4,c='r')
+        ax2.scatter(old_div(tr_pred_locs[id_tr,p1,0,1],4), old_div(tr_pred_locs[id_tr,p1,1,1],4),c='r')
         ax2 = fig.add_subplot(nr,nc,(ii+1)*nc+3)
         ax2.imshow(tr_preds[id_tr,:,:,p2,0], cmap='jet',vmax=1.,vmin=-1.)
-        ax2.scatter(tr_pred_locs[id_tr,p2,0,1]/4, tr_pred_locs[id_tr,p2,1,1]/4,c='r')
+        ax2.scatter(old_div(tr_pred_locs[id_tr,p2,0,1],4), old_div(tr_pred_locs[id_tr,p2,1,1],4),c='r')
         pstr += ',%d'%(id_tr)
     
     display.clear_output(wait=False)
     display.display(fig)
-    a = raw_input('%s Press Enter to continue'%pstr)
+    a = input('%s Press Enter to continue'%pstr)
 #     time.sleep(3.0)
     
 

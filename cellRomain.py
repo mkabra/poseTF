@@ -3,6 +3,7 @@
 
 # In[11]:
 
+from builtins import range
 import romainLegConfig
 reload(romainLegConfig)
 from romainLegConfig import bottomconf as conf

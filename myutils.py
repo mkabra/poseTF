@@ -1,3 +1,4 @@
+from __future__ import division
 
 # coding: utf-8
 
@@ -8,6 +9,8 @@
 
 # In[1]:
 
+from builtins import range
+from past.utils import old_div
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,7 +27,7 @@ import sys
 
 def padgrab(inmat,padv,*args):
     assert len(args)%2==0,'number of coordinates should be even'
-    assert (len(args)/2)==inmat.ndim,'number of coordinates should be even'
+    assert (old_div(len(args),2))==inmat.ndim,'number of coordinates should be even'
     cc = []
     padamt = []
     sz = inmat.shape
@@ -32,7 +35,7 @@ def padgrab(inmat,padv,*args):
     for i in range(0,len(args),2):
         cc.append([args[i],args[i+1]])
         p1 = -min(args[i],0)
-        p2 = max(args[i+1]-sz[i/2]+1,0)
+        p2 = max(args[i+1]-sz[old_div(i,2)]+1,0)
         padamt.append([p1,p2])
         idx.append(slice(args[i]+p1,args[i+1]+p1))
 

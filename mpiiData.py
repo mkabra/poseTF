@@ -1,4 +1,8 @@
+from __future__ import division
+from __future__ import print_function
 ##
+from builtins import range
+from past.utils import old_div
 import scipy.io as sio
 from mpiiConfig import conf
 import os
@@ -24,7 +28,7 @@ def _float_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 def crash():
-    vv = 3/0
+    vv = old_div(3,0)
     return vv
 
 def createTFRecordMPII():
@@ -57,7 +61,7 @@ def createTFRecordMPII():
 
         imfile = os.path.join(conf.imdir, A.annolist[ndx].image.name)
         if not os.path.exists(imfile):
-            print A.annolist[ndx].image.name + ' Doesnt exist:{}'.format(ndx)
+            print(A.annolist[ndx].image.name + ' Doesnt exist:{}'.format(ndx))
             continue
         im = misc.imread(imfile)
 
@@ -85,7 +89,7 @@ def createTFRecordMPII():
             cur_pos = curo.objpos
             scale = curo.scale
             c = [cur_pos.x, cur_pos.y]
-            bsz = round((200 + 200) * scale) / 2
+            bsz = old_div(round((200 + 200) * scale), 2)
             top = int(c[1] - bsz)
             bot = int(c[1] + bsz)
             left = int(c[0] - bsz)

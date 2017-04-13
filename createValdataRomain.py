@@ -1,6 +1,10 @@
+from __future__ import division
+from __future__ import print_function
 
 ##
 
+from builtins import range
+from past.utils import old_div
 import romainLegConfig
 reload(romainLegConfig)
 from romainLegConfig import bottomconf as confb
@@ -27,7 +31,7 @@ for ndx, dirname in enumerate(localdirs):
     curpts = np.array(L[pts[0, ndx]])
     zz = curpts.reshape([curpts.shape[0], -1])
     frames = np.where(np.invert(np.any(np.isnan(curpts[:, :, :]), axis=(1, 2))))[0]
-    print frames.size,dirname
+    print(frames.size,dirname)
 
     fr_count.append(frames.size)
     if isval.count(ndx):
@@ -36,7 +40,7 @@ for ndx, dirname in enumerate(localdirs):
         tr_count += frames.size
 
 fr_count = np.array(fr_count)
-print val_count,tr_count
+print(val_count,tr_count)
 
 ##
 
@@ -49,12 +53,12 @@ for ndx in range(10):
     kk = np.random.permutation(len(localdirs))
     idx = 0
 
-    while(float(val_count)/tot_count < tr):
+    while(old_div(float(val_count),tot_count) < tr):
         val_count += fr_count[kk[idx]]
         idx+=1
-    if float(val_count)/tot_count <= tr_high:
+    if old_div(float(val_count),tot_count) <= tr_high:
         sel.append(kk[:idx])
-        print val_count, kk[:idx]
+        print(val_count, kk[:idx])
 
 isval = list(sel[0])
 ##

@@ -1,8 +1,13 @@
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import zip
+from builtins import str
+from builtins import chr
+from builtins import range
 import localSetup
 import scipy.io as sio
 import os,sys
@@ -31,7 +36,7 @@ import tensorflow as tf
 
 def findLocalDirs(conf):
     L = h5py.File(conf.labelfile,'r')
-    localdirs = [u''.join(unichr(c) for c in L[jj]) for jj in conf.getexplist(L)]
+    localdirs = [u''.join(chr(c) for c in L[jj]) for jj in conf.getexplist(L)]
     seldirs = [True]*len(localdirs)
     L.close()
     return localdirs,seldirs
@@ -48,7 +53,7 @@ def createValdata(conf,force=False):
     print('Creating val data %s!'%outfile)
     localdirs,seldirs = findLocalDirs(conf)
     nexps = len(seldirs)
-    isval = sample(range(nexps),int(nexps*conf.valratio))
+    isval = sample(list(range(nexps)),int(nexps*conf.valratio))
     try:
         os.makedirs(conf.cachedir)
     except OSError as exception:
@@ -123,7 +128,7 @@ def decodeID(keystr):
     vv = re.findall('(\d+):(.*):x(.*):y(.*):t(\d+)',keystr)[0]
     xlocs = [int(x) for x in vv[2].split('_')]
     ylocs = [int(x) for x in vv[3].split('_')]
-    locs = zip(xlocs,ylocs)
+    locs = list(zip(xlocs,ylocs))
     return vv[1],locs,int(vv[4])
 
 
