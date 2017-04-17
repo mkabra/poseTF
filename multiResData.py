@@ -72,8 +72,11 @@ def loadValdata(conf):
     outfile = os.path.join(conf.cachedir,conf.valdatafilename)
     assert os.path.isfile(outfile),"valdatafile {} doesn't exist".format(outfile)
 
-    with open(outfile,'r') as f:
-        isval,localdirs,seldirs = pickle.load(f)
+    with open(outfile,'rb') as f:
+        if sys.version_info.major == 3:
+            isval,localdirs,seldirs = pickle.load(f,encoding='latin1')
+        else:
+            isval, localdirs, seldirs = pickle.load(f)
     return isval,localdirs,seldirs
 
 

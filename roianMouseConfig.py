@@ -35,7 +35,7 @@ class myconfig(object):
     # a) gpu memory size
     # b) overfitting due to large number of variables.
     sel_sz = old_div(512,3)
-    psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
+    psz = sel_sz//(scale**(numscale-1))//rescale//pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5
     fine_label_blur_rad = 1.5
@@ -55,7 +55,7 @@ class myconfig(object):
     # ----- MRF Network Parameters
     baseIter4MRFTrain = 5000
     baseIter4ACTrain = 5000
-
+    add_loc_info = True
 
     # ----- Learning parameters
 
@@ -67,7 +67,7 @@ class myconfig(object):
     batch_size = 8
     mult_fac = old_div(16,batch_size)
     base_training_iters = 10000*mult_fac
-    fine_training_iters = 3000*mult_fac
+    fine_training_iters = 5000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000
     gamma = 0.1

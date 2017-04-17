@@ -411,11 +411,11 @@ def createFineLabelImages(locs,pred,conf,labelT):
         for ndx in range(conf.n_classes):
             dx = maxlocs[1,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,0],conf.rescale))
             dy = maxlocs[0,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,1],conf.rescale))
-            dd = tf.pack([dx,dy])
+            dd = tf.stack([dy,dx])
             dd = tf.maximum(tf.to_int32(hsz-old_div(tsz,2)),tf.minimum(tf.to_int32(old_div(tsz,2)-hsz-1),dd))
             curlimgs.append(extractFineLabelTensor(labelT,tsz,dd,conf.fine_sz))
-        limgs.append(tf.pack(curlimgs))
-    return tf.transpose(tf.pack(limgs),[0,2,3,1])
+        limgs.append(tf.stack(curlimgs))
+    return tf.transpose(tf.stack(limgs),[0,2,3,1])
 
 
 # In[ ]:
@@ -423,14 +423,14 @@ def createFineLabelImages(locs,pred,conf,labelT):
 def argmax2d(Xin):
     
     origShape = tf.shape(Xin)
-    reshape_t = tf.concat(0,[origShape[0:1],[-1],origShape[3:4]])
+    reshape_t = tf.concat([origShape[0:1],[-1],origShape[3:4]],0)
     zz = tf.reshape(Xin,reshape_t)
     pp = tf.to_int32(tf.argmax(zz,1))
     sz1 = tf.slice(origShape,[2],[1])
     cc1 = tf.div(pp,tf.to_int32(sz1))
     cc2 = tf.mod(pp,tf.to_int32(sz1))
     
-    return tf.pack([cc1,cc2])
+    return tf.stack([cc1,cc2])
 
 
 # In[ ]:
@@ -638,7 +638,7 @@ def createNetwork(conf,outtype):
         self.createBaseNetwork(doBatchNorm)
     self.createBaseSaver()
 
-    if outtype > 1:
+    if outtype > 1 and self.conf.useMRF:
         with tf.variable_scope('mrf'):
             self.createMRFNetwork(doBatchNorm)
         self.createMRFSaver()
@@ -685,20 +685,36 @@ def createPredImage(predscores,n_classes):
 
 # In[ ]:
 
-def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
-    cap = cv2.VideoCapture(moviename)
+def classifyMovie(conf, movie_name, out_type, self, sess, maxframes=-1, startat=0):
+    # maxframes if specificied reads that many frames
+    # start at specifies where to start reading.
+
+    cap = cv2.VideoCapture(movie_name)
     nframes = int(cap.get(cvc.FRAME_COUNT))
+
+    # figure out how many frames to read
     if maxframes > 0:
-        nframes = maxframes
+        if maxframes + startat > nframes:
+            nframes = nframes-startat
+        else:
+            nframes = maxframes
+    else:
+        nframes = nframes-startat
+
+    # since out of order frame access in python sucks, do it one by one
+    for ndx in range(startat):
+        cap.read()
+
+    #pre allocate results
     predLocs = np.zeros([nframes,conf.n_classes,2,2])
     predmaxscores = np.zeros([nframes,conf.n_classes,2])
     
-    if outtype == 3:
+    if out_type == 3:
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
         else:
             predPair = [self.basePred,self.finePred]
-    elif outtype == 2:
+    elif out_type == 2:
         predPair = [self.mrfPred,self.basePred]
     else:        
         predPair = [self.basePred]
@@ -735,7 +751,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
         pred = sess.run(predPair,self.feed_dict)
         if curl == 0:
             predscores = np.zeros((nframes,)+pred[0].shape[1:] + (2,))
-        if outtype == 3:
+        if out_type == 3:
             baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
             predLocs[ndxst:ndxe,:,0,:] = fineLocs[:ppe,:,:]
             predLocs[ndxst:ndxe,:,1,:] = baseLocs[:ppe,:,:]
@@ -743,7 +759,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
                 predmaxscores[ndxst:ndxe,:,0] = pred[0][:ppe,:,:,ndx].max()
                 predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
             predscores[curl,:,:,:,0] = pred[0][:ppe,:,:,:]
-        elif outtype == 2:
+        elif out_type == 2:
             baseLocs = getBasePredLocs(pred[0],conf)
             predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             baseLocs = getBasePredLocs(pred[1],conf)
@@ -753,7 +769,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
                 predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
             predscores[ndxst:ndxe,:,:,:,0] = pred[0][:ppe,:,:,:]
             predscores[ndxst:ndxe,:,:,:,1] = pred[1][:ppe,:,:,:]
-        elif outtype == 1:
+        elif out_type == 1:
             baseLocs = getBasePredLocs(pred[0],conf)
             predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             for ndx in range(conf.n_classes):
@@ -767,13 +783,28 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
     return predLocs,predscores,predmaxscores
 
 
-def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1):
+def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1,startat=0):
+    # maxframes if specificied reads that many frames
+    # start at specifies where to start reading.
+
     cap = cv2.VideoCapture(movie_name)
     nframes = int(cap.get(cvc.FRAME_COUNT))
+
+    # figure out how many frames to read
     if maxframes > 0:
-        nframes = maxframes
-    predLocs = np.zeros([nframes, conf.n_classes, 2, 2])
-    predmaxscores = np.zeros([nframes, conf.n_classes, 2])
+        if maxframes + startat > nframes:
+            nframes = nframes - startat
+        else:
+            nframes = maxframes
+    else:
+        nframes = nframes - startat
+
+    # since out of order frame access in python sucks, do it in order to exhaust it
+    for ndx in range(startat):
+        cap.read()
+
+    # pre allocate results
+    predLocs = np.zeros([nframes, conf.n_classes, 2])
 
     if self.conf.useMRF:
         predPair = [self.mrfPred, self.finePred]
@@ -791,6 +822,7 @@ def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1):
     #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
 
     allf = np.zeros((bsize,) + conf.imsz + (1,))
+    alll = np.zeros((bsize,conf.n_classes,2))
     for curl in range(nbatches):
 
         ndxst = curl * bsize
@@ -811,22 +843,19 @@ def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1):
         self.feed_dict[self.ph['x2']] = x2
         pred_int = sess.run(predPair[0],feed_dict=self.feed_dict)
         self.feed_dict[self.ph['fine_pred_in']] = pred_int
-        self.feed_dict[self.ph['fine_pred_locs_in']] = locs[ndxst:ndxe,...]
+        alll[:ppe,...] = locs[ndxst:ndxe,...]
+        self.feed_dict[self.ph['fine_pred_locs_in']] = alll
         pred = sess.run(predPair, self.feed_dict)
 
 
         baseLocs, fineLocs = getFinePredLocs(pred[0], pred[1], conf)
-        predLocs[ndxst:ndxe, :, 0, :] = fineLocs[:ppe, :, :]
-        predLocs[ndxst:ndxe, :, 1, :] = baseLocs[:ppe, :, :]
-        for ndx in range(conf.n_classes):
-            predmaxscores[ndxst:ndxe, :, 0] = pred[0][:ppe, :, :, ndx].max()
-            predmaxscores[ndxst:ndxe, :, 1] = pred[1][:ppe, :, :, ndx].max()
+        predLocs[ndxst:ndxe, :, :] = fineLocs[:ppe, :, :]
         sys.stdout.write('.')
         if curl % 20 == 19:
             sys.stdout.write('\n')
 
     cap.release()
-    return predLocs, predmaxscores
+    return predLocs
 
 
 # In[ ]:

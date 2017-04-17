@@ -20,6 +20,7 @@ from scipy import io
 import cv2
 from cvc import cvc
 import copy
+import math
 ##
 def main(argv):
 
@@ -41,6 +42,10 @@ def main(argv):
                         help="Train")
     parser.add_argument("-detect",dest='detect',action="store_true",
                         help="Detect")
+    parser.add_argument("-fine_train",dest='fine_train',action="store_true",
+                        help="Fine Train")
+    parser.add_argument("-fine_detect",dest='fine_detect',action="store_true",
+                        help="Fine Detection")
     parser.add_argument("-r",dest="redo",
                       help="if specified will recompute everything",
                       action="store_true")
@@ -52,6 +57,8 @@ def main(argv):
                       help="out type: 2 for mrf, 1 for pd",type=int)
     parser.add_argument("-extra_str",dest="extra_str",
                       help="extra str to attach to output files")
+    parser.add_argument("-results_dir",dest="results_dir",
+                      help="Directory with tracking results")
 
     args = parser.parse_args(argv[1:])
 
@@ -91,6 +98,23 @@ def main(argv):
                      curgpu=curgpu,batch_size=batch_size,redo=args.redo,
                      outdir=args.outdir,confname=args.confname,
                      outtype=args.outtype,extra_str=args.extra_str)
+
+
+    if args.fine_train:
+        trainfold_fine(conffile=args.configfile, curfold=curfold,
+                  curgpu=curgpu, batch_size=batch_size,
+                  confname=args.confname)
+
+    if args.fine_detect:
+        if args.results_dir is None:
+            print('Need results dir for fine detection')
+            return
+        classifyfold_fine(conffile=args.configfile,curfold=curfold,
+                     curgpu=curgpu,batch_size=batch_size,redo=args.redo,
+                     outdir=args.outdir,results_dir=args.results_dir,confname=args.confname,
+                     extra_str=args.extra_str)
+
+
 
 def createvaldataJan(conf):
     from janLegConfig import conf
@@ -235,11 +259,13 @@ def createvaldataJay():
     for ndx in range(nmov):
 
         dstr = localdirs[ndx].split('/')
-        if re.search('M(\d+)_*', dstr[-2]):
-            aa = re.search('M(\d+)_*', dstr[-2]).groups()[0]
+        if re.search('M(\d+)_(\d{8})_', dstr[-2]):
+            mm = re.search('M(\d+)_(\d{8})_', dstr[-2]).groups()
+            aa = '_'.join(mm)
         else:
-            aa = re.search('M(\d+)_*', dstr[-1]).groups()[0]
-        fly_id.append(int(aa))
+            mm = re.search('M(\d+)_(\d{8})_', dstr[-1]).groups()
+            aa = '_'.join(mm)
+        fly_id.append(aa)
         date_id.append(aa[1])
         curpts = np.array(L[pts[0,ndx]])
         frames = np.where(np.invert(np.all(np.isnan(curpts[:, :, :]), axis=(1, 2))))[0]
@@ -271,7 +297,7 @@ def createvaldataJay():
                     fly_fold[ndx] = curfold
                     per_fold[curfold] += fly_labels[ndx]
                     done = True
-        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,1.8))
+        imbalance = (per_fold.max()-per_fold.min())>(old_div(lbls_fold,2.5))
     print(per_fold)
 
 ##
@@ -333,7 +359,7 @@ def trainfold(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
     tf.reset_default_graph()
     self.mrfTrain(restore=True,trainType=0)
 
-def trainfold_fine(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
+def trainfold_fine(conffile,curfold,curgpu,batch_size,confname='conf'):
 
     imp_mod = importlib.import_module(conffile)
     conf = imp_mod.__dict__[confname]
@@ -357,15 +383,6 @@ def trainfold_fine(conffile,curfold,curgpu,batch_size,onlydb=False,confname='con
     conf.finedataname += ext
     conf.mrfdataname += ext
 
-    _,localdirs,seldirs = multiResData.loadValdata(conf)
-    for ndx,curl in enumerate(localdirs):
-        if not os.path.exists(curl):
-            print(curl + ' {} doesnt exist!!!!'.format(ndx))
-            return
-
-
-    if not os.path.exists(os.path.join(conf.cachedir,conf.trainfilename+'.tfrecords')):
-        multiResData.createTFRecordFromLbl(conf,True)
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
     tf.reset_default_graph()
     self = PoseTrain.PoseTrain(conf)
@@ -406,6 +423,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
 
 
+    max_chunk_size = 1000
     self = PoseTools.createNetwork(conf,outtype)
     sess = tf.Session()
     PoseTools.initNetwork(self,sess,outtype)
@@ -422,31 +440,133 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
         pname = os.path.join(outdir , oname)
 
         # detect
-        if redo or not (os.path.isfile(pname + '.mat') or os.path.isfile(pname + '.h5')):
 
-            predList = PoseTools.classifyMovie(conf,localdirs[ndx],outtype,self,sess)
+        if redo or not (os.path.isfile(pname + '.mat') or os.path.isfile(pname + '.h5')):
 
             cap = cv2.VideoCapture(localdirs[ndx])
             height = int(cap.get(cvc.FRAME_HEIGHT))
             width = int(cap.get(cvc.FRAME_WIDTH))
             orig_crop_loc = conf.cropLoc[(height,width)]
-            crop_loc = [old_div(x,4) for x in orig_crop_loc]
-            end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
-            pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
-            predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
+            nframes = int(cap.get(cvc.FRAME_COUNT))
+            nblocks = int(math.ceil(float(nframes)/max_chunk_size))
+            cap.release()
 
-            predLocs = predList[0]
-            predLocs[:,:,:,0] += orig_crop_loc[1]
-            predLocs[:,:,:,1] += orig_crop_loc[0]
-
+            out_sz = [0,0]
+            out_sz[0] = height//conf.pool_scale//conf.rescale
+            out_sz[1] = width//conf.pool_scale//conf.rescale
             with h5py.File(pname+'.h5','w') as f:
-                f.create_dataset('locs',data=predLocs)
-                f.create_dataset('scores', data=predScores)
                 f.create_dataset('expname', data=localdirs[ndx])
+                for cur_b in range(nblocks):
+                    startat = cur_b*max_chunk_size
+                    stopat = min((cur_b+1)*max_chunk_size,nframes)
+                    frames_read = stopat-startat
+                    predList = PoseTools.classifyMovie(conf,localdirs[ndx],outtype,
+                                                       self,sess,maxframes=frames_read,
+                                                       startat=startat)
+                    scale_fac = conf.pool_scale*conf.rescale
+                    crop_loc = [old_div(x,scale_fac) for x in orig_crop_loc]
+                    end_pad = [old_div(height,scale_fac)-crop_loc[0]-old_div(conf.imsz[0],scale_fac),
+                               old_div(width,scale_fac)-crop_loc[1]-old_div(conf.imsz[1],scale_fac)]
+                    pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
+                    predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
+
+                    if cur_b == 0:
+                        locs_o = f.create_dataset('locs', (nframes, conf.n_classes, 2, 2))
+                        scores_o = f.create_dataset('scores', (nframes, predScores.shape[1],
+                                                               predScores.shape[2], conf.n_classes, 2))
+
+                    predLocs = predList[0]
+                    predLocs[:,:,:,0] += orig_crop_loc[1]
+                    predLocs[:,:,:,1] += orig_crop_loc[0]
+
+                    locs_o[startat:stopat,...] = predLocs
+                    scores_o[startat:stopat,...] = predScores
 
             # io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
             print('Detecting:%s'%oname)
 
+def classifyfold_fine(conffile,curfold,curgpu,batch_size,
+                 redo,outdir,results_dir,confname='conf',extra_str=None):
+
+    imp_mod = importlib.import_module(conffile)
+    conf = imp_mod.__dict__[confname]
+    if batch_size>0:
+        conf.batch_size = batch_size
+
+    ext = '_fold_{}'.format(curfold)
+    conf.valdatafilename = conf.valdatafilename + ext
+    conf.trainfilename = conf.trainfilename + ext
+    conf.valfilename = conf.valfilename + ext
+    conf.fulltrainfilename += ext
+    conf.baseoutname = conf.baseoutname + ext
+    conf.mrfoutname += ext
+    conf.fineoutname += ext
+    conf.baseckptname += ext
+    conf.mrfckptname += ext
+    conf.fineckptname += ext
+    conf.basedataname += ext
+    conf.finedataname += ext
+    conf.mrfdataname += ext
+
+    isval,localdirs,seldirs = multiResData.loadValdata(conf)
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
+
+    max_chunk_size = 5000
+    outtype = 3
+    self = PoseTools.createNetwork(conf,outtype)
+    sess = tf.Session()
+    PoseTools.initNetwork(self,sess,outtype)
+
+    for ndx in range(len(localdirs)):
+        if not isval.count(ndx):
+            continue
+        mname,_ = os.path.splitext(os.path.basename(localdirs[ndx]))
+        ename = re.sub('!','__',conf.getexpname(localdirs[ndx]))
+        if extra_str is not None:
+            oname = ename+ '_'+extra_str
+        else:
+            oname = ename
+        print(oname)
+
+
+        pname = os.path.join(outdir , oname) + '_fine'
+        rname = os.path.join(results_dir,ename) + '.mat'
+        S = h5py.File(rname,'r')
+        view = conf.view
+        locs = np.array(S[S['R'][view,0]]['final_locs'])
+        locs = np.transpose(locs,[2,1,0])
+        # detect
+        if redo or not (os.path.isfile(pname + '.h5')):
+            cap = cv2.VideoCapture(localdirs[ndx])
+            height = int(cap.get(cvc.FRAME_HEIGHT))
+            width = int(cap.get(cvc.FRAME_WIDTH))
+            orig_crop_loc = conf.cropLoc[(height,width)]
+            nframes = int(cap.get(cvc.FRAME_COUNT))
+            nblocks = int(math.ceil(float(nframes)/max_chunk_size))
+            cap.release()
+
+            locs[:,:,0] -= orig_crop_loc[1]
+            locs[:,:,1] -= orig_crop_loc[0]
+
+            with h5py.File(pname+'.h5','w') as f:
+                f.create_dataset('expname', data=localdirs[ndx])
+                locs_o = f.create_dataset('locs',  (nframes,conf.n_classes,2))
+
+                for cur_b in range(nblocks):
+                    startat = cur_b*max_chunk_size
+                    stopat = min((cur_b+1)*max_chunk_size,nframes)
+                    frames_read = stopat-startat
+
+                    predLocs = PoseTools.classify_movie_fine(conf,localdirs[ndx],locs,
+                                                             self,sess,maxframes=frames_read,
+                                                             startat=startat)
+
+                    predLocs[:,:,0] += orig_crop_loc[1]
+                    predLocs[:,:,1] += orig_crop_loc[0]
+                    locs_o[startat:stopat,...] = predLocs
+            # io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
+            print('\nFine Detection done for :%s'%oname)
 
 def createCVMat(conffile):
     imp_mod = importlib.import_module(conffile)
@@ -500,6 +620,7 @@ def checkDB(conffile,confname='conf'):
         self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
     xs = self.xs
     selex = np.random.randint(conf.batch_size)
+    plt.cla()
     plt.imshow(xs[selex,0,...],cmap='gray')
     locs = self.locs
     plt.scatter(locs[selex,:,0],locs[selex,:,1])

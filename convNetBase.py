@@ -331,11 +331,11 @@ def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes,inDim=1):
                                      old_div(imsz[0],rescale),
                                      old_div(imsz[1],rescale),inDim],name='x0')
     x1 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/scale/rescale,
-                                     imsz[1]/scale/rescale,inDim],name='x1')
+                                     imsz[0]//scale//rescale,
+                                     imsz[1]//scale//rescale,inDim],name='x1')
     x2 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/scale/scale/rescale,
-                                     imsz[1]/scale/scale/rescale,inDim],name='x2')
+                                     imsz[0]//scale//scale//rescale,
+                                     imsz[1]//scale//scale//rescale,inDim],name='x2')
 
     lsz0,lsz1 = findPredSize(imsz,rescale,pool_scale)
     y = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes],'limg')
@@ -401,19 +401,21 @@ def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,
 #     conv5_cat = tf.concat(3,[fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
     return fineSum
 
-def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,trainPhase):
+def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf,doBatchNorm,trainPhase):
     inter = []
     with tf.variable_scope('fine_siamese') as scope:
         tvar = fineNetwork(fineIn1_1[0], fineIn1_2[0],
                            fineIn2_1[0], fineIn2_2[0],
-                           fineIn7[0], conf, doBatchNorm, 
+                           conf, doBatchNorm,
                            trainPhase)
         inter.append(tvar)
-        scope.reuse_variables()
+        # scope.reuse_variables()
+        tf.get_variable_scope().reuse_variables()
+
         for ndx in range(1,len(fineIn1_1)):
             tvar = fineNetwork(fineIn1_1[ndx], fineIn1_2[ndx],
                                fineIn2_1[ndx], fineIn2_2[ndx],
-                               fineIn7[ndx], conf, doBatchNorm, 
+                               conf, doBatchNorm,
                                trainPhase)
             inter.append(tvar)
 

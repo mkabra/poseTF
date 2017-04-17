@@ -10,6 +10,7 @@ import sys
 import os
 import PoseTrain
 import multiResData
+import tensorflow as tf
 from stephenHeadConfig import sideconf as sideconf
 from stephenHeadConfig import conf as frontconf
 import argparse
@@ -33,19 +34,21 @@ def main(argv):
                         help="Detect")
     parser.add_argument("-fine_train",dest='fine_train',action="store_true",
                         help="Fine Train")
+    parser.add_argument("-fine_detect",dest='fine_detect',action="store_true",
+                        help="Fine Detect")
     parser.add_argument("-r",dest="redo",
                       help="if specified will recompute everything for detecting",
                       action="store_true")
     parser.add_argument("-o",dest="outdir",
                       help="temporary output directory to store intermediate computations")
-    parser.add_argument("-cname",dest="confname",
-                      help="config name")
+    parser.add_argument("-results_dir",dest="results_dir",
+                      help="Directory with tracking results")
 
     args = parser.parse_args(argv[1:])
 
     view = args.view
     curfold = args.fold
-    curgpu = args.gpu
+    curgpu = args.gpunum
     if args.batch_size is not None:
         batch_size = args.batch_size
     else:
@@ -58,6 +61,9 @@ def main(argv):
     if args.fine_train:
         trainfold_fine(view=view, curfold=curfold, curgpu=curgpu, batch_size=batch_size)
 
+    if args.fine_detect:
+        classifyfold_fine(view=view, curfold=curfold, curgpu=curgpu, batch_size=batch_size,
+                          redo=args.redo,outdir=args.outdir,results_dir=args.results_dir)
 
 def trainfold(view,curfold,curgpu,batch_size):
     if view == 0:
@@ -132,17 +138,95 @@ def trainfold_fine(view,curfold,curgpu,batch_size):
     conf.finedataname += ext
     conf.mrfdataname += ext
 
-    _,localdirs,seldirs = multiResData.loadValdata(conf)
-    for ndx,curl in enumerate(localdirs):
-        if not os.path.exists(curl):
-            print(curl + ' {} doesnt exist!!!!'.format(ndx))
-            return
-
-
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
     tf.reset_default_graph()
     self = PoseTrain.PoseTrain(conf)
     self.fineTrain(restore=True,trainPhase=True,trainType=0)
+
+def classifyfold_fine(curfold,curgpu,batch_size,
+                 redo,outdir,results_dir,view):
+
+    if view == 0:
+        conf = sideconf
+        extra_str = '_side_fine'
+        filename = '/groups/branson/bransonlab/mayank/stephenCV/view1vids_fold_{}.txt'.format(curfold)
+        with open(filename, "r") as text_file:
+            smovies = text_file.readlines()
+        movies = [x.rstrip() for x in smovies]
+    else:
+        conf = frontconf
+        extra_str = '_front_fine'
+        filename = '/groups/branson/bransonlab/mayank/stephenCV/view2vids_fold_{}.txt'.format(curfold)
+        with open(filename, "r") as text_file:
+            smovies = text_file.readlines()
+        movies = [x.rstrip() for x in smovies]
+
+    if batch_size>0:
+        conf.batch_size = batch_size
+
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+
+    ext = '_fold_{}'.format(curfold)
+    conf.valdatafilename = conf.valdatafilename + ext
+    conf.trainfilename = conf.trainfilename + ext
+    conf.valfilename = conf.valfilename + ext
+    conf.fulltrainfilename += ext
+    conf.baseoutname = conf.baseoutname + ext
+    conf.mrfoutname += ext
+    conf.fineoutname += ext
+    conf.baseckptname += ext
+    conf.mrfckptname += ext
+    conf.fineckptname += ext
+    conf.basedataname += ext
+    conf.finedataname += ext
+    conf.mrfdataname += ext
+
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
+
+    outtype = 3
+    self = PoseTools.createNetwork(conf,outtype)
+    sess = tf.Session()
+    PoseTools.initNetwork(self,sess,outtype)
+
+
+    for ndx in range(len(movies)):
+        mname,_ = os.path.splitext(os.path.basename(movies[ndx]))
+
+        oname = re.sub('!','__',conf.getexpname(movies[ndx]))
+        pname = os.path.join(outdir, oname + extra_str)
+        print(oname)
+
+
+        rname = os.path.join(results_dir,oname) + '.mat'
+        if not os.path.exists(rname):
+            print('{} {} doesnt exist'.format(ndx,rname))
+            continue
+        S = h5py.File(rname,'r')
+        view = conf.view
+        locs = np.array(S[S['R'][view,0]]['final_locs'])
+        locs = np.transpose(locs,[2,1,0])
+        # detect
+        if redo or not (os.path.isfile(pname + '.h5')):
+            cap = cv2.VideoCapture(movies[ndx])
+            height = int(cap.get(cvc.FRAME_HEIGHT))
+            width = int(cap.get(cvc.FRAME_WIDTH))
+            orig_crop_loc = conf.cropLoc[(height,width)]
+
+            locs[:,:,0] -= orig_crop_loc[1]
+            locs[:,:,1] -= orig_crop_loc[0]
+
+            predLocs = PoseTools.classify_movie_fine(conf,movies[ndx],locs,self,sess)
+
+            predLocs[:,:,0] += orig_crop_loc[1]
+            predLocs[:,:,1] += orig_crop_loc[0]
+
+            with h5py.File(pname+'.h5','w') as f:
+                f.create_dataset('locs',data=predLocs)
+                f.create_dataset('expname', data=movies[ndx])
+            # io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':localdirs[ndx]})
+            print('\nFine detection done for :%s'%oname)
+
 
 
 

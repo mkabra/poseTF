@@ -68,7 +68,7 @@ class myconfig(object):
     batch_size = 8
     mult_fac = old_div(16,batch_size)
     base_training_iters = 15000*mult_fac
-    fine_training_iters = 3000*mult_fac
+    fine_training_iters = 5000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000
     gamma = 0.1

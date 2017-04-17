@@ -67,7 +67,7 @@ class myconfig(object):
     batch_size = 8
     mult_fac = old_div(16,batch_size)
     base_training_iters = 10000*mult_fac
-    fine_training_iters = 3000*mult_fac
+    fine_training_iters = 5000*mult_fac
     mrf_training_iters = 0*mult_fac
     ac_training_iters = 5000
     gamma = 0.1
@@ -78,8 +78,8 @@ class myconfig(object):
     # range for contrast, brightness and rotation adjustment
     horzFlip = False
     vertFlip = False
-    brange = [-0.2,0.2]
-    crange = [0.7,1.3]
+    brange = [-0.1,0.1] #[-0.2,0.2]
+    crange = [0.9,1.1] #[0.7,1.3]
     rrange = 30
     imax = 255.
     adjustContrast = False
@@ -97,7 +97,7 @@ class myconfig(object):
     imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cache','jayMouseSide')
-    labelfile = os.path.join('/groups/branson/bransonlab/mayank/PoseTF/data/jayMouse/miceLabels_20170412.lbl')
+    labelfile = os.path.join(localSetup.bdir,'data','jayMouse','miceLabels_20170412.lbl')
     # this label file has more data and includes the correction for vertical flipping
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
