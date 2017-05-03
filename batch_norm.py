@@ -8,6 +8,10 @@ from tensorflow.python.ops import control_flow_ops
 
 
 def batch_norm(x, phase_train, scope='batch_norm'):
+    # return tf.contrib.layers.batch_norm(x,center=True,scale=True,
+    #                                     is_training=phase_train,
+    #                                     scope=tf.get_variable_scope())
+
     """
     Batch normalization on convolutional maps.
     Args:
@@ -20,6 +24,8 @@ def batch_norm(x, phase_train, scope='batch_norm'):
         normed:      batch-normalized maps
     From: http://stackoverflow.com/questions/33949786/how-could-i-use-batch-normalization-in-tensorflow/33950177?noredirect=1#comment55758348_33950177
     """
+
+
     x_shape = tf.Tensor.get_shape(x)
     n_out = x_shape.as_list()[3]
     with tf.device(None):
@@ -35,18 +41,17 @@ def batch_norm(x, phase_train, scope='batch_norm'):
 
                 ema = tf.train.ExponentialMovingAverage(decay=0.9)
 
-
                 def mean_var_with_update():
-                        ema_apply_op = ema.apply([batch_mean, batch_var])
-                        with tf.control_dependencies([ema_apply_op]):
-                            return tf.identity(batch_mean), tf.identity(batch_var)
+                    ema_apply_op = ema.apply([batch_mean, batch_var])
+                    with tf.control_dependencies([ema_apply_op]):
+                        return tf.identity(batch_mean), tf.identity(batch_var)
 
                 mean, var = tf.cond(phase_train,
                                     mean_var_with_update,
-                                    lambda: (ema.average(batch_mean), ema.average(batch_var)))
-
+                                    lambda: (ema.average(batch_mean), ema.average(batch_var)),
+                                    name='ema')
             normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
-        return normed            
+        return normed
 # Below is buggy - sigh.. MK Aug 9 2016            
 #             ema_apply_op = ema.apply([batch_mean, batch_var])
 #             ema_mean, ema_var = ema.average(batch_mean), ema.average(batch_var)

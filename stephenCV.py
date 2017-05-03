@@ -14,7 +14,9 @@ import tensorflow as tf
 from stephenHeadConfig import sideconf as sideconf
 from stephenHeadConfig import conf as frontconf
 import argparse
+import copy
 
+##
 
 def main(argv):
 
@@ -43,6 +45,8 @@ def main(argv):
                       help="temporary output directory to store intermediate computations")
     parser.add_argument("-results_dir",dest="results_dir",
                       help="Directory with tracking results")
+    parser.add_argument("-train_size",dest="train_size",action='store_true',
+                      help="Train size varying classifiers")
 
     args = parser.parse_args(argv[1:])
 
@@ -57,13 +61,15 @@ def main(argv):
     if args.train:
         trainfold(view=view,curfold=curfold,curgpu=curgpu,batch_size=batch_size)
 
-
     if args.fine_train:
         trainfold_fine(view=view, curfold=curfold, curgpu=curgpu, batch_size=batch_size)
 
     if args.fine_detect:
         classifyfold_fine(view=view, curfold=curfold, curgpu=curgpu, batch_size=batch_size,
                           redo=args.redo,outdir=args.outdir,results_dir=args.results_dir)
+
+    if args.train_size:
+        trainfold_size(view=view,curfold=curfold,curgpu=curgpu)
 
 def trainfold(view,curfold,curgpu,batch_size):
     if view == 0:
@@ -228,6 +234,35 @@ def classifyfold_fine(curfold,curgpu,batch_size,
             print('\nFine detection done for :%s'%oname)
 
 
+def trainfold_size(view, curfold, curgpu):
+    if view == 0:
+        conf = sideconf
+    else:
+        conf = frontconf
+
+    conf.cachedir = os.path.join(conf.cachedir, 'size_exp')
+    tr_frac = np.array([0.1,0.25,0.5,0.75,0.9])
+
+    ##
+
+    ext = '_sz_{}'.format(int(tr_frac[curfold]*100))
+    conf.trainfilename = conf.trainfilename + ext
+    conf.baseoutname += ext
+    conf.mrfoutname += ext
+    conf.fineoutname += ext
+    conf.baseckptname += ext
+    conf.mrfckptname += ext
+    conf.fineckptname += ext
+    conf.basedataname += ext
+    conf.finedataname += ext
+    conf.mrfdataname += ext
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
+    tf.reset_default_graph()
+    self = PoseTrain.PoseTrain(conf)
+    self.baseTrain(restore=True, trainPhase=True, trainType=0)
+    tf.reset_default_graph()
+    self.mrfTrain(restore=True, trainType=0)
 
 
 if __name__ == "__main__":
@@ -356,7 +391,117 @@ def createSideValData():
             pickle.dump([isval, localdirs, seldirs], f)
 
 
+def size_exp_datasets():
+    ##
+    def _int64_feature(value):
+        if not isinstance(value, (list, np.ndarray)):
+            value = [value]
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+
+    def _bytes_feature(value):
+        if not isinstance(value, list):
+            value = [value]
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
+
+    def _float_feature(value):
+        if not isinstance(value, (list, np.ndarray)):
+            value = [value]
+        return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
+    ##
+    from stephenHeadConfig import conf as frontconf
+    from stephenHeadConfig import sideconf
+    
+    conf = []
+    conf.append(copy.deepcopy(frontconf))
+    conf.append(copy.deepcopy(sideconf))
 ##
+    ims = [[],[]]
+    exp_ids = [[],[]]
+    ts = [[],[]]
+    locs = [[],[]]
+    for view in range(2):
+        orig_train_file_name = os.path.join(conf[view].cachedir, 'cross_val_fly',
+                                            conf[view].trainfilename + '_fold_0')
+        in_tf = tf.python_io.tf_record_iterator(orig_train_file_name + '.tfrecords')
+        for string_record in in_tf:
+            example = tf.train.Example()
+            example.ParseFromString(string_record)
+
+            exp_id_in = int(example.features.feature['expndx']
+                         .float_list
+                         .value[0])
+            ts_in = int(example.features.feature['ts']
+                        .float_list
+                        .value[0])
+            img_string = (example.features.feature['image_raw']
+                          .bytes_list
+                          .value[0])
+            img_1d = np.fromstring(img_string, dtype=np.uint8)
+            reconstructed_img = img_1d.reshape((conf[view].imsz[0], conf[view].imsz[1], conf[view].imgDim))
+            locs_in = np.reshape(np.array(example.features.feature['locs'].float_list.value),
+                                 [conf[view].n_classes,2])
+
+            ims[view].append(reconstructed_img)
+            exp_ids[view].append(exp_id_in)
+            ts[view].append(ts_in)
+            locs[view].append(locs_in)
+    ##
+    tr_frac = np.array([0.1,0.25,0.5,0.75,0.9])
+    u_exp, c_exp = np.unique(np.array(exp_ids[0]), return_counts=True)
+    perm = np.random.permutation(len(u_exp))
+    u_exp = u_exp[perm]
+    c_exp = c_exp[perm]
+    balance = 1
+    count = 0
+    while balance>0.05 and count<10:
+        perm = np.random.permutation(len(u_exp))
+        u_exp = u_exp[perm]
+        c_exp = c_exp[perm]
+        gg = np.cumsum(c_exp)/c_exp.sum()
+        ids = (tr_frac*len(u_exp)).astype('int')
+        balance = np.abs(gg[ids]-tr_frac).max()
+        print('{:.2f}'.format(balance))
+        count += 1
+    ##
+
+    for sz in range(len(tr_frac)):
+        last_ndx = int(tr_frac[sz]*len(u_exp))
+        for view in range(2):
+            train_file_name = os.path.join(conf[view].cachedir, 'size_exp',
+                                         conf[view].trainfilename + '_sz_{}'.format(int(tr_frac[sz]*100)))
+            cur_tf = tf.python_io.TFRecordWriter(train_file_name + '.tfrecords')
+
+            for e_idx in range(last_ndx):
+                idx = np.where(exp_ids[view]==u_exp[e_idx])[0]
+                for cur_idx in idx:
+                    cur_img = ims[view][cur_idx]
+                    rows = cur_img.shape[0]
+                    cols = cur_img.shape[1]
+                    if np.ndim(cur_img) > 2:
+                        depth = cur_img.shape[2]
+                    else:
+                        depth = 1
+
+                    cur_loc = locs[view][cur_idx]
+                    cur_exp = exp_ids[view][cur_idx]
+                    cur_ts = ts[view][cur_idx]
+                    image_raw = cur_img.tostring()
+                    example = tf.train.Example(features=tf.train.Features(feature={
+                        'height': _int64_feature(rows),
+                        'width': _int64_feature(cols),
+                        'depth': _int64_feature(depth),
+                        'locs': _float_feature(cur_loc.flatten()),
+                        'expndx': _float_feature(cur_exp),
+                        'ts': _float_feature(cur_ts),
+                        'image_raw': _bytes_feature(image_raw)}))
+                    cur_tf.write(example.SerializeToString())
+
+
+            cur_tf.close()
+
+
+                ##
 # folds = 5
 # allisval = []
 # for ndx in range(1,folds):

@@ -79,7 +79,7 @@ def scaleImages(img,scale,conf):
                     to_add = old_div(((np.random.rand(conf.batch_size)-0.5)*conf.imax),8)
                     xx[:,:,:,dim] += to_add[:,np.newaxis,np.newaxis]
     else:
-        xx = zz
+        xx = zz - zz.mean()
 
     return xx
 
@@ -331,7 +331,9 @@ def createLabelImages(locs,imsz,scale,blur_rad):
         for ndx in range(len(locs)):
             if np.isnan(locs[ndx][cls][0]) or np.isinf(locs[ndx][cls][0]):
                 continue
-#             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
+            if np.isnan(locs[ndx][cls][1]) or np.isinf(locs[ndx][cls][1]):
+                continue
+    #             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
 #             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
             modlocs0 = int(np.round(old_div(locs[ndx][cls][1],scale)))
             modlocs1 = int(np.round(old_div(locs[ndx][cls][0],scale)))
