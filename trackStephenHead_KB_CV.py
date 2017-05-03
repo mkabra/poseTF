@@ -17,10 +17,9 @@ from subprocess import call
 import stat
 
 def main(argv):
+    print(argv)
 
-#    defaulttrackerpath = "/groups/branson/home/bransonk/tracking/code/poseTF/matlab/compute3Dfrom2D/for_redistribution_files_only/run_compute3Dfrom2D.sh"
     defaulttrackerpath = "/groups/branson/bransonlab/mayank/PoseTF/matlab/compiled/run_compute3Dfrom2D_compiled.sh"
-#    defaultmcrpath = "/groups/branson/bransonlab/projects/olympiad/MCR/v91"
     defaultmcrpath = "/groups/branson/bransonlab/mayank/MCR/v92"
 
     parser = argparse.ArgumentParser()
@@ -33,14 +32,14 @@ def main(argv):
     parser.add_argument("-d",dest="dltfilename",
                       help="text file with list of DLTs, one per fly as 'flynum,/path/to/dltfile'",
                       required=True)
+    parser.add_argument("-fold",dest="fold",
+                      help="fold number",
+                      required=True)
     parser.add_argument("-o",dest="outdir",
                       help="temporary output directory to store intermediate computations",
                       required=True)
     parser.add_argument("-r",dest="redo",
                       help="if specified will recompute everything",
-                      action="store_true")
-    parser.add_argument("-rt",dest="redo_tracking",
-                      help="if specified will only recompute tracking",
                       action="store_true")
     parser.add_argument("-gpu",dest='gpunum',type=int,
                         help="GPU to use [optional]")
@@ -64,11 +63,9 @@ def main(argv):
     
 
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.redo is None:
         args.redo = False
-    if args.redo_tracking is None:
-        args.redo_tracking= False
         
     if args.detect is False and args.track is False: 
         args.detect = True
@@ -107,6 +104,7 @@ def main(argv):
         # compiled matlab command
         matscript = args.trackerpath + " " + args.mcrpath
 
+
     if args.detect:
         import numpy as np
         import tensorflow as tf
@@ -122,7 +120,7 @@ def main(argv):
                 print("Movie %s not found"%(ff))
                 raise exit(0)
         if args.gpunum is not None:
-            os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+            os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(args.gpunum)
 
     for view in range(2): # 0 for front and 1 for side
         if args.detect:
@@ -134,13 +132,31 @@ def main(argv):
             outtype = 2
             extrastr = '_side'
             valmovies = smovies
+
         else:
             # For FRONT
             from stephenHeadConfig import conf as conf
             conf.useMRF = True
             outtype = 2
             extrastr = '_front'
-            valmovies = fmovies    
+            valmovies = fmovies
+
+        ext = '_fold_{}'.format(args.fold)
+        conf.cachedir = os.path.join(conf.cachedir, 'cross_val_fly')
+        conf.valdatafilename = conf.valdatafilename + ext
+        conf.trainfilename = conf.trainfilename + ext
+        conf.valfilename = conf.valfilename + ext
+        conf.fulltrainfilename += ext
+        conf.baseoutname = conf.baseoutname + ext
+        conf.mrfoutname += ext
+        conf.fineoutname += ext
+        conf.baseckptname += ext
+        conf.mrfckptname += ext
+        conf.fineckptname += ext
+        conf.basedataname += ext
+        conf.finedataname += ext
+        conf.mrfdataname += ext
+
 
         # conf.batch_size = 1
 
@@ -155,6 +171,12 @@ def main(argv):
             pname = os.path.join(args.outdir , oname + extrastr)
 
             print(oname)
+
+            flynum = conf.getflynum(smovies[ndx])
+            # print "Parsed fly number as %d"%flynum
+            if flynum not in dltdict:
+                print('No dlt file, skipping')
+                continue
 
             # detect
             if args.detect and os.path.isfile(valmovies[ndx]) and \
@@ -196,14 +218,15 @@ def main(argv):
                 trkfile_front = basename_front+'.trk'
                 trkfile_side = basename_side+'.trk'
 
-                redo_tracking = args.redo or args.redo_tracking
                 if os.path.isfile(savefile) and os.path.isfile(trkfile_front) and \
-                   os.path.isfile(trkfile_side) and not redo_tracking:
+                   os.path.isfile(trkfile_side) and not args.redo:
                     print("%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side))
                     continue
 
                 flynum = conf.getflynum(smovies[ndx])
                 #print "Parsed fly number as %d"%flynum
+                if flynum not in dltdict:
+                    continue
                 kinematfile = os.path.abspath(dltdict[flynum])
 
                 jobid = oname_side

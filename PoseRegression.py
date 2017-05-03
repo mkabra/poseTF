@@ -6,7 +6,12 @@
 '''
 Mayank Oct 10 2016
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys,shutil
 import tempfile,copy,re
@@ -33,8 +38,8 @@ class PoseRegression(PoseTrain.PoseTrain):
     def createPH(self):
         super(PoseRegression,self).createPH()
         scale = self.conf.rescale*self.conf.pool_scale
-        lsz0 = self.conf.imsz[0]/scale
-        lsz1 = self.conf.imsz[1]/scale
+        lsz0 = old_div(self.conf.imsz[0],scale)
+        lsz1 = old_div(self.conf.imsz[1],scale)
         n_classes = self.conf.n_classes
         regx_ph = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes],'regx')
         self.ph['regx'] = regx_ph
@@ -55,7 +60,7 @@ class PoseRegression(PoseTrain.PoseTrain):
         
     def createLoss(self):
         label_cost = tf.nn.l2_loss(self.baseregPred-self.ph['y']) 
-        norm_label = tf.sqrt(tf.maximum((self.ph['y']/2)+0.5,0))
+        norm_label = tf.sqrt(tf.maximum((old_div(self.ph['y'],2))+0.5,0))
         # sqrt so that in l2_loss it becomes what we want
         xcost = tf.mul(self.regpredx-self.ph['regx'],norm_label)
         ycost = tf.mul(self.regpredy-self.ph['regy'],norm_label)
@@ -63,7 +68,7 @@ class PoseRegression(PoseTrain.PoseTrain):
         rad = self.conf.label_blur_rad*2*self.conf.pool_scale
         # dividing xcost and ycost by rad so that if we are off by rad in regression
         # it is equivalent to complete misprediction on labels
-        reg_cost = tf.nn.l2_loss(xcost/rad) + tf.nn.l2_loss(ycost/rad)
+        reg_cost = tf.nn.l2_loss(old_div(xcost,rad)) + tf.nn.l2_loss(old_div(ycost,rad))
         
         reg_lambda = self.conf.reg_lambda
         self.cost = label_cost + reg_lambda*(reg_cost)
@@ -121,7 +126,7 @@ class PoseRegression(PoseTrain.PoseTrain):
             pickle.dump([self.baseregtrainData,self.conf],tdfile)
             
     def updateBaseRegLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]))
 #         nstep = step-self.basestartat
 #         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
 #               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
@@ -162,7 +167,7 @@ class PoseRegression(PoseTrain.PoseTrain):
                     train_loss = self.computeLoss(sess,[self.cost])
                     tt1 = self.computePredDist(sess,self.baseregPred)
                     trainDist = [tt1.mean()]
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([2,])
                     valDist = [0.]
                     for rep in range(numrep):
@@ -170,8 +175,8 @@ class PoseRegression(PoseTrain.PoseTrain):
                         val_loss += np.array(self.computeLoss(sess,[self.cost]))
                         tt1 = self.computePredDist(sess,self.baseregPred)
                         valDist = [valDist[0]+tt1.mean()]
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep]
+                    val_loss = old_div(val_loss,numrep)
+                    valDist = [old_div(valDist[0],numrep)]
                     self.updateBaseRegLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveBaseReg(sess,step)

@@ -9,7 +9,12 @@ Paw detector modified from:
 Author: Aymeric Damien
 Project: https://github.com/aymericdamien/TensorFlow-Examples/
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 
 import os,sys
@@ -67,7 +72,7 @@ def readLMDB(cursor,num,n_input,n_classes):
 
 #     print(images.shape)
     for ndx in range(num):
-        if not cursor.next():
+        if not next(cursor):
             cursor.first()
 #             print('restarting at %d' % ndx)
             
@@ -270,9 +275,9 @@ with tf.Session() as sess:
             acc = sess.run(accuracy, feed_dict={x: val_xs, y: val_ys, keep_prob: 1.})
             # Calculate batch loss
             loss = sess.run(cost, feed_dict={x: val_xs, y: val_ys, keep_prob: 1.})
-            print "**** Iter " + str(step) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Validation Accuracy= " + "{:.5f}".format(acc)
+            print("**** Iter " + str(step) + ", Minibatch Loss= " + "{:.6f}".format(loss) + ", Validation Accuracy= " + "{:.5f}".format(acc))
         step += 1
-    print "Optimization Finished!"
+    print("Optimization Finished!")
    
 
 
@@ -315,7 +320,7 @@ bb = 55
 sta = aa*4+1
 stb = bb*4+1
 patch = frame[np.newaxis,sta:sta+128,stb:stb+128,:]
-plt.imshow(frame[sta:sta+128,stb:stb+128,:]/255)
+plt.imshow(old_div(frame[sta:sta+128,stb:stb+128,:],255))
 frame_feed = frame[np.newaxis,:]
 label = np.array([[0.,1.]]).astype('float32')
 

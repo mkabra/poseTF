@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
@@ -16,6 +18,11 @@
 #
 ################################################################################
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 from numpy import *
 import os
 from pylab import *
@@ -27,7 +34,7 @@ from scipy.misc import imread
 from scipy.misc import imresize
 import matplotlib.image as mpimg
 from scipy.ndimage import filters
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from numpy import random
 
 import tensorflow as tf
@@ -197,7 +204,7 @@ sess.run(init)
 
 # In[48]:
 
-x_dummy = (np.random.random((1,)+ xdim)/255.).astype(float)
+x_dummy = (old_div(np.random.random((1,)+ xdim),255.)).astype(float)
 i = x_dummy.copy()
 i[0,:,:,:] = (imread("poodle.png")[:,:,:3]).astype(float)
 i = i-mean(i)
@@ -209,7 +216,7 @@ output = sess.run(prob,feed_dict={x:i})
 
 inds = argsort(output)[0,:]
 for i in range(5):
-    print class_names[inds[-1-i]], output[0, inds[-1-i]]
+    print(class_names[inds[-1-i]], output[0, inds[-1-i]])
 
 
 # In[7]:
@@ -222,13 +229,13 @@ vdir = '/media/kabram/My Passport/imagenet/ILSVRC2012_img_val'
 
 vfiles = [os.path.join(vdir,ff) for ff in os.listdir(vdir)]
 random.shuffle(vfiles)
-print vfiles[0:3]
+print(vfiles[0:3])
 
 
 # In[8]:
 
-print layers.keys()
-print layers['fc6'].get_shape().as_list()
+print(list(layers.keys()))
+print(layers['fc6'].get_shape().as_list())
 
 
 # In[100]:
@@ -266,17 +273,17 @@ import scipy
 import scipy.stats
 
 lname = 'conv3'
-print vals[lname].shape
+print(vals[lname].shape)
 fndx = np.random.randint(0,vals[lname].shape[-1])
 bb = net_data[lname][1][fndx]
 a = vals[lname][...,fndx].flatten()
 plt.hist(a,bins=30)
-print a.shape
+print(a.shape)
 [k,p] = scipy.stats.mstats.normaltest(a[:,np.newaxis],0)
-print k,p,bb,fndx
+print(k,p,bb,fndx)
 ss = np.random.randn(5000,1)*10+5
 [k,p] = scipy.stats.mstats.normaltest(ss,0)
-print k,p
+print(k,p)
 plt.show()
 plt.hist(ss,bins=30)
 
@@ -312,43 +319,43 @@ plt.scatter(amm-abb,avv)
 # In[85]:
 
 kk = gg.flatten()[:,np.newaxis]
-print kk.shape
+print(kk.shape)
 ss = np.var(kk)
-print ss
+print(ss)
 
 
 # In[104]:
 
-plt.hist((amm-abb)/avv,bins=20)
+plt.hist(old_div((amm-abb),avv),bins=20)
 
 
 # In[121]:
 
 kk = np.corrcoef(mm[ndx].flatten()-bb[ndx].flatten(),vv[ndx].flatten())
-print kk
+print(kk)
 
 
 # In[123]:
 
 fig = figure(figsize=[10,10])
 nl = len(mm)
-print lsel
+print(lsel)
 cc = np.zeros([len(mm),1])
 for ndx in range(len(mm)):
-    ax = fig.add_subplot(4,nl/2,ndx+1)
-    ax.hist((mm[ndx]-bb[ndx])/vv[ndx])
-    ax = fig.add_subplot(4,nl/2,ndx+nl+1)
+    ax = fig.add_subplot(4,old_div(nl,2),ndx+1)
+    ax.hist(old_div((mm[ndx]-bb[ndx]),vv[ndx]))
+    ax = fig.add_subplot(4,old_div(nl,2),ndx+nl+1)
 #     ax.scatter(mm[ndx]-bb[ndx],vv[ndx])
     ax.scatter(mm[ndx],vv[ndx])
     cc[ndx,0] = np.corrcoef(mm[ndx].flatten().flatten(),vv[ndx].flatten())[0,1]
-print cc
+print(cc)
 
 
 # In[128]:
 
 fig = figure(figsize=[10,5])
-print lsel
+print(lsel)
 for ndx in range(len(mm)):
-    ax = fig.add_subplot(2,nl/2,ndx+1)
+    ax = fig.add_subplot(2,old_div(nl,2),ndx+1)
     ax.hist((bb[ndx]))
 

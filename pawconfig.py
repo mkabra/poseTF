@@ -1,5 +1,7 @@
+from __future__ import division
+from past.utils import old_div
 split = True
-sel_sz = 512/2
+sel_sz = old_div(512,2)
 scale = 2
 rescale = 2
 numscale = 3

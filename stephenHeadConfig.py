@@ -1,8 +1,11 @@
+from __future__ import division
 
 # coding: utf-8
 
 # In[ ]:
 
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import localSetup
@@ -44,7 +47,7 @@ class myconfig(object):
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = False
+    useMRF = True
     useHoldout = False
     device = None
     reg_lambda = 0.5
@@ -75,9 +78,9 @@ class myconfig(object):
     ac_learning_rate = 0.0003
     fine_learning_rate = 0.0003
 
-    batch_size = 4
-    mult_fac = 16/batch_size
-    base_training_iters = 15000*mult_fac
+    batch_size = 8
+    mult_fac = old_div(16,batch_size)
+    base_training_iters = 10000*mult_fac #15000
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
     
@@ -86,7 +89,7 @@ class myconfig(object):
     # when run iwth batch size of 32, best validation loss is achieved at 8000 iters 
     # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
     basereg_training_iters = 5000*mult_fac
-    fine_training_iters = 3000*mult_fac
+    fine_training_iters = 5000*mult_fac
     mrf_training_iters = 3000*mult_fac
     ac_training_iters = 5000*mult_fac
     eval_training_iters = 500*mult_fac
@@ -97,7 +100,7 @@ class myconfig(object):
     numTest = 100
     
     # range for contrast, brightness and rotation adjustment
-    horzFlip = True
+    horzFlip = False
     vertFlip = False
     brange = [-0.2,0.2] 
     crange = [0.7,1.3]
@@ -122,8 +125,9 @@ class myconfig(object):
     map_size = 100000*psz**2*3
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
     selpts = np.arange(0,5)
+    imgDim = 1
 
-    cachedir = os.path.join(localSetup.bdir,'cacheHead/')
+    cachedir = os.path.join(localSetup.bdir,'cacheHead')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
     labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound1_Janelia.lbl')
  
@@ -182,7 +186,9 @@ class myconfig(object):
     def getflynum(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        flynum = float(dir_parts[-3][3:6])
+        # flynum = float(dir_parts[-3][3:6])
+        aa = re.search('fly_*(\d+)',dir_parts[-3])
+        flynum = float(aa.groups()[0])
         return flynum
 
 
@@ -192,7 +198,7 @@ conf = myconfig()
 sideconf = myconfig()
 sideconf.cropLoc = {(1024,1024):[300,50],(512,768):[0,0]}
 # sideconf.cachedir = '/home/mayank/work/tensorflow/cacheHeadSide/'
-sideconf.cachedir = os.path.join(localSetup.bdir,'cacheHeadSide/')
+sideconf.cachedir = os.path.join(localSetup.bdir,'cacheHeadSide')
 sideconf.view = 0
 sideconf.mrf_psz = 50
 

@@ -1,8 +1,10 @@
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[1]:
 
+from builtins import range
 import tensorflow as tf
 
 efile = '/home/mayank/work/poseEstimation/cache/romainLegBottom/eval_test_summary/events.out.tfevents.1484832405.mayankWS'
@@ -29,7 +31,7 @@ for aa in tf.train.summary_iterator(efile):
 # In[3]:
 
 for n in names:
-    print n
+    print(n)
 
 
 # In[4]:

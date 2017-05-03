@@ -1,8 +1,13 @@
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import zip
+from builtins import str
+from builtins import chr
+from builtins import range
 import localSetup
 import scipy.io as sio
 import os,sys
@@ -31,7 +36,7 @@ import tensorflow as tf
 
 def findLocalDirs(conf):
     L = h5py.File(conf.labelfile,'r')
-    localdirs = [u''.join(unichr(c) for c in L[jj]) for jj in conf.getexplist(L)]
+    localdirs = [u''.join(chr(c) for c in L[jj]) for jj in conf.getexplist(L)]
     seldirs = [True]*len(localdirs)
     L.close()
     return localdirs,seldirs
@@ -48,7 +53,7 @@ def createValdata(conf,force=False):
     print('Creating val data %s!'%outfile)
     localdirs,seldirs = findLocalDirs(conf)
     nexps = len(seldirs)
-    isval = sample(range(nexps),int(nexps*conf.valratio))
+    isval = sample(list(range(nexps)),int(nexps*conf.valratio))
     try:
         os.makedirs(conf.cachedir)
     except OSError as exception:
@@ -65,10 +70,13 @@ def createValdata(conf,force=False):
 def loadValdata(conf):
     
     outfile = os.path.join(conf.cachedir,conf.valdatafilename)
-    assert os.path.isfile(outfile),"valdatafile doesn't exist"
+    assert os.path.isfile(outfile),"valdatafile {} doesn't exist".format(outfile)
 
-    with open(outfile,'r') as f:
-        isval,localdirs,seldirs = pickle.load(f)
+    with open(outfile,'rb') as f:
+        if sys.version_info.major == 3:
+            isval,localdirs,seldirs = pickle.load(f,encoding='latin1')
+        else:
+            isval, localdirs, seldirs = pickle.load(f)
     return isval,localdirs,seldirs
 
 
@@ -123,7 +131,7 @@ def decodeID(keystr):
     vv = re.findall('(\d+):(.*):x(.*):y(.*):t(\d+)',keystr)[0]
     xlocs = [int(x) for x in vv[2].split('_')]
     ylocs = [int(x) for x in vv[3].split('_')]
-    locs = zip(xlocs,ylocs)
+    locs = list(zip(xlocs,ylocs))
     return vv[1],locs,int(vv[4])
 
 
@@ -343,6 +351,7 @@ def createTFRecord(conf):
         if not seldirs[ndx]:
             continue
 
+        expname = conf.getexpname(dirname)
         frames = np.where(expid == (ndx + 1))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
@@ -426,6 +435,7 @@ def createFullTFRecord(conf):
         if not seldirs[ndx]:
             continue
 
+        expname = conf.getexpname(dirname)
         frames = np.where(expid == (ndx + 1))[0]
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
@@ -593,9 +603,9 @@ def read_and_decode(filename_queue,conf):
         features={'height':tf.FixedLenFeature([], dtype=tf.int64),
           'width':tf.FixedLenFeature([], dtype=tf.int64),
           'depth':tf.FixedLenFeature([], dtype=tf.int64),
-#           'expndx': tf.FixedLenFeature([], dtype=tf.float32),
-#           'ts': tf.FixedLenFeature([], dtype=tf.float32),
           'locs':tf.FixedLenFeature(shape=[conf.n_classes,2], dtype=tf.float32),
+          'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+          'ts': tf.FixedLenFeature([], dtype=tf.float32),
           'image_raw':tf.FixedLenFeature([], dtype=tf.string)
                  })
     image = tf.decode_raw(features['image_raw'], tf.uint8)
@@ -608,8 +618,8 @@ def read_and_decode(filename_queue,conf):
         image = tf.reshape(image, conf.imsz)
 
     locs = tf.cast(features['locs'], tf.float64)
-    expndx = tf.constant([0]);#tf.cast(features['expndx'],tf.float64)
-    ts = tf.constant([0]); #tf.cast(features['ts'],tf.float64)
+    expndx = tf.cast(features['expndx'],tf.float64)
+    ts = tf.cast(features['ts'],tf.float64) #tf.constant([0]); #
 
     return image, locs, [expndx,ts]
 

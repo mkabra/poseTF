@@ -1,8 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[2]:
 
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys
 import matplotlib
@@ -239,7 +244,7 @@ def net_multi_conv(ph,conf):
         
 #         conv5_cat = tf.concat(1,[conv5_0,conv5_1,conv5_2,L3_S,L3_A,L3_D])
 #change 1 20022017
-        conv5_cat = tf.concat([L3_S/3,L3_A/3,L3_D/3],1)
+        conv5_cat = tf.concat([old_div(L3_S,3),old_div(L3_A,3),old_div(L3_D,3)],1)
     
         with tf.variable_scope('L6_{}'.format(ndx)):
             L6 = FC_2D(conv5_cat,128,trainPhase)
@@ -371,8 +376,8 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     dist = dist_from_locs(locs_coords)
     for ndx in range(conf.n_classes):
         feed_dict[ph['X'][0][ndx]] = extract_patches(x0,locs_patch[:,ndx,:],psz)
-        feed_dict[ph['X'][1][ndx]] = extract_patches(x1,(locs_patch[:,ndx,:])/conf.scale,psz)
-        feed_dict[ph['X'][2][ndx]] = extract_patches(x2,(locs_patch[:,ndx,:])/(conf.scale**2),psz)
+        feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((locs_patch[:,ndx,:]),conf.scale),psz)
+        feed_dict[ph['X'][2][ndx]] = extract_patches(x2,old_div((locs_patch[:,ndx,:]),(conf.scale**2)),psz)
         feed_dict[ph['S'][0][ndx]] = np.reshape(locs_coords-locs_coords[:,ndx:ndx+1,:],[conf.batch_size,2*conf.n_classes])
         feed_dict[ph['S'][1][ndx]] = np.reshape(ang[:,ndx,:,:],[conf.batch_size,8*conf.n_classes])
         feed_dict[ph['S'][2][ndx]] = dist[:,ndx,:]
@@ -443,8 +448,8 @@ def extract_patches(img,locs,psz):
     locs = np.round(locs).astype('int')
     for ndx in range(img.shape[0]):
         pimg = np.pad(img[ndx,...],pad_arg,'constant')
-        zz.append( pimg[(locs[ndx,1]+psz-psz/2):(locs[ndx,1]+psz+psz/2),
-                         (locs[ndx,0]+psz-psz/2):(locs[ndx,0]+psz+psz/2),:]);
+        zz.append( pimg[(locs[ndx,1]+psz-old_div(psz,2)):(locs[ndx,1]+psz+old_div(psz,2)),
+                         (locs[ndx,0]+psz-old_div(psz,2)):(locs[ndx,0]+psz+old_div(psz,2)),:]);
     return np.array(zz)
 
 
@@ -530,13 +535,13 @@ def print_gradients(sess,feed_dict,loss):
     grads_std = [g.std() for g in grads]
     wts_std = [w.std() for w in wts]
 
-    grads_by_wts = [s/w for s,w in zip(grads_std,wts_std)]
+    grads_by_wts = [old_div(s,w) for s,w in zip(grads_std,wts_std)]
 
 
 
     bb = [[r,n.name] for r,n in zip(grads_by_wts,aa)]
     for b,k,g in zip(bb,grads_std,wts_std):
-        print b,k,g
+        print(b,k,g)
 
 
 # In[ ]:
@@ -553,8 +558,8 @@ def poseEvalNetInit(conf):
     trainType = 0
     queue = openDBs(conf,trainType=trainType)
     if trainType == 1:
-        print "Training with all the data!"
-        print "Validation data is same as training data!!!! "
+        print("Training with all the data!")
+        print("Validation data is same as training data!!!! ")
     return ph,feed_dict,out,queue,out_dict
     
 
@@ -572,7 +577,7 @@ def poseEvalTrain(conf,restore=True):
     selpt1 = conf.eval2_selpt1
     selpt2 = conf.eval2_selpt2
     wt_den = shape_prior[selpt1,:,:,0].transpose([1,0])
-    wt = tf.reduce_max( y_re/(wt_den+0.1),axis=(1,2))
+    wt = tf.reduce_max( old_div(y_re,(wt_den+0.1)),axis=(1,2))
     loss = tf.reduce_sum( tf.reduce_sum((out-ph['y'])**2,axis=1)*wt)
 #     loss = tf.nn.l2_loss(out-ph['y'])
     correct_pred = tf.cast(tf.equal(out>0.5,ph['y']>0.5),tf.float32)
@@ -595,7 +600,7 @@ def poseEvalTrain(conf,restore=True):
         initializeRemainingVars(sess,feed_dict)
         for step in range(evalstartat,conf.eval2_training_iters+1):
             excount = step*conf.batch_size
-            cur_lr = conf.eval2_learning_rate * conf.gamma**math.floor(excount/conf.step_size)
+            cur_lr = conf.eval2_learning_rate * conf.gamma**math.floor(old_div(excount,conf.step_size))
             feed_dict[ph['learning_rate']] = cur_lr
             feed_dict[ph['phase_train']] = True
             updateFeedDict(conf,'train',distort=True,sess=sess,data=data,feed_dict=feed_dict,ph=ph)
@@ -606,7 +611,7 @@ def poseEvalTrain(conf,restore=True):
                 updateFeedDict(conf,'train',sess=sess,distort=True,data=data,feed_dict=feed_dict,ph=ph)
                 feed_dict[ph['phase_train']] = False
                 train_loss,train_acc = sess.run([loss,accuracy],feed_dict=feed_dict)
-                numrep = int(conf.numTest/conf.batch_size)+1
+                numrep = int(old_div(conf.numTest,conf.batch_size))+1
                 val_loss = 0.
                 val_acc = 0.
 #                 val_acc_wt = 0.
@@ -616,13 +621,13 @@ def poseEvalTrain(conf,restore=True):
                     val_loss += vloss
                     val_acc += vacc
 #                     val_acc_wt += vacc_wt
-                val_loss = val_loss/numrep
-                val_acc = val_acc/numrep
+                val_loss = old_div(val_loss,numrep)
+                val_acc = old_div(val_acc,numrep)
 #                 val_acc_wt /= numrep
                 test_summary,_ = sess.run([merged,loss],feed_dict=feed_dict)
 #                 test_writer.add_summary(test_summary,step)
-                print 'Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
-                    val_acc,val_loss,train_acc,train_loss,step)
+                print('Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(
+                    val_acc,val_loss,train_acc,train_loss,step))
 #                 print_gradients(sess,feed_dict,loss)
             if step % conf.save_step == 0:
                 saveEval(sess,evalSaver,step,conf)
@@ -718,7 +723,7 @@ def genGaussianNegSamples(bout,locs,conf,nsamples=10,minlen = 8):
 def genMovedNegSamples(bout,locs,conf,nsamples=10,minlen=8):
     # Add same x and y to locs
     
-    minlen = float(minlen)/2
+    minlen = old_div(float(minlen),2)
     maxlen = 2*minlen
     rlocs = np.zeros(locs.shape + (nsamples,))
 #     sz = (np.array(bout.shape[1:3])-1)*conf.rescale*conf.pool_scale

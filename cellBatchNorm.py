@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # coding: utf-8
 
@@ -20,7 +21,7 @@ ema_mean, ema_var = ema.average(beta), ema.average(gamma)
 
 vv = ema.variables_to_restore()
 for v in vv:
-    print v
+    print(v)
     
 # ema1 = tf.train.ExponentialMovingAverage(decay=0.999)
 # ema_apply_op = ema1.apply([beta1, gamma1])
@@ -28,5 +29,5 @@ for v in vv:
 
 
 for v in vv:
-    print v
+    print(v)
 

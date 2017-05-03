@@ -1,8 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[ ]:
 
+from past.builtins import cmp
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import scipy,re
 import math,h5py
@@ -22,6 +27,7 @@ from cvc import cvc
 import math
 import sys
 import copy
+from scipy import io
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 # from matplotlib import cm
@@ -55,20 +61,26 @@ import copy
 
 def scaleImages(img,scale,conf):
     sz = img.shape
-    simg = np.zeros((sz[0],sz[1]/scale,sz[2]/scale,sz[3]))
+    simg = np.zeros((sz[0],old_div(sz[1],scale),old_div(sz[2],scale),sz[3]))
     for ndx in range(sz[0]):
         if sz[3] == 1:
-            simg[ndx,:,:,0] = misc.imresize(img[ndx,:,:,0],1./scale)
+            simg[ndx,:,:,0] = misc.imresize(img[ndx,:,:,0],old_div(1.,scale))
         else:
-            simg[ndx,:,:,:] = misc.imresize(img[ndx,:,:,:],1./scale)
+            simg[ndx,:,:,:] = misc.imresize(img[ndx,:,:,:],old_div(1.,scale))
 
 #     return simg
     zz = simg.astype('float')
     if conf.normalize_mean_img:
         mm = zz.mean(1).mean(1)
         xx = zz-mm[:,np.newaxis,np.newaxis,:]
+        if conf.imgDim == 3:
+            if conf.perturb_color:
+                for dim in range(3):
+                    to_add = old_div(((np.random.rand(conf.batch_size)-0.5)*conf.imax),8)
+                    xx[:,:,:,dim] += to_add[:,np.newaxis,np.newaxis]
     else:
         xx = zz
+
     return xx
 
 def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
@@ -210,10 +222,10 @@ def randomlyRotate(img,locs,conf):
                 sane = True
                 doRotate = False
             ll = copy.deepcopy(origLocs)
-            ll = ll - [cols/2,rows/2]
+            ll = ll - [old_div(cols,2),old_div(rows,2)]
             ang = np.deg2rad(rangle)
             R = [[np.cos(ang),-np.sin(ang)],[np.sin(ang),np.cos(ang)]]
-            lr = np.dot(ll,R) + [cols/2,rows/2]
+            lr = np.dot(ll,R) + [old_div(cols,2),old_div(rows,2)]
             if np.all(lr[valid,:].flatten()>0) and np.all(lr[valid,0] <= cols) and np.all(lr[valid,1] <= rows):
                 sane = True
             elif doRotate:
@@ -222,7 +234,7 @@ def randomlyRotate(img,locs,conf):
 #             else:
 #                 print 'not sane {}'.format(count)
             ii = copy.deepcopy(origIm).transpose([1,2,0])
-            M = cv2.getRotationMatrix2D((cols/2,rows/2),rangle,1)
+            M = cv2.getRotationMatrix2D((old_div(cols,2),old_div(rows,2)),rangle,1)
             ii = cv2.warpAffine(ii,M,(cols,rows))
             if ii.ndim==2:
                 ii = ii[...,np.newaxis]
@@ -286,16 +298,16 @@ def randomlyAdjust(img,conf):
 # In[ ]:
 
 def blurLabel(imsz,loc,scale,blur_rad):
-    sz0 = int(math.ceil(float(imsz[0])/scale))
-    sz1 = int(math.ceil(float(imsz[1])/scale))
+    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
+    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
 
     label = np.zeros([sz0,sz1])
     if not np.isnan(loc[0]):
-        label[int(loc[0]/scale),int(loc[1]/scale)] = 1
+        label[int(old_div(loc[0],scale)),int(old_div(loc[1],scale))] = 1
 #         blurL = ndimage.gaussian_filter(label,blur_rad)
         ksize = 2*3*blur_rad+1
         blurL = cv2.GaussianBlur(label,(ksize,ksize),blur_rad)
-        blurL = blurL/blurL.max()
+        blurL = old_div(blurL,blurL.max())
     else:
         blurL = label
     return blurL
@@ -305,8 +317,8 @@ def blurLabel(imsz,loc,scale,blur_rad):
 
 def createLabelImages(locs,imsz,scale,blur_rad):
     n_classes = len(locs[0])
-    sz0 = int(math.ceil(float(imsz[0])/scale))
-    sz1 = int(math.ceil(float(imsz[1])/scale))
+    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
+    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
 
     labelims = np.zeros((len(locs),sz0,sz1,n_classes))
     labelims1 = np.zeros((len(locs),sz0,sz1,n_classes))
@@ -314,15 +326,15 @@ def createLabelImages(locs,imsz,scale,blur_rad):
     blurL = np.zeros([2*ksize+1,2*ksize+1])
     blurL[ksize,ksize] = 1
     blurL = cv2.GaussianBlur(blurL,(2*ksize+1,2*ksize+1),blur_rad)
-    blurL = blurL/blurL.max()
+    blurL = old_div(blurL,blurL.max())
     for cls in range(n_classes):
         for ndx in range(len(locs)):
-            if np.isnan(locs[ndx][cls][0]):
+            if np.isnan(locs[ndx][cls][0]) or np.isinf(locs[ndx][cls][0]):
                 continue
 #             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
 #             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
-            modlocs0 = int(np.round(locs[ndx][cls][1]/scale))
-            modlocs1 = int(np.round(locs[ndx][cls][0]/scale))
+            modlocs0 = int(np.round(old_div(locs[ndx][cls][1],scale)))
+            modlocs1 = int(np.round(old_div(locs[ndx][cls][0],scale)))
             l0 = min(sz0,max(0,modlocs0-ksize))
             r0 = max(0,min(sz0,modlocs0+ksize+1))
             l1 = min(sz1,max(0,modlocs1-ksize))
@@ -338,8 +350,8 @@ def createLabelImages(locs,imsz,scale,blur_rad):
 
 def createRegLabelImages(locs,imsz,scale,blur_rad):
     n_classes = len(locs[0])
-    sz0 = int(math.ceil(float(imsz[0])/scale))
-    sz1 = int(math.ceil(float(imsz[1])/scale))
+    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
+    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
 
     labelims = np.zeros((len(locs),sz0,sz1,n_classes))
     regimsx = np.zeros((len(locs),sz0,sz1,n_classes))
@@ -374,9 +386,9 @@ def createRegLabelImages(locs,imsz,scale,blur_rad):
 def createFineLabelTensor(conf):
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
     timg = np.zeros((tsz,tsz))
-    timg[tsz/2,tsz/2] = 1
+    timg[old_div(tsz,2),old_div(tsz,2)] = 1
     blurL = ndimage.gaussian_filter(timg,conf.fine_label_blur_rad)
-    blurL = blurL/blurL.max()
+    blurL = old_div(blurL,blurL.max())
     blurL = 2.0*(blurL-0.5)
     return tf.constant(blurL)
 
@@ -384,7 +396,7 @@ def createFineLabelTensor(conf):
 # In[ ]:
 
 def extractFineLabelTensor(labelT,sz,dd,fsz):
-    return tf.slice(labelT,dd+sz/2-fsz/2,[fsz,fsz])
+    return tf.slice(labelT,dd+old_div(sz,2)-old_div(fsz,2),[fsz,fsz])
 
 
 # In[ ]:
@@ -392,18 +404,18 @@ def extractFineLabelTensor(labelT,sz,dd,fsz):
 def createFineLabelImages(locs,pred,conf,labelT):
     maxlocs = argmax2d(pred)*conf.pool_scale
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
-    hsz = conf.fine_sz/2
+    hsz = old_div(conf.fine_sz,2)
     limgs = []
     for inum in range(conf.batch_size):
         curlimgs = []
         for ndx in range(conf.n_classes):
-            dx = maxlocs[1,inum,ndx]-tf.to_int32(locs[inum,ndx,0]/conf.rescale)
-            dy = maxlocs[0,inum,ndx]-tf.to_int32(locs[inum,ndx,1]/conf.rescale)
-            dd = tf.pack([dx,dy])
-            dd = tf.maximum(tf.to_int32(hsz-tsz/2),tf.minimum(tf.to_int32(tsz/2-hsz-1),dd))
+            dx = maxlocs[1,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,0],conf.rescale))
+            dy = maxlocs[0,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,1],conf.rescale))
+            dd = tf.stack([dy,dx])
+            dd = tf.maximum(tf.to_int32(hsz-old_div(tsz,2)),tf.minimum(tf.to_int32(old_div(tsz,2)-hsz-1),dd))
             curlimgs.append(extractFineLabelTensor(labelT,tsz,dd,conf.fine_sz))
-        limgs.append(tf.pack(curlimgs))
-    return tf.transpose(tf.pack(limgs),[0,2,3,1])
+        limgs.append(tf.stack(curlimgs))
+    return tf.transpose(tf.stack(limgs),[0,2,3,1])
 
 
 # In[ ]:
@@ -411,14 +423,14 @@ def createFineLabelImages(locs,pred,conf,labelT):
 def argmax2d(Xin):
     
     origShape = tf.shape(Xin)
-    reshape_t = tf.concat(0,[origShape[0:1],[-1],origShape[3:4]])
+    reshape_t = tf.concat([origShape[0:1],[-1],origShape[3:4]],0)
     zz = tf.reshape(Xin,reshape_t)
     pp = tf.to_int32(tf.argmax(zz,1))
     sz1 = tf.slice(origShape,[2],[1])
     cc1 = tf.div(pp,tf.to_int32(sz1))
     cc2 = tf.mod(pp,tf.to_int32(sz1))
     
-    return tf.pack([cc1,cc2])
+    return tf.stack([cc1,cc2])
 
 
 # In[ ]:
@@ -448,7 +460,7 @@ def getFinePredLocs(pred,finepred,conf):
             predLocs[ndx,cls,0] = curloc[1]
             predLocs[ndx,cls,1] = curloc[0]
             maxndx = np.argmax(finepred[ndx,:,:,cls])
-            curfineloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-conf.fine_sz/2)*conf.rescale
+            curfineloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-old_div(conf.fine_sz,2))*conf.rescale
             finepredLocs[ndx,cls,0] = curloc[1] + curfineloc[1]
             finepredLocs[ndx,cls,1] = curloc[0] + curfineloc[0]
     return predLocs,finepredLocs
@@ -479,7 +491,7 @@ def getFineError(locs,pred,finepred,conf):
             predloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
             predloc = predloc * conf.pool_scale * conf.rescale
             maxndx = np.argmax(finepred[ndx,:,:,cls])
-            finepredloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-conf.fine_sz/2)*conf.rescale
+            finepredloc = (np.array(np.unravel_index(maxndx,finepred.shape[1:3]))-old_div(conf.fine_sz,2))*conf.rescale
             baselocerr[ndx,cls,0]= float(predloc[1])-locs[ndx][cls][0]
             baselocerr[ndx,cls,1]= float(predloc[0])-locs[ndx][cls][1]
             finelocerr[ndx,cls,0]= float(predloc[1]+finepredloc[1])-locs[ndx][cls][0]
@@ -512,19 +524,19 @@ def initMRFweights(conf):
             pts = np.append(pts,curlocs[:,:,np.newaxis,:],axis=0)
             
             
-    dx = np.zeros([pts.shape[0]])
-    dy = np.zeros([pts.shape[0]])
-    for ndx in range(pts.shape[0]):
-        dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
-        dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
-    maxd = max( (np.percentile(dx,99), np.percentile(dy,99)))
     if hasattr(conf,'mrf_psz'):
         psz = conf.mrf_psz
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
         print('!!!Overriding MRF Size using conf.mrf_psz!!!')
     else:
-        psz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale))
+        dx = np.zeros([pts.shape[0]])
+        dy = np.zeros([pts.shape[0]])
+        for ndx in range(pts.shape[0]):
+            dx[ndx] = pts[ndx, :, v, 0].max() - pts[ndx, :, v, 0].min()
+            dy[ndx] = pts[ndx, :, v, 1].max() - pts[ndx, :, v, 1].min()
+        maxd = max((np.percentile(dx, 99), np.percentile(dy, 99)))
+        psz = int(math.ceil( old_div((maxd*2/conf.rescale),conf.pool_scale)))
     bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
     
     for ndx in range(pts.shape[0]):
@@ -532,10 +544,14 @@ def initMRFweights(conf):
             for c2 in range(conf.n_classes):
                 d12x = pts[ndx,c1,v,0] - pts[ndx,c2,v,0]
                 d12y = pts[ndx,c1,v,1] - pts[ndx,c2,v,1]
-                d12x = max(-psz/2+1,min(psz/2-1,int( (d12x/conf.rescale)/conf.pool_scale)))
-                d12y = max(-psz/2+1,min(psz/2-1,int( (d12y/conf.rescale)/conf.pool_scale)))
-                bfilt[psz/2+d12y,psz/2+d12x,c1,c2] += 1
-    bfilt = (bfilt/pts.shape[0])
+                if np.isinf(d12y) or np.isinf(d12y):
+                    continue
+                if np.isnan(d12y) or np.isnan(d12y):
+                    continue
+                d12x = max(old_div(-psz,2)+1,min(old_div(psz,2)-1,int( old_div((old_div(d12x,conf.rescale)),conf.pool_scale))))
+                d12y = max(old_div(-psz,2)+1,min(old_div(psz,2)-1,int( old_div((old_div(d12y,conf.rescale)),conf.pool_scale))))
+                bfilt[old_div(psz,2)+d12y,old_div(psz,2)+d12x,c1,c2] += 1
+    bfilt = (old_div(bfilt,pts.shape[0]))
     return bfilt
 
 
@@ -551,7 +567,7 @@ def initMRFweightsIdentity(conf):
         dx[ndx] = pts[ndx,:,v,0].max() - pts[ndx,:,v,0].min()
         dy[ndx] = pts[ndx,:,v,1].max() - pts[ndx,:,v,1].min()
     maxd = max(dx.max(),dy.max())
-    hsz = int(math.ceil( (maxd*2/conf.rescale)/conf.pool_scale)/2)
+    hsz = int(old_div(math.ceil( old_div((maxd*2/conf.rescale),conf.pool_scale)),2))
     psz = hsz*2+1
 #     psz = conf.mrf_psz
     bfilt = np.zeros([psz,psz,conf.n_classes,conf.n_classes])
@@ -581,22 +597,22 @@ def compareConf(curconf,oldconf):
             continue
         if hasattr(curconf,f) and hasattr(oldconf,f):
             if type(getattr(curconf,f)) is np.ndarray:
-                print '%s'%(f)
-                print 'New:' , getattr(curconf,f)
-                print 'Old:' , getattr(oldconf,f)
+                print('%s'%(f))
+                print('New:' , getattr(curconf,f))
+                print('Old:' , getattr(oldconf,f))
             
             elif type(getattr(curconf,f)) is list:
                 if type(getattr(oldconf,f)) is list:
                     if not cmp(getattr(curconf,f),getattr(oldconf,f)):
-                        print '%s doesnt match'%(f)
+                        print('%s doesnt match'%(f))
                 else:
-                    print '%s doesnt match'%(f)
+                    print('%s doesnt match'%(f))
                 
             elif getattr(curconf,f) != getattr(oldconf,f):
-                print '%s doesnt match'%(f)
+                print('%s doesnt match'%(f))
                 
         else:
-            print '%s doesnt match'%(f)
+            print('%s doesnt match'%(f))
             
 
 
@@ -622,7 +638,7 @@ def createNetwork(conf,outtype):
         self.createBaseNetwork(doBatchNorm)
     self.createBaseSaver()
 
-    if outtype > 1:
+    if outtype > 1 and self.conf.useMRF:
         with tf.variable_scope('mrf'):
             self.createMRFNetwork(doBatchNorm)
         self.createMRFSaver()
@@ -669,26 +685,42 @@ def createPredImage(predscores,n_classes):
 
 # In[ ]:
 
-def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
-    cap = cv2.VideoCapture(moviename)
+def classifyMovie(conf, movie_name, out_type, self, sess, maxframes=-1, startat=0):
+    # maxframes if specificied reads that many frames
+    # start at specifies where to start reading.
+
+    cap = cv2.VideoCapture(movie_name)
     nframes = int(cap.get(cvc.FRAME_COUNT))
+
+    # figure out how many frames to read
     if maxframes > 0:
-        nframes = maxframes
+        if maxframes + startat > nframes:
+            nframes = nframes-startat
+        else:
+            nframes = maxframes
+    else:
+        nframes = nframes-startat
+
+    # since out of order frame access in python sucks, do it one by one
+    for ndx in range(startat):
+        cap.read()
+
+    #pre allocate results
     predLocs = np.zeros([nframes,conf.n_classes,2,2])
     predmaxscores = np.zeros([nframes,conf.n_classes,2])
     
-    if outtype == 3:
+    if out_type == 3:
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
         else:
             predPair = [self.basePred,self.finePred]
-    elif outtype == 2:
+    elif out_type == 2:
         predPair = [self.mrfPred,self.basePred]
     else:        
         predPair = [self.basePred]
         
     bsize = conf.batch_size
-    nbatches = int(math.ceil(float(nframes)/bsize))
+    nbatches = int(math.ceil(old_div(float(nframes),bsize)))
 #     framein = myutils.readframe(cap,1)
 #     framein = cropImages(framein,conf)
 #     framein = framein[np.newaxis,:,:,0:1]
@@ -719,7 +751,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
         pred = sess.run(predPair,self.feed_dict)
         if curl == 0:
             predscores = np.zeros((nframes,)+pred[0].shape[1:] + (2,))
-        if outtype == 3:
+        if out_type == 3:
             baseLocs,fineLocs = getFinePredLocs(pred[0],pred[1],conf)
             predLocs[ndxst:ndxe,:,0,:] = fineLocs[:ppe,:,:]
             predLocs[ndxst:ndxe,:,1,:] = baseLocs[:ppe,:,:]
@@ -727,7 +759,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
                 predmaxscores[ndxst:ndxe,:,0] = pred[0][:ppe,:,:,ndx].max()
                 predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
             predscores[curl,:,:,:,0] = pred[0][:ppe,:,:,:]
-        elif outtype == 2:
+        elif out_type == 2:
             baseLocs = getBasePredLocs(pred[0],conf)
             predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             baseLocs = getBasePredLocs(pred[1],conf)
@@ -737,7 +769,7 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
                 predmaxscores[ndxst:ndxe,:,1] = pred[1][:ppe,:,:,ndx].max()
             predscores[ndxst:ndxe,:,:,:,0] = pred[0][:ppe,:,:,:]
             predscores[ndxst:ndxe,:,:,:,1] = pred[1][:ppe,:,:,:]
-        elif outtype == 1:
+        elif out_type == 1:
             baseLocs = getBasePredLocs(pred[0],conf)
             predLocs[ndxst:ndxe,:,0,:] = baseLocs[:ppe,:,:]
             for ndx in range(conf.n_classes):
@@ -749,6 +781,81 @@ def classifyMovie(conf,moviename,outtype,self,sess,maxframes=-1):
 
     cap.release()
     return predLocs,predscores,predmaxscores
+
+
+def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1,startat=0):
+    # maxframes if specificied reads that many frames
+    # start at specifies where to start reading.
+
+    cap = cv2.VideoCapture(movie_name)
+    nframes = int(cap.get(cvc.FRAME_COUNT))
+
+    # figure out how many frames to read
+    if maxframes > 0:
+        if maxframes + startat > nframes:
+            nframes = nframes - startat
+        else:
+            nframes = maxframes
+    else:
+        nframes = nframes - startat
+
+    # since out of order frame access in python sucks, do it in order to exhaust it
+    for ndx in range(startat):
+        cap.read()
+
+    # pre allocate results
+    predLocs = np.zeros([nframes, conf.n_classes, 2])
+
+    if self.conf.useMRF:
+        predPair = [self.mrfPred, self.finePred]
+    else:
+        predPair = [self.basePred, self.finePred]
+
+    bsize = conf.batch_size
+    nbatches = int(math.ceil(old_div(float(nframes), bsize)))
+    #     framein = myutils.readframe(cap,1)
+    #     framein = cropImages(framein,conf)
+    #     framein = framein[np.newaxis,:,:,0:1]
+    #     x0t,x1t,x2t = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz,conf)
+    #     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10,10))
+    #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+    #     print "WARNING!!!ATTENTION!!! DOING CONTRAST NORMALIZATION!!!!"
+
+    allf = np.zeros((bsize,) + conf.imsz + (1,))
+    alll = np.zeros((bsize,conf.n_classes,2))
+    for curl in range(nbatches):
+
+        ndxst = curl * bsize
+        ndxe = min(nframes, (curl + 1) * bsize)
+        ppe = min(ndxe - ndxst, bsize)
+        for ii in range(ppe):
+            success, framein = cap.read()
+            assert success, "Could not read frame"
+
+            framein = cropImages(framein, conf)
+            #             framein = clahe.apply(framein[:,:,:1])
+            allf[ii, ...] = framein[..., 0:1]
+
+        x0, x1, x2 = multiScaleImages(allf, conf.rescale, conf.scale, conf.l1_cropsz, conf)
+
+        self.feed_dict[self.ph['x0']] = x0
+        self.feed_dict[self.ph['x1']] = x1
+        self.feed_dict[self.ph['x2']] = x2
+        pred_int = sess.run(predPair[0],feed_dict=self.feed_dict)
+        self.feed_dict[self.ph['fine_pred_in']] = pred_int
+        alll[:ppe,...] = locs[ndxst:ndxe,...]
+        self.feed_dict[self.ph['fine_pred_locs_in']] = alll
+        pred = sess.run(predPair, self.feed_dict)
+
+
+        baseLocs, fineLocs = getFinePredLocs(pred[0], pred[1], conf)
+        predLocs[ndxst:ndxe, :, :] = fineLocs[:ppe, :, :]
+        sys.stdout.write('.')
+        if curl % 20 == 19:
+            sys.stdout.write('\n')
+
+    cap.release()
+    return predLocs
 
 
 # In[ ]:
@@ -788,7 +895,7 @@ def createPredMovie(conf,predList,moviename,outmovie,outtype,maxframes=-1):
         ax1 = fig.add_subplot(1,2,1)
         ax1.imshow(framein, cmap=cm.gray)
         ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
-                    c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                    c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                     s=np.clip(predmaxscores[curl,:,0]*100,20,40),
                     linewidths=0,edgecolors='face')
         ax1.axis('off')
@@ -843,7 +950,7 @@ def createPredMovieNoConf(conf,predList,moviename,outmovie,outtype):
         ax1 = fig.add_subplot(1,2,1)
         ax1.imshow(framein[:,:,0], cmap=cm.gray)
         ax1.scatter(predLocs[curl,:,0,0],predLocs[curl,:,0,1], #hold=True,
-                    c=cm.hsv(np.linspace(0,1-1./conf.n_classes,conf.n_classes)),
+                    c=cm.hsv(np.linspace(0,1-old_div(1.,conf.n_classes),conf.n_classes)),
                     s=20,linewidths=0,edgecolors='face')
         ax1.axis('off')
         ax2 = fig.add_subplot(1,2,2)

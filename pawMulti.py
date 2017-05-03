@@ -8,7 +8,12 @@ Mayank Jan 12 2016
 Paw detector modified from:
 Project: https://github.com/aymericdamien/TensorFlow-Examples/
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 
 import os,sys
@@ -98,8 +103,8 @@ def createPlaceHolders():
     # tf Graph input
     keep_prob = tf.placeholder(tf.float32) # dropout(keep probability)
     x0 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/conf.rescale,
-                                     imsz[1]/conf.rescale,1])
+                                     old_div(imsz[0],conf.rescale),
+                                     old_div(imsz[1],conf.rescale),1])
     x1 = tf.placeholder(tf.float32, [None, 
                                      imsz[0]/conf.scale/conf.rescale,
                                      imsz[1]/conf.scale/conf.rescale,1])
@@ -180,7 +185,7 @@ def train():
                                                      x2:x2_in,
                                                y: labelims, keep_prob: 1.})
                     
-                    numrep = int(conf.numTest/conf.batch_size)+1
+                    numrep = int(old_div(conf.numTest,conf.batch_size))+1
                     acc = 0; loss = 0
                     for rep in range(numrep):
                         val_xs, locs = multiPawTools.readLMDB(val_cursor,batch_size,n_classes)
@@ -193,9 +198,9 @@ def train():
                                                          x1:x1_in,
                                                          x2:x2_in,
                                                    y: labelims, keep_prob: 1.})
-                    loss = loss/numrep
-                    print " Iter " + str(step) + ", Training Loss= " + "{:.6f}".format(train_loss)
-                    print " Iter " + str(step) + ", Minibatch Loss= " + "{:.6f}".format(loss) 
+                    loss = old_div(loss,numrep)
+                    print(" Iter " + str(step) + ", Training Loss= " + "{:.6f}".format(train_loss))
+                    print(" Iter " + str(step) + ", Minibatch Loss= " + "{:.6f}".format(loss)) 
                 if step % conf.save_step == 0:
                     curoutname = '%s_%d.ckpt'% (conf.outname,step)
                     outfilename = os.path.join(conf.cachedir,curoutname)
@@ -203,7 +208,7 @@ def train():
                     print('Saved state to %s' %(outfilename))
 
                 step += 1
-            print "Optimization Finished!"
+            print("Optimization Finished!")
             curoutname = '%s_%d.ckpt'% (conf.outname,step)
             outfilename = os.path.join(conf.cachedir,curoutname)
             saver.save(sess,outfilename)
@@ -260,7 +265,7 @@ def predictMovie(model_file,inmovie,outmovie):
             plt.clf()
             plt.axis('off')
             framein = myutils.readframe(cap,fnum)
-            framein = framein[:,0:(framein.shape[1]/2),0:1]
+            framein = framein[:,0:(old_div(framein.shape[1],2)),0:1]
             out = predict(copy.copy(framein),sess,pred,pholders)
             plt.imshow(framein[:,:,0])
             maxndx = np.argmax(out[0,:,:,0])

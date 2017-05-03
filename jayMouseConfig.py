@@ -12,7 +12,7 @@ import localSetup
 import numpy as np
 
 class myconfig(object):
-    expname = 'janLeg'
+    expname = 'jayMouse'
     baseName = 'Base'
     fineName = 'Fine' #_resize'
     mrfName = 'MRF' #_identity'
@@ -39,15 +39,14 @@ class myconfig(object):
     dist2pos = 5
     label_blur_rad = 3 #1.5
     fine_label_blur_rad = 1.5
-    n_classes = 4
+    n_classes = 1
     dropout = 0.5
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
-    useMRF = True
+    useMRF = False
     useHoldout = False
 
-    mrf_psz = 50
     # ----- Fine Network parameters
     fine_flt_sz = 5
     fine_nfilt = 48
@@ -67,9 +66,9 @@ class myconfig(object):
 
     batch_size = 8
     mult_fac = old_div(16,batch_size)
-    base_training_iters = 15000*mult_fac
+    base_training_iters = 10000*mult_fac
     fine_training_iters = 5000*mult_fac
-    mrf_training_iters = 3000*mult_fac
+    mrf_training_iters = 0*mult_fac
     ac_training_iters = 5000
     gamma = 0.1
     step_size = 100000
@@ -79,11 +78,11 @@ class myconfig(object):
     # range for contrast, brightness and rotation adjustment
     horzFlip = False
     vertFlip = False
-    brange = [-0.2,0.2]
-    crange = [0.7,1.3]
+    brange = [-0.1,0.1] #[-0.2,0.2]
+    crange = [0.9,1.1] #[0.7,1.3]
     rrange = 30
     imax = 255.
-    adjustContrast = True
+    adjustContrast = False
     clahegridsize = 20
     normalize_mean_img = True
 
@@ -92,20 +91,17 @@ class myconfig(object):
     split = True
     view = 0
     l1_cropsz = 0
-    imsz = (256,256)
-    map_size = 100000*imsz[0]*imsz[1]*3
-    cropLoc = {(256,256):[0,0]}
-    selpts = np.arange(3,7)
+    imsz = (260,352)
+    cropLoc = {(260,704):[0,0]}
+    selpts = np.arange(1)
     imgDim = 1
 
-    cachedir = os.path.join(localSetup.bdir,'cachejanLeg/')
-    labelfile = os.path.join(localSetup.bdir,'janLegTracking','160819_Dhyey_2_al_fixed.lbl')
+    cachedir = os.path.join(localSetup.bdir,'cache','jayMouseSide')
+    labelfile = os.path.join(localSetup.bdir,'data','jayMouse','miceLabels_20170412.lbl')
     # this label file has more data and includes the correction for vertical flipping
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'
     valfilename = 'val_TF'
-    holdouttrain = 'holdouttrain_lmdb'
-    holdouttest = 'holdouttest_lmdb'
     valdatafilename = 'valdata'
     valratio = 0.3
     holdoutratio = 0.8
@@ -140,5 +136,9 @@ class myconfig(object):
         return L['movieFilesAll'][self.view,:]
 
 
-conf = myconfig()
+sideconf = myconfig()
 
+frontconf = myconfig()
+frontconf.cropLoc = {(260, 704): [0, 352]}
+frontconf.cachedir = os.path.join(localSetup.bdir,'cache','jayMouseFront')
+frontconf.view = 1

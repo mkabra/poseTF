@@ -2,6 +2,9 @@
 
 # In[ ]:
 
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import os
 import re
 import localSetup
@@ -49,6 +52,8 @@ class myconfig(object):
     device = None
     reg_lambda = 0.5
     l1_cropsz = 0
+    view = 0
+    selpts = np.arange(16)
 
     # ----- Fine Network parameters
 
@@ -59,7 +64,7 @@ class myconfig(object):
     # ----- MRF Network Parameters
 
     maxDPts = 400
-    mrf_psz = (maxDPts / rescale) / pool_scale
+    mrf_psz = old_div((old_div(maxDPts, rescale)), pool_scale)
     # Above should not be determined automatically
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000  # without batch_norm
@@ -85,7 +90,7 @@ class myconfig(object):
     N2move4neg = 3
     eval_minlen = 30
 
-    mult_fac = 16 / batch_size
+    mult_fac = old_div(16, batch_size)
     base_training_iters = 5000 * mult_fac
     # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
     # -- March 31, 2016 Mayank
@@ -100,10 +105,10 @@ class myconfig(object):
     ac_training_iters = 5000 * mult_fac
     eval_training_iters = 2000 * mult_fac
     eval2_training_iters = 5000 * mult_fac
-    shape_training_iters = 5000 * mult_fac
+    shape_training_iters = 25000 * mult_fac
     gen_training_iters = 4000 * mult_fac
     gamma = 0.1
-    step_size = 60000
+    step_size = 200000
     eval2_step_size = 40000
     display_step = 30
     numTest = 100
@@ -113,19 +118,21 @@ class myconfig(object):
     vertFlip = False
     brange = [0, 0]  # [-0.2,0.2]
     crange = [0.9, 1.1]  # [0.7,1.3]
-    rrange = 45
+    rrange = 150
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = False
+    normalize_mean_img = True
+    perturb_color = True
     # fine_batch_size = 8
 
     # Shape Parameters
     shape_n_orts = 8  # number of orientation bins for shape output
-    shape_r_bins = [0,40,120,np.inf]
-    shape_selpt1 = [0]
-    shape_selpt2 = [range(16)]
+    shape_r_bins = [0,20,60,np.inf]
+    shape_selpt1 = [1,]
+    shape_selpt2 = [[0,]]
     shape_psz = 64
+    shape_perturb_rad = 0
 
     # ----- Data parameters
 
@@ -133,7 +140,7 @@ class myconfig(object):
     imgDim = 3
 
     cachedir = os.path.join(localSetup.bdir, 'cache', 'mpii')
-    labelfile = '/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1.mat'
+    labelfile = '/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1_modified.lbl'
     imdir = '/groups/branson/bransonlab/mayank/pose_hourglass/pose_hg_demo/images'
 
     trainfilename = 'train_TF'

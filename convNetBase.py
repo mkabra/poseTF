@@ -8,7 +8,11 @@ Mayank Jan 12 2016
 Paw detector modified from:
 Project: https://github.com/aymericdamien/TensorFlow-Examples/
 '''
+from __future__ import division
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import tensorflow as tf
 import os,sys
 # import caffe
@@ -158,8 +162,8 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     # crop lower res layers to match higher res size
     conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
     conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
-    crop_0 = int((sz0-conv5_0_sz[1])/2)
-    crop_1 = int((sz1-conv5_0_sz[2])/2)
+    crop_0 = int(old_div((sz0-conv5_0_sz[1]),2))
+    crop_1 = int(old_div((sz1-conv5_0_sz[2]),2))
 
     curloc = [0,crop_0,crop_1,0]
     patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
@@ -242,8 +246,8 @@ def net_multi_conv_reg(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     # crop lower res layers to match higher res size
     conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
     conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
-    crop_0 = int((sz0-conv5_0_sz[1])/2)
-    crop_1 = int((sz1-conv5_0_sz[2])/2)
+    crop_0 = int(old_div((sz0-conv5_0_sz[1]),2))
+    crop_1 = int(old_div((sz1-conv5_0_sz[2]),2))
 
     curloc = [0,crop_0,crop_1,0]
     patchsz = tf.to_int32([-1,conv5_0_sz[1],conv5_0_sz[2],-1])
@@ -324,14 +328,14 @@ def createPlaceHolders(imsz,rescale,scale,pool_scale,n_classes,inDim=1):
     # tf Graph input
     keep_prob = tf.placeholder(tf.float32,name='dropout') # dropout(keep probability)
     x0 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/rescale,
-                                     imsz[1]/rescale,inDim],name='x0')
+                                     old_div(imsz[0],rescale),
+                                     old_div(imsz[1],rescale),inDim],name='x0')
     x1 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/scale/rescale,
-                                     imsz[1]/scale/rescale,inDim],name='x1')
+                                     imsz[0]//scale//rescale,
+                                     imsz[1]//scale//rescale,inDim],name='x1')
     x2 = tf.placeholder(tf.float32, [None, 
-                                     imsz[0]/scale/scale/rescale,
-                                     imsz[1]/scale/scale/rescale,inDim],name='x2')
+                                     imsz[0]//scale//scale//rescale,
+                                     imsz[1]//scale//scale//rescale,inDim],name='x2')
 
     lsz0,lsz1 = findPredSize(imsz,rescale,pool_scale)
     y = tf.placeholder(tf.float32, [None, lsz0,lsz1,n_classes],'limg')
@@ -364,7 +368,7 @@ def fine_base(X,conf,insize,doBatchNorm,trainPhase):
         conv2 = conv_relu(conv1, [fsz, fsz, fine_nfilt, fine_nfilt],
                           0.05,1,doBatchNorm,trainPhase)
     with tf.variable_scope("fine_3"):
-        conv3 = conv_relu(conv2, [fsz, fsz, fine_nfilt, fine_nfilt/2],
+        conv3 = conv_relu(conv2, [fsz, fsz, fine_nfilt, old_div(fine_nfilt,2)],
                           0.05,1,doBatchNorm,trainPhase)
     return conv3
 
@@ -397,26 +401,28 @@ def fineNetwork(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,
 #     conv5_cat = tf.concat(3,[fine1_1,fine1_2_up,fine2_1_up,fine2_2_up])
     return fineSum
 
-def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,trainPhase):
+def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,conf,doBatchNorm,trainPhase):
     inter = []
     with tf.variable_scope('fine_siamese') as scope:
         tvar = fineNetwork(fineIn1_1[0], fineIn1_2[0],
                            fineIn2_1[0], fineIn2_2[0],
-                           fineIn7[0], conf, doBatchNorm, 
+                           conf, doBatchNorm,
                            trainPhase)
         inter.append(tvar)
-        scope.reuse_variables()
+        # scope.reuse_variables()
+        tf.get_variable_scope().reuse_variables()
+
         for ndx in range(1,len(fineIn1_1)):
             tvar = fineNetwork(fineIn1_1[ndx], fineIn1_2[ndx],
                                fineIn2_1[ndx], fineIn2_2[ndx],
-                               fineIn7[ndx], conf, doBatchNorm, 
+                               conf, doBatchNorm,
                                trainPhase)
             inter.append(tvar)
 
     fineLast = []
     for ndx in range(len(fineIn1_1)):
         with tf.variable_scope('point_' + str(ndx)):
-            weights = tf.get_variable("weights", [1,1,conf.fine_nfilt/2,1],
+            weights = tf.get_variable("weights", [1,1,old_div(conf.fine_nfilt,2),1],
                 initializer=tf.random_normal_initializer(stddev=0.05))
             biases = tf.get_variable("biases", 1,
                 initializer=tf.constant_initializer(0))
@@ -426,21 +432,4 @@ def fineOut(fineIn1_1,fineIn1_2,fineIn2_1,fineIn2_2,fineIn7,conf,doBatchNorm,tra
 
     out = tf.concat(fineLast,3)
     return out
-
-def extractPatches(layer,out,conf,scale,outscale):
-    hsz = conf.fine_sz/scale/2
-    padsz = tf.constant([[0,0],[hsz, hsz],[hsz,hsz],[0,0]])
-    patchsz = tf.to_int32([conf.fine_sz/scale,conf.fine_sz/scale,-1])
-
-    patches = []
-    maxloc = PoseTools.argmax2d(out)*outscale
-    padlayer = tf.pad(layer,padsz)
-    for inum in range(conf.batch_size):
-        curpatches = []
-        for ndx in range(conf.n_classes):
-            curloc = tf.concat([tf.squeeze(maxloc[:,inum,ndx]),[0]],0)
-            curpatches.append(tf.slice(padlayer[inum,:,:,:],curloc,patchsz))
-        patches.append(tf.pack(curpatches))
-    return tf.pack(patches)
-        
 

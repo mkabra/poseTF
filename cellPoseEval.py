@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
@@ -5,6 +7,9 @@
 
 # Interactive plots from
 # http://matplotlib.1069221.n5.nabble.com/how-to-create-interactive-plots-in-jupyter-python3-notebook-td46804.html
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 get_ipython().magic(u'pylab notebook')
 import ipywidgets as widgets
 import warnings
@@ -135,7 +140,7 @@ ff[1:5,1:5]
 # In[4]:
 
 kk = np.abs(pp).mean(axis=0)
-print kk
+print(kk)
 
 
 # In[5]:
@@ -161,7 +166,7 @@ kk = sess.run(aa,feed_dict=feed_dict)
 ss = [np.sum(np.abs(g.flatten())) for g in gg]
 ww = [np.sum(np.abs(g.flatten())) for g in kk]
 
-rr = [s/w for s,w in zip(ss,ww)]
+rr = [old_div(s,w) for s,w in zip(ss,ww)]
 
 
 # In[ ]:
@@ -169,7 +174,7 @@ rr = [s/w for s,w in zip(ss,ww)]
 #for new
 bb = [[r,n.name] for r,n in zip(rr,aa)]
 for b in bb:
-    print b
+    print(b)
 bbnew = bb
 
 
@@ -178,14 +183,14 @@ bbnew = bb
 #for reloaded
 bb = [[r,n.name] for r,n in zip(rr,aa)]
 for b in bb:
-    print b
+    print(b)
 
 
 # In[ ]:
 
 for v in vv:
     if re.search('beta|gamma',v.name):
-        print v.eval()
+        print(v.eval())
 
 
 # In[ ]:
@@ -205,11 +210,11 @@ ww = [np.sum(np.abs(g.flatten())) for g in kk]
 
 # In[ ]:
 
-rr = [s/w for s,w in zip(ss,ww)]
+rr = [old_div(s,w) for s,w in zip(ss,ww)]
 
 bb = [[r,n.name] for r,n in zip(rr,aa)]
 for b in bb:
-    print b
+    print(b)
 
 
 # In[ ]:
@@ -228,13 +233,13 @@ curpts = np.array(L[pts[0,0]])
 frames = np.where(np.invert( np.any(np.isnan(curpts[:,:,:]),axis=(1,2))))[0]
 loc = curpts[frames[0],:,:]
 
-print loc.shape    
+print(loc.shape)    
 
 
 # In[84]:
 
 jj = curpts[frames,:,:]
-print jj.shape
+print(jj.shape)
 
 
 # In[101]:
@@ -243,11 +248,11 @@ kk = np.logspace(4,10,3,base=2)
 kk = np.concatenate([[0,],kk,[np.inf,]])
 # kk = np.insert(kk,0,0)
 # kk = np.insert(kk,np.inf,-1)
-print kk
+print(kk)
 jj = np.random.random(8)*1200
 hh = np.digitize(jj,kk)
-print hh
-print jj
+print(hh)
+print(jj)
 
 
 # In[104]:

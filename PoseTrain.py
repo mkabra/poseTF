@@ -6,7 +6,13 @@
 '''
 Mayank Feb 3 2016
 '''
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import tensorflow as tf
 import os,sys,shutil
 import tempfile,copy,re
@@ -35,8 +41,10 @@ class PoseTrain(object):
     
     Nets = Enum('Nets','Base Joint Fine')
     TrainingType = Enum('TrainingType','Base MRF Fine All')
-    DBType = Enum('DBType','Train Val')
-   
+    # DBType = Enum('DBType','Train Val')
+    class DBType(Enum):
+        Train = 1
+        Val = 2
     
     def __init__(self,conf):
         self.conf = conf
@@ -59,13 +67,13 @@ class PoseTrain(object):
             valfilename =os.path.join(self.conf.cachedir,self.conf.fulltrainfilename) + '.tfrecords'
             self.train_queue = tf.train.string_input_producer([trainfilename])
             self.val_queue = tf.train.string_input_producer([valfilename])
-            
 
-    def openHoldoutDBs(self):
-        lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
-        vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttest)
-        self.env = lmdb.open(lmdbfilename, readonly = True)
-        self.valenv = lmdb.open(vallmdbfilename, readonly = True)
+
+    # def openHoldoutDBs(self):
+    #     lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
+    #     vallmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttest)
+    #     self.env = lmdb.open(lmdbfilename, readonly = True)
+    #     self.valenv = lmdb.open(vallmdbfilename, readonly = True)
 
     def createCursors(self, sess, txn=None, valtxn=None):
 #         if txn is None:
@@ -77,12 +85,12 @@ class PoseTrain(object):
         val_ims,val_locs,val_info = multiResData.read_and_decode(self.val_queue,self.conf)
         self.train_data = [train_ims,train_locs,train_info]
         self.val_data = [val_ims,val_locs,val_info]
-        coord = tf.train.Coordinator()
-        self.threads = tf.train.start_queue_runners(sess=sess,coord=coord)
+        self.coord = tf.train.Coordinator()
+        self.threads = tf.train.start_queue_runners(sess=sess,coord=self.coord)
         
     def closeCursors(self):
-        self.env.close()
-        self.valenv.close()
+        self.coord.request_stop()
+        self.coord.join(self.threads)
         
     def readImages(self,dbType,distort,sess):
         conf = self.conf
@@ -120,6 +128,9 @@ class PoseTrain(object):
         x0,x1,x2,y,keep_prob = CNB.createPlaceHolders(self.conf.imsz,
                                self.conf.rescale,self.conf.scale,self.conf.pool_scale,
                                 self.conf.n_classes)
+        fine_pred_in = tf.placeholder(tf.float32, y.shape, name='fine_pred_in')
+        fine_pred_locs_in = tf.placeholder(tf.float32, [self.conf.batch_size,
+                                                        self.conf.n_classes,2], name='fine_pred_locs_in')
         locs_ph = tf.placeholder(tf.float32,[self.conf.batch_size,
                                              self.conf.n_classes,2])
         learning_rate_ph = tf.placeholder(tf.float32,shape=[],name='learning_r')
@@ -127,15 +138,21 @@ class PoseTrain(object):
         phase_train_fine = tf.placeholder(tf.bool, name='phase_train_fine')                 
         self.ph = {'x0':x0,'x1':x1,'x2':x2,
                      'y':y,'keep_prob':keep_prob,'locs':locs_ph,
+                     'fine_pred_in':fine_pred_in,'fine_pred_locs_in':fine_pred_locs_in,
                      'phase_train_base':phase_train_base,
                      'phase_train_fine':phase_train_fine,
                      'learning_rate':learning_rate_ph}
 
     def createFeedDict(self):
+        predsz = self.ph['y'].shape.as_list()
+        fine_pred_dummy = np.zeros([self.conf.batch_size,]+predsz[1:])
+        fine_pred_locs_dummy = np.ones([self.conf.batch_size,self.conf.n_classes,2])*predsz[1]/2
         self.feed_dict = {self.ph['x0']:[],
                           self.ph['x1']:[],
                           self.ph['x2']:[],
                           self.ph['y']:[],
+                          self.ph['fine_pred_in']:fine_pred_dummy,
+                          self.ph['fine_pred_locs_in']: fine_pred_locs_dummy,
                           self.ph['keep_prob']:1.,
                           self.ph['learning_rate']:1,
                           self.ph['phase_train_base']:False,
@@ -158,7 +175,21 @@ class PoseTrain(object):
         self.feed_dict[self.ph['x2']] = x2
         self.feed_dict[self.ph['y']] = labelims
         self.feed_dict[self.ph['locs']] = self.locs
-        
+
+        # For fine stuff.
+        predsz = self.ph['y'].shape.as_list()
+        fine_pred_dummy = np.zeros([self.conf.batch_size,]+predsz[1:])
+        fine_pred_locs_dummy = np.ones([self.conf.batch_size,self.conf.n_classes,2])*predsz[1]/2
+
+        self.feed_dict[self.ph['fine_pred_in']] = fine_pred_dummy
+        self.feed_dict[self.ph['fine_pred_locs_in']] = fine_pred_locs_dummy
+
+    def updateFeedDictFine(self,dbType,distort,sess):
+        self.updateFeedDict(dbType,distort,sess)
+        pred = sess.run(self.pred_fine_in,feed_dict=self.feed_dict)
+        self.feed_dict[self.ph['fine_pred_in']] = pred
+        self.feed_dict[self.ph['fine_pred_locs_in']] = PoseTools.getBasePredLocs(pred,self.conf)
+
 
     # ---------------- NETWORK ---------------------
     
@@ -195,46 +226,80 @@ class PoseTrain(object):
     def createMRFNetwork(self,doBatch,jointTraining=False):
         
         n_classes = self.conf.n_classes
-        bpred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
+        base_pred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
         mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
-        mrf_weights = mrf_weights/n_classes
+        mrf_weights = old_div(mrf_weights,n_classes)
         
-        baseShape = tf.Tensor.get_shape(bpred).as_list()[1:3]
+        base_shape = tf.Tensor.get_shape(base_pred).as_list()[1:3]
         mrf_sz = mrf_weights.shape[0:2]
 
-        bpred = tf.nn.relu((bpred+1)/2)
-        sliceEnd = [0,0]
+        base_pred = tf.nn.relu(old_div((base_pred+1),2))
+        slice_end = [0,0]
         pad = False
-        if mrf_sz[0] > baseShape[0]:
-            dd1 = int(math.ceil(float(mrf_sz[0]-baseShape[0])/2))
-            sliceEnd[0] = mrf_sz[0]-dd1
+        if mrf_sz[0] > base_shape[0]:
+            dd1 = int(math.ceil(old_div(float(mrf_sz[0]-base_shape[0]),2)))
+            slice_end[0] = mrf_sz[0]-dd1
             pad = True
         else:
             dd1 = 0
-            sliceEnd[0] = baseShape[0]
+            slice_end[0] = base_shape[0]
             
-        if mrf_sz[1] > baseShape[1]:
-            dd2 = int(math.ceil(float(mrf_sz[1]-baseShape[1])/2))
-            sliceEnd[1] = mrf_sz[1]-dd2
+        if mrf_sz[1] > base_shape[1]:
+            dd2 = int(math.ceil(old_div(float(mrf_sz[1]-base_shape[1]),2)))
+            slice_end[1] = mrf_sz[1]-dd2
             pad = True
         else:
             dd2 = 0
-            sliceEnd[1] = baseShape[1]
+            slice_end[1] = base_shape[1]
             
         if pad:    
-            print('Padding base prediction by %d,%d. Filter shape:%d,%d Base shape:%d,%d'%(dd1,dd2,mrf_sz[0],mrf_sz[1],baseShape[0],baseShape[1]))
-            bpred = tf.pad(bpred,[[0,0],[dd1,dd1],[dd2,dd2],[0,0]])
+            print('Padding base prediction by %d,%d. Filter shape:%d,%d Base shape:%d,%d'%(dd1,dd2,mrf_sz[0],mrf_sz[1],base_shape[0],base_shape[1]))
+            base_pred = tf.pad(base_pred,[[0,0],[dd1,dd1],[dd2,dd2],[0,0]])
 
+        base_shape_pad = tf.Tensor.get_shape(base_pred).as_list()[1:3]
         ksz = math.sqrt(mrf_weights.shape[0]*mrf_weights.shape[1])
+
+        if hasattr(self.conf, 'add_loc_info') and self.conf.add_loc_info:
+            # generate a constant image to represent distance from center
+            x_mesh,y_mesh = np.meshgrid(np.arange(float(base_shape_pad[1])),
+                                        np.arange(float(base_shape_pad[0])))
+            x_mesh -= float(base_shape_pad[1])/2
+            y_mesh -= float(base_shape_pad[0])/2
+            loc_image = np.sqrt(x_mesh**2 + y_mesh**2)
+            loc_image = np.tile(loc_image[np.newaxis,...,np.newaxis],[self.conf.batch_size,1,1,1])
+            self.ph['mrf_loc'] = tf.placeholder(tf.float32,
+                                                [None,base_shape_pad[0],base_shape_pad[1],1],
+                                                name='x1')
+            self.feed_dict[self.ph['mrf_loc']] = loc_image
+
         with tf.variable_scope('mrf'):
-            conv_std = (1./n_classes)/ksz
+            # conv_std = old_div((old_div(1.,n_classes)),ksz)
             weights = tf.get_variable("weights", initializer=tf.constant(mrf_weights))
             biases = tf.get_variable("biases", n_classes,
                                      initializer=tf.constant_initializer(0))
-            conv = tf.nn.conv2d(bpred, weights,
+            conv = tf.nn.conv2d(base_pred, weights,
                                strides=[1, 1, 1, 1], padding='SAME')
-            mrfout = conv+biases
-        self.mrfPred = mrfout[:,dd1:sliceEnd[0],dd2:sliceEnd[1],:]
+            mrf_out = conv+biases
+
+            if hasattr(self.conf, 'add_loc_info') and self.conf.add_loc_info:
+                weights = tf.get_variable("loc_weights", [4,4,1,self.conf.n_classes],
+                                          initializer=tf.random_normal_initializer(stddev=0.001))
+                conv = tf.nn.conv2d(self.ph['mrf_loc'], weights,
+                                   strides=[1, 1, 1, 1], padding='SAME')
+                biases = tf.get_variable("biases_loc", n_classes,
+                                         initializer=tf.constant_initializer(0))
+                t_mrf_out = tf.nn.relu(tf.concat([mrf_out,conv+biases],axis=3))
+                weights = tf.get_variable("loc_weights_1", [1,1,2*self.conf.n_classes,self.conf.n_classes],
+                                          initializer=tf.random_normal_initializer(stddev=0.001))
+                conv = tf.nn.conv2d(t_mrf_out, weights,
+                                   strides=[1, 1, 1, 1], padding='SAME')
+                biases = tf.get_variable("biases_loc_1", n_classes,
+                                         initializer=tf.constant_initializer(0))
+                mrf_out = conv+biases
+
+
+
+        self.mrfPred = mrf_out[:,dd1:slice_end[0],dd2:slice_end[1],:]
         
 #   BELOW is from Chris bregler's paper where they try to do MRF style inference.
 #   This didn't work so well and the performance was always worse than base.
@@ -268,18 +333,39 @@ class PoseTrain(object):
 #         self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
 #    Return the value below when we used MRF kind of stuff
 #         return conv_out,all_wts
-        
+    def extractPatches(self,layer, out, locs, conf, scale, outscale):
+        # extract patch from a layer for finer resolution
+        hsz = conf.fine_sz // scale // 2
+        padsz = tf.constant([[0, 0], [hsz, hsz], [hsz, hsz], [0, 0]])
+        patchsz = tf.to_int32([conf.fine_sz//scale, conf.fine_sz//scale, -1])
+
+        patches = []
+        # maxloc = PoseTools.argmax2d(out) * outscale
+        maxloc = tf.to_int32(tf.transpose(locs//conf.pool_scale//conf.rescale * outscale,[2,0,1]))
+        maxloc = tf.stack([maxloc[1,...],maxloc[0,...]],axis=0) # stupid x, y thing
+        padlayer = tf.pad(layer, padsz) # pad layer so that we don't worry about boundaries
+        for inum in range(conf.batch_size):
+            curpatches = []
+            for ndx in range(conf.n_classes):
+                curloc = tf.concat([tf.squeeze(maxloc[:, inum, ndx]), [0]], 0)
+                curpatches.append(tf.slice(padlayer[inum, :, :, :], curloc, patchsz))
+            patches.append(tf.stack(curpatches))
+        return tf.stack(patches)
+
     def createFineNetwork(self,doBatch,jointTraining=False):
         if self.conf.useMRF:
             if not jointTraining:
-                pred = tf.stop_gradient(self.mrfPred)
+                self.pred_fine_in = tf.stop_gradient(self.mrfPred)
             else:
-                pred = self.mrfPred
+                self.pred_fine_in = self.mrfPred
         else:
             if not jointTraining:
-                pred = tf.stop_gradient(self.basePred)
+                self.pred_fine_in = tf.stop_gradient(self.basePred)
             else:
-                pred = self.basePred
+                self.pred_fine_in = self.basePred
+
+        pred = self.ph['fine_pred_in']
+        locs = self.ph['fine_pred_locs_in']
 
         # Construct fine model
         labelT  = PoseTools.createFineLabelTensor(self.conf)
@@ -296,16 +382,16 @@ class PoseTrain(object):
             layer2_1 = layers['base_dict_1']['conv1']
             layer2_2 = layers['base_dict_1']['conv2']
             
-        curfine1_1 = CNB.extractPatches(layer1_1,pred,self.conf,1,4)
-        curfine1_2 = CNB.extractPatches(layer1_2,pred,self.conf,2,2)
-        curfine2_1 = CNB.extractPatches(layer2_1,pred,self.conf,2,2)
-        curfine2_2 = CNB.extractPatches(layer2_2,pred,self.conf,4,1)
-        curfine1_1u = tf.unpack(tf.transpose(curfine1_1,[1,0,2,3,4]))
-        curfine1_2u = tf.unpack(tf.transpose(curfine1_2,[1,0,2,3,4]))
-        curfine2_1u = tf.unpack(tf.transpose(curfine2_1,[1,0,2,3,4]))
-        curfine2_2u = tf.unpack(tf.transpose(curfine2_2,[1,0,2,3,4]))
+        curfine1_1 = self.extractPatches(layer1_1,pred,locs,self.conf,1,4)
+        curfine1_2 = self.extractPatches(layer1_2,pred,locs,self.conf,2,2)
+        curfine2_1 = self.extractPatches(layer2_1,pred,locs,self.conf,2,2)
+        curfine2_2 = self.extractPatches(layer2_2,pred,locs,self.conf,4,1)
+        curfine1_1u = tf.unstack(tf.transpose(curfine1_1,[1,0,2,3,4]))
+        curfine1_2u = tf.unstack(tf.transpose(curfine1_2,[1,0,2,3,4]))
+        curfine2_1u = tf.unstack(tf.transpose(curfine2_1,[1,0,2,3,4]))
+        curfine2_2u = tf.unstack(tf.transpose(curfine2_2,[1,0,2,3,4]))
         finepred = CNB.fineOut(curfine1_1u,curfine1_2u,curfine2_1u,curfine2_2u,
-                               curfine7u,self.conf,doBatch,
+                               self.conf,doBatch,
                                self.ph['phase_train_fine'])    
         limgs = PoseTools.createFineLabelImages(self.ph['locs'],
                                                 pred,self.conf,labelT)
@@ -343,6 +429,7 @@ class PoseTrain(object):
             
     def restoreBase(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.baseoutname)
+        outfilename = outfilename.replace('\\', '/')
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.basedataname)
         latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
                                             latest_filename = self.conf.baseckptname)
@@ -358,7 +445,11 @@ class PoseTrain(object):
             matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
             self.basestartat = int(matchObj.group(1))+1
             with open(traindatafilename,'rb') as tdfile:
-                inData = pickle.load(tdfile)
+                if sys.version_info.major==3:
+                    inData = pickle.load(tdfile,encoding='latin1')
+                else:
+                    inData = pickle.load(tdfile)
+
                 if not isinstance(inData,dict):
                     self.basetrainData, loadconf = inData
                     print('Parameters that dont match for base:')
@@ -371,6 +462,7 @@ class PoseTrain(object):
             
     def restoreMRF(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
+        outfilename = outfilename.replace('\\', '/')
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.mrfdataname)
         latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
                                             latest_filename = self.conf.mrfckptname)
@@ -388,7 +480,10 @@ class PoseTrain(object):
             matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
             self.mrfstartat = int(matchObj.group(1))+1
             with open(traindatafilename,'rb') as tdfile:
-                inData = pickle.load(tdfile)
+                if sys.version_info.major==3:
+                    inData = pickle.load(tdfile,encoding='latin1')
+                else:
+                    inData = pickle.load(tdfile)
                 if not isinstance(inData,dict):
                     self.mrftrainData, loadconf = inData
                     print('Parameters that dont match for mrf:')
@@ -401,6 +496,7 @@ class PoseTrain(object):
             
     def restoreFine(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.fineoutname)
+        outfilename = outfilename.replace('\\', '/')
         traindatafilename = os.path.join(self.conf.cachedir,self.conf.finedataname)
         latest_ckpt = tf.train.get_checkpoint_state(self.conf.cachedir,
                                             latest_filename = self.conf.fineckptname)
@@ -412,22 +508,37 @@ class PoseTrain(object):
                                 'train_dist':[],'val_dist':[],
                                 'train_mrf_dist':[],'val_mrf_dist':[],
                                 'train_base_dist':[],'val_base_dist':[]}
-            sess.run(tf.initialize_variables(PoseTools.getvars('fine')))
+            sess.run(tf.variables_initializer(PoseTools.getvars('fine')))
             print("Not loading fine variables. Initializing them")
             return False
         else:
             self.finesaver.restore(sess,latest_ckpt.model_checkpoint_path)
-            matchObj = re.match(outfilename + '-(\d*)',latest_ckpt.model_checkpoint_path)
+            mcp = latest_ckpt.model_checkpoint_path
+            mcp = mcp.replace('\\', '/')
+
+            matchObj = re.match(outfilename + '-(\d*)',mcp)
             self.finestartat = int(matchObj.group(1))+1
             with open(traindatafilename,'rb') as tdfile:
-                inData = pickle.load(tdfile)
-                if not isinstance(inData,dict):
-                    self.finetrainData, loadconf = inData
-                    print('Parameters that dont match for fine:')
-                    PoseTools.compareConf(self.conf, loadconf)
-                else:
-                    print("No conf was stored for fine. Not comparing conf")
-                    self.finetrainData = inData
+                try:
+                    if sys.version_info.major==3:
+                        inData = pickle.load(tdfile,encoding='latin1')
+                    else:
+                        inData = pickle.load(tdfile)
+                    if not isinstance(inData,dict):
+                        self.finetrainData, loadconf = inData
+                        print('Parameters that dont match for fine:')
+                        PoseTools.compareConf(self.conf, loadconf)
+                    else:
+                        print("No conf was stored for fine. Not comparing conf")
+                        self.finetrainData = inData
+                except ValueError:
+                    self.finetrainData = {'train_err': [], 'val_err': [], 'step_no': [],
+                                          'train_mrf_err': [], 'val_mrf_err': [],
+                                          'train_base_err': [], 'val_base_err': [],
+                                          'train_dist': [], 'val_dist': [],
+                                          'train_mrf_dist': [], 'val_mrf_dist': [],
+                                          'train_base_dist': [], 'val_base_dist': []}
+
             print("Loading fine variables from %s"%latest_ckpt.model_checkpoint_path)
             return True
 
@@ -472,7 +583,7 @@ class PoseTrain(object):
                    latest_filename = self.conf.baseckptname)
         print('Saved state to %s-%d' %(outfilename,step))
         with open(traindatafilename,'wb') as tdfile:
-            pickle.dump([self.basetrainData,self.conf],tdfile)
+            pickle.dump([self.basetrainData,self.conf],tdfile,protocol=2)
             
     def saveAC(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.acoutname)
@@ -481,7 +592,7 @@ class PoseTrain(object):
                    latest_filename = self.conf.acckptname)
         print('Saved state to %s-%d' %(outfilename,step))
         with open(traindatafilename,'wb') as tdfile:
-            pickle.dump([self.actrainData,self.conf],tdfile)
+            pickle.dump([self.actrainData,self.conf],tdfile,protocol=2)
 
     def saveMRF(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.mrfoutname)
@@ -490,7 +601,7 @@ class PoseTrain(object):
                    latest_filename = self.conf.mrfckptname)
         print('Saved state to %s-%d' %(outfilename,step))
         with open(traindatafilename,'wb') as tdfile:
-            pickle.dump([self.mrftrainData,self.conf],tdfile)
+            pickle.dump([self.mrftrainData,self.conf],tdfile,protocol=2)
 
     def saveFine(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.fineoutname)
@@ -499,7 +610,7 @@ class PoseTrain(object):
                    latest_filename = self.conf.fineckptname)
         print('Saved state to %s-%d' %(outfilename,step))
         with open(traindatafilename,'wb') as tdfile:
-            pickle.dump([self.finetrainData,self.conf],tdfile)
+            pickle.dump([self.finetrainData,self.conf],tdfile,protocol=2)
 
     def saveJoint(self,sess,step):
         outfilename = os.path.join(self.conf.cachedir,self.conf.jointoutname)
@@ -508,9 +619,11 @@ class PoseTrain(object):
                    latest_filename = self.conf.jointckptname)
         print('Saved state to %s-%d' %(outfilename,step))
         with open(traindatafilename,'wb') as tdfile:
-            pickle.dump([self.jointtrainData,self.conf],tdfile)
+            pickle.dump([self.jointtrainData,self.conf],tdfile,protocol=2)
 
     def initializeRemainingVars(self,sess):
+        # at some stage do faster initialization.
+        # tf.initialize_local_variables()
         varlist = tf.global_variables()
         for var in varlist:
             try:
@@ -531,7 +644,7 @@ class PoseTrain(object):
 
     def doOpt(self,sess,step,learning_rate):
         excount = step*self.conf.batch_size
-        cur_lr = learning_rate *                 self.conf.gamma**math.floor(excount/self.conf.step_size)
+        cur_lr = learning_rate * self.conf.gamma**math.floor(old_div(excount,self.conf.step_size))
         self.feed_dict[self.ph['learning_rate']] = cur_lr
         self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
@@ -543,10 +656,24 @@ class PoseTrain(object):
         self.read_time += r_end-r_start
         self.opt_time += o_end-r_end
 
+    def doOptFine(self, sess, step, learning_rate):
+        excount = step * self.conf.batch_size
+        cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(excount, self.conf.step_size))
+        self.feed_dict[self.ph['learning_rate']] = cur_lr
+        self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
+        r_start = time.clock()
+        self.updateFeedDictFine(self.DBType.Train, distort=True, sess=sess)
+        r_end = time.clock()
+        sess.run(self.opt, self.feed_dict)
+        o_end = time.clock()
+
+        self.read_time += r_end - r_start
+        self.opt_time += o_end - r_end
+
     def computeLoss(self,sess,costfcns):
         self.feed_dict[self.ph['keep_prob']] = 1.
         loss = sess.run(costfcns,self.feed_dict)
-        loss = [x/self.conf.batch_size for x in loss]
+        loss = [old_div(x,self.conf.batch_size) for x in loss]
         return loss
     
     def computePredDist(self,sess,predfcn):
@@ -565,7 +692,7 @@ class PoseTrain(object):
         return fine_dist
 
     def updateBaseLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]))
 #         nstep = step-self.basestartat
 #         print "  Read Time:" + "{:.2f}, ".format(self.read_time/(nstep+1)) + \
 #               "Opt Time:" + "{:.2f}".format(self.opt_time/(nstep+1)) 
@@ -576,8 +703,8 @@ class PoseTrain(object):
         self.basetrainData['val_dist'].append(valDist[0])        
 
     def updateMRFLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
-                                                      trainDist[1],valDist[1])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " ({:.1f},{:.1f}),({:.1f},{:.1f})".format(train_loss[1],val_loss[1],
+                                                      trainDist[1],valDist[1]))
         self.mrftrainData['train_err'].append(train_loss[0])        
         self.mrftrainData['val_err'].append(val_loss[0])        
         self.mrftrainData['train_base_err'].append(train_loss[1])        
@@ -589,7 +716,11 @@ class PoseTrain(object):
         self.mrftrainData['step_no'].append(step)        
 
     def updateFineLoss(self,step,train_loss,val_loss,trainDist,valDist):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) +              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) +              " (MRF:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[1],val_loss[1],trainDist[1],valDist[1]) +              " (Base:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[2],val_loss[2],trainDist[2],valDist[2])
+        print("Iter " + str(step) +    \
+              ", Train = " + "{:.3f},{:.1f}".format(train_loss[0],trainDist[0]) + \
+              ", Val = " + "{:.3f},{:.1f}".format(val_loss[0],valDist[0]) + \
+              " (MRF:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[1],val_loss[1],trainDist[1],valDist[1]) + \
+              " (Base:{:.1f},{:.1f},{:.1f},{:.1f})".format(train_loss[2],val_loss[2],trainDist[2],valDist[2]))
         self.finetrainData['train_err'].append(train_loss[0])        
         self.finetrainData['val_err'].append(val_loss[0])        
         self.finetrainData['train_mrf_err'].append(train_loss[1])        
@@ -605,7 +736,7 @@ class PoseTrain(object):
         self.finetrainData['val_base_dist'].append(valDist[2])        
 
     def updateJointLoss(self,step,train_loss,val_loss):
-        print "Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (Fine:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[2],val_loss[2]) +              " (Base:{:.1f},{:.1f})".format(train_loss[3],val_loss[3])
+        print("Iter " + str(step) +              ", Train = " + "{:.3f}".format(train_loss[0]) +              ", Val = " + "{:.3f}".format(val_loss[0]) +              " (Fine:{:.1f},{:.1f})".format(train_loss[1],val_loss[1]) +              " (MRF:{:.1f},{:.1f})".format(train_loss[2],val_loss[2]) +              " (Base:{:.1f},{:.1f})".format(train_loss[3],val_loss[3]))
         self.jointtrainData['train_err'].append(train_loss)        
         self.jointftrainData['val_err'].append(val_loss[0])        
         self.jointtrainData['train_fine_err'].append(train_loss[1])        
@@ -645,36 +776,38 @@ class PoseTrain(object):
             self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
             self.restoreBase(sess,restore)
             self.initializeRemainingVars(sess)
-            
-            for step in range(self.basestartat,self.conf.base_training_iters+1):
-                self.feed_dict[self.ph['keep_prob']] = 0.5
-                self.doOpt(sess,step,self.conf.base_learning_rate)
-                if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
-                    self.feed_dict[self.ph['keep_prob']] = 1.
-                    train_loss = self.computeLoss(sess,[self.cost])
-                    tt1 = self.computePredDist(sess,self.basePred)
-                    nantt1 = np.invert(np.isnan(tt1.flatten()))
-                    nantt1_mean = tt1.flatten()[nantt1].mean()
-                    trainDist = [nantt1_mean]
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
-                    val_loss = np.zeros([2,])
-                    valDist = [0.]
-                    for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
-                        val_loss += np.array(self.computeLoss(sess,[self.cost]))
+
+            if self.basestartat < self.conf.base_training_iters:
+
+                for step in range(self.basestartat,self.conf.base_training_iters+1):
+                    self.feed_dict[self.ph['keep_prob']] = 0.5
+                    self.doOpt(sess,step,self.conf.base_learning_rate)
+                    if step % self.conf.display_step == 0:
+                        self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
+                        self.feed_dict[self.ph['keep_prob']] = 1.
+                        train_loss = self.computeLoss(sess,[self.cost])
                         tt1 = self.computePredDist(sess,self.basePred)
                         nantt1 = np.invert(np.isnan(tt1.flatten()))
                         nantt1_mean = tt1.flatten()[nantt1].mean()
-                        valDist = [valDist[0]+nantt1_mean]
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep]
-                    self.updateBaseLoss(step,train_loss,val_loss,trainDist,valDist)
-                if step % self.conf.save_step == 0:
-                    self.saveBase(sess,step)
-            print("Optimization Finished!")
-            self.saveBase(sess,step)
-    
+                        trainDist = [nantt1_mean]
+                        numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
+                        val_loss = np.zeros([2,])
+                        valDist = [0.]
+                        for rep in range(numrep):
+                            self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
+                            val_loss += np.array(self.computeLoss(sess,[self.cost]))
+                            tt1 = self.computePredDist(sess,self.basePred)
+                            nantt1 = np.invert(np.isnan(tt1.flatten()))
+                            nantt1_mean = tt1.flatten()[nantt1].mean()
+                            valDist = [valDist[0]+nantt1_mean]
+                        val_loss = old_div(val_loss,numrep)
+                        valDist = [old_div(valDist[0],numrep)]
+                        self.updateBaseLoss(step,train_loss,val_loss,trainDist,valDist)
+                    if step % self.conf.save_step == 0:
+                        self.saveBase(sess,step)
+                print("Optimization Finished!")
+                self.saveBase(sess,step)
+            self.closeCursors()
     
     def mrfTrain(self,restore=True,trainType=0):
         self.createPH()
@@ -693,7 +826,7 @@ class PoseTrain(object):
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
 # the labels shouldn't be zero because the prediction is an output of
 # exp. And it seems a lot of effort is wasted to make the prediction goto
 # zero rather than match the location.
@@ -728,7 +861,7 @@ class PoseTrain(object):
                     tt2 = self.computePredDist(sess,self.basePred)
                     trainDist = [tt1.mean(),tt2.mean()]
 
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([2,])
                     valDist = [0.,0.]
                     for rep in range(numrep):
@@ -738,19 +871,20 @@ class PoseTrain(object):
                         tt2 = self.computePredDist(sess,self.basePred)
                         valDist = [valDist[0]+tt1.mean(),valDist[1]+tt2.mean()]
                         
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep,valDist[1]/numrep]
+                    val_loss = old_div(val_loss,numrep)
+                    valDist = [old_div(valDist[0],numrep),old_div(valDist[1],numrep)]
                     self.updateMRFLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveMRF(sess,step)
             print("Optimization Finished!")
             self.saveMRF(sess,step)
-            
+            self.closeCursors()
             
             
     def fineTrain(self, restore=True,trainPhase=True,trainType=0):
         self.createPH()
         self.createFeedDict()
+        self.trainType = trainType
         self.openDBs()
         self.feed_dict[self.ph['phase_train_fine']] = trainPhase
         self.feed_dict[self.ph['phase_train_base']] = False
@@ -759,23 +893,28 @@ class PoseTrain(object):
         
         with tf.variable_scope('base'):
             self.createBaseNetwork(doBatchNorm)
-        with tf.variable_scope('mrf'):
-            self.createMRFNetwork(doBatchNorm)
+        if self.conf.useMRF:
+            with tf.variable_scope('mrf'):
+                self.createMRFNetwork(doBatchNorm)
         with tf.variable_scope('fine'):
             self.createFineNetwork(doBatchNorm)
 
         self.createBaseSaver()
-        self.createMRFSaver()
+        if self.conf.useMRF:
+            self.createMRFSaver()
         self.createFineSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
         # the labels shouldn't be zero because the prediction is an output of
         # exp. And it seems a lot of effort is wasted to make the prediction goto
         # zero rather than match the location.
         
         self.cost = tf.nn.l2_loss(self.finePred-tf.to_float(self.fine_labels))
-        mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
         basecost =  tf.nn.l2_loss(self.basePred-self.ph['y'])
+        if self.conf.useMRF:
+            mrfcost = tf.nn.l2_loss(self.mrfPred-mod_labels)
+        else:
+            mrfcost = basecost
         self.createOptimizer()
         if self.conf.useMRF:
             predPair = [self.mrfPred,self.finePred]
@@ -785,42 +924,50 @@ class PoseTrain(object):
         with tf.Session() as sess:
 
             self.restoreBase(sess,True)
-            self.restoreMRF(sess,True)
+            if self.conf.useMRF:
+                self.restoreMRF(sess,True)
             self.restoreFine(sess,restore)
             self.initializeRemainingVars(sess)
             self.createCursors(sess)
             
             for step in range(self.finestartat,self.conf.fine_training_iters+1):
-                self.doOpt(sess,step,self.conf.fine_learning_rate)
+                self.doOptFine(sess,step,self.conf.fine_learning_rate)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train,distort=True,sess=sess)
+                    self.updateFeedDictFine(self.DBType.Train,distort=True,sess=sess)
                     train_loss = self.computeLoss(sess,[self.cost,mrfcost,basecost])
                     tt1 = self.computePredDist(sess,self.basePred)
-                    tt2 = self.computePredDist(sess,self.mrfPred)
+                    if self.conf.useMRF:
+                        tt2 = self.computePredDist(sess,self.mrfPred)
+                    else:
+                        tt2 = tt1
                     tt3 = self.computeFinePredDist(sess,predPair)
 
                     trainDist = [tt3.mean(),tt2.mean(),tt1.mean()]
 
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([3,])
                     valDist = [0.,0.,0.]
                     for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val,distort=False,sess=sess)
+                        self.updateFeedDictFine(self.DBType.Val,distort=False,sess=sess)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,mrfcost,basecost]))
                         tt1 = self.computePredDist(sess,self.basePred)
-                        tt2 = self.computePredDist(sess,self.mrfPred)
+                        if self.conf.useMRF:
+                            tt2 = self.computePredDist(sess, self.mrfPred)
+                        else:
+                            tt2 = tt1
                         tt3 = self.computeFinePredDist(sess,predPair)
                         valDist = [valDist[0]+tt3.mean(),
                                    valDist[1]+tt2.mean(),
                                    valDist[2]+tt1.mean()]
                         
-                    val_loss = val_loss/numrep
-                    valDist = [valDist[0]/numrep,valDist[1]/numrep,valDist[2]/numrep]
+                    val_loss = old_div(val_loss,numrep)
+                    valDist = [old_div(valDist[0],numrep),old_div(valDist[1],numrep),old_div(valDist[2],numrep)]
                     self.updateFineLoss(step,train_loss,val_loss,trainDist,valDist)
                 if step % self.conf.save_step == 0:
                     self.saveFine(sess,step)
             print("Optimization Finished!")
             self.saveFine(sess,step)
+            self.closeCursors()
 
     def jointTrain(self, restore=True):
         self.createPH()
@@ -843,7 +990,7 @@ class PoseTrain(object):
         self.createFineSaver()
         self.createJointSaver()
 
-        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
+        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
         # the labels shouldn't be zero because the prediction is an output of
         # exp. And it seems a lot of effort is wasted to make the prediction goto
         # zero rather than match the location.
@@ -869,12 +1016,12 @@ class PoseTrain(object):
                 if step % self.conf.display_step == 0:
                     self.updateFeedDict(self.DBType.Train)
                     train_loss = self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost])
-                    numrep = int(self.conf.numTest/self.conf.batch_size)+1
+                    numrep = int(old_div(self.conf.numTest,self.conf.batch_size))+1
                     val_loss = np.zeros([2,])
                     for rep in range(numrep):
                         self.updateFeedDict(self.DBType.Val)
                         val_loss += np.array(self.computeLoss(sess,[self.cost,finecost,mrfcost,basecost]))
-                    val_loss = val_loss/numrep
+                    val_loss = old_div(val_loss,numrep)
                     self.updateJointLoss(step,train_loss,val_loss)
                 if step % self.conf.save_step == 0:
                     self.saveJoint(sess,step)

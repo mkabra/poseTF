@@ -1,9 +1,13 @@
+from __future__ import division
+from __future__ import print_function
 
 # coding: utf-8
 
 # In[13]:
 
 #!/usr/bin/python
+from builtins import range
+from past.utils import old_div
 import os
 import re
 import glob
@@ -63,10 +67,10 @@ def main(argv):
         fmovies = text_file.readlines()
     fmovies = [x.rstrip() for x in fmovies]
 
-    print smovies
-    print fmovies
-    print len(smovies)
-    print len(fmovies)
+    print(smovies)
+    print(fmovies)
+    print(len(smovies))
+    print(len(fmovies))
     
     if args.detect:
         import numpy as np
@@ -80,7 +84,7 @@ def main(argv):
 
         for ff in smovies+fmovies:
             if not os.path.isfile(ff):
-                print "Movie %s not found"%(ff)
+                print("Movie %s not found"%(ff))
                 raise exit(0)
         if args.gpunum is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -113,7 +117,7 @@ def main(argv):
                 oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
             #     pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/headResults/movies/' + oname + extrastr
                 pname = os.path.join(args.outdir , oname + extrastr)
-                print oname
+                print(oname)
                 if os.path.isfile(pname + '.mat') and not args.redo:
                     continue
 
@@ -130,8 +134,8 @@ def main(argv):
                 height = int(cap.get(cvc.FRAME_HEIGHT))
                 width = int(cap.get(cvc.FRAME_WIDTH))
                 orig_crop_loc = conf.cropLoc[(height,width)]
-                crop_loc = [x/4 for x in orig_crop_loc] 
-                end_pad = [height/4-crop_loc[0]-conf.imsz[0]/4,width/4-crop_loc[1]-conf.imsz[1]/4]
+                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
                 pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
                 predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
@@ -140,7 +144,7 @@ def main(argv):
                 predLocs[:,:,:,1] += orig_crop_loc[0]
 
                 io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
-                print 'Done:%s'%oname
+                print('Done:%s'%oname)
                 
                 
     if args.track:
@@ -148,12 +152,12 @@ def main(argv):
         script_path = os.path.realpath(__file__)
         [script_dir,script_name] = os.path.split(script_path)
         matdir = os.path.join(script_dir,'matlab')
-		redo_tracking = args.redo or args.redo_tracking
+        redo_tracking = args.redo or args.redo_tracking
         matlab_cmd = "addpath %s; GMMTrack2DTo3D('%s','%s','%s','%s',%d);exit;" %(matdir,args.ffilename,
                                                               args.sfilename,args.dltfilename,
                                                               args.outdir,redo_tracking)
         matlab_cmd = 'matlab -nodesktop -nosplash -r "%s" ' % matlab_cmd
-        print 'Executing matlab command:%s'%matlab_cmd
+        print('Executing matlab command:%s'%matlab_cmd)
         call(matlab_cmd,shell=True)
 
 if __name__ == "__main__":
