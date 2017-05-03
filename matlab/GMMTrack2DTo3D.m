@@ -2,7 +2,12 @@ function GMMTrack2DTo3D(fmoviefile,smoviefile,kinelistfile,outdir,redo)
 
 %% Constructs smoothed 3D construction for videos listed in file
 
-6
+addpath /groups/branson/home/bransonk/behavioranalysis/code/Jdetect/Jdetect/filehandling;
+addpath /groups/branson/home/bransonk/behavioranalysis/code/Jdetect/Jdetect/misc;
+
+addpath /groups/branson/bransonlab/projects/flyHeadTracking/code/
+addpath /groups/branson/home/bransonk/tracking/code/Ctrax/matlab/netlab
+
 % infile = '~/bransonlab/PoseEstimationData/Stephen/folders2track.txt';
 % outdir = '/nobackup/branson/mayank/stephenOut/';
 % kinelistfile = '/groups/branson/bransonlab/mayank/PoseEstimationData/Stephen/FlyNumber2CorrespondingDLTfile.csv';
