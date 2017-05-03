@@ -2,7 +2,11 @@
 A = load('/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1.mat');
 A = A.RELEASE;
 %%
-
+ff = fopen('/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/annot/valid_images.txt');
+G = textscan(ff,'%s');
+fclose(ff);
+G = G{1};
+%%
 imdir = '/groups/branson/bransonlab/mayank/pose_hourglass/pose_hg_demo/images';
 id = 1;
 imfile = fullfile(imdir,A.annolist(ndx).image.name);
@@ -18,6 +22,7 @@ scatter([pts.point(:).x],[pts.point(:).y],'.');
 %%
 
 zz = zeros(0,16,2);
+valid = [];
 for ndx = 1:numel(A.annolist)
   if ~A.img_train(ndx), continue; end
 %   if ~isfield(A.annolist(ndx).annorect,'annopoints'),

@@ -1,4 +1,6 @@
-function compute3Dfrom2DRomain(savefile,vidfiles,matfiles,calibfile,dosave)
+function tracks = compute3Dfrom2DRomain(vscores,cRig)
+
+% vscores should be a cell with dims TxYxXxPts
 
 % Order of views is Left,Right and then Bottom for Romain
 
@@ -8,59 +10,15 @@ offx_side = 0;
 offy_side = 0;
 scale= 4;
 
-nviews = numel(matfiles);
-
-%% load in tracking results
-
-vscores = cell(1,nviews);
-predpts = cell(1,nviews);
-
-SHOWGMM = false;
+nviews = numel(vscores);
 
 thresh_nonmax_front = 0;
 thresh_nonmax_side = 0;
 thresh_perc = 99.7;
 r_nonmax = 2;
 
-[dx,dy] = meshgrid(-r_nonmax:r_nonmax,-r_nonmax:r_nonmax);
-fil = double(dx.^2 + dy.^2 <= r_nonmax^2);
-
-for view = 1:nviews
-
-  rdf = load(matfiles{view});
-  rdf.scores = rdf.scores(:,:,:,:,1);
-  rdf.locs = permute(rdf.locs(:,:,1,:),[1,2,4,3]);
-  
-  if abs(prctile(rdf.scores(1:1000:end),20))<0.1,
-    minscore = 0;
-    maxscore = 1;
-  elseif abs(prctile(rdf.scores(1:1000:end),20)+1)<0.1
-    minscore = -1;
-    maxscore = 1;
-  else
-    error('Couldnt figure out score range');
-  end
-
-%   minscore = min(rdf.scores(:));
-%   maxscore = max(rdf.scores(:));
-
-  rdf.scores(:,:,:,:) = ...
-    (rdf.scores(:,:,:,:) - minscore)/(maxscore-minscore);
-%   rdf.scores(rdf.scores>1) = 1;
-%   rdf.scores(rdf.scores<0) = 0;
-
-  % locs is nframes x nlandmarks x noutputtypes x ndims
-  % scores is nframes x 256 x 256 x nlandmarks x noutputtypes
-
-  predptsfront = rdf.locs;
-  predptsfront = permute(predptsfront,[3,2,1]);
-
-  [~,nlandmarks,Tfront] = size(predptsfront);
-  T = Tfront;
-  vscores{view} = rdf.scores;
-  predpts{view} = predptsfront;
-
-end
+[T,~,~,nlandmarks] = size(vscores{1});
+Tfront = T;
 
 %% 3D reconstruction
 
@@ -131,15 +89,15 @@ for t = 1:Tfront,
   if mod(t,50)==0, fprintf('.'); end
   if mod(t,1000)==0, fprintf('\n'); end
 end
-
+fprintf('\n');
 %%
 
 K = 50;
 Kneighbor = 10;
 discountneighbor = .05;
 
-J = load(calibfile);
-cRig = J.crig2AllExtAllInt;
+% J = load(calibfile);
+% cRig = J.crig2AllExtAllInt;
 % cRig = CalibratedRig2(calibfiles{1},calibfiles{2});
 
 Psample = zeros([3,K+2*Kneighbor,nlandmarks,T]);
@@ -168,6 +126,7 @@ for t = 1:T,
   if mod(t,50)==0, fprintf('.'); end
   if mod(t,1000)==0, fprintf('\n'); end
 end
+fprintf('\n');
 
 % add the top Kneighbor points from adjacent frames, which corresponds to
 % just interpolating through the current frame
@@ -197,13 +156,13 @@ w = bsxfun(@rdivide,w,z);
 
 %% choose trajectory
 
-dampen = .5;
-poslambdafixed = 100;
+dampen = .9;
+poslambdafixed = 1000;
 Pbest = nan(3,nlandmarks,T);
 cost = nan(1,nlandmarks);
 poslambda = nan(1,nlandmarks);
 idx = nan(nlandmarks,T);
-for i = 1:nlandmarks,
+for i = 1:nlandmarks
   fprintf('Landmark %d / %d\n',i,nlandmarks);
   X = permute(Psample(:,:,i,:),[1,4,2,3]);
   appearancecost = permute(w(:,i,:),[3,1,2]);
@@ -219,16 +178,23 @@ cNames = {'L','R','B'};
 pbest_re = cell(1,3);
 for view = 1:nviews
   pbest_re{view} = nan([2,nlandmarks,T]);
-  for i = 1:nlandmarks,
+  for i = 1:nlandmarks
     pview = cRig.camxform(squeeze(Pbest(:,i,:)),[cNames{1} cNames{view}]);
     [pbest_re{view}(2,i,:),pbest_re{view}(1,i,:)] = cRig.projectCPR(pview,view);
   end
 end
 
-save(savefile,'Pbest','pbest_re', 'Psample','w','z','-v7.3');
+tracks = struct;
+tracks.Pbest = Pbest;
+tracks.pbest_re = pbest_re;
+tracks.Psample = Psample;
+tracks.w = w;
+tracks.z = z;
+% save(savefile,'Pbest','pbest_re', 'Psample','w','z','-v7.3');
 
 %% plot results with temporal smoothing
 
+dosave = false;
 if dosave,
   [readframe_front,~] = get_readframe_fcn(frontviewvideofile);
   [readframe_side,~] = get_readframe_fcn(sideviewvideofile);

@@ -1,5 +1,13 @@
 function compute3Dfrom2D(savefile,frontviewvideofile,sideviewvideofile,...
   frontviewmatfile,sideviewmatfile,kinematfile,dosave,experiment_name)
+% outdated. moving to maintaining only _KB.
+
+compute3Dfrom2D_KB(savefile,frontviewmatfile,sideviewmatfile,kinematfile,...
+    '/tmp/front.trk','/tmp/side.trk');
+
+return;
+
+%%
 
 offx_front = -1;
 offy_front = -1;
