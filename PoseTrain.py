@@ -290,7 +290,7 @@ class PoseTrain(object):
                                          initializer=tf.constant_initializer(0))
                 t_mrf_out = tf.nn.relu(tf.concat([mrf_out,conv+biases],axis=3))
                 weights = tf.get_variable("loc_weights_1", [1,1,2*self.conf.n_classes,self.conf.n_classes],
-                                          initializer=tf.random_normal_initializer(stddev=0.001))
+                                          initializer=tf.random_normal_initializer(stddev=1.))
                 conv = tf.nn.conv2d(t_mrf_out, weights,
                                    strides=[1, 1, 1, 1], padding='SAME')
                 biases = tf.get_variable("biases_loc_1", n_classes,

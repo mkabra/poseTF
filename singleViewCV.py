@@ -587,6 +587,8 @@ def checkDB(conffile,confname='conf'):
     conf = imp_mod.__dict__[confname]
 ##
     curfold = 0
+
+    ##
     ext = '_fold_{}'.format(curfold)
     conf.valdatafilename = conf.valdatafilename + ext
     conf.trainfilename = conf.trainfilename + ext

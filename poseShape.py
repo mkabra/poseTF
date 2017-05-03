@@ -27,7 +27,7 @@ import localSetup
 import operator
 import copy
 import convNetBase as CNB
-import multiResData
+import mpiiData
 
 
 # In[3]:
@@ -102,7 +102,7 @@ def max_pool(name, l_input, k, s):
 def create_place_holders(conf):
     psz = conf.shape_psz
     n_classes = conf.n_classes
-    img_dim = conf.imgDim
+    img_dim = conf.imgDim+1
 
     nex = conf.batch_size
     x0 = []
@@ -118,7 +118,8 @@ def create_place_holders(conf):
     for selpt2 in conf.shape_selpt2:
         n_out += len(selpt2)
     n_bins = len(conf.shape_r_bins)-1
-    y = tf.placeholder(tf.float32, [nex, conf.shape_n_orts*n_out*n_bins], 'out')
+    # y = tf.placeholder(tf.float32, [nex, conf.shape_n_orts*n_out*n_bins], 'out')
+    y = tf.placeholder(tf.float32, [nex, psz,psz,n_out], 'out')
 
     X = [x0, x1, x2]
 
@@ -158,24 +159,33 @@ def net_multi_base_named(X, n_filt, do_batch_norm, train_phase, add_summary=True
 
     with tf.variable_scope('layer3'):
         conv3 = conv_relu(pool2, [3, 3, n_filt, n_filt], 0.01, 0, do_batch_norm, train_phase, add_summary)
-        pool3 = max_pool('pool3', conv3, k=3, s=2)
+        # pool3 = max_pool('pool3', conv3, k=3, s=2)
+        pool3 = conv3
 
     with tf.variable_scope('layer4'):
         conv4 = conv_relu(pool3, [3, 3, n_filt, n_filt], 0.01, 0, do_batch_norm, train_phase, add_summary)
-        pool4 = max_pool('pool4', conv4, k=3, s=2)
-    conv4_reshape = tf.reshape(pool4, [nex, -1])
-    conv4_dims = conv4_reshape.get_shape()[1].value
+        # pool4 = max_pool('pool4', conv4, k=3, s=2)
+        pool4 = conv4
+    # conv4_reshape = tf.reshape(pool4, [nex, -1])
 
+    # with tf.variable_scope('layer5'):
+    #     conv5 = fc_2d_norm_init(conv4_reshape, 128, train_phase, 0.01, add_summary)
     with tf.variable_scope('layer5'):
-        conv5 = fc_2d_norm_init(conv4_reshape, 128, train_phase, 0.01, add_summary)
+        conv5 = conv_relu(conv4,[3,3,n_filt,n_filt],0.01,1,do_batch_norm,train_phase)
 
     out_dict = {'conv1': conv1, 'conv2': conv2, 'conv3': conv3, 'conv4': conv4, 'conv5': conv5}
     return conv5, out_dict
 
+def upscale(name,l_input,sz):
+    l_out = tf.image.resize_nearest_neighbor(l_input,sz,name=name)
+    return l_out
 
 def net_multi_conv(ph, conf):
     X = ph['X']
     X0, X1, X2 = X
+    imsz = conf.imsz; rescale = conf.rescale
+    pool_scale = conf.pool_scale
+    nfilt = conf.nfilt
 
     # out_size = ph['y'].get_shape()[1]
     train_phase = ph['phase_train']
@@ -197,29 +207,68 @@ def net_multi_conv(ph, conf):
             conv5_2, base_dict_2 = net_multi_base_named(X2[ndx], n_filter, do_batch_norm, train_phase, False)
         conv5_cat = tf.concat([conv5_0, conv5_1, conv5_2],1)
 
-        with tf.variable_scope('L6_{}'.format(ndx)):
-            l6 = fc_2d(conv5_cat, 256, train_phase)
-        with tf.variable_scope('L7_{}'.format(ndx)):
-            l7 = fc_2d(l6, 256, train_phase)
-        with tf.variable_scope('L8_{}'.format(ndx)):
-            l8 = fc_2d(l7, 256, train_phase)
+        sz0 = conv5_0.shape.as_list()[1]
+        sz1 = conv5_0.shape.as_list()[2]
+        conv5_1_up = upscale('5_1', conv5_1, [sz0, sz1])
+        conv5_2_up = upscale('5_2', conv5_2, [sz0, sz1])
 
-        with tf.variable_scope('out_{}'.format(ndx)):
-            weights = tf.get_variable("weights", [l8.get_shape()[1].value, n_out],
-                                      initializer=tf.random_normal_initializer(stddev=0.2))
-            biases = tf.get_variable("biases", n_out, initializer=tf.constant_initializer(0))
-            with tf.variable_scope('weights'):
-                PoseTools.variable_summaries(weights)
-            with tf.variable_scope('biases'):
-                PoseTools.variable_summaries(biases)
+        # crop lower res layers to match higher res size
+        conv5_0_sz = tf.Tensor.get_shape(conv5_0).as_list()
+        conv5_1_sz = tf.Tensor.get_shape(conv5_1_up).as_list()
+        crop_0 = int(old_div((sz0 - conv5_0_sz[1]), 2))
+        crop_1 = int(old_div((sz1 - conv5_0_sz[2]), 2))
 
-        base_dict_array.append([base_dict_0, base_dict_2, base_dict_2, l6, l7,l8])
-        out_array.append(tf.matmul(l8, weights) - biases)
+        curloc = [0, crop_0, crop_1, 0]
+        patchsz = tf.to_int32([-1, conv5_0_sz[1], conv5_0_sz[2], -1])
+        conv5_1_up = tf.slice(conv5_1_up, curloc, patchsz)
+        conv5_2_up = tf.slice(conv5_2_up, curloc, patchsz)
 
-    out = tf.concat(out_array,1)
-    out_dict = {'base_dict_array': base_dict_array}
+        conv5_cat = tf.concat([conv5_0, conv5_1_up, conv5_2_up], 3)
 
-    return out, out_dict
+        with tf.variable_scope('layer6'):
+            conv6 = conv_relu(conv5_cat,
+                              [conf.psz, conf.psz, conf.numscale * nfilt, conf.nfcfilt],
+                              0.005, 1, True, train_phase)
+
+        with tf.variable_scope('layer7'):
+            conv7 = conv_relu(conv6, [1, 1, conf.nfcfilt, conf.nfcfilt],
+                              0.005, 1, True, train_phase)
+
+        with tf.variable_scope('layer8'):
+            l8_weights = tf.get_variable("weights", [1, 1, conf.nfcfilt, len(conf.shape_selpt2[ndx])],
+                                         initializer=tf.random_normal_initializer(stddev=0.01))
+            l8_biases = tf.get_variable("biases", len(conf.shape_selpt2[ndx]),
+                                        initializer=tf.constant_initializer(0))
+            out = tf.nn.conv2d(conv7, l8_weights,
+                               strides=[1, 1, 1, 1], padding='SAME') + l8_biases
+            out_array.append(out)
+    out = tf.concat(out_array,3)
+    return out,{}
+
+            # with shape context kind of output
+    #     with tf.variable_scope('L6_{}'.format(ndx)):
+    #         l6 = fc_2d(conv5_cat, 256, train_phase)
+    #     with tf.variable_scope('L7_{}'.format(ndx)):
+    #         l7 = fc_2d(l6, 256, train_phase)
+    #     with tf.variable_scope('L8_{}'.format(ndx)):
+    #         l8 = fc_2d(l7, 256, train_phase)
+    #
+    #     with tf.variable_scope('out_{}'.format(ndx)):
+    #         weights = tf.get_variable("weights", [l8.get_shape()[1].value, n_out],
+    #                                   initializer=tf.random_normal_initializer(stddev=0.2))
+    #         biases = tf.get_variable("biases", n_out, initializer=tf.constant_initializer(0))
+    #         with tf.variable_scope('weights'):
+    #             PoseTools.variable_summaries(weights)
+    #         with tf.variable_scope('biases'):
+    #             PoseTools.variable_summaries(biases)
+    #
+    #     base_dict_array.append([base_dict_0, base_dict_2, base_dict_2, l6, l7,l8])
+    #     out_array.append(tf.matmul(l8, weights) - biases)
+    #
+    # out = tf.concat(out_array,1)
+    # out_dict = {'base_dict_array': base_dict_array}
+    #
+    # return out, out_dict
 
 
 def open_dbs(conf, train_type=0):
@@ -238,10 +287,10 @@ def open_dbs(conf, train_type=0):
 
 def create_cursors(sess, queue, conf):
     train_queue, val_queue = queue
-    train_ims, train_locs, temp = multiResData.read_and_decode(train_queue, conf)
-    val_ims, val_locs, temp = multiResData.read_and_decode(val_queue, conf)
-    train_data = [train_ims, train_locs]
-    val_data = [val_ims, val_locs]
+    train_ims, train_locs, train_exp_data = mpiiData.read_and_decode(train_queue)
+    val_ims, val_locs, val_exp_data = mpiiData.read_and_decode(val_queue)
+    train_data = [train_ims, train_locs,train_exp_data]
+    val_data = [val_ims, val_locs,val_exp_data]
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
     return [train_data, val_data], coord, threads
@@ -252,10 +301,11 @@ def read_images(conf, db_type, distort, sess, data):
     cur_data = val_data if (db_type == 'val') else train_data
     xs = []
     locs = []
+    exp_data = []
 
     count = 0
     while count < conf.batch_size:
-        [cur_xs, cur_locs] = sess.run(cur_data)
+        [cur_xs, cur_locs, cur_exp_data] = sess.run(cur_data)
 
         # kk = cur_locs[conf.shape_selpt2, :] - cur_locs[conf.shape_selpt1, :]
         # dd = np.sqrt(kk[0] ** 2 + kk[1] ** 2)
@@ -268,60 +318,76 @@ def read_images(conf, db_type, distort, sess, data):
             cur_xs = np.transpose(cur_xs,[2,0,1])
             xs.append(cur_xs)
         locs.append(cur_locs)
+        exp_data.append(cur_exp_data)
         count += 1
+
 
     xs = np.array(xs)
     locs = np.array(locs)
-    locs = multiResData.sanitizelocs(locs)
     if distort:
         if conf.horzFlip:
             xs, locs = PoseTools.randomlyFlipLR(xs, locs)
         if conf.vertFlip:
             xs, locs = PoseTools.randomlyFlipUD(xs, locs)
         xs, locs = PoseTools.randomlyRotate(xs, locs, conf)
-        xs = PoseTools.randomlyAdjust(xs, conf)
+        # xs = PoseTools.randomlyAdjust(xs, conf)
 
-    return xs, locs
+    return xs, locs, exp_data
 
 
 # In[2]:
 
 def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
-    xs, locs = read_images(conf, db_type, distort, sess, data)
-    #     global shape_prior
-
+    xs, locs, exp_data = read_images(conf, db_type, distort, sess, data)
 
     shape_perturb_rad = conf.shape_perturb_rad
 
     sel_pt1 = conf.shape_selpt1
     sel_pt2 = conf.shape_selpt2
 
+    assert len(sel_pt1)==1, "current implementation only works for 1 pt"
+    assert len(sel_pt2[0])==1, "current implementation only works for 1 pt"
+
+    psz = conf.shape_psz
     # perturb the locs a bit
     sel_locs = []
+    all_label_locs = []
+    all_label_ims = []
     for ndx,count in enumerate(sel_pt1):
         cur_locs = copy.deepcopy(locs)
         cur_locs[:,count,0] += np.random.randn()*shape_perturb_rad
         cur_locs[:,count,1] += np.random.randn()*shape_perturb_rad
-        cur_locs[:,:,0] = np.clip(cur_locs[:,:,0],0,conf.imsz[0])
-        cur_locs[:,:,1] = np.clip(cur_locs[:,:,1],0,conf.imsz[1])
+        cur_locs[cur_locs<0] = np.nan
+        cur_locs[cur_locs[:,:,0]>conf.imsz[1],0] = np.nan
+        cur_locs[cur_locs[:,:,1]>conf.imsz[0],1] = np.nan
         sel_locs.append(cur_locs)
-        ind_labels = shape_from_locs(cur_locs,conf)
-        labels = []
-        curlabels = ind_labels[:, sel_pt1, sel_pt2[ndx], ...]
-        labels.append(curlabels.reshape([curlabels.shape[0],-1]))
+        label_locs = copy.deepcopy(cur_locs)
+        label_locs -= (label_locs[:,count:count+1,:]-psz/2)
+        label_locs[label_locs<0] = np.nan
+        label_locs[label_locs>=psz] = np.nan
+        label_ims = PoseTools.createLabelImages(label_locs,[psz,psz],1,conf.label_blur_rad)
+        label_ims = label_ims[...,sel_pt2[ndx]]
+        all_label_locs.append(label_locs[:,sel_pt2[ndx],:])
+        all_label_ims.append(label_ims)
+        # ind_labels = shape_from_locs(cur_locs,conf)
+        # labels = []
+        # curlabels = ind_labels[:, sel_pt1, sel_pt2[ndx], ...]
+        # labels.append(curlabels.reshape([curlabels.shape[0],-1]))
 
-    labels = np.concatenate(labels,1)
+    all_label_locs = np.concatenate(all_label_locs,axis=1)
+    # labels = np.concatenate(labels,1)
+    feed_dict[ph['y']] = np.concatenate(all_label_ims,axis=3)
 
-    psz = conf.shape_psz
-    x0, x1, x2 = PoseTools.multiScaleImages(xs.transpose([0, 2, 3, 1]), conf.rescale, conf.scale, conf.l1_cropsz, conf)
+    x0, x1, x2 = PoseTools.multiScaleImages(xs.transpose([0, 2, 3, 1]),
+                                            conf.rescale, conf.scale, conf.l1_cropsz, conf)
 
     for ndx, count in enumerate(sel_pt1):
         cur_locs = sel_locs[ndx]
         feed_dict[ph['X'][0][ndx]] = extract_patches(x0, cur_locs[:, count, :], psz)
         feed_dict[ph['X'][1][ndx]] = extract_patches(x1, old_div((cur_locs[:, count, :]), conf.scale), psz)
         feed_dict[ph['X'][2][ndx]] = extract_patches(x2, old_div((cur_locs[:, count, :]), (conf.scale ** 2)), psz)
-    feed_dict[ph['y']] = labels
-    return locs, xs
+
+    return locs, xs, all_label_locs, exp_data
 
 
 def angle_from_locs(locs):
@@ -381,15 +447,25 @@ def shape_from_locs(locs,conf):
 
 
 def extract_patches(img, locs, psz):
-    zz = np.zeros([img.shape[0],psz,psz,img.shape[-1]])
+    zz = np.zeros([img.shape[0],psz,psz,img.shape[-1]+1])
     pad_arg = [(psz, psz), (psz, psz), (0, 0)]
     int_locs = np.round(locs).astype('int')
+
+    x_mesh, y_mesh = np.meshgrid(np.arange(float(psz)),
+                                 np.arange(float(psz)))
+    x_mesh -= float(psz)/2
+    y_mesh -= float(psz) / 2
+    loc_image = np.sqrt(x_mesh ** 2 + y_mesh ** 2)
+    loc_image -= psz/2
+
     for ndx in range(img.shape[0]):
-        if np.isnan(locs[ndx,0]):
+        if np.isnan(locs[ndx,0]) or np.isnan(locs[ndx,1]):
             continue
         p_img = np.pad(img[ndx, ...], pad_arg, 'constant')
-        zz[ndx,...]= p_img[(int_locs[ndx, 1] + psz - old_div(psz, 2)):(int_locs[ndx, 1] + psz + old_div(psz, 2)),
+        zz[ndx,...,:-1]= p_img[(int_locs[ndx, 1] + psz - old_div(psz, 2)):(int_locs[ndx, 1] + psz + old_div(psz, 2)),
                   (int_locs[ndx, 0] + psz - old_div(psz, 2)):(int_locs[ndx, 0] + psz + old_div(psz, 2)), :]
+        zz[ndx,...,-1] = loc_image
+
     return np.array(zz)
 
 
@@ -500,7 +576,15 @@ def print_shape_accuracy(correct_pred,conf):
         print(cur_acc.mean(axis=0).squeeze())
 
 
-
+def getPredError(locs,pred):
+    locerr = np.zeros(locs.shape)
+    for ndx in range(pred.shape[0]):
+        for cls in range(pred.shape[-1]):
+            maxndx = np.argmax(pred[ndx,:,:,cls])
+            predloc = np.array(np.unravel_index(maxndx,pred.shape[1:3]))
+            locerr[ndx][cls][0]= float(predloc[1])-locs[ndx][cls][0]
+            locerr[ndx][cls][1]= float(predloc[0])-locs[ndx][cls][1]
+    return np.sqrt(np.sum((locerr**2),2))
 
 
 def pose_shape_train(conf, restore=True):
@@ -510,17 +594,17 @@ def pose_shape_train(conf, restore=True):
 
     np.set_printoptions(precision=3,suppress=True)
     # for weighted..
-    y_re = tf.reshape(ph['y'], [conf.batch_size, 1,1,conf.shape_n_orts,len(conf.shape_r_bins)-1])
-    sel_pt1 = conf.shape_selpt1[0]
-    sel_pt2 = conf.shape_selpt2[0][0]
-    shape_prior = init_shape_prior(conf)
-    wt_den = shape_prior[sel_pt1:sel_pt1+1, sel_pt2:sel_pt2+1, ...]
-    wt = tf.reduce_max(old_div(y_re, (wt_den + 0.1)), axis=(1, 2,3,4))
-    loss = tf.reduce_sum(tf.reduce_sum((out - ph['y']) ** 2, axis=1) * wt)
+    # y_re = tf.reshape(ph['y'], [conf.batch_size, 1,1,conf.shape_n_orts,len(conf.shape_r_bins)-1])
+    # sel_pt1 = conf.shape_selpt1[0]
+    # sel_pt2 = conf.shape_selpt2[0][0]
+    # shape_prior = init_shape_prior(conf)
+    # wt_den = shape_prior[sel_pt1:sel_pt1+1, sel_pt2:sel_pt2+1, ...]
+    # wt = tf.reduce_max(old_div(y_re, (wt_den + 0.1)), axis=(1, 2,3,4))
+    loss = tf.nn.l2_loss(out - ph['y'])
 
     # loss = tf.nn.l2_loss(out-ph['y'])
-    correct_pred = tf.cast(tf.equal(out > 0.5, ph['y'] > 0.5), tf.float32)
-    accuracy = tf.reduce_mean(correct_pred)
+    # correct_pred = tf.cast(tf.equal(out > 0.5, ph['y'] > 0.5), tf.float32)
+    # accuracy = tf.reduce_mean(correct_pred)
 
     #     tf.summary.scalar('cross_entropy',loss)
     #     tf.summary.scalar('accuracy',accuracy)
@@ -533,44 +617,52 @@ def pose_shape_train(conf, restore=True):
         #         train_writer = tf.summary.FileWriter(conf.cachedir + '/shape_train_summary',sess.graph)
         #         test_writer = tf.summary.FileWriter(conf.cachedir + '/shape_test_summary',sess.graph)
         data, coord, threads = create_cursors(sess, queue, conf)
-        update_feed_dict(conf, 'train', distort=True, sess=sess, data=data, feed_dict=feed_dict, ph=ph)
+        update_feed_dict(conf, 'train', distort=True, sess=sess,
+                         data=data, feed_dict=feed_dict, ph=ph)
         shape_start_at = restore_shape(sess, shape_saver, restore, conf, feed_dict)
         for step in range(shape_start_at, conf.shape_training_iters + 1):
             ex_count = step * conf.batch_size
-            cur_lr = conf.shape_learning_rate * conf.gamma ** math.floor(old_div(ex_count, conf.step_size))
+            cur_lr = conf.shape_learning_rate * \
+                     conf.gamma**math.floor(old_div(ex_count, conf.step_size))
             feed_dict[ph['learning_rate']] = cur_lr
             feed_dict[ph['phase_train']] = True
-            update_feed_dict(conf, 'train', distort=True, sess=sess, data=data, feed_dict=feed_dict, ph=ph)
-            train_summary, _ = sess.run([merged, opt], feed_dict=feed_dict)
-            #             train_writer.add_summary(train_summary,step)
+            update_feed_dict(conf, 'train', distort=True, sess=sess,
+                             data=data, feed_dict=feed_dict, ph=ph)
+            sess.run(opt, feed_dict=feed_dict)
+            # train_writer.add_summary(train_summary,step)
 
             if step % conf.display_step == 0:
-                update_feed_dict(conf, 'train', sess=sess, distort=True, data=data, feed_dict=feed_dict, ph=ph)
+                xs,locs,label_locs,exp_data = update_feed_dict(conf, 'train', sess=sess,
+                                                      distort=True, data=data,
+                                                      feed_dict=feed_dict, ph=ph)
                 feed_dict[ph['phase_train']] = False
-                train_loss, train_acc = sess.run([loss, accuracy], feed_dict=feed_dict)
+                train_loss, train_pred = sess.run([loss,out], feed_dict=feed_dict)
+                train_dist = np.nanmean(getPredError(label_locs, train_pred))
+                train_loss /= (conf.shape_psz**2)*train_pred.shape[-1]*conf.batch_size
+                train_loss = np.sqrt(train_loss)
+
                 num_rep = int(old_div(conf.numTest, conf.batch_size)) + 1
                 val_loss = 0.
-                val_acc = 0.
-                c_pred = []
-                #                 val_acc_wt = 0.
+                val_dist = 0.
                 for rep in range(num_rep):
-                    update_feed_dict(conf, 'val', distort=False, sess=sess, data=data, feed_dict=feed_dict, ph=ph)
-                    vloss, vacc, vpred = sess.run([loss, accuracy,correct_pred], feed_dict=feed_dict)
+                    xs, locs, label_locs,exp_data = update_feed_dict(conf, 'val', distort=False,
+                                                            sess=sess, data=data,
+                                                            feed_dict=feed_dict, ph=ph)
+                    vloss,vpred = sess.run([loss,out], feed_dict=feed_dict)
+                    v_dist = np.nanmean(getPredError(label_locs, vpred))
+                    vloss /= (conf.shape_psz**2)*train_pred.shape[-1] * conf.batch_size
+                    vloss = np.sqrt(vloss)
                     val_loss += vloss
-                    val_acc += vacc
-                    c_pred.append(vpred)
+                    val_dist += v_dist
                 # val_acc_wt += vacc_wt
                 val_loss /= num_rep
-                val_acc /= num_rep
+                val_dist /= num_rep
                 #                 val_acc_wt /= num_rep
-                test_summary, _ = sess.run([merged, loss], feed_dict=feed_dict)
+                # test_summary, _ = sess.run([merged, loss], feed_dict=feed_dict)
                 #                 test_writer.add_summary(test_summary,step)
-                print('Val -- Acc:{:.4f} Loss:{:.4f} Train Acc:{:.4f} Loss:{:.4f} Iter:{}'.format(val_acc, val_loss,
-                                                                                  train_acc, train_loss,
-                                                                                  step))
-                c_pred = np.concatenate(c_pred,axis=0)
-                if step%(conf.display_step*10) == 0:
-                    print_shape_accuracy(c_pred, conf)
+                print('Val -- Dist:{:.2f} Loss:{:.4f} Train Dist:{:.4f} Loss:{:.4f} Iter:{}'\
+                      .format(val_dist,val_loss,train_dist, train_loss,step))
+
             # print_gradients(sess,feed_dict,loss)
             if step % conf.save_step == 0:
                 save_shape(sess, shape_saver, step, conf)

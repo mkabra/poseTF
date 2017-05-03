@@ -122,7 +122,7 @@ class myconfig(object):
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = True
+    normalize_mean_img = False
     perturb_color = True
     # fine_batch_size = 8
 
@@ -131,7 +131,7 @@ class myconfig(object):
     shape_r_bins = [0,20,60,np.inf]
     shape_selpt1 = [1,]
     shape_selpt2 = [[0,]]
-    shape_psz = 64
+    shape_psz = 128
     shape_perturb_rad = 0
 
     # ----- Data parameters
@@ -142,6 +142,8 @@ class myconfig(object):
     cachedir = os.path.join(localSetup.bdir, 'cache', 'mpii')
     labelfile = '/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1_modified.lbl'
     imdir = '/groups/branson/bransonlab/mayank/pose_hourglass/pose_hg_demo/images'
+    mpiifile = '/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/mpii_human_pose_v1_u12_2/mpii_human_pose_v1_u12_1.mat'
+    validfile = '/groups/branson/home/kabram/bransonlab/pose_hourglass/pose_hg_demo/annot/valid_images.txt'
 
     trainfilename = 'train_TF'
     fulltrainfilename = 'fullTrain_TF'

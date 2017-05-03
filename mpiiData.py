@@ -33,10 +33,16 @@ def crash():
 
 def createTFRecordMPII():
 ##
-    A = sio.loadmat(conf.labelfile, struct_as_record=False, squeeze_me=True)
+    A = sio.loadmat(conf.mpiifile, struct_as_record=False, squeeze_me=True)
     A = A['RELEASE']
 
-    ##
+##
+    # load the list of validation images for pose hour glass
+    with open(conf.validfile) as f:
+        content = f.readlines()
+    val_images = [x.strip() for x in content]
+
+##
 
     trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
     valfilename = os.path.join(conf.cachedir, conf.valfilename)
@@ -46,16 +52,12 @@ def createTFRecordMPII():
     valenv = tf.python_io.TFRecordWriter(valfilename + '.tfrecords')
     testenv = tf.python_io.TFRecordWriter(testfilename + '.tfrecords')
 
-    ##
+##
 
-    val_data_file_name = os.path.join(conf.cachedir,conf.valdatafilename)
     num_ex =len(A.annolist)
-    num_vid = len(A.video_list)
-    val = np.random.choice(num_vid,int((1-conf.holdoutratio)*num_vid),replace=False)
-
-    with open(val_data_file_name,'w') as f:
-        pickle.dump(val,f)
-    ##
+    valcount = 0
+    traincount = 0
+    testcount = 0
 
     for ndx in range(num_ex):
 
@@ -65,20 +67,24 @@ def createTFRecordMPII():
             continue
         im = misc.imread(imfile)
 
+
         if not A.img_train[ndx]:
             cur_env = testenv
+            testcount += 1
         else:
-            if np.any(val==A.annolist[ndx].vididx):
+            if val_images.count(A.annolist[ndx].image.name):
                 cur_env = valenv
+                valcount += 1
             else:
                 cur_env = env
+                traincount += 1
 
         if isinstance(A.annolist[ndx].annorect, np.ndarray):
             a_list = A.annolist[ndx].annorect
         else:
             a_list = [A.annolist[ndx].annorect, ]
 
-        for curo in a_list:
+        for ondx,curo in enumerate(a_list):
             if not curo._fieldnames.count('objpos'):
                 continue
             if isinstance(curo.objpos,np.ndarray):
@@ -89,7 +95,7 @@ def createTFRecordMPII():
             cur_pos = curo.objpos
             scale = curo.scale
             c = [cur_pos.x, cur_pos.y]
-            bsz = old_div(round((200 + 200) * scale), 2)
+            bsz = old_div(round((200 + 100) * scale), 2)
             top = int(c[1] - bsz)
             bot = int(c[1] + bsz)
             left = int(c[0] - bsz)
@@ -134,11 +140,12 @@ def createTFRecordMPII():
                 'width': _int64_feature(cols),
                 'depth': _int64_feature(depth),
                 'locs': _float_feature(cur_locs.flatten()),
-                'expndx': _float_feature(ndx),
-                'ts': _int64_feature(ndx),
+                'expndx': _int64_feature(ndx),
+                'ts': _int64_feature(ondx),
                 'image_raw': _bytes_feature(image_raw)}))
             cur_env.write(example.SerializeToString())
 
+    print('Train:{}, Val:{}, Test:{}'.format(traincount,valcount,testcount))
     testenv.close()
     valenv.close()
     env.close()
@@ -152,8 +159,8 @@ def read_and_decode(filename_queue):
         features={'height': tf.FixedLenFeature([], dtype=tf.int64),
                   'width': tf.FixedLenFeature([], dtype=tf.int64),
                   'depth': tf.FixedLenFeature([], dtype=tf.int64),
-                  #           'expndx': tf.FixedLenFeature([], dtype=tf.float32),
-                  #           'ts': tf.FixedLenFeature([], dtype=tf.float32),
+                  'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+                  'ts': tf.FixedLenFeature([], dtype=tf.int64),
                   'locs': tf.FixedLenFeature(shape=[conf.n_classes, 2], dtype=tf.float32),
                   'image_raw': tf.FixedLenFeature([], dtype=tf.string)
                   })
@@ -161,13 +168,13 @@ def read_and_decode(filename_queue):
     height = tf.cast(features['height'], tf.int64)
     width = tf.cast(features['width'], tf.int64)
     depth = tf.cast(features['depth'], tf.int64)
-    image = tf.reshape(image, conf.imsz)
+    image = tf.reshape(image, conf.imsz+(3,))
 
     locs = tf.cast(features['locs'], tf.float64)
-    expndx = tf.constant([0])  # tf.cast(features['expndx'],tf.float64)
-    ts = tf.constant([0])  # tf.cast(features['ts'],tf.float64)
+    expndx = tf.cast(features['expndx'],tf.int64)
+    ondx = tf.cast(features['ts'],tf.int64)
 
-    return image, locs, [expndx, ts]
+    return image, locs, [expndx, ondx]
 
 ##
 #

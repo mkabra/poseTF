@@ -37,7 +37,7 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/2/2/2
+    sel_sz = 512/2/2
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5

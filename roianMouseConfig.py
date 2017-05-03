@@ -37,7 +37,7 @@ class myconfig(object):
     sel_sz = old_div(512,3)
     psz = sel_sz//(scale**(numscale-1))//rescale//pool_scale
     dist2pos = 5
-    label_blur_rad = 3 #1.5
+    label_blur_rad = 5 #1.5
     fine_label_blur_rad = 1.5
     n_classes = 2
     dropout = 0.5
