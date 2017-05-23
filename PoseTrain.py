@@ -642,13 +642,10 @@ class PoseTrain(object):
         self.read_time = 0.
         self.opt_time = 0.
 
-    def doOpt(self,sess,step,learning_rate):
-        excount = step*self.conf.batch_size
-        cur_lr = learning_rate * self.conf.gamma**math.floor(old_div(excount,self.conf.step_size))
-        self.feed_dict[self.ph['learning_rate']] = cur_lr
-        self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
+    def doOpt(self,sess):
+        # self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
         r_start = time.clock()
-        self.updateFeedDict(self.DBType.Train,distort=True,sess=sess)
+        self.updateFeedDict(self.DBType.Train, distort=True, sess=sess)
         r_end = time.clock()
         sess.run(self.opt, self.feed_dict)
         o_end = time.clock()
@@ -656,11 +653,7 @@ class PoseTrain(object):
         self.read_time += r_end-r_start
         self.opt_time += o_end-r_end
 
-    def doOptFine(self, sess, step, learning_rate):
-        excount = step * self.conf.batch_size
-        cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(excount, self.conf.step_size))
-        self.feed_dict[self.ph['learning_rate']] = cur_lr
-        self.feed_dict[self.ph['keep_prob']] = self.conf.dropout
+    def doOptFine(self, sess):
         r_start = time.clock()
         self.updateFeedDictFine(self.DBType.Train, distort=True, sess=sess)
         r_end = time.clock()
@@ -754,10 +747,12 @@ class PoseTrain(object):
     
     
     def baseTrain(self, restore=True, trainPhase=True,trainType=0):
+        base_dropout = 1.
+
         self.createPH()
         self.createFeedDict()
         self.feed_dict[self.ph['phase_train_base']] = trainPhase
-        self.feed_dict[self.ph['keep_prob']] = 0.5
+        self.feed_dict[self.ph['keep_prob']] = base_dropout
         self.trainType = trainType
         doBatchNorm = self.conf.doBatchNorm
         
@@ -780,8 +775,12 @@ class PoseTrain(object):
             if self.basestartat < self.conf.base_training_iters:
 
                 for step in range(self.basestartat,self.conf.base_training_iters+1):
-                    self.feed_dict[self.ph['keep_prob']] = 0.5
-                    self.doOpt(sess,step,self.conf.base_learning_rate)
+                    ex_count = step * self.conf.batch_size
+                    cur_lr = self.conf.base_learning_rate * \
+                             self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
+                    self.feed_dict[self.ph['learning_rate']] = cur_lr
+                    self.feed_dict[self.ph['keep_prob']] = base_dropout
+                    self.doOpt(sess)
                     if step % self.conf.display_step == 0:
                         self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
                         self.feed_dict[self.ph['keep_prob']] = 1.
@@ -810,10 +809,11 @@ class PoseTrain(object):
             self.closeCursors()
     
     def mrfTrain(self,restore=True,trainType=0):
+        mrf_dropout = 0.5
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
-        self.feed_dict[self.ph['keep_prob']] = 0.5
+        self.feed_dict[self.ph['keep_prob']] = mrf_dropout
         self.feed_dict[self.ph['phase_train_base']] = False
         self.trainType = trainType
         
@@ -851,8 +851,12 @@ class PoseTrain(object):
             self.createCursors(sess)
             
             for step in range(self.mrfstartat,self.conf.mrf_training_iters+1):
-                self.feed_dict[self.ph['keep_prob']] = 0.5
-                self.doOpt(sess,step,self.conf.mrf_learning_rate)
+                ex_count = step * self.conf.batch_size
+                cur_lr = self.conf.mrf_learning_rate * \
+                         self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
+                self.feed_dict[self.ph['learning_rate']] = cur_lr
+                self.feed_dict[self.ph['keep_prob']] = mrf_dropout
+                self.doOpt(sess)
                 if step % self.conf.display_step == 0:
                     self.feed_dict[self.ph['keep_prob']] = 1.0
                     self.updateFeedDict(self.DBType.Train,sess=sess,distort=True)
@@ -886,6 +890,8 @@ class PoseTrain(object):
         self.createFeedDict()
         self.trainType = trainType
         self.openDBs()
+        fine_dropout = 1.
+        self.feed_dict[self.ph['keep_prob']] = fine_dropout
         self.feed_dict[self.ph['phase_train_fine']] = trainPhase
         self.feed_dict[self.ph['phase_train_base']] = False
         doBatchNorm = self.conf.doBatchNorm
@@ -931,8 +937,14 @@ class PoseTrain(object):
             self.createCursors(sess)
             
             for step in range(self.finestartat,self.conf.fine_training_iters+1):
-                self.doOptFine(sess,step,self.conf.fine_learning_rate)
+                ex_count = step * self.conf.batch_size
+                cur_lr = self.conf.fine_learning_rate * \
+                         self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
+                self.feed_dict[self.ph['learning_rate']] = cur_lr
+                self.feed_dict[self.ph['keep_prob']] = fine_dropout
+                self.doOptFine(sess)
                 if step % self.conf.display_step == 0:
+                    self.feed_dict[self.ph['keep_prob']] = 1.
                     self.updateFeedDictFine(self.DBType.Train,distort=True,sess=sess)
                     train_loss = self.computeLoss(sess,[self.cost,mrfcost,basecost])
                     tt1 = self.computePredDist(sess,self.basePred)

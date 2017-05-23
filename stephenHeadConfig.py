@@ -43,7 +43,7 @@ class myconfig(object):
     label_blur_rad = 3 #1.5
     fine_label_blur_rad = 1.5
     n_classes = 5 # 
-    dropout = 0.5 # Dropout, probability to keep units
+    # dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
     nfcfilt = 512
     doBatchNorm = True
