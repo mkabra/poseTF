@@ -411,8 +411,8 @@ def createFineLabelImages(locs,maxlocs,conf,labelT):
     for inum in range(conf.batch_size):
         curlimgs = []
         for ndx in range(conf.n_classes):
-            dx = maxlocs[1,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,0],conf.rescale))
-            dy = maxlocs[0,inum,ndx]-tf.to_int32(old_div(locs[inum,ndx,1],conf.rescale))
+            dx = maxlocs[inum,ndx,0]-tf.to_int32(old_div(locs[inum,ndx,0],conf.rescale))
+            dy = maxlocs[inum,ndx,1]-tf.to_int32(old_div(locs[inum,ndx,1],conf.rescale))
             dd = tf.stack([dy,dx])
             dd = tf.maximum(tf.to_int32(hsz-old_div(tsz,2)),tf.minimum(tf.to_int32(old_div(tsz,2)-hsz-1),dd))
             curlimgs.append(extractFineLabelTensor(labelT,tsz,dd,conf.fine_sz))
