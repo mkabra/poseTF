@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTrain.py" afterPath="$PROJECT_DIR$/PoseTrain.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -106,8 +105,8 @@
           <file leaf-file-name="scratch.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/scratch.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="259">
-                  <caret line="99" column="16" lean-forward="true" selection-start-line="99" selection-start-column="16" selection-end-line="99" selection-end-column="16" />
+                <state relative-caret-position="859">
+                  <caret line="139" column="0" lean-forward="true" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#23#0" expanded="true" />
                   </folding>
@@ -917,7 +916,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495528746300</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="adding jitter to fine training">
+      <created>1496322480762</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1496322480762</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1009,7 +1015,8 @@
     <MESSAGE value="Fine tracking additions" />
     <MESSAGE value="MRF changes for roians data" />
     <MESSAGE value="Mixture Density Networks. Also dropouts added back for MRF training.&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="Mixture Density Networks. Also dropouts added back for MRF training.&#10;" />
+    <MESSAGE value="adding jitter to fine training" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding jitter to fine training" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1338,16 +1345,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scratch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="259">
-          <caret line="99" column="16" lean-forward="true" selection-start-line="99" selection-start-column="16" selection-end-line="99" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="334">
@@ -1480,6 +1477,16 @@
             <element signature="e#50551#51375#0" expanded="false" />
             <element signature="e#50678#51277#0" expanded="false" />
             <element signature="e#51011#51154#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scratch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="859">
+          <caret line="139" column="0" lean-forward="true" selection-start-line="139" selection-start-column="0" selection-end-line="139" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#23#0" expanded="true" />
           </folding>
         </state>
       </provider>
