@@ -397,7 +397,7 @@ class PoseTrain(object):
                                self.conf,doBatch,
                                self.ph['phase_train_fine'])    
         limgs = PoseTools.createFineLabelImages(self.ph['locs'],
-                                                pred,self.conf,labelT)
+                                                locs,self.conf,labelT)
         self.finePred = finepred
         self.fine_labels = limgs
 

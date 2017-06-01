@@ -403,8 +403,8 @@ def extractFineLabelTensor(labelT,sz,dd,fsz):
 
 # In[ ]:
 
-def createFineLabelImages(locs,pred,conf,labelT):
-    maxlocs = argmax2d(pred)*conf.pool_scale
+def createFineLabelImages(locs,maxlocs,conf,labelT):
+    maxlocs /= conf.rescale
     tsz = int(conf.fine_sz + 2*6*math.ceil(conf.fine_label_blur_rad))
     hsz = old_div(conf.fine_sz,2)
     limgs = []
