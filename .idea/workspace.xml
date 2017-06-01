@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTrain.py" afterPath="$PROJECT_DIR$/PoseTrain.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -103,7 +103,7 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="scratch.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/scratch.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="859">
@@ -115,22 +115,12 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1080">
-                  <caret line="83" column="30" lean-forward="false" selection-start-line="83" selection-start-column="30" selection-end-line="83" selection-end-column="30" />
-                  <folding>
-                    <marker date="1496297842856" expanded="true" signature="200:5813" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="1290:1488" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="1956:2373" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="2965:3016" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="3752:3941" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="5188:5381" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="5410:5536" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="5411:5489" ph="..." />
-                    <marker date="1496297842856" expanded="true" signature="5570:5813" ph="..." />
-                  </folding>
+                <state relative-caret-position="435">
+                  <caret line="58" column="16" lean-forward="true" selection-start-line="58" selection-start-column="16" selection-end-line="58" selection-end-column="16" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -139,11 +129,11 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="446">
-                  <caret line="414" column="25" lean-forward="false" selection-start-line="414" selection-start-column="25" selection-end-line="414" selection-end-column="25" />
+                <state relative-caret-position="356">
+                  <caret line="408" column="0" lean-forward="false" selection-start-line="408" selection-start-column="0" selection-end-line="408" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#29081#31375#0" expanded="false" />
@@ -166,11 +156,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseTrain.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseTrain.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseTrain.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="409">
-                  <caret line="191" column="17" lean-forward="false" selection-start-line="191" selection-start-column="17" selection-end-line="191" selection-end-column="17" />
+                  <caret line="191" column="16" lean-forward="false" selection-start-line="191" selection-start-column="16" selection-end-line="191" selection-end-column="16" />
                   <folding>
                     <element signature="e#54#85#0" expanded="true" />
                     <element signature="e#346#365#0" expanded="false" />
@@ -403,8 +393,8 @@
         <option value="$PROJECT_DIR$/PoseMDN.py" />
         <option value="$PROJECT_DIR$/testEdward.py" />
         <option value="$PROJECT_DIR$/scratch.py" />
-        <option value="$PROJECT_DIR$/PoseTrain.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
+        <option value="$PROJECT_DIR$/PoseTrain.py" />
       </list>
     </option>
   </component>
@@ -944,7 +934,14 @@
       <option name="project" value="LOCAL" />
       <updated>1496322945119</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="adding jitter to fine training">
+      <created>1496323043534</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1496323043534</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1239,24 +1236,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1080">
-          <caret line="83" column="30" lean-forward="false" selection-start-line="83" selection-start-column="30" selection-end-line="83" selection-end-column="30" />
-          <folding>
-            <marker date="1496297842856" expanded="true" signature="200:5813" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="1290:1488" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="1956:2373" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="2965:3016" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="3752:3941" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="5188:5381" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="5410:5536" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="5411:5489" ph="..." />
-            <marker date="1496297842856" expanded="true" signature="5570:5813" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/convNetBase.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2625">
@@ -1369,10 +1348,25 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="408" column="0" lean-forward="false" selection-start-line="408" selection-start-column="0" selection-end-line="408" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#29081#31375#0" expanded="false" />
+            <element signature="e#31466#33362#0" expanded="false" />
+            <element signature="e#33409#33832#0" expanded="false" />
+            <element signature="e#33887#34228#0" expanded="false" />
+            <element signature="e#34434#34493#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTrain.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="409">
-          <caret line="191" column="17" lean-forward="false" selection-start-line="191" selection-start-column="17" selection-end-line="191" selection-end-column="17" />
+          <caret line="191" column="16" lean-forward="false" selection-start-line="191" selection-start-column="16" selection-end-line="191" selection-end-column="16" />
           <folding>
             <element signature="e#54#85#0" expanded="true" />
             <element signature="e#346#365#0" expanded="false" />
@@ -1496,18 +1490,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="446">
-          <caret line="414" column="25" lean-forward="false" selection-start-line="414" selection-start-column="25" selection-end-line="414" selection-end-column="25" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#29081#31375#0" expanded="false" />
-            <element signature="e#31466#33362#0" expanded="false" />
-            <element signature="e#33409#33832#0" expanded="false" />
-            <element signature="e#33887#34228#0" expanded="false" />
-            <element signature="e#34434#34493#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="435">
+          <caret line="58" column="16" lean-forward="true" selection-start-line="58" selection-start-column="16" selection-end-line="58" selection-end-column="16" />
+          <folding />
         </state>
       </provider>
     </entry>

@@ -189,7 +189,7 @@ class PoseTrain(object):
         pred = sess.run(self.pred_fine_in,feed_dict=self.feed_dict)
         self.feed_dict[self.ph['fine_pred_in']] = pred
         baseLocs = PoseTools.getBasePredLocs(pred, self.conf)
-        j_sz = 5*self.conf.rescale*self.conf.pool_scale
+        j_sz = 2*self.conf.rescale*self.conf.pool_scale
         baseLocs += np.random.randint(-j_sz,j_sz,baseLocs.shape)
         self.feed_dict[self.ph['fine_pred_locs_in']] = baseLocs
 
