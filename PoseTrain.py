@@ -754,10 +754,10 @@ class PoseTrain(object):
         self.feed_dict[self.ph['phase_train_base']] = trainPhase
         self.feed_dict[self.ph['keep_prob']] = base_dropout
         self.trainType = trainType
-        doBatchNorm = self.conf.doBatchNorm
+        self.doBatchNorm = self.conf.doBatchNorm
         
         with tf.variable_scope('base'):
-            self.createBaseNetwork(doBatchNorm)
+            self.createBaseNetwork(self.doBatchNorm)
         self.cost = tf.nn.l2_loss(self.basePred-self.ph['y'])
         self.openDBs()
         self.createOptimizer()
@@ -826,7 +826,7 @@ class PoseTrain(object):
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
+        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
 # the labels shouldn't be zero because the prediction is an output of
 # exp. And it seems a lot of effort is wasted to make the prediction goto
 # zero rather than match the location.

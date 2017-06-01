@@ -1,3 +1,10 @@
+from __future__ import division
+from __future__ import print_function
+
+from builtins import str
+from builtins import range
+from builtins import object
+
 from PoseTrain import PoseTrain
 import os
 import sys
@@ -7,6 +14,8 @@ import re
 import pickle
 from tensorflow.contrib import slim
 from edward.models import Categorical, Mixture, Normal
+import edward as ed
+import math
 
 class PoseMDN(PoseTrain):
 
@@ -73,30 +82,44 @@ class PoseMDN(PoseTrain):
     def create_network(self):
         K = 100
 
-        pred,layers=super(self.__class__, self).createBaseNetwork(doBatch=True)
-        self.basePred = pred
-        self.baseLayers = layers
+        with tf.variable_scope('base'):
+            super(self.__class__, self).createBaseNetwork(doBatch=True)
 
-        l7layer = layers['conv7']
+        l7layer = self.baseLayers['conv7']
+        n_out = K*self.conf.n_classes*2
         with tf.variable_scope('mdn'):
-        # l7_sh = tf.shape(l7layer)
-            l7layer_re = tf.stop_gradient(tf.reshape(l7layer, [self.conf.batch_size,-1]))
+            # l7_sh = l7layer.get_shape().as_list()
+            # l7_sz = l7_sh[1]*l7_sh[2]*l7_sh[3]
+            # l7layer_re = tf.reshape(l7layer, [self.conf.batch_size, l7_sz])
+            l7layer_re = tf.stop_gradient(slim.flatten(l7layer))
             mdn_hidden1 = slim.fully_connected(l7layer_re, 256)
             mdn_hidden2 = slim.fully_connected(mdn_hidden1, 256)
-            locs = slim.fully_connected(mdn_hidden2, K, activation_fn=None)
-            scales = slim.fully_connected(mdn_hidden2, K, activation_fn=tf.exp)
-            logits = slim.fully_connected(mdn_hidden2, K, activation_fn=None)
+            locs = slim.fully_connected(mdn_hidden2, n_out, activation_fn=None)
+            scales = slim.fully_connected(mdn_hidden2, n_out, activation_fn=tf.exp)
+            logits = slim.fully_connected(mdn_hidden2, n_out, activation_fn=None)
 
-        cat = Categorical(logits=logits)
-        components = [Normal(locs=loc,scales=scale) for loc, scale
-                      in zip(tf.unstack(tf.transpose(locs)),
-                             tf.unstack(tf.transpose(scales)))]
-        y = Mixture(cat=cat, components=components, value=self.ph['locs'])
-
+        locs = tf.reshape(locs, [-1,self.conf.n_classes,2,K])
+        scales = tf.reshape(scales, [-1,self.conf.n_classes,2,K])
+        logits = tf.reshape(logits, [-1,self.conf.n_classes,2,K])
+        y_stack = []
+        loss = None
+        for dim in range(2):
+            for cndx in range(self.conf.n_classes):
+                cat = Categorical(logits=logits[:,cndx,dim,:])
+                components = [Normal(loc=loc,scale=scale) for loc, scale
+                              in zip(tf.unstack(tf.transpose(locs[:,cndx,dim,:])),
+                                     tf.unstack(tf.transpose(scales[:,cndx,dim,:])))]
+                cur_y = Mixture(cat=cat, components=components, value=tf.zeros_like(self.ph['locs'][:,0,0]))
+                curinference = ed.MAP(data={cur_y:self.ph['locs'][:,cndx,dim]})
+                curinference.initialize(var_list=PoseTools.getvars('mdn'))
+                if loss is None:
+                    loss = curinference.loss
+                else:
+                    loss += curinference.loss
         self.mdn_locs = locs
         self.mdn_scales = scales
         self.mdn_logits = logits
-        self.mdn_y = y
+        self.loss = loss
 
 
     def create_ph(self):
@@ -104,13 +127,61 @@ class PoseMDN(PoseTrain):
 
 
     def train(self, restore, trainType):
-        PoseTrain = super(self.__class__,self)
+        self.conf.psz = 4
+
+        mdn_dropout = 0.5
         self.create_ph()
         self.createFeedDict()
-        self.feed_dict[self.ph['keep_prob']] = 0.5
+        self.feed_dict[self.ph['keep_prob']] = mdn_dropout
         self.feed_dict[self.ph['phase_train_base']] = False
         self.trainType = trainType
 
+        self.create_network()
+        self.openDBs()
+        self.createBaseSaver()
 
-        with tf.session() as sess:
-            PoseTrain.restoreBase(sess, restore=True)
+        self.opt = tf.train.AdamOptimizer(learning_rate= self.ph['learning_rate']).minimize(self.loss)
+
+        with tf.Session() as sess:
+            self.createCursors(sess)
+            self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
+            self.restoreBase(sess, restore=True)
+            for dim in range(2):
+                for cls in range(self.conf.n_classes):
+                    inference[dim,cls].initialize(var_list=PoseTools.getvars('mdn'))
+
+            self.initializeRemainingVars(sess)
+            for step in range(1000):
+                self.updateFeedDict(self.DBType.Train, sess=sess,
+                                    distort=True)
+                self.feed_dict[self.ph['keep_prob']] = mdn_dropout
+                ex_count = step * self.conf.batch_size
+                cur_lr = self.conf.base_learning_rate * \
+                         self.conf.gamma ** math.floor(ex_count/ self.conf.step_size)
+                self.feed_dict[self.ph['learning_rate']] = cur_lr
+                sess.run(self.opt,self.feed_dict)
+
+                if step % self.conf.display_step == 0:
+                    self.updateFeedDict(self.DBType.Train, sess=sess,
+                                        distort=True)
+                    self.feed_dict[self.ph['keep_prob']] = 1.
+                    tr_loss = sess.run(loss,feed_dict=self.feed_dict)
+
+                    numrep = int(self.conf.numTest/self.conf.batch_size) + 1
+                    te_loss = 0.
+                    for rep in range(numrep):
+                        self.updateFeedDict(self.DBType.Val, sess=sess,
+                                            distort=False)
+                        self.feed_dict[self.ph['keep_prob']] = 1.
+                        cur_te_loss = sess.run(loss, feed_dict=self.feed_dict)
+                        te_loss += cur_te_loss
+                    te_loss /= numrep
+
+                    print('Train Loss:{:.4f}, Test Loss:{:.4f}'.format(tr_loss,te_loss))
+
+                if step % conf.save_step == 0:
+                    self.save(sess,step)
+
+            print("Optimization finished!")
+            self.save(sess,step)
+        self.closeCursors()

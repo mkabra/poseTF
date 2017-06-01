@@ -17,6 +17,6 @@ elif re.search('Keller-W12', socket.gethostname()):
     bdir = 'D:/mayank/data'
 else:
     sys.path.append('/home/mayank/work/caffe/python')
-    bdir = '/home/mayank/work/poseEstimation/'
+    bdir = '/home/mayank/work/poseTF/'
 
 
