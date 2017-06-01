@@ -81,7 +81,7 @@ def trainfold(view,curfold,curgpu,batch_size):
         conf.batch_size = batch_size
 
     createvaldata = False
-    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly_psz')
 
     ##
 
@@ -126,7 +126,7 @@ def trainfold_fine(view,curfold,curgpu,batch_size):
     if batch_size>0:
         conf.batch_size = batch_size
 
-    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly_psz')
     ##
 
     ext = '_fold_{}'.format(curfold)
@@ -170,7 +170,7 @@ def classifyfold_fine(curfold,curgpu,batch_size,
     if batch_size>0:
         conf.batch_size = batch_size
 
-    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly_psz')
 
     ext = '_fold_{}'.format(curfold)
     conf.valdatafilename = conf.valdatafilename + ext
@@ -352,7 +352,7 @@ def createViewFiles(view):
         conf = sideconf
     else:
         conf = frontconf
-    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly')
+    conf.cachedir = os.path.join(conf.cachedir,'cross_val_fly_psz')
 
     basepath = '/groups/branson/bransonlab/mayank/stephenCV/'
     for curfold in range(5):
@@ -421,7 +421,7 @@ def size_exp_datasets():
     ts = [[],[]]
     locs = [[],[]]
     for view in range(2):
-        orig_train_file_name = os.path.join(conf[view].cachedir, 'cross_val_fly',
+        orig_train_file_name = os.path.join(conf[view].cachedir, 'cross_val_fly_psz',
                                             conf[view].trainfilename + '_fold_0')
         in_tf = tf.python_io.tf_record_iterator(orig_train_file_name + '.tfrecords')
         for string_record in in_tf:

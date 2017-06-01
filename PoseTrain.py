@@ -233,7 +233,7 @@ class PoseTrain(object):
         base_shape = tf.Tensor.get_shape(base_pred).as_list()[1:3]
         mrf_sz = mrf_weights.shape[0:2]
 
-        base_pred = tf.nn.relu(old_div((base_pred+1),2))
+        base_pred = tf.nn.relu((base_pred+1)/2)
         slice_end = [0,0]
         pad = False
         if mrf_sz[0] > base_shape[0]:
@@ -809,7 +809,7 @@ class PoseTrain(object):
             self.closeCursors()
     
     def mrfTrain(self,restore=True,trainType=0):
-        mrf_dropout = 0.5
+        mrf_dropout = 0.1
         self.createPH()
         self.createFeedDict()
         doBatchNorm = self.conf.doBatchNorm
@@ -826,7 +826,7 @@ class PoseTrain(object):
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = tf.maximum(old_div((self.ph['y']+1.),2),0.01)
+        mod_labels = tf.maximum((self.ph['y']+1.)/2,0.01)
 # the labels shouldn't be zero because the prediction is an output of
 # exp. And it seems a lot of effort is wasted to make the prediction goto
 # zero rather than match the location.
