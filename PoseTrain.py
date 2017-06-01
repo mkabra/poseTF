@@ -188,7 +188,10 @@ class PoseTrain(object):
         self.updateFeedDict(dbType,distort,sess)
         pred = sess.run(self.pred_fine_in,feed_dict=self.feed_dict)
         self.feed_dict[self.ph['fine_pred_in']] = pred
-        self.feed_dict[self.ph['fine_pred_locs_in']] = PoseTools.getBasePredLocs(pred,self.conf)
+        baseLocs = PoseTools.getBasePredLocs(pred, self.conf)
+        j_sz = self.conf.rescale*self.conf.pool_scale
+        baseLocs += np.random.randint(-j_sz,j_sz,baseLocs.shape)
+        self.feed_dict[self.ph['fine_pred_locs_in']] = baseLocs
 
 
     # ---------------- NETWORK ---------------------
@@ -845,11 +848,12 @@ class PoseTrain(object):
 #         self.env.begin() as txn,self.valenv.begin() as valtxn,
         with tf.Session() as sess:
             
+            self.createCursors(sess)
+            self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
             self.restoreBase(sess,restore=True)
             self.restoreMRF(sess,restore)
             self.initializeRemainingVars(sess)
-            self.createCursors(sess)
-            
+
             for step in range(self.mrfstartat,self.conf.mrf_training_iters+1):
                 ex_count = step * self.conf.batch_size
                 cur_lr = self.conf.mrf_learning_rate * \
