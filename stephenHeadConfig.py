@@ -175,7 +175,8 @@ class myconfig(object):
     def getexpname(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-6]
+        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-4]
+#        print("!!!!!CHange the experiment name convention!!!")
         return expname
 
     def getexplist(self,L):
