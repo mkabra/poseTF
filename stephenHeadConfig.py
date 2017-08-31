@@ -37,7 +37,7 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/2
+    sel_sz = 512/2/2
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5
@@ -105,6 +105,7 @@ class myconfig(object):
     brange = [-0.2,0.2] 
     crange = [0.7,1.3]
     rrange = 30
+    trange = 0
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
@@ -175,7 +176,8 @@ class myconfig(object):
     def getexpname(self,dirname):
         dirname = os.path.normpath(dirname)
         dir_parts = dirname.split(os.sep)
-        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-6]
+        expname = dir_parts[-6] + "!" + dir_parts[-3] + "!" + dir_parts[-1][-10:-4]
+#        print("!!!!!CHange the experiment name convention!!!")
         return expname
 
     def getexplist(self,L):

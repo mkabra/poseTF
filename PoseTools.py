@@ -201,6 +201,50 @@ def randomlyFlipUD(img,locs):
 
 # In[2]:
 
+def randomlyTranslate(img, locs, conf):
+    if conf.trange < 1:
+        return img, locs
+    num = img.shape[0]
+    rows, cols = img.shape[2:]
+    for ndx in range(num):
+        origLocs = copy.deepcopy(locs[ndx, ...])
+        origIm = copy.deepcopy(img[ndx, ...])
+        sane = False
+        do_move = True
+
+        count = 0
+        while not sane:
+            valid = np.invert(np.isnan(origLocs[:, 0]))
+            dx = np.random.randint(-conf.trange,conf.trange)
+            dy = np.random.randint(-conf.trange,conf.trange)
+            count += 1
+            if count > 5:
+                dx = 0
+                dy = 0
+                sane = True
+                do_move = False
+            ll = copy.deepcopy(origLocs)
+            ll[:,0] += dx
+            ll[:,1] += dy
+            if np.all(ll[valid, :].flatten() > 0) and np.all(ll[valid, 0] <= cols) and np.all(ll[valid, 1] <= rows):
+                sane = True
+            elif do_move:
+                continue
+
+            # else:
+            #                 print 'not sane {}'.format(count)
+            ii = copy.deepcopy(origIm).transpose([1, 2, 0])
+            M = np.float32([[1, 0, dx], [0, 1, dy]])
+            ii = cv2.warpAffine(ii, M, (cols, rows))
+            if ii.ndim == 2:
+                ii = ii[..., np.newaxis]
+            ii = ii.transpose([2, 0, 1])
+        locs[ndx, ...] = ll
+        img[ndx, ...] = ii
+
+    return img, locs
+
+
 def randomlyRotate(img,locs,conf):
     if conf.rrange<1:
         return img,locs

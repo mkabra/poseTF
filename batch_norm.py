@@ -38,9 +38,7 @@ def batch_norm(x, phase_train, scope='batch_norm'):
             batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments')
 
             with tf.variable_scope(tf.get_variable_scope(), reuse=False):
-
                 ema = tf.train.ExponentialMovingAverage(decay=0.9)
-
                 def mean_var_with_update():
                     ema_apply_op = ema.apply([batch_mean, batch_var])
                     with tf.control_dependencies([ema_apply_op]):
@@ -91,17 +89,17 @@ def batch_norm_2D(x, phase_train, scope='batch_norm'):
                 name='gamma', trainable=True)
 
             batch_mean, batch_var = tf.nn.moments(x, [0,], name='moments')
-            ema = tf.train.ExponentialMovingAverage(decay=0.9)
-            
 
-            def mean_var_with_update():
-                ema_apply_op = ema.apply([batch_mean, batch_var])
-                with tf.control_dependencies([ema_apply_op]):
-                    return tf.identity(batch_mean), tf.identity(batch_var)
+            with tf.variable_scope(tf.get_variable_scope(), reuse=False):
+                ema = tf.train.ExponentialMovingAverage(decay=0.9)
+                def mean_var_with_update():
+                    ema_apply_op = ema.apply([batch_mean, batch_var])
+                    with tf.control_dependencies([ema_apply_op]):
+                        return tf.identity(batch_mean), tf.identity(batch_var)
 
-            mean, var = tf.cond(phase_train,
-                                mean_var_with_update,
-                                lambda: (ema.average(batch_mean), ema.average(batch_var)))
+                mean, var = tf.cond(phase_train,
+                                    mean_var_with_update,
+                                    lambda: (ema.average(batch_mean), ema.average(batch_var)))
             normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
         return normed            
 
