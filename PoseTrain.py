@@ -205,6 +205,10 @@ class PoseTrain(object):
         self.basePred = pred
         self.baseLayers = layers
 
+    def createBaseNetwork_vgg(self):
+
+        return None
+
     def createACNetwork(self, doBatch, jointTraining=False):
 
         n_classes = self.conf.n_classes

@@ -1,120 +1,30 @@
-# # ##
-# #
-# import tensorflow as tf
-# import PoseMDN
-# from stephenHeadConfig import conf as conf
-# import PoseTools
-# import edward as ed
-# import math
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import mymap
-# import PoseTrain
-# import os
-# import pickle
-# from tensorflow.contrib import slim
-# from edward.models import Categorical, Mixture, Normal, MultivariateNormalDiag
-#
-# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-# conf.expname = 'head_tf1p3'
-# conf.baseckptname = 'head_tf1p3_Baseckpt'
-# conf.baseoutname =  'head_tf1p3_Base'
-# conf.basedataname =  'head_tf1p3_Basetraindata'
-#
-# tf.reset_default_graph()
-#
-# restore = True
-# trainType = 0
-# conf.batch_size = 16
-# # conf.nfcfilt = 256
-# self = PoseTrain.PoseTrain(conf)
-# self.createPH()
-# self.createFeedDict()
-# self.feed_dict[self.ph['keep_prob']] = 1.
-# self.feed_dict[self.ph['phase_train_base']] = False
-# self.feed_dict[self.ph['learning_rate']] = 0.
-# self.trainType = 0
-#
-# with tf.variable_scope('base'):
-#     self.createBaseNetwork(doBatch=True)
-#
-# self.conf.trange = self.conf.imsz[0] // 25
-#
-# self.openDBs()
-# self.createBaseSaver()
-#
-# sess = tf.InteractiveSession()
-# self.createCursors(sess)
-# self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
-# sess.run(tf.global_variables_initializer())
-# self.restoreBase(sess, restore=True)
-#
-# #
-#
-# train_file = os.path.join(conf.cachedir,
-#                          conf.trainfilename) + '.tfrecords'
-# num_train = 0
-# for t in tf.python_io.tf_record_iterator(train_file):
-#     num_train += 1
-#
-# test_file = os.path.join(conf.cachedir,
-#                          conf.valfilename) + '.tfrecords'
-# num_test = 0
-# for t in tf.python_io.tf_record_iterator(test_file):
-#     num_test += 1
-#
-# train_data = []
-# for ndx in range(num_train//conf.batch_size):
-#     self.updateFeedDict(self.DBType.Train,distort=True,
-#                         sess=sess)
-#     cur_pred = sess.run(self.basePred, self.feed_dict)
-#     train_data.append([cur_pred, self.locs, self.info, self.xs])
-#
-# test_data = []
-# for ndx in range(num_test//conf.batch_size):
-#     self.updateFeedDict(self.DBType.Val,distort=False,
-#                         sess=sess)
-#     cur_pred = sess.run(self.basePred, self.feed_dict)
-#     test_data.append([cur_pred, self.locs, self.info, self.xs])
-#
-# with open(os.path.join(self.conf.cachedir, 'base_predictions'),
-#           'wb') as f:
-#     pickle.dump([train_data,test_data], f, protocol=2)
-#
-
-##
-
 import tensorflow as tf
 import PoseMDN
 from stephenHeadConfig import conf as conf
 import PoseTools
-import edward as ed
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import mymap
 import PoseTrain
 import os
 import pickle
-from tensorflow.contrib import slim
-from edward.models import Categorical, Mixture, Normal, MultivariateNormalDiag
 import copy
 import time
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-ntype = 'conv'
+os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
 conf.mdn_min_sigma = 3.
 conf.mdn_max_sigma = 4.
-if ntype is 'conv':
-    conf.expname = 'head_gridconv'
+conf.save_step = 50
+conf.maxckpt = 100
+net = 'nvgg'
+
+if net is 'vgg':
+    conf.expname = 'head_joint_vgg'
 else:
-    conf.expname = 'head_myloss_unboundlocs'
-
-
-kk=0
-# conf.expname = 'head_train_jitter_sigma3to4_my_bnorm_blocs'
+    # ===========================================
+    conf.expname = 'head_joint_5layers_ssf_lrx50'
+    # ===========================================
 
 tf.reset_default_graph()
 restore = True
@@ -138,47 +48,31 @@ self.ph['base_pred'] = tf.placeholder(
 y_label = self.ph['base_locs'] / self.conf.rescale / self.conf.pool_scale
 self.mdn_label = y_label
 
-if ntype is 'conv':
-    self.create_network(self.ph['base_pred'])
+if net is 'vgg':
+    self.create_network_vgg(self.ph['base_pred'])
 else:
-    self.create_network_grid(self.ph['base_pred'])
+    self.create_network_joint(self.ph['base_pred'])
 
-self.loss = self.my_loss()
-
-# y = self.create_network_ed(self.ph['base_pred'])
-# self.mdn_out = y
-#
-# data_dict = {}
-# for ndx in range(self.conf.n_classes):
-#     data_dict[y[ndx]] = y_label[:, ndx, :]
-# inference = mymap.MAP(data=data_dict)
-# inference.initialize(var_list=PoseTools.getvars('mdn'))
-# self.loss = inference.loss
+self.loss = self.my_loss_joint()
 
 self.openDBs()
 self.create_saver()
 
-# # old settings
-starter_learning_rate = 0.0001
-decay_steps = 5000 * 8 / self.conf.batch_size
+# starter_learning_rate = 0.0001
+# decay_steps = 5000 * 8 / self.conf.batch_size
+# for ssf perturbations ===========================
+starter_learning_rate = 0.005
+decay_steps = 15000 * 8 / self.conf.batch_size
+# =================================================
 learning_rate = tf.train.exponential_decay(
     starter_learning_rate, self.ph['step'], decay_steps, 0.9,
     staircase=True)
-
-# # new settings
-# starter_learning_rate = 0.0001
-# decay_steps = 12000 * 8 / self.conf.batch_size
-# learning_rate = tf.train.exponential_decay(
-#     starter_learning_rate, self.ph['step'], decay_steps, 0.9)
 
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     self.opt = tf.train.AdamOptimizer(
         learning_rate=learning_rate).minimize(self.loss)
 
-# adam_opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
-# self.opt =slim.learning.create_train_op(
-#     self.loss, adam_opt, global_step=step)
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.2
 sess = tf.Session(config=config)
@@ -188,7 +82,6 @@ self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
 self.feed_dict[self.ph['base_locs']] = np.zeros([self.conf.batch_size,
                                                  self.conf.n_classes, 2])
 sess.run(tf.global_variables_initializer())
-# self.initializeRemainingVars(sess)
 
 with open(os.path.join(conf.cachedir, 'base_predictions'),
           'rb') as f:
@@ -204,19 +97,6 @@ for ndx in range(len(test_data)):
     tr_locs = PoseTools.getBasePredLocs(bpred_tr, self.conf)/4
     in_locs = PoseTools.getBasePredLocs(bpred_in, self.conf)/4
 
-    # training blobs test locations
-    # for ex in range(bpred_in.shape[0]):
-    #     for cls in range(bpred_in.shape[-1]):
-    #         cur_sc = bpred_in[ex,:,:,cls]
-    #         inxx = int(in_locs[ex,cls,0])
-    #         inyy = int(in_locs[ex,cls,1])
-    #         trxx = int(tr_locs[ex,cls,0])
-    #         tryy = int(tr_locs[ex,cls,1])
-    #         tr_sc = bpred_tr[ex,(tryy-10):(tryy+10),
-    #                 (trxx - 10):(trxx + 10),cls]
-    #         bpred_out[ex,(inyy-10):(inyy+10),
-    #             (inxx - 10):(inxx + 10),cls ] = tr_sc
-
     # test blobs training locs
     for ex in range(bpred_in.shape[0]):
         for cls in range(bpred_in.shape[-1]):
@@ -230,7 +110,6 @@ for ndx in range(len(test_data)):
             bpred_out[ex,(tryy-10):(tryy+10),
                 (trxx - 10):(trxx + 10),cls ] = test_sc
     test_data[ndx][0] = bpred_out
-# m_test_data = [i for sl in zip(test_data,o_test_data) for i in sl]
 m_test_data = o_test_data
 
 self.restore(sess, restore)
@@ -240,7 +119,7 @@ self.restore(sess, restore)
 self.updateFeedDict(self.DBType.Train, sess=sess,
                     distort=True)
 
-mdn_steps = 50000 * 8 / self.conf.batch_size
+mdn_steps = 100000 * 8 / self.conf.batch_size
 test_step = 0
 self.feed_dict[self.ph['phase_train_mdn']] = True
 train_time = 0
@@ -274,9 +153,9 @@ for cur_step in range(self.mdn_start_at, mdn_steps):
         self.mdn_train_data['train_err'].append(tr_loss)
         self.mdn_train_data['step_no'].append(cur_step)
 
-        mdn_pred = self.mdn_pred(sess)
+        mdn_pred_joint = self.mdn_pred_joint(sess)
         bee = PoseTools.getBaseError(
-            self.feed_dict[self.ph['base_locs']], mdn_pred, conf)
+            self.feed_dict[self.ph['base_locs']], mdn_pred_joint, conf)
         tt1 = np.sqrt(np.sum(np.square(bee), 2))
         nantt1 = np.invert(np.isnan(tt1.flatten()))
         train_dist = tt1.flatten()[nantt1].mean()
@@ -289,9 +168,9 @@ for cur_step in range(self.mdn_start_at, mdn_steps):
         self.feed_dict[self.ph['base_pred']] = cur_bpred
         cur_te_loss = sess.run(self.loss, feed_dict=self.feed_dict)
         val_loss = cur_te_loss
-        mdn_pred = self.mdn_pred(sess)
+        mdn_pred_joint = self.mdn_pred_joint(sess)
         bee = PoseTools.getBaseError(
-            self.feed_dict[self.ph['base_locs']],mdn_pred,conf)
+            self.feed_dict[self.ph['base_locs']],mdn_pred_joint,conf)
         tt1 = np.sqrt(np.sum(np.square(bee), 2))
         nantt1 = np.invert(np.isnan(tt1.flatten()))
         val_dist = tt1.flatten()[nantt1].mean()

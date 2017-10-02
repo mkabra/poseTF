@@ -226,7 +226,9 @@ def randomlyTranslate(img, locs, conf):
             ll = copy.deepcopy(origLocs)
             ll[:,0] += dx
             ll[:,1] += dy
-            if np.all(ll[valid, :].flatten() > 0) and np.all(ll[valid, 0] <= cols) and np.all(ll[valid, 1] <= rows):
+            if np.all(ll[valid, :].flatten() > 0) and \
+                    np.all(ll[valid, 0] <= cols) and \
+                    np.all(ll[valid, 1] <= rows):
                 sane = True
             elif do_move:
                 continue

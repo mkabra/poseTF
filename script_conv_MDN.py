@@ -14,13 +14,15 @@ from tensorflow.contrib import slim
 from edward.models import Categorical, Mixture, Normal, MultivariateNormalDiag
 import copy
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
 conf.mdn_min_sigma = 3.
 conf.mdn_max_sigma = 4.
-conf.expname = 'head_conv_sigma3to4_xavier_lr0p3'
+conf.expname = 'head_conv_myloss'
 
 
 tf.reset_default_graph()
-restore = False
+restore = True
 trainType = 0
 conf.batch_size = 16
 conf.nfcfilt = 256
@@ -38,28 +40,24 @@ self.trainType = trainType
 self.ph['base_pred'] = tf.placeholder(
     tf.float32, [None, 128, 128, self.conf.n_classes])
 
-y = self.create_network(self.ph['base_pred'])
-self.mdn_out = y
+self.create_network_conv(self.ph['base_pred'])
 self.openDBs()
 self.create_saver()
 
 y_label = self.ph['base_locs'] / self.conf.rescale / self.conf.pool_scale
 self.mdn_label = y_label
-data_dict = {}
-for ndx in range(self.conf.n_classes):
-    data_dict[y[ndx]] = y_label[:, ndx, :]
-inference = mymap.MAP(data=data_dict)
-inference.initialize(var_list=PoseTools.getvars('mdn'))
-self.loss = inference.loss
+# data_dict = {}
+# for ndx in range(self.conf.n_classes):
+#     data_dict[y[ndx]] = y_label[:, ndx, :]
+# inference = mymap.MAP(data=data_dict)
+# inference.initialize(var_list=PoseTools.getvars('mdn'))
+self.loss = self.my_loss()
 
 # # old settings
-step = tf.get_variable("step", [],
-                       initializer=tf.constant_initializer(0.0),
-                       trainable=False)
-starter_learning_rate = 0.00003
+starter_learning_rate = 0.0001
 decay_steps = 5000 / 8 * self.conf.batch_size
 learning_rate = tf.train.exponential_decay(
-    starter_learning_rate, step, decay_steps, 0.9,
+    starter_learning_rate, self.ph['step'], decay_steps, 0.9,
     staircase=True)
 
 # # new settings
@@ -71,12 +69,15 @@ learning_rate = tf.train.exponential_decay(
 # self.opt = tf.train.AdamOptimizer(
 #     learning_rate=learning_rate).minimize(self.loss)
 
-adam_opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
-self.opt =slim.learning.create_train_op(
-    self.loss, adam_opt, global_step=step)
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+    self.opt = tf.train.AdamOptimizer(
+        learning_rate=learning_rate).minimize(self.loss)
 
 
-sess = tf.Session()
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+sess = tf.Session(config=config)
 
 self.createCursors(sess)
 self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
@@ -129,15 +130,16 @@ for ndx in range(len(test_data)):
 # m_test_data = [i for sl in zip(test_data,o_test_data) for i in sl]
 m_test_data = o_test_data
 
-##
-
 self.updateFeedDict(self.DBType.Train, sess=sess,
                     distort=True)
 
 mdn_steps = 50000 * 8 / self.conf.batch_size
 test_step = 0
+
+##
+
 for cur_step in range(self.mdn_start_at, mdn_steps):
-    step.assign(cur_step)
+    self.feed_dict[self.ph['step']] = cur_step
     data_ndx = cur_step%len(m_train_data)
     cur_bpred = m_train_data[data_ndx][0]
     pd = 15

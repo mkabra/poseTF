@@ -30,19 +30,25 @@ import h5py
 import errno
 import PoseTools
 import tensorflow as tf
-
-
-# In[ ]:
+import movies
 
 def findLocalDirs(conf):
     L = h5py.File(conf.labelfile,'r')
     localdirs = [u''.join(chr(c) for c in L[jj]) for jj in conf.getexplist(L)]
     seldirs = [True]*len(localdirs)
+    try:
+        rdir = u''.join(chr(c) for c in L['projMacros']['rootdatadir'])
+        localdirs = [s.replace('$rootdatadir', rdir) for s in localdirs]
+    except:
+        None
     L.close()
     return localdirs,seldirs
 
-
-# In[4]:
+def get_trx_files(L,localdirs):
+    trxfiles = [u''.join(chr(c) for c in L[jj]) for jj in L['trxFilesAll'][0]]
+    movdir = [os.path.dirname(a) for a in localdirs]
+    trxfiles = [s.replace('$movdir',m) for (s,m) in zip(trxfiles,movdir)]
+    return trxfiles
 
 def createValdata(conf,force=False):
     
@@ -65,8 +71,6 @@ def createValdata(conf,force=False):
         pickle.dump([isval,localdirs,seldirs],f)
 
 
-# In[6]:
-
 def loadValdata(conf):
     
     outfile = os.path.join(conf.cachedir,conf.valdatafilename)
@@ -78,9 +82,6 @@ def loadValdata(conf):
         else:
             isval, localdirs, seldirs = pickle.load(f)
     return isval,localdirs,seldirs
-
-
-# In[ ]:
 
 def getMovieLists(conf):
     isval,localdirs,seldirs = loadValdata(conf)
@@ -94,21 +95,6 @@ def getMovieLists(conf):
             trainexps.append(localdirs[ndx])
     
     return trainexps, valexps
-
-
-# In[ ]:
-
-# def createDatum(curp,label):
-#     datum = caffe.proto.caffe_pb2.Datum()
-#     datum.channels = curp.shape[0]
-#     datum.height = curp.shape[1]
-#     datum.width = curp.shape[2]
-#     datum.data = curp.tostring()  # or .tobytes() if numpy >= 1.9
-#     datum.label = label
-#     return datum
-
-
-# In[ ]:
 
 def createID(expname,curloc,fnum,imsz):
     for x in curloc: 
@@ -124,9 +110,6 @@ def createID(expname,curloc,fnum,imsz):
            expname,xstr,ystr,fnum)
     return str_id
 
-
-# In[ ]:
-
 def decodeID(keystr):
     vv = re.findall('(\d+):(.*):x(.*):y(.*):t(\d+)',keystr)[0]
     xlocs = [int(x) for x in vv[2].split('_')]
@@ -134,8 +117,6 @@ def decodeID(keystr):
     locs = list(zip(xlocs,ylocs))
     return vv[1],locs,int(vv[4])
 
-
-# In[ ]:
 
 def sanitizelocs(locs):
     nlocs = np.array(locs).astype('float')
@@ -502,7 +483,8 @@ def createTFRecordFromLbl(conf,split=True):
     
     createValdata(conf)
     isval,localdirs,seldirs = loadValdata(conf)
-    
+    trx_files = get_trx_files(L,localdirs)
+
     if split:
         trainfilename =os.path.join(conf.cachedir,conf.trainfilename)
         valfilename =os.path.join(conf.cachedir,conf.valfilename)
@@ -532,7 +514,6 @@ def createTFRecordFromLbl(conf,split=True):
         curdir = os.path.dirname(localdirs[ndx])
         cap = cv2.VideoCapture(localdirs[ndx])
 
-        
         curenv = valenv if isval.count(ndx) and split else env
             
 
@@ -589,11 +570,142 @@ def createTFRecordFromLbl(conf,split=True):
     if split:
         valenv.close()
     print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
-    
-    
 
 
-# In[1]:
+def createTFRecordFromLblWithTrx(conf, split=True):
+    L = h5py.File(conf.labelfile, 'r')
+
+    psz = conf.sel_sz
+
+    createValdata(conf)
+    isval, localdirs, seldirs = loadValdata(conf)
+    trx_files = get_trx_files(L,localdirs)
+
+    if split:
+        trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
+        valfilename = os.path.join(conf.cachedir, conf.valfilename)
+
+        env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+        valenv = tf.python_io.TFRecordWriter(valfilename + '.tfrecords')
+    else:
+        trainfilename = os.path.join(conf.cachedir, conf.fulltrainfilename)
+        env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+        valenv = None
+
+    pts = np.array(L['labeledpos'])
+
+    view = conf.view
+    count = 0
+    valcount = 0
+
+    for ndx, dirname in enumerate(localdirs):
+        if not seldirs[ndx]:
+            continue
+
+        expname = conf.getexpname(dirname)
+        T = sio.loadmat(trx_files[ndx])['trx'][0]
+        n_trx = len(T)
+        curpts = np.array(L[pts[0, ndx]])
+        trx_split = np.random.random(n_trx) < conf.valratio
+
+        for trx_ndx in range(n_trx):
+            frames = np.where(np.invert(np.all(np.isnan(curpts[trx_ndx,:, :, :]), axis=(1, 2))))[0]
+            # cap = cv2.VideoCapture(localdirs[ndx])
+            cap = movies.Movie(localdirs[ndx])
+            cur_trx = T[trx_ndx]
+
+            for fnum in frames:
+
+                if split:
+                    try:
+                        if conf.splitType is 'frame':
+                            curenv = valenv if np.random.random() < conf.valratio \
+                                else env
+                        elif conf.splitType is 'trx':
+                            curenv = valenv if trx_split[trx_ndx] else env
+                        else:
+                            curenv = valenv if isval.count(ndx) else env
+                    except:
+                        curenv = valenv if isval.count(ndx) and split else env
+                else:
+                    curenv = env
+
+                if fnum > cap.get_n_frames():#get(cvc.FRAME_COUNT):
+                    if fnum > cap.get_n_frames: #get(cvc.FRAME_COUNT) + 1:
+                        raise ValueError('Accessing frames beyond ' +
+                                         'the length of the video for' +
+                                         ' {} expid {:d} '.format(expname, ndx) +
+                                         ' at t {:d}'.format(fnum)
+                                         )
+                    continue
+                # framein = myutils.readframe(cap, fnum)
+                framein = cap.get_frame(fnum)[0]
+                if framein.ndim==2:
+                    framein = framein[:,:,np.newaxis]
+                x = int(round(cur_trx['x'][0,fnum]))
+                y = int(round(cur_trx['y'][0,fnum]))
+                theta = cur_trx['theta'][0,fnum]
+
+                assert conf.imsz[0] == conf.imsz[1]
+                framein = get_patch_trx(framein,x,y,theta,conf.imsz[0])
+                framein = framein[:, :, 0:1]
+
+                nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0, 0]
+                pts_st = int(view * nptsPerView)
+                selpts = pts_st + conf.selpts
+                curloc = curpts[fnum, :, selpts]
+                curloc[:, 0] = curloc[:, 0] - cloc[1] - 1  # ugh, the nasty x-y business.
+                curloc[:, 1] = curloc[:, 1] - cloc[0] - 1
+                curloc = curloc.clip(min=0, max=[conf.imsz[1] + 7, conf.imsz[0] + 7])
+
+                rows = framein.shape[0]
+                cols = framein.shape[1]
+                if np.ndim(framein) > 2:
+                    depth = framein.shape[2]
+                else:
+                    depth = 1
+
+                image_raw = framein.tostring()
+                example = tf.train.Example(features=tf.train.Features(feature={
+                    'height': _int64_feature(rows),
+                    'width': _int64_feature(cols),
+                    'depth': _int64_feature(depth),
+                    'locs': _float_feature(curloc.flatten()),
+                    'expndx': _float_feature(ndx),
+                    'ts': _float_feature(fnum),
+                    'image_raw': _bytes_feature(image_raw)}))
+                curenv.write(example.SerializeToString())
+
+                if curenv is valenv:
+                    valcount += 1
+                else:
+                    count += 1
+
+        cap.close()  # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx, len(localdirs), count, valcount))
+    env.close()  # close the database
+    if split:
+        valenv.close()
+    print('%d,%d number of pos examples added to the db and valdb' % (count, valcount))
+
+
+def get_patch_trx(im,x,y,theta,psz):
+    im = im.copy()
+    if im.ndim == 2:
+        pad_im = np.pad(im,[psz,psz],'constant')
+        patch = pad_im[y:y+2*psz,x:x+ 2*psz]
+        rot_mat = cv2.getRotationMatrix2D((psz,psz),theta*180/math.pi+90,1)
+        rpatch = cv2.warpAffine(patch, rot_mat, (2*psz, 2*psz) )
+        return rpatch[psz/2:-psz/2,psz/2:-psz/2]
+    else:
+        pad_im = np.pad(im, [[psz, psz], [psz, psz], [0, 0]], 'constant')
+        patch = pad_im[y:y + 2*psz, x:x + 2*psz,:]
+        rot_mat = cv2.getRotationMatrix2D((psz,psz),theta*180/math.pi+90,1)
+        rpatch = cv2.warpAffine(patch, rot_mat, (2*psz, 2*psz) )
+        if rpatch.ndim == 2:
+            rpatch = rpatch[:,:,np.newaxis]
+        return rpatch[psz/2:-psz/2,psz/2:-psz/2,:]
+
 
 def read_and_decode(filename_queue,conf):
     reader = tf.TFRecordReader()

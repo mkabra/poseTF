@@ -6,13 +6,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+# ind_loss = []
+# for ndx in range(conf.n_classes):
+#     ind_loss.append(inference.ind_loss[y[ndx]])
+# ind_loss = tf.transpose(tf.stack(ind_loss), [1, 0])
+
 ind_loss = []
-for ndx in range(conf.n_classes):
-    ind_loss.append(inference.ind_loss[y[ndx]])
+for cls in range(self.conf.n_classes):
+    ll = tf.nn.softmax(self.mdn_logits[..., cls], dim=1)
+
+    cur_scales = self.mdn_scales[:, :, cls]
+    pp = self.mdn_label[:, cls:cls + 1, :]
+    kk = tf.reduce_sum(tf.square(pp - self.mdn_locs[:, :, cls, :]), axis=2)
+    cur_comp = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
+
+    # cur_comp = [i.prob(self.mdn_label[:,cls,:]) for i in self.components[cls]]
+    # cur_comp = tf.stack(cur_comp)
+    pp = cur_comp * ll
+    cur_loss = tf.log(tf.reduce_sum(pp, axis=1))
+    ind_loss.append(cur_loss)
 ind_loss = tf.transpose(tf.stack(ind_loss), [1, 0])
 
 ## training and test predictions
 
+self.restore(sess,True)
 self.feed_dict[self.ph['phase_train_mdn']] = False
 
 all_tt = []
@@ -58,7 +75,7 @@ with open('mdn_train_preds','wb') as f:
 all_tt = []
 all_locs = []
 all_preds = []
-for train_step in range(len(m_test_data) / 5):
+for train_step in range(len(m_test_data)):
     data_ndx = train_step % len(m_test_data)
     cur_bpred = m_test_data[data_ndx][0]
     self.feed_dict[self.ph['base_locs']] = \
@@ -85,7 +102,7 @@ for train_step in range(len(m_test_data) / 5):
 all_t = np.array(all_tt).reshape([-1, 5])
 all_w = np.array([i[0] for i in all_preds]).reshape([-1, 256, 5])
 all_m = np.array([i[1] for i in all_preds]).reshape([-1, 256, 5, 2])
-all_s = np.array([i[2] for i in all_preds]).reshape([-1, 256, 5, 2])
+all_s = np.array([i[2] for i in all_preds]).reshape([-1, 256, 5, 1])
 all_l = np.array(all_locs).reshape([-1, 5, 2])
 all_loss = np.array([i[4] for i in all_preds]).reshape([-1, 5])
 all_lm = (all_l / 4) % 16
@@ -104,10 +121,11 @@ with open('mdn_train_preds','rb') as f:
     [train_t, train_w, train_m, train_s,
      train_l, train_loss, train_lm] = pickle.load(f)
 
+sel_count = -1
 ##
 
 sel_count += 1
-zz = np.where(all_t.sum(axis=1) > 120)[0]
+zz = np.where(all_t.sum(axis=1) > 0)[0]
 
 kk = np.arange(256) // 4
 xx = kk // 8
@@ -116,7 +134,7 @@ yy = kk % 8
 while True:
     # sel = np.random.choice(zz)
     sel = zz[sel_count]
-    pp = np.where(all_t[sel, :] > 40)[0]
+    pp = np.where(all_t[sel, :] > 0)[0]
     if pp.size > 0:
         break
     else:
@@ -127,7 +145,7 @@ i_ndx = sel % conf.batch_size
 
 cur_l = all_l[sel, sel_cls, :] / 4 // 16
 
-sel_ndx = np.where((xx == (cur_l[0])) & (yy == (cur_l[1])))[0]
+sel_ndx = np.where((xx == (cur_l[1])) & (yy == (cur_l[0])))[0]
 
 diff_m = all_m[sel, sel_ndx, sel_cls, :] * 4 - all_l[sel, sel_cls, :]
 
@@ -143,20 +161,28 @@ for ndx in range(256):
     cur_scale = cur_s[ndx, :].mean().astype('int')
     cur_limg = (PoseTools.createLabelImages(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
     mdn_pred_out += cur_w[ndx] * cur_limg[0, ..., 0]
+maxndx = np.argmax(mdn_pred_out)
+curloc = np.array(np.unravel_index(maxndx,mdn_pred_out.shape))
 
-f, ax = plt.subplots(1, 3)
+f = plt.figure(figsize=[30,12])
+# f, ax = plt.subplots(1, 3)
+ax = []
+for ndx in range(3):
+    ax.append(f.add_subplot(1,3,ndx+1))
 c_im = (m_test_data[d_ndx][0][i_ndx, :, :, sel_cls] + 1) / 2
 c_im = np.clip(c_im, 0, 1)
 i_im = m_test_data[d_ndx][3][i_ndx, 0, :, :]
 ax[0].imshow(c_im, interpolation='nearest')
-ax[0].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4,s = 6)
-ax[0].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r', s = 5)
+ax[0].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4)
+ax[0].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r')
 ax[1].imshow(mdn_pred_out, vmax=1., interpolation='nearest')
-ax[1].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4, s= 5)
-ax[1].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r', s=6)
+ax[1].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4)
+ax[1].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r')
+ax[1].set_title('{}'.format(sel))
 ax[0].set_title('{:.2f},{},{}'.format(c_im.max(), sel_cls, sel))
 ax[2].imshow(i_im, cmap='gray')
 ax[2].scatter(all_l[sel, sel_cls, 0], all_l[sel, sel_cls, 1])
+ax[2].scatter(curloc[1]*4,curloc[0]*4,c='r')
 # ax[2].scatter(all_m[sel,sel_ndx,sel_cls,0]*4, all_m[sel,sel_ndx,sel_cls,1]*4,c='r')
 
 for cur_ax in ax:
@@ -166,7 +192,7 @@ for cur_ax in ax:
     cur_ax.set_xticklabels(np.arange(0, 128, 16));
     cur_ax.set_yticklabels(np.arange(0, 128, 16));
     # Gridlines based on minor ticks
-    cur_ax.grid(which='major', color='k', linestyle='-', linewidth=0.1)
+    cur_ax.grid(which='major', color='w', linestyle='-', linewidth=1)
 
 ##
 print('yes')
@@ -259,6 +285,8 @@ print('yes')
 # vv = [vv[i] for i in kk]
 # gg = [gg[i] for i in kk]
 
+self.restore(sess,True)
+
 d_ndx = sel // conf.batch_size
 i_ndx = sel % conf.batch_size
 cur_in_img = np.tile(m_test_data[d_ndx][0][i_ndx, ...],
@@ -266,15 +294,30 @@ cur_in_img = np.tile(m_test_data[d_ndx][0][i_ndx, ...],
 self.feed_dict[self.ph['base_pred']] = cur_in_img
 self.feed_dict[self.ph['base_locs']] = \
     PoseTools.getBasePredLocs(cur_in_img, self.conf)
-self.feed_dict[self.ph['step']] = 1000
-self.feed_dict[self.ph['phase_train_mdn']] = True
+self.feed_dict[self.ph['step']] = 10000
+self.feed_dict[self.ph['phase_train_mdn']] = False
 
-for count in range(1):
+p_loss, b_ind_loss, b_w, b_m, b_s = \
+    sess.run([self.loss, ind_loss, tf.nn.softmax(self.mdn_logits, dim=1),
+              self.mdn_locs, self.mdn_scales], feed_dict=self.feed_dict)
+
+for count in range(10):
     sess.run(self.opt, self.feed_dict)
+
+self.feed_dict[self.ph['phase_train_mdn']] = False
 
 p_loss, p_ind_loss, p_w, p_m, p_s = \
     sess.run([self.loss, ind_loss, tf.nn.softmax(self.mdn_logits, dim=1),
               self.mdn_locs, self.mdn_scales], feed_dict=self.feed_dict)
+
+mdn_b_img = np.zeros([128, 128])
+for m_ndx in range(b_m.shape[1]):
+    if b_w[0, m_ndx, sel_cls] < 0.02:
+        continue
+    cur_locs = b_m[0:1, m_ndx:m_ndx + 1, sel_cls, :].astype('int')
+    cur_scale = 3
+    curl = (PoseTools.createLabelImages(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
+    mdn_b_img += b_w[0, m_ndx, sel_cls] * curl[0, ..., 0]
 
 mdn_p_img = np.zeros([128, 128])
 for m_ndx in range(p_m.shape[1]):
@@ -292,15 +335,16 @@ c_im = np.clip(c_im, 0, 1)
 i_im = m_test_data[d_ndx][3][i_ndx, 0, :, :]
 ax[0].imshow(c_im, interpolation='nearest')
 ax[0].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4)
-ax[0].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r',s=5)
-ax[1].imshow(mdn_pred_out, vmax=1., interpolation='nearest')
-ax[1].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4,s=5)
-ax[1].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r', s=5)
+ax[0].scatter(all_m[sel, sel_ndx, sel_cls, 0], all_m[sel, sel_ndx, sel_cls, 1], c='r')
 ax[0].set_title('{:.2f},{},{}'.format(c_im.max(), sel_cls, sel))
+ax[1].imshow(mdn_b_img , vmax=1., interpolation='nearest')
+ax[1].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4)
+ax[1].scatter(b_m[0, sel_ndx, sel_cls, 0], b_m[0, sel_ndx, sel_cls, 1], c='r')
 ax[2].imshow(mdn_p_img, vmax=1., interpolation='nearest')
-ax[2].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4, s = 5)
+ax[2].scatter(all_l[sel, sel_cls, 0] / 4, all_l[sel, sel_cls, 1] / 4)
+ax[2].scatter(p_m[0, sel_ndx, sel_cls, 0], p_m[0, sel_ndx, sel_cls, 1], c='r')
 ax[3].imshow(i_im, cmap='gray')
-ax[3].scatter(all_l[sel, sel_cls, 0], all_l[sel, sel_cls, 1],s=5)
+ax[3].scatter(all_l[sel, sel_cls, 0], all_l[sel, sel_cls, 1])
 # ax[2].scatter(all_m[sel,sel_ndx,sel_cls,0]*4, all_m[sel,sel_ndx,sel_cls,1]*4,c='r')
 
 for cur_ax in ax:
@@ -386,3 +430,187 @@ for ndx in range(10):
     mdn_pred_out[:, :, 2] = cur_bpred
     mdn_pred_out = np.clip(mdn_pred_out, 0, 1)
     ax[ndx].imshow(mdn_pred_out, interpolation='nearest')
+
+
+
+
+## ================= whole network =======================
+
+
+
+from stephenHeadConfig import conf as conf
+import os
+import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES']= '0'
+import PoseMDN
+import localSetup
+import PoseTools
+
+conf.cachedir = os.path.join(localSetup.bdir,'cacheHead_MDN')
+conf.expname = 'head_MDN_0p8dropout'
+self = PoseMDN.PoseMDN(conf)
+restore = True
+trainType = 0
+full = True
+
+self.conf.trange = self.conf.imsz[0] // 25
+
+mdn_dropout = 1.
+self.create_ph()
+self.createFeedDict()
+self.feed_dict[self.ph['keep_prob']] = mdn_dropout
+self.feed_dict[self.ph['phase_train_base']] = False
+self.feed_dict[self.ph['phase_train_mdn']] = True
+self.feed_dict[self.ph['learning_rate']] = 0.
+self.trainType = trainType
+
+with tf.variable_scope('base'):
+    super(self.__class__, self).createBaseNetwork(doBatch=True)
+
+if full:
+    l7_layer = self.baseLayers['conv7']
+else:
+    l7_layer = tf.stop_gradient(self.baseLayers['conv7'])
+# if full:
+#     l7_layer = self.basePred
+# else:
+#     l7_layer = tf.stop_gradient(self.basePred)
+self.create_network_joint(l7_layer)
+self.openDBs()
+self.createBaseSaver()
+self.create_saver()
+
+y_label = self.ph['locs'] / self.conf.rescale / self.conf.pool_scale
+self.mdn_label = y_label
+# data_dict = {}
+# for ndx in range(self.conf.n_classes):
+#     data_dict[y[ndx]] = y_label[:,ndx,:]
+# inference = mymap.MAP(data=data_dict)
+# inference.initialize(var_list=PoseTools.getvars('mdn'))
+# self.loss = inference.loss
+self.loss = self.my_loss_joint()
+
+starter_learning_rate = 0.0001
+decay_steps = 12000 * 8 / self.conf.batch_size
+learning_rate = tf.train.exponential_decay(
+    starter_learning_rate, self.ph['step'], decay_steps, 0.9)
+# decay_steps = 5000 / 8 * self.conf.batch_size
+# learning_rate = tf.train.exponential_decay(
+#     starter_learning_rate,self.ph['step'],decay_steps, 0.1,
+#     staircase=True)
+
+mdn_steps = 50000 * 8 / self.conf.batch_size
+
+# self.opt = tf.train.AdamOptimizer(
+#     learning_rate=learning_rate).minimize(self.loss)
+
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+with tf.control_dependencies(update_ops):
+    self.opt = tf.train.AdamOptimizer(
+        learning_rate=learning_rate).minimize(self.loss)
+
+sess = tf.InteractiveSession()
+self.createCursors(sess)
+self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
+self.feed_dict[self.ph['base_locs']] = np.zeros([self.conf.batch_size,
+                                                 self.conf.n_classes, 2])
+sess.run(tf.global_variables_initializer())
+self.restore_base_full(sess,True)
+self.restore(sess, restore)
+l7_shape = self.baseLayers['conv7'].get_shape().as_list()
+l7_shape[0] = self.conf.batch_size
+
+self.feed_dict[self.ph['step']] = 0
+self.feed_dict[self.ph['phase_train_mdn']] = False
+self.feed_dict[self.ph['phase_train_base']] = False
+
+ind_loss = []
+for cls in range(self.conf.n_classes):
+    ll = tf.nn.softmax(self.mdn_logits, dim=1)
+
+    cur_scales = self.mdn_scales[:, :, cls]
+    pp = self.mdn_label[:, cls:cls + 1, :]
+    kk = tf.reduce_sum(tf.square(pp - self.mdn_locs[:, :, cls, :]), axis=2)
+    cur_comp = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
+
+    # cur_comp = [i.prob(self.mdn_label[:,cls,:]) for i in self.components[cls]]
+    # cur_comp = tf.stack(cur_comp)
+    pp = cur_comp * ll
+    cur_loss = tf.log(tf.reduce_sum(pp, axis=1))
+    ind_loss.append(cur_loss)
+ind_loss = tf.transpose(tf.stack(ind_loss), [1, 0])
+
+##
+mod_tt = []
+mod_locs = []
+mod_preds = []
+mod_x = []
+mod_bpred = []
+for step in range(100):
+    self.updateFeedDict(self.DBType.Val, sess=sess, distort=False)
+    self.feed_dict[self.ph['keep_prob']] = 1
+
+    self.restoreBase(sess,True)
+    b_pred = sess.run(self.basePred, feed_dict=self.feed_dict)
+    self.restore_base_full(sess,True)
+    self.restore(sess, restore)
+    cur_te_loss, cur_ind_loss, pred_weights, pred_means, pred_std, raw_pred_weights = \
+        sess.run([self.loss, ind_loss, tf.nn.softmax(self.mdn_logits, dim=1),
+                  self.mdn_locs, self.mdn_scales, self.mdn_logits], feed_dict=self.feed_dict)
+    val_loss = cur_te_loss
+    jj = np.argmax(pred_weights, axis=1)
+    f_pred = np.zeros([conf.batch_size, conf.n_classes, 2])
+    for a_ndx in range(conf.batch_size):
+        for b_ndx in range(conf.n_classes):
+            f_pred[a_ndx, b_ndx, :] = pred_means[a_ndx, jj[a_ndx],
+                                      b_ndx, :]
+
+    tt1 = np.sqrt(((f_pred * 4 - self.feed_dict[self.ph['locs']]) ** 2).sum(axis=2))
+    mod_tt.append(tt1)
+    mod_locs.append(self.feed_dict[self.ph['locs']])
+    mod_preds.append([pred_weights, pred_means, pred_std, val_loss, cur_ind_loss, raw_pred_weights])
+    mod_x.append(self.xs)
+    mod_bpred.append(b_pred)
+    if step % 10 == 0:
+        print('{},{}'.format(step, 10))
+
+mod_t = np.array(mod_tt).reshape([-1, 5])
+mod_w = np.array([i[0] for i in mod_preds]).reshape([-1, 256])
+mod_rw = np.array([i[5] for i in mod_preds]).reshape([-1, 256])
+mod_m = np.array([i[1] for i in mod_preds]).reshape([-1, 256, 5, 2])
+mod_s = np.array([i[2] for i in mod_preds]).reshape([-1, 256, 5])
+mod_l = np.array(mod_locs).reshape([-1, 5, 2])
+mod_loss = np.array([i[4] for i in mod_preds]).reshape([-1, 5])
+mod_lm = (mod_l / 4) % 16
+mod_x = np.array(mod_x).reshape([-1, 512, 512])
+mod_bpred = np.array(mod_bpred).reshape([-1, 128, 128, 5])
+print(np.argmax(mod_t,axis=0))
+print(np.max(mod_t,axis=0))
+blocs = PoseTools.getBasePredLocs(mod_bpred,conf)
+sc = -1
+##
+sc += 1
+kk = np.flipud(np.argsort(mod_t.flatten()))
+[yy,xx] = np.unravel_index(kk[:30],mod_t.shape)
+# kk = np.argsort(mod_t.sum(axis=1))
+# yy = kk[:10]
+print(np.unique(yy))
+
+sel = np.unique(yy)[sc]
+print(mod_t[sel,:])
+
+f = plt.figure(figsize=[12,12])
+ax = f.add_subplot(111)
+plt.imshow(mod_x[sel,:,:],cmap='gray')
+plt.scatter(mod_l[sel,:,0], mod_l[sel,:,1])
+w_sort = np.flipud(np.argsort(mod_w[sel,...]))
+jx = w_sort[0]
+plt.scatter(mod_m[sel,jx,:,0]*4,mod_m[sel,jx,:,1]*4,c='r')
+plt.scatter(blocs[sel,:,0],blocs[sel,:,1],c='g')
+jx1 = w_sort[1]
+plt.scatter(mod_m[sel,jx1,:,0]*4,mod_m[sel,jx1,:,1]*4,c='w')
+tt = mod_m[sel,...]
+zz = np.sqrt(np.sum((tt*4-mod_l[sel,...])**2,axis=(1,2)))
+jx2 = zz.argmin()
+plt.scatter(mod_m[sel,jx2,:,0]*4,mod_m[sel,jx2,:,1]*4,c='c')
+ax.set_title('{}, {:.2f}, {:.2f}, {:.2f}'.format(sel,mod_w[sel,jx],mod_w[sel,jx1],mod_w[sel,jx2]))

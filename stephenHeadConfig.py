@@ -146,6 +146,10 @@ class myconfig(object):
     holdoutratio = 0.8
 
 
+    # ----- MDN params
+    mdn_min_sigma = 3.
+    mdn_max_sigma = 4.
+
     # ----- Save parameters
 
     save_step = 500
