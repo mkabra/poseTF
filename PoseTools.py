@@ -83,7 +83,7 @@ def scaleImages(img,scale,conf):
 
     return xx
 
-def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
+def multiScaleImages(inImg, rescale, scale, conf):
     # only crop the highest res image
 #     if l1_cropsz > 0:
 #         inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
@@ -96,7 +96,7 @@ def multiScaleImages(inImg, rescale, scale, l1_cropsz,conf):
     x2_in = scaleImages(x1_in,scale,conf)
     return x0_in,x1_in,x2_in
 
-def multiScaleLabelImages(inImg, rescale, scale, l1_cropszf):
+def multiScaleLabelImages(inImg, rescale, scale):
     # only crop the highest res image
 #     if l1_cropsz > 0:
 #         inImg_crop = inImg[:,l1_cropsz:-l1_cropsz,l1_cropsz:-l1_cropsz,:]
@@ -108,9 +108,6 @@ def multiScaleLabelImages(inImg, rescale, scale, l1_cropszf):
     x2_in = scaleImages(x1_in,scale)
     return x0_in,x1_in,x2_in
 
-
-# In[ ]:
-
 def adjustContrast(inImg,conf):
     if conf.adjustContrast:
         clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(conf.clahegridsize,conf.clahegridsize))
@@ -121,9 +118,6 @@ def adjustContrast(inImg,conf):
         return simg
     else:
         return inImg
-
-
-# In[ ]:
 
 def processImage(framein,conf):
 #     cropx = (framein.shape[0] - conf.imsz[0])/2
@@ -137,9 +131,6 @@ def processImage(framein,conf):
     x0,x1,x2 = multiScaleImages(framein, conf.rescale,  conf.scale, conf.l1_cropsz)
     return x0,x1,x2
     
-
-
-# In[ ]:
 
 def cropImages(framein,conf):
     cshape = tuple(framein.shape[0:2])
@@ -343,35 +334,35 @@ def randomlyAdjust(img,conf):
 
 # In[ ]:
 
-def blurLabel(imsz,loc,scale,blur_rad):
-    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
-    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
+def blurLabel(im_sz, loc, scale, blur_rad):
+    sz0 = int(math.ceil(old_div(float(im_sz[0]), scale)))
+    sz1 = int(math.ceil(old_div(float(im_sz[1]), scale)))
 
     label = np.zeros([sz0,sz1])
     if not np.isnan(loc[0]):
         label[int(old_div(loc[0],scale)),int(old_div(loc[1],scale))] = 1
 #         blurL = ndimage.gaussian_filter(label,blur_rad)
         ksize = 2*3*blur_rad+1
-        blurL = cv2.GaussianBlur(label,(ksize,ksize),blur_rad)
-        blurL = old_div(blurL,blurL.max())
+        blur_label = cv2.GaussianBlur(label,(ksize,ksize),blur_rad)
+        blur_label = old_div(blur_label,blur_label.max())
     else:
-        blurL = label
-    return blurL
+        blur_label = label
+    return blur_label
 
 
 # In[ ]:
 
-def createLabelImages(locs,imsz,scale,blur_rad):
+def createLabelImages(locs, im_sz, scale, blur_rad):
     n_classes = len(locs[0])
-    sz0 = int(math.ceil(old_div(float(imsz[0]),scale)))
-    sz1 = int(math.ceil(old_div(float(imsz[1]),scale)))
+    sz0 = int(math.ceil(old_div(float(im_sz[0]), scale)))
+    sz1 = int(math.ceil(old_div(float(im_sz[1]), scale)))
 
-    labelims = np.zeros((len(locs),sz0,sz1,n_classes))
-    labelims1 = np.zeros((len(locs),sz0,sz1,n_classes))
-    ksize = 3*blur_rad
-    blurL = np.zeros([2*ksize+1,2*ksize+1])
-    blurL[ksize,ksize] = 1
-    blurL = cv2.GaussianBlur(blurL,(2*ksize+1,2*ksize+1),blur_rad)
+    label_ims = np.zeros((len(locs),sz0,sz1,n_classes))
+    # labelims1 = np.zeros((len(locs),sz0,sz1,n_classes))
+    k_size = 3*blur_rad
+    blurL = np.zeros([2*k_size+1,2*k_size+1])
+    blurL[k_size,k_size] = 1
+    blurL = cv2.GaussianBlur(blurL,(2*k_size+1,2*k_size+1),blur_rad)
     blurL = old_div(blurL,blurL.max())
     for cls in range(n_classes):
         for ndx in range(len(locs)):
@@ -383,15 +374,15 @@ def createLabelImages(locs,imsz,scale,blur_rad):
 #             labelims1[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
             modlocs0 = int(np.round(old_div(locs[ndx][cls][1],scale)))
             modlocs1 = int(np.round(old_div(locs[ndx][cls][0],scale)))
-            l0 = min(sz0,max(0,modlocs0-ksize))
-            r0 = max(0,min(sz0,modlocs0+ksize+1))
-            l1 = min(sz1,max(0,modlocs1-ksize))
-            r1 = max(0,min(sz1,modlocs1+ksize+1))
-            labelims[ndx,l0:r0,l1:r1,cls] = blurL[(l0-modlocs0+ksize):(r0-modlocs0+ksize),
-                                                  (l1-modlocs1+ksize):(r1-modlocs1+ksize)]
+            l0 = min(sz0,max(0,modlocs0-k_size))
+            r0 = max(0,min(sz0,modlocs0+k_size+1))
+            l1 = min(sz1,max(0,modlocs1-k_size))
+            r1 = max(0,min(sz1,modlocs1+k_size+1))
+            label_ims[ndx,l0:r0,l1:r1,cls] = blurL[(l0-modlocs0+k_size):(r0-modlocs0+k_size),
+                                                  (l1-modlocs1+k_size):(r1-modlocs1+k_size)]
  
-    labelims = 2.0*(labelims-0.5)
-    return labelims
+    label_ims = 2.0*(label_ims-0.5)
+    return label_ims
 
 
 # In[ ]:
@@ -406,7 +397,7 @@ def createRegLabelImages(locs,imsz,scale,blur_rad):
     regimsy = np.zeros((len(locs),sz0,sz1,n_classes))
     for cls in range(n_classes):
         for ndx in range(len(locs)):
-            x,y = np.meshgrid(np.arange(sz0),np.arange(sz1))
+            # x,y = np.meshgrid(np.arange(sz0),np.arange(sz1))
             modlocs = [locs[ndx][cls][1],locs[ndx][cls][0]]
             labelims[ndx,:,:,cls] = blurLabel(imsz,modlocs,scale,blur_rad)
             
@@ -652,15 +643,15 @@ def compareConf(curconf,oldconf):
             elif type(getattr(curconf,f)) is list:
                 if type(getattr(oldconf,f)) is list:
                     if not cmp(getattr(curconf,f),getattr(oldconf,f)):
-                        print('%s doesnt match'%(f))
+                        print('%s doesnt match'%f)
                 else:
-                    print('%s doesnt match'%(f))
+                    print('%s doesnt match'%f)
                 
             elif getattr(curconf,f) != getattr(oldconf,f):
-                print('%s doesnt match'%(f))
+                print('%s doesnt match'%f)
                 
         else:
-            print('%s doesnt match'%(f))
+            print('%s doesnt match'%f)
             
 
 
@@ -712,18 +703,18 @@ def initNetwork(self,sess,outtype):
 
 # In[ ]:
 
-def openMovie(moviename):
-    cap = cv2.VideoCapture(moviename)
+def openMovie(movie_name):
+    cap = cv2.VideoCapture(movie_name)
     nframes = int(cap.get(cvc.FRAME_COUNT))
     return cap,nframes
 
 
 # In[ ]:
 
-def createPredImage(predscores,n_classes):
-    im = np.zeros(predscores.shape[0:2]+(3,))
-    im[:,:,0] = np.argmax(predscores,2).astype('float32')/(n_classes)*180
-    im[:,:,1] = (np.max(predscores,2)+1)/2*255
+def createPredImage(pred_scores, n_classes):
+    im = np.zeros(pred_scores.shape[0:2] + (3,))
+    im[:,:,0] = np.argmax(pred_scores, 2).astype('float32') / (n_classes) * 180
+    im[:,:,1] = (np.max(pred_scores, 2) + 1) / 2 * 255
     im[:,:,2] = 255.
     im = np.clip(im,0,255)
     im = im.astype('uint8')
@@ -733,7 +724,7 @@ def createPredImage(predscores,n_classes):
 
 # In[ ]:
 
-def classifyMovie(conf, movie_name, out_type, self, sess, maxframes=-1, startat=0):
+def classifyMovie(conf, movie_name, out_type, self, sess, max_frames=-1, start_at=0):
     # maxframes if specificied reads that many frames
     # start at specifies where to start reading.
 
@@ -741,16 +732,16 @@ def classifyMovie(conf, movie_name, out_type, self, sess, maxframes=-1, startat=
     nframes = int(cap.get(cvc.FRAME_COUNT))
 
     # figure out how many frames to read
-    if maxframes > 0:
-        if maxframes + startat > nframes:
-            nframes = nframes-startat
+    if max_frames > 0:
+        if max_frames + start_at > nframes:
+            nframes = nframes - start_at
         else:
-            nframes = maxframes
+            nframes = max_frames
     else:
-        nframes = nframes-startat
+        nframes = nframes - start_at
 
     # since out of order frame access in python sucks, do it one by one
-    for ndx in range(startat):
+    for _ in range(start_at):
         cap.read()
 
     #pre allocate results
@@ -831,7 +822,7 @@ def classifyMovie(conf, movie_name, out_type, self, sess, maxframes=-1, startat=
     return predLocs,predscores,predmaxscores
 
 
-def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1,startat=0):
+def classify_movie_fine(conf, movie_name, locs, self, sess, max_frames=-1, start_at=0):
     # maxframes if specificied reads that many frames
     # start at specifies where to start reading.
 
@@ -839,16 +830,16 @@ def classify_movie_fine(conf, movie_name, locs, self, sess, maxframes=-1,startat
     nframes = int(cap.get(cvc.FRAME_COUNT))
 
     # figure out how many frames to read
-    if maxframes > 0:
-        if maxframes + startat > nframes:
-            nframes = nframes - startat
+    if max_frames > 0:
+        if max_frames + start_at > nframes:
+            nframes = nframes - start_at
         else:
-            nframes = maxframes
+            nframes = max_frames
     else:
-        nframes = nframes - startat
+        nframes = nframes - start_at
 
     # since out of order frame access in python sucks, do it in order to exhaust it
-    for ndx in range(startat):
+    for ndx in range(start_at):
         cap.read()
 
     # pre allocate results

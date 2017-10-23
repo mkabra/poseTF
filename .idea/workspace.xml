@@ -1,23 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="MDN is working. Adding trx file stuff for Alice">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/FlyMovieFormat.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/movies.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/poseConfig.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/scratch_ssf.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/script_offline_MDN_joint.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ufmf.py" />
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/kabram.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/kabram.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseMDN.py" afterPath="$PROJECT_DIR$/PoseMDN.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTrain.py" afterPath="$PROJECT_DIR$/PoseTrain.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/convNetBase.py" afterPath="$PROJECT_DIR$/convNetBase.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/debugMDN.py" afterPath="$PROJECT_DIR$/debugMDN.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResData.py" afterPath="$PROJECT_DIR$/multiResData.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_conv_MDN.py" afterPath="$PROJECT_DIR$/script_conv_MDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_offline_MDN.py" afterPath="$PROJECT_DIR$/script_offline_MDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/singleViewCV.py" afterPath="$PROJECT_DIR$/singleViewCV.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenHeadConfig.py" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -53,53 +46,31 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="11880">
-                  <caret line="1073" column="0" lean-forward="true" selection-start-line="1073" selection-start-column="0" selection-end-line="1073" selection-end-column="0" />
+                <state relative-caret-position="340">
+                  <caret line="721" column="0" lean-forward="false" selection-start-line="713" selection-start-column="0" selection-end-line="721" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
-                    <element signature="e#30540#32834#0" expanded="false" />
-                    <element signature="e#32925#34821#0" expanded="false" />
-                    <element signature="e#34868#35291#0" expanded="false" />
-                    <element signature="e#35346#35687#0" expanded="false" />
-                    <element signature="e#35893#35952#0" expanded="false" />
-                    <marker date="1506440007300" expanded="false" signature="33655:34482" ph="..." />
+                    <element signature="e#32974#34870#0" expanded="false" />
+                    <element signature="e#34917#35340#0" expanded="false" />
+                    <element signature="e#35395#35736#0" expanded="false" />
+                    <element signature="e#35942#36001#0" expanded="false" />
+                    <marker date="1507052433956" expanded="false" signature="33704:34531" ph="..." />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/multiResData.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="405">
-                  <caret line="652" column="6" lean-forward="false" selection-start-line="652" selection-start-column="6" selection-end-line="652" selection-end-column="6" />
+                <state relative-caret-position="150">
+                  <caret line="574" column="22" lean-forward="true" selection-start-line="574" selection-start-column="22" selection-end-line="574" selection-end-column="22" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                     <element signature="e#39#54#0" expanded="false" />
-                    <element signature="e#3486#3494#0" expanded="false" />
+                    <element signature="e#3575#3583#0" expanded="false" />
+                    <element signature="e#13572#16302#0" expanded="false" />
                   </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="movies.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/movies.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="558">
-                  <caret line="265" column="9" lean-forward="true" selection-start-line="265" selection-start-column="9" selection-end-line="265" selection-end-column="9" />
-                  <folding>
-                    <element signature="e#30#42#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1000">
-                  <caret line="191" column="0" lean-forward="false" selection-start-line="186" selection-start-column="0" selection-end-line="191" selection-end-column="0" />
-                  <folding />
                 </state>
               </provider>
             </entry>
@@ -107,10 +78,22 @@
           <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1119">
-                  <caret line="401" column="0" lean-forward="true" selection-start-line="401" selection-start-column="0" selection-end-line="401" selection-end-column="0" />
+                <state relative-caret-position="-2417">
+                  <caret line="228" column="0" lean-forward="true" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#16#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="scratch_6.py" pinned="false" current-in-tab="false">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="459">
+                  <caret line="27" column="16" lean-forward="true" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
+                  <folding>
+                    <element signature="e#0#42#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -119,12 +102,20 @@
           <file leaf-file-name="PoseTrain.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTrain.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="425">
-                  <caret line="93" column="24" lean-forward="true" selection-start-line="93" selection-start-column="24" selection-end-line="93" selection-end-column="24" />
+                <state relative-caret-position="102">
+                  <caret line="727" column="27" lean-forward="false" selection-start-line="727" selection-start-column="27" selection-end-line="727" selection-end-column="27" />
                   <folding>
-                    <element signature="e#22413#24293#0" expanded="false" />
-                    <element signature="e#24345#27056#0" expanded="false" />
-                    <element signature="e#27109#29058#0" expanded="false" />
+                    <element signature="e#4105#4168#0" expanded="false" />
+                    <element signature="e#4227#5582#0" expanded="false" />
+                    <element signature="e#10033#13914#0" expanded="false" />
+                    <element signature="e#13920#14001#0" expanded="false" />
+                    <element signature="e#16749#18902#0" expanded="false" />
+                    <element signature="e#20087#21857#0" expanded="false" />
+                    <element signature="e#21908#23788#0" expanded="false" />
+                    <element signature="e#23840#26551#0" expanded="false" />
+                    <element signature="e#26604#28553#0" expanded="false" />
+                    <element signature="e#40306#43819#0" expanded="false" />
+                    <element signature="e#43898#48302#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -133,8 +124,8 @@
           <file leaf-file-name="PoseMDN.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="849">
-                  <caret line="1133" column="11" lean-forward="false" selection-start-line="1133" selection-start-column="11" selection-end-line="1133" selection-end-column="11" />
+                <state relative-caret-position="1154">
+                  <caret line="978" column="0" lean-forward="true" selection-start-line="966" selection-start-column="0" selection-end-line="978" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#6912#8518#0" expanded="false" />
@@ -148,7 +139,6 @@
                     <element signature="e#47196#47731#0" expanded="false" />
                     <element signature="e#47767#48141#0" expanded="false" />
                     <element signature="e#48180#49267#0" expanded="false" />
-                    <element signature="e#49312#50390#0" expanded="false" />
                     <element signature="e#50442#57742#0" expanded="false" />
                     <element signature="e#63120#65955#0" expanded="false" />
                     <element signature="e#66015#71922#0" expanded="false" />
@@ -158,11 +148,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="debugMDN.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="debugMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/debugMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1054">
-                  <caret line="601" column="25" lean-forward="true" selection-start-line="601" selection-start-column="25" selection-end-line="601" selection-end-column="25" />
+                <state relative-caret-position="1173">
+                  <caret line="699" column="11" lean-forward="true" selection-start-line="699" selection-start-column="11" selection-end-line="699" selection-end-column="11" />
                   <folding />
                 </state>
               </provider>
@@ -206,21 +196,37 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1850">
-                  <caret line="176" column="12" lean-forward="false" selection-start-line="176" selection-start-column="12" selection-end-line="176" selection-end-column="12" />
+                <state relative-caret-position="119">
+                  <caret line="129" column="19" lean-forward="true" selection-start-line="129" selection-start-column="19" selection-end-line="129" selection-end-column="19" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="convNetBase.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="convNetBase.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/convNetBase.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2326">
-                  <caret line="258" column="0" lean-forward="false" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
+                <state relative-caret-position="765">
+                  <caret line="146" column="52" lean-forward="false" selection-start-line="146" selection-start-column="52" selection-end-line="146" selection-end-column="52" />
+                  <folding>
+                    <element signature="e#1248#1279#0" expanded="false" />
+                    <element signature="e#11869#14972#0" expanded="false" />
+                    <element signature="e#15050#19511#0" expanded="false" />
+                    <element signature="e#19588#20446#0" expanded="false" />
+                    <element signature="e#20495#20634#0" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="748">
+                  <caret line="177" column="0" lean-forward="false" selection-start-line="177" selection-start-column="0" selection-end-line="177" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -260,9 +266,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>psz</find>
-      <find>sanitiz</find>
-      <find>adju</find>
       <find>mean</find>
       <find>shape_psz</find>
       <find>v_loss</find>
@@ -289,7 +292,10 @@
       <find>mdn_out</find>
       <find>mdn_pred</find>
       <find>wx</find>
+      <find>multiscaleimages</find>
+      <find>acsaver</find>
       <find>params</find>
+      <find>hsv</find>
     </findStrings>
     <replaceStrings>
       <replace>localdirs</replace>
@@ -350,22 +356,22 @@
         <option value="$PROJECT_DIR$/mymap.py" />
         <option value="$PROJECT_DIR$/batch_norm.py" />
         <option value="$PROJECT_DIR$/test_bnorm.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_4.py" />
         <option value="$PROJECT_DIR$/script_conv_MDN.py" />
         <option value="$PROJECT_DIR$/script_offline_MDN.py" />
-        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
-        <option value="$PROJECT_DIR$/PoseTrain.py" />
-        <option value="$PROJECT_DIR$/convNetBase.py" />
-        <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/script_offline_MDN_joint.py" />
         <option value="$PROJECT_DIR$/scratch_ssf.py" />
-        <option value="$PROJECT_DIR$/debugMDN.py" />
-        <option value="$PROJECT_DIR$/PoseMDN.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
         <option value="$PROJECT_DIR$/movies.py" />
+        <option value="$PROJECT_DIR$/PoseTools.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+        <option value="$PROJECT_DIR$/PoseTrain.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
+        <option value="$PROJECT_DIR$/convNetBase.py" />
+        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
+        <option value="$PROJECT_DIR$/PoseMDN.py" />
+        <option value="$PROJECT_DIR$/debugMDN.py" />
       </list>
     </option>
   </component>
@@ -846,7 +852,14 @@
       <option name="project" value="LOCAL" />
       <updated>1504170090981</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="MDN is working. Adding trx file stuff for Alice">
+      <created>1506978565573</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1506978565573</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -973,8 +986,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/contrib/distributions/python/ops/mixture.py" />
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/math_ops.py" />
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/ops.py" />
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/edward/inferences/variational_inference.py" />
     <entry file="file://$PROJECT_DIR$/script_offline_MDN.py">
@@ -1023,7 +1034,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
     <entry file="file://$PROJECT_DIR$/batch_norm.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="342">
@@ -1064,13 +1074,6 @@
         <state relative-caret-position="405">
           <caret line="77" column="7" lean-forward="false" selection-start-line="77" selection-start-column="7" selection-end-line="77" selection-end-column="7" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cellCode.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="697">
-          <caret line="116" column="8" lean-forward="true" selection-start-line="116" selection-start-column="8" selection-end-line="116" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -1123,14 +1126,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/convNetBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2326">
-          <caret line="258" column="0" lean-forward="false" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/script_offline_MDN_joint.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1564">
@@ -1141,92 +1136,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debugMDN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1054">
-          <caret line="601" column="25" lean-forward="true" selection-start-line="601" selection-start-column="25" selection-end-line="601" selection-end-column="25" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scratch_ssf.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
           <caret line="23" column="5" lean-forward="true" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
           <folding>
             <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1000">
-          <caret line="191" column="0" lean-forward="false" selection-start-line="186" selection-start-column="0" selection-end-line="191" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTrain.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="425">
-          <caret line="93" column="24" lean-forward="true" selection-start-line="93" selection-start-column="24" selection-end-line="93" selection-end-column="24" />
-          <folding>
-            <element signature="e#22413#24293#0" expanded="false" />
-            <element signature="e#24345#27056#0" expanded="false" />
-            <element signature="e#27109#29058#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseMDN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="849">
-          <caret line="1133" column="11" lean-forward="false" selection-start-line="1133" selection-start-column="11" selection-end-line="1133" selection-end-column="11" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#6912#8518#0" expanded="false" />
-            <element signature="e#8582#13839#0" expanded="false" />
-            <element signature="e#13893#18054#0" expanded="false" />
-            <element signature="e#18110#21459#0" expanded="false" />
-            <element signature="e#21510#27298#0" expanded="false" />
-            <element signature="e#37854#45771#0" expanded="false" />
-            <element signature="e#45805#46496#0" expanded="false" />
-            <element signature="e#46535#47142#0" expanded="false" />
-            <element signature="e#47196#47731#0" expanded="false" />
-            <element signature="e#47767#48141#0" expanded="false" />
-            <element signature="e#48180#49267#0" expanded="false" />
-            <element signature="e#49312#50390#0" expanded="false" />
-            <element signature="e#50442#57742#0" expanded="false" />
-            <element signature="e#63120#65955#0" expanded="false" />
-            <element signature="e#66015#71922#0" expanded="false" />
-            <element signature="e#71963#73830#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1119">
-          <caret line="401" column="0" lean-forward="true" selection-start-line="401" selection-start-column="0" selection-end-line="401" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11880">
-          <caret line="1073" column="0" lean-forward="true" selection-start-line="1073" selection-start-column="0" selection-end-line="1073" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#30540#32834#0" expanded="false" />
-            <element signature="e#32925#34821#0" expanded="false" />
-            <element signature="e#34868#35291#0" expanded="false" />
-            <element signature="e#35346#35687#0" expanded="false" />
-            <element signature="e#35893#35952#0" expanded="false" />
-            <marker date="1506440007300" expanded="false" signature="33655:34482" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1243,21 +1158,158 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/poseConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1850">
-          <caret line="176" column="12" lean-forward="false" selection-start-line="176" selection-start-column="12" selection-end-line="176" selection-end-column="12" />
+        <state relative-caret-position="119">
+          <caret line="129" column="19" lean-forward="true" selection-start-line="129" selection-start-column="19" selection-end-line="129" selection-end-column="19" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/singleViewCV.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="935">
+          <caret line="626" column="20" lean-forward="true" selection-start-line="626" selection-start-column="20" selection-end-line="626" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="748">
+          <caret line="177" column="0" lean-forward="false" selection-start-line="177" selection-start-column="0" selection-end-line="177" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/convNetBase.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="765">
+          <caret line="146" column="52" lean-forward="false" selection-start-line="146" selection-start-column="52" selection-end-line="146" selection-end-column="52" />
+          <folding>
+            <element signature="e#1248#1279#0" expanded="false" />
+            <element signature="e#11869#14972#0" expanded="false" />
+            <element signature="e#15050#19511#0" expanded="false" />
+            <element signature="e#19588#20446#0" expanded="false" />
+            <element signature="e#20495#20634#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cellCode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="936" column="27" lean-forward="true" selection-start-line="936" selection-start-column="27" selection-end-line="936" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2417">
+          <caret line="228" column="0" lean-forward="true" selection-start-line="228" selection-start-column="0" selection-end-line="228" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="27" column="16" lean-forward="true" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
+          <folding>
+            <element signature="e#0#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTrain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="727" column="27" lean-forward="false" selection-start-line="727" selection-start-column="27" selection-end-line="727" selection-end-column="27" />
+          <folding>
+            <element signature="e#4105#4168#0" expanded="false" />
+            <element signature="e#4227#5582#0" expanded="false" />
+            <element signature="e#10033#13914#0" expanded="false" />
+            <element signature="e#13920#14001#0" expanded="false" />
+            <element signature="e#16749#18902#0" expanded="false" />
+            <element signature="e#20087#21857#0" expanded="false" />
+            <element signature="e#21908#23788#0" expanded="false" />
+            <element signature="e#23840#26551#0" expanded="false" />
+            <element signature="e#26604#28553#0" expanded="false" />
+            <element signature="e#40306#43819#0" expanded="false" />
+            <element signature="e#43898#48302#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cellCodeHead.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="133">
+          <caret line="2089" column="0" lean-forward="true" selection-start-line="2089" selection-start-column="0" selection-end-line="2089" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="652" column="6" lean-forward="false" selection-start-line="652" selection-start-column="6" selection-end-line="652" selection-end-column="6" />
+        <state relative-caret-position="150">
+          <caret line="574" column="22" lean-forward="true" selection-start-line="574" selection-start-column="22" selection-end-line="574" selection-end-column="22" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
             <element signature="e#39#54#0" expanded="false" />
-            <element signature="e#3486#3494#0" expanded="false" />
+            <element signature="e#3575#3583#0" expanded="false" />
+            <element signature="e#13572#16302#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="721" column="0" lean-forward="false" selection-start-line="713" selection-start-column="0" selection-end-line="721" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#32974#34870#0" expanded="false" />
+            <element signature="e#34917#35340#0" expanded="false" />
+            <element signature="e#35395#35736#0" expanded="false" />
+            <element signature="e#35942#36001#0" expanded="false" />
+            <marker date="1507052433956" expanded="false" signature="33704:34531" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1154">
+          <caret line="978" column="0" lean-forward="true" selection-start-line="966" selection-start-column="0" selection-end-line="978" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#6912#8518#0" expanded="false" />
+            <element signature="e#8582#13839#0" expanded="false" />
+            <element signature="e#13893#18054#0" expanded="false" />
+            <element signature="e#18110#21459#0" expanded="false" />
+            <element signature="e#21510#27298#0" expanded="false" />
+            <element signature="e#37854#45771#0" expanded="false" />
+            <element signature="e#45805#46496#0" expanded="false" />
+            <element signature="e#46535#47142#0" expanded="false" />
+            <element signature="e#47196#47731#0" expanded="false" />
+            <element signature="e#47767#48141#0" expanded="false" />
+            <element signature="e#48180#49267#0" expanded="false" />
+            <element signature="e#50442#57742#0" expanded="false" />
+            <element signature="e#63120#65955#0" expanded="false" />
+            <element signature="e#66015#71922#0" expanded="false" />
+            <element signature="e#71963#73830#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debugMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1173">
+          <caret line="699" column="11" lean-forward="true" selection-start-line="699" selection-start-column="11" selection-end-line="699" selection-end-column="11" />
+          <folding />
         </state>
       </provider>
     </entry>

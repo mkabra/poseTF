@@ -12,10 +12,9 @@ import localSetup
 import numpy as np
 
 
-class myconfig(object):
+class config(object):
     # ----- Names
 
-    expname = 'head'
     baseName = 'Base'
     fineName = 'Fine'  # _resize'
     mrfName = 'MRF'  # _identity'
@@ -37,12 +36,9 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512 / 2 / 2
-    psz = sel_sz / (scale ** (numscale - 1)) / rescale / pool_scale
     dist2pos = 5
     label_blur_rad = 3  # 1.5
     fine_label_blur_rad = 1.5
-    n_classes = 5  #
     # dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
     nfcfilt = 512
@@ -133,46 +129,72 @@ class myconfig(object):
 
     save_step = 500
     maxckpt = 20
-    # def __init__(self):
-    #     self.baseoutname = lambda : self.expname + self.baseName
-    #     self.baseckptname = lambda: self.baseoutname() + 'ckpt'
-    #     self.basedataname = lambda: self.baseoutname() + 'traindata'
-    baseoutname = expname + baseName
-    baseckptname = baseoutname + 'ckpt'
-    basedataname = baseoutname + 'traindata'
-    fineoutname = expname + fineName
-    mrfoutname = expname + mrfName
-    evaloutname = expname + evalName
-    genoutname = expname + genName
-    baseregoutname = expname + regName
-    baseregckptname = baseregoutname + 'ckpt'
-    fineckptname = fineoutname + 'ckpt'
-    mrfckptname = mrfoutname + 'ckpt'
-    evalckptname = evaloutname + 'ckpt'
-    genckptname = genoutname + 'ckpt'
-    baseregdataname = baseregoutname + 'traindata'
-    finedataname = fineoutname + 'traindata'
-    mrfdataname = mrfoutname + 'traindata'
-    evaldataname = evaloutname + 'traindata'
-    gendataname = genoutname + 'traindata'
+    def set_exp_name(self, exp_name):
+        self.expname = exp_name
+        self.baseoutname = self.expname + self.baseName
+        self.baseckptname = self.baseoutname + 'ckpt'
+        self.basedataname = self.baseoutname + 'traindata'
+        self.fineoutname = self.expname + self.fineName
+        self.fineckptname = self.fineoutname + 'ckpt'
+        self.finedataname = self.fineoutname + 'traindata'
+        self.mrfoutname = self.expname + self.mrfName
+        self.mrfckptname = self.mrfoutname + 'ckpt'
+        self.mrfdataname = self.mrfoutname + 'traindata'
+        # self.evaloutname = self.expname + evalName
+        # self.evalckptname = self.evaloutname + 'ckpt'
+        # self.evaldataname = self.evaloutname + 'traindata'
+        # self.genoutname = self.expname + genName
+        # self.genckptname = self.genoutname + 'ckpt'
+        # self.gendataname = self.genoutname + 'traindata'
+        self.baseregoutname = self.expname + self.regName
+        self.baseregckptname = self.baseregoutname + 'ckpt'
+        self.baseregdataname = self.baseregoutname + 'traindata'
 
-    mrf_psz = 54
+    # baseoutname = expname + baseName
+    # baseckptname = baseoutname + 'ckpt'
+    # basedataname = baseoutname + 'traindata'
+    # fineoutname = expname + fineName
+    # mrfoutname = expname + mrfName
+    # evaloutname = expname + evalName
+    # genoutname = expname + genName
+    # baseregoutname = expname + regName
+    # baseregckptname = baseregoutname + 'ckpt'
+    # fineckptname = fineoutname + 'ckpt'
+    # mrfckptname = mrfoutname + 'ckpt'
+    # evalckptname = evaloutname + 'ckpt'
+    # genckptname = genoutname + 'ckpt'
+    # baseregdataname = baseregoutname + 'traindata'
+    # finedataname = fineoutname + 'traindata'
+    # mrfdataname = mrfoutname + 'traindata'
+    # evaldataname = evaloutname + 'traindata'
+    # gendataname = genoutname + 'traindata'
 
 
-aliceConfig = myconfig()
-aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cacheAlice')
+
+aliceConfig = config()
+aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice')
 aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
-def aliceexpname(dirname):
+def alice_exp_name(dirname):
     return os.path.basename(os.path.dirname(dirname))
 
-def alicegetexplist(L):
+def alice_get_exp_list(L):
     return L['movieFilesAll'][0,:]
 
-aliceConfig.getexpname = aliceexpname
-aliceConfig.getexplist = alicegetexplist
+aliceConfig.getexpname = alice_exp_name
+aliceConfig.getexplist = alice_get_exp_list
 aliceConfig.has_trx_file = True
 aliceConfig.view = 0
 aliceConfig.imsz = (180, 180)
 aliceConfig.selpts = np.arange(0, 17)
 aliceConfig.imgDim = 1
-
+aliceConfig.n_classes = len(aliceConfig.selpts)
+aliceConfig.splitType = 'frame'
+aliceConfig.set_exp_name('aliceFly')
+aliceConfig.trange = 20
+aliceConfig.nfcfilt = 128
+aliceConfig.sel_sz = 144
+aliceConfig.num_pools = 1
+aliceConfig.dilation_rate = 2
+aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
+aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
+aliceConfig.valratio = 0.15

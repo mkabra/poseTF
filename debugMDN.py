@@ -447,7 +447,7 @@ import localSetup
 import PoseTools
 
 conf.cachedir = os.path.join(localSetup.bdir,'cacheHead_MDN')
-conf.expname = 'head_MDN_0p8dropout'
+conf.expname = 'head_MDN_0p9dropout'
 self = PoseMDN.PoseMDN(conf)
 restore = True
 trainType = 0
@@ -614,3 +614,94 @@ zz = np.sqrt(np.sum((tt*4-mod_l[sel,...])**2,axis=(1,2)))
 jx2 = zz.argmin()
 plt.scatter(mod_m[sel,jx2,:,0]*4,mod_m[sel,jx2,:,1]*4,c='c')
 ax.set_title('{}, {:.2f}, {:.2f}, {:.2f}'.format(sel,mod_w[sel,jx],mod_w[sel,jx1],mod_w[sel,jx2]))
+
+##
+import cv2
+def createPredImage(pred_scores, n_classes):
+    im = np.zeros(pred_scores.shape[0:2] + (3,))
+    im[:,:,0] = np.argmax(pred_scores, 2).astype('float32') / (n_classes) * 180
+    im[:,:,1] = (np.max(pred_scores, 2) + 1) / 2 * 255
+    im[:,:,2] = 255.
+    im = np.clip(im,0,255)
+    im = im.astype('uint8')
+    return cv2.cvtColor(im,cv2.COLOR_HSV2RGB)
+
+
+sel = 16
+ll = np.where(mod_w[sel,:]>0.2)[0]
+f = plt.figure()
+ax = f.add_subplot(111)
+ax.imshow(mod_x[sel,:,:],cmap='gray',vmax=255)
+for curl in ll:
+    ax.scatter(mod_m[sel,curl,:,0]*4,mod_m[sel,curl,:,1]*4)
+
+plt.figure()
+from scipy import misc
+pimg = createPredImage(mod_bpred[sel,...],5)
+pimg = misc.imresize(pimg,4.)
+hh1 = cv2.cvtColor(pimg,cv2.COLOR_RGB2HSV)
+hh = cv2.cvtColor(np.tile(mod_x[sel,:,:,np.newaxis],[1,1,3]),cv2.COLOR_RGB2HSV)
+kk = hh
+kk[:,:,0] = hh1[:,:,0]
+kk[:,:,1] = np.maximum(hh1[:,:,1],hh[:,:,1])
+rr = cv2.cvtColor(kk,cv2.COLOR_HSV2RGB)
+plt.imshow(rr)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/part_detector_hmap.png',dpi=240)
+plt.figure()
+plt.imshow(mod_x[sel,:,:],cmap='gray',vmax=255)
+plt.scatter(mod_l[sel,:,0],mod_l[sel,:,1],c='r',vmax=255)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/orig_img.png',dpi=240)
+
+##
+f = plt.figure()
+ax = f.add_subplot(111)
+ll = np.zeros([800,256,6,2])
+ll[:,:,0,:] = mod_m[:,:,0,:]
+ll[:,:,1,:] = mod_m[:,:,2,:]
+ll[:,:,2,:] = mod_m[:,:,3,:]
+ll[:,:,3,:] = mod_m[:,:,1,:]
+ll[:,:,4,:] = mod_m[:,:,4,:]
+ll[:,:,5,:] = mod_m[:,:,0,:]
+for x in range(8):
+    for y in range(8):
+        f.clf()
+        ax = f.add_subplot(111)
+        cur_idx = np.arange(4*(8*y+x),4*(8*y+x+1))
+        ax.plot(ll[sel,cur_idx,:,0].T*4,ll[sel,cur_idx,:,1].T*4,c='r')
+        sz = 208
+        x_s = 64*x-sz; x_e = 64*x+sz
+        y_s = 64*y-sz; y_e = 64*y+sz
+        ax.plot([x_s,x_s,x_e,x_e,x_s],[y_s,y_e,y_e,y_s,y_s],c='r')
+        ax.imshow(mod_x[sel,...],cmap='gray',vmax=255)
+        f.savefig('/groups/branson/home/kabram/temp/mdn_plots/ex_x{}_y{}.jpg'.format(x,y),
+                  dpi=240)
+        # ax.set_xlim([0,512]); ax.set_ylim([0,512])
+
+
+
+##
+
+mdn_pred_out = np.zeros([128, 128, conf.n_classes])
+for cls in range(conf.n_classes):
+    for ndx in range(pred_means.shape[1]):
+        if mod_w[sel,ndx] < 0.02:
+            continue
+        cur_locs = mod_m[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
+        # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
+        cur_scale = mod_s[sel, ndx, cls].astype('int')
+        curl = (PoseTools.createLabelImages(cur_locs, [128,128], 1, cur_scale) + 1) / 2
+        mdn_pred_out[:, :, cls] += mod_w[sel, ndx] * curl[0, ..., 0]
+
+mdn_pred_out = mdn_pred_out*2-1
+plt.figure()
+from scipy import misc
+pimg = createPredImage(mdn_pred_out,5)
+pimg = misc.imresize(pimg,4.)
+hh1 = cv2.cvtColor(pimg,cv2.COLOR_RGB2HSV)
+hh = cv2.cvtColor(np.tile(mod_x[sel,:,:,np.newaxis],[1,1,3]),cv2.COLOR_RGB2HSV)
+kk = hh
+kk[:,:,0] = hh1[:,:,0]
+kk[:,:,1] = np.maximum(hh1[:,:,1],hh[:,:,1])
+rr = cv2.cvtColor(kk,cv2.COLOR_HSV2RGB)
+plt.imshow(rr)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/part_detector_mdn_hmap.png',dpi=240)

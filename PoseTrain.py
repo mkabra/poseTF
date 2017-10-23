@@ -1,10 +1,3 @@
-# coding: utf-8
-
-# In[ ]:
-
-'''
-Mayank Feb 3 2016
-'''
 from __future__ import division
 from __future__ import print_function
 
@@ -17,11 +10,6 @@ import os, sys, shutil
 import tempfile, copy, re
 from enum import Enum
 import localSetup
-
-# import caffe,lmdb
-# import caffe.proto.caffe_pb2
-# from caffe.io import datum_to_array
-
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
@@ -33,8 +21,6 @@ import PoseTools, myutils, multiResData
 import convNetBase as CNB
 from batch_norm import batch_norm
 
-
-# In[ ]:
 
 class PoseTrain(object):
     Nets = Enum('Nets', 'Base Joint Fine')
@@ -48,6 +34,40 @@ class PoseTrain(object):
     def __init__(self, conf):
         self.conf = conf
         self.feed_dict = {}
+        self.coord = None
+        self.threads = None
+        self.xs = None
+        self.basePred = None
+        self.trainType = None
+        self.locs = None
+        self.info = None
+        self.train_data = None
+        self.val_data = None
+        self.train_queue = None
+        self.val_queue = None
+        self.ph = {}
+        self.baseLayers = None
+        self.basesaver = None
+        self.basestartat = None
+        self.basetrainData = None
+        self.fine_labels = None
+        self.finePred = None
+        self.finesaver = None
+        self.finestartat = None
+        self.finetrainData = None
+        self.mrfPred = None
+        self.mrftrainData = None
+        self.mrfsaver = None
+        self.mrfstartat = None
+        self.read_time = 0.
+        self.jointsaver = None
+        self.jointstartat = None
+        self.jointtrainData = None
+        self.pred_fine_in = None
+        self.opt_time = 0.
+        self.doBatchNorm = None
+        self.cost = None
+        self.opt = None
 
     # ---------------- DATABASE ---------------------
 
@@ -57,15 +77,15 @@ class PoseTrain(object):
         #         self.env = lmdb.open(lmdbfilename, readonly = True)
         #         self.valenv = lmdb.open(vallmdbfilename, readonly = True)
         if self.trainType == 0:
-            trainfilename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
-            valfilename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([trainfilename])
-            self.val_queue = tf.train.string_input_producer([valfilename])
+            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([train_filename])
+            self.val_queue = tf.train.string_input_producer([val_filename])
         else:
-            trainfilename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
-            valfilename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([trainfilename])
-            self.val_queue = tf.train.string_input_producer([valfilename])
+            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([train_filename])
+            self.val_queue = tf.train.string_input_producer([val_filename])
 
     # def openHoldoutDBs(self):
     #     lmdbfilename =os.path.join(self.conf.cachedir,self.conf.holdouttrain)
@@ -73,7 +93,7 @@ class PoseTrain(object):
     #     self.env = lmdb.open(lmdbfilename, readonly = True)
     #     self.valenv = lmdb.open(vallmdbfilename, readonly = True)
 
-    def createCursors(self, sess, txn=None, valtxn=None):
+    def createCursors(self, sess):
         #         if txn is None:
         #             txn = self.env.begin()
         #             valtxn = self.valenv.begin()
@@ -97,10 +117,10 @@ class PoseTrain(object):
         #         xs, locs = PoseTools.readLMDB(curcursor,
         #                          conf.batch_size,conf.imsz,multiResData)
         cur_data = self.val_data if (dbType == self.DBType.Val)                 else self.train_data
-        xs = [];
-        locs = [];
+        xs = []
+        locs = []
         info = []
-        for ndx in range(conf.batch_size):
+        for _ in range(conf.batch_size):
             [curxs, curlocs, curinfo] = sess.run(cur_data)
             if np.ndim(curxs) < 3:
                 xs.append(curxs[np.newaxis, :, :])
@@ -164,8 +184,7 @@ class PoseTrain(object):
         conf = self.conf
         self.readImages(dbType, distort, sess)
         x0, x1, x2 = PoseTools.multiScaleImages(self.xs.transpose([0, 2, 3, 1]),
-                                                conf.rescale, conf.scale,
-                                                conf.l1_cropsz, conf)
+                                                conf.rescale, conf.scale,conf)
 
         labelims = PoseTools.createLabelImages(self.locs,
                                                self.conf.imsz,
@@ -209,28 +228,7 @@ class PoseTrain(object):
 
         return None
 
-    def createACNetwork(self, doBatch, jointTraining=False):
-
-        n_classes = self.conf.n_classes
-        with tf.variable_scope('AC_'):
-            self.createMRFNetwork(doBatch, jointTraining)
-
-        mrfpred = self.mrfPred if jointTraining else tf.stop_gradient(self.mrfPred)
-
-        layer7_init = self.baseLayers['conv7']
-        layer7 = layer7_init if jointTraining else tf.stop_gradient(layer7_init)
-
-        with tf.variable_scope('AC_'):
-            ac_weights = tf.get_variable("weights",
-                                         [1, 1, self.conf.nfcfilt, self.conf.n_classes],
-                                         initializer=tf.random_normal_initializer(stddev=0.01))
-            ac_biases = tf.get_variable("biases", self.conf.n_classes,
-                                        initializer=tf.constant_initializer(0))
-            ac_out = tf.nn.conv2d(layer7, ac_weights,
-                                  strides=[1, 1, 1, 1], padding='SAME') + ac_biases
-        self.acPred = ac_out + mrfpred
-
-    def createMRFNetwork(self, doBatch, jointTraining=False):
+    def createMRFNetwork(self, jointTraining=False):
 
         n_classes = self.conf.n_classes
         base_pred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
@@ -265,7 +263,6 @@ class PoseTrain(object):
             base_pred = tf.pad(base_pred, [[0, 0], [dd1, dd1], [dd2, dd2], [0, 0]])
 
         base_shape_pad = tf.Tensor.get_shape(base_pred).as_list()[1:3]
-        ksz = math.sqrt(mrf_weights.shape[0] * mrf_weights.shape[1])
 
         if hasattr(self.conf, 'add_loc_info') and self.conf.add_loc_info:
             # generate a constant image to represent distance from center
@@ -339,7 +336,7 @@ class PoseTrain(object):
     #         self.mrfPred = mrfout[:,dd:sliceEnd,dd:sliceEnd,:]
     #    Return the value below when we used MRF kind of stuff
     #         return conv_out,all_wts
-    def extractPatches(self, layer, out, locs, conf, scale, outscale):
+    def extractPatches(self, layer, out, locs, conf, scale, out_scale):
         # extract patch from a layer for finer resolution
         hsz = conf.fine_sz // scale // 2
         padsz = tf.constant([[0, 0], [hsz, hsz], [hsz, hsz], [0, 0]])
@@ -347,7 +344,7 @@ class PoseTrain(object):
 
         patches = []
         # maxloc = PoseTools.argmax2d(out) * outscale
-        maxloc = tf.to_int32(tf.transpose(locs // conf.pool_scale // conf.rescale * outscale, [2, 0, 1]))
+        maxloc = tf.to_int32(tf.transpose(locs // conf.pool_scale // conf.rescale * out_scale, [2, 0, 1]))
         maxloc = tf.stack([maxloc[1, ...], maxloc[0, ...]], axis=0)  # stupid x, y thing
         padlayer = tf.pad(layer, padsz)  # pad layer so that we don't worry about boundaries
         for inum in range(conf.batch_size):
@@ -410,10 +407,6 @@ class PoseTrain(object):
         self.basesaver = tf.train.Saver(var_list=PoseTools.getvars('base'),
                                         max_to_keep=self.conf.maxckpt)
 
-    def createACSaver(self):
-        self.acsaver = tf.train.Saver(var_list=PoseTools.getvars('AC_'),
-                                      max_to_keep=self.conf.maxckpt)
-
     def createMRFSaver(self):
         self.mrfsaver = tf.train.Saver(var_list=PoseTools.getvars('mrf'),
                                        max_to_keep=self.conf.maxckpt)
@@ -430,7 +423,7 @@ class PoseTrain(object):
     def loadBase(self, sess, iterNum):
         outfilename = os.path.join(self.conf.cachedir, self.conf.baseoutname)
         ckptfilename = '%s-%d' % (outfilename, iterNum)
-        print('Loading base from %s' % (ckptfilename))
+        print('Loading base from %s' % ckptfilename)
         self.basesaver.restore(sess, ckptfilename)
 
     def restoreBase(self, sess, restore):
@@ -590,15 +583,6 @@ class PoseTrain(object):
         with open(traindatafilename, 'wb') as tdfile:
             pickle.dump([self.basetrainData, self.conf], tdfile, protocol=2)
 
-    def saveAC(self, sess, step):
-        outfilename = os.path.join(self.conf.cachedir, self.conf.acoutname)
-        traindatafilename = os.path.join(self.conf.cachedir, self.conf.acdataname)
-        self.acsaver.save(sess, outfilename, global_step=step,
-                          latest_filename=self.conf.acckptname)
-        print('Saved state to %s-%d' % (outfilename, step))
-        with open(traindatafilename, 'wb') as tdfile:
-            pickle.dump([self.actrainData, self.conf], tdfile, protocol=2)
-
     def saveMRF(self, sess, step):
         outfilename = os.path.join(self.conf.cachedir, self.conf.mrfoutname)
         traindatafilename = os.path.join(self.conf.cachedir, self.conf.mrfdataname)
@@ -685,7 +669,6 @@ class PoseTrain(object):
         self.feed_dict[self.ph['keep_prob']] = 1.
         pred = sess.run(predfcn, self.feed_dict)
         base_ee, fine_ee = PoseTools.getFineError(self.locs, pred[0], pred[1], self.conf)
-        base_dist = np.sqrt(np.sum(np.square(base_ee), 2))
         fine_dist = np.sqrt(np.sum(np.square(fine_ee), 2))
         return fine_dist
 
@@ -801,20 +784,20 @@ class PoseTrain(object):
                         numrep = int(old_div(self.conf.numTest, self.conf.batch_size)) + 1
                         val_loss = np.zeros([2, ])
                         valDist = [0.]
-                        for rep in range(numrep):
+                        for _ in range(numrep):
                             self.updateFeedDict(self.DBType.Val, distort=False, sess=sess)
                             val_loss += np.array(self.computeLoss(sess, [self.cost]))
                             tt1 = self.computePredDist(sess, self.basePred)
                             nantt1 = np.invert(np.isnan(tt1.flatten()))
                             nantt1_mean = tt1.flatten()[nantt1].mean()
-                            valDist = [valDist[0] + nantt1_mean]
+                            valDist += nantt1_mean
                         val_loss = old_div(val_loss, numrep)
                         valDist = [old_div(valDist[0], numrep)]
                         self.updateBaseLoss(step, train_loss, val_loss, trainDist, valDist)
                     if step % self.conf.save_step == 0:
                         self.saveBase(sess, step)
                 print("Optimization Finished!")
-                self.saveBase(sess, step)
+                self.saveBase(sess, self.conf.base_training_iters)
             self.closeCursors()
 
     def mrfTrain(self, restore=True, trainType=0):
@@ -835,7 +818,7 @@ class PoseTrain(object):
         self.createBaseSaver()
         self.createMRFSaver()
 
-        mod_labels = tf.maximum((self.ph['y'] + 1.) / 2, 0.01)
+        # mod_labels = tf.maximum((self.ph['y'] + 1.) / 2, 0.01)
         # the labels shouldn't be zero because the prediction is an output of
         # exp. And it seems a lot of effort is wasted to make the prediction goto
         # zero rather than match the location.
@@ -878,7 +861,7 @@ class PoseTrain(object):
                     numrep = int(old_div(self.conf.numTest, self.conf.batch_size)) + 1
                     val_loss = np.zeros([2, ])
                     valDist = [0., 0.]
-                    for rep in range(numrep):
+                    for _ in range(numrep):
                         self.updateFeedDict(self.DBType.Val, sess=sess, distort=False)
                         val_loss += np.array(self.computeLoss(sess, [self.cost, basecost]))
                         tt1 = self.computePredDist(sess, self.mrfPred)
@@ -891,7 +874,7 @@ class PoseTrain(object):
                 if step % self.conf.save_step == 0:
                     self.saveMRF(sess, step)
             print("Optimization Finished!")
-            self.saveMRF(sess, step)
+            self.saveMRF(sess, self.conf.mrf_training_iters)
             self.closeCursors()
 
     def fineTrain(self, restore=True, trainPhase=True, trainType=0):
@@ -968,7 +951,7 @@ class PoseTrain(object):
                     numrep = int(old_div(self.conf.numTest, self.conf.batch_size)) + 1
                     val_loss = np.zeros([3, ])
                     valDist = [0., 0., 0.]
-                    for rep in range(numrep):
+                    for _ in range(numrep):
                         self.updateFeedDictFine(self.DBType.Val, distort=False, sess=sess)
                         val_loss += np.array(self.computeLoss(sess, [self.cost, mrfcost, basecost]))
                         tt1 = self.computePredDist(sess, self.basePred)
@@ -987,7 +970,7 @@ class PoseTrain(object):
                 if step % self.conf.save_step == 0:
                     self.saveFine(sess, step)
             print("Optimization Finished!")
-            self.saveFine(sess, step)
+            self.saveFine(sess, self.conf.fine_training_iters)
             self.closeCursors()
 
     def jointTrain(self, restore=True):
@@ -1023,28 +1006,28 @@ class PoseTrain(object):
 
         self.createOptimizer()
 
-        with self.env.begin() as txn, self.valenv.begin() as valtxn, tf.Session() as sess:
+        with tf.Session() as sess:
 
             self.restoreBase(sess, True)
             self.restoreMRF(sess, True)
             self.restoreFine(sess, True)
             self.restoreJoint(sess, restore)
             self.initializeRemainingVars(sess)
-            self.createCursors(txn, valtxn)
+            self.createCursors(sess)
 
             for step in range(self.jointstartat, self.conf.joint_training_iters + 1):
-                self.doOpt(sess, step, self.conf.joint_learning_rate)
+                self.doOpt(sess)
                 if step % self.conf.display_step == 0:
-                    self.updateFeedDict(self.DBType.Train)
+                    self.updateFeedDict(self.DBType.Train,distort=True,sess= sess)
                     train_loss = self.computeLoss(sess, [self.cost, finecost, mrfcost, basecost])
                     numrep = int(old_div(self.conf.numTest, self.conf.batch_size)) + 1
                     val_loss = np.zeros([2, ])
-                    for rep in range(numrep):
-                        self.updateFeedDict(self.DBType.Val)
+                    for _ in range(numrep):
+                        self.updateFeedDict(self.DBType.Val,distort=False, sess=sess)
                         val_loss += np.array(self.computeLoss(sess, [self.cost, finecost, mrfcost, basecost]))
                     val_loss = old_div(val_loss, numrep)
                     self.updateJointLoss(step, train_loss, val_loss)
                 if step % self.conf.save_step == 0:
                     self.saveJoint(sess, step)
             print("Optimization Finished!")
-            self.saveJoint(sess, step)
+            self.saveJoint(sess, self.conf.joint_training_iters )

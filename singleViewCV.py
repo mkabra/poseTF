@@ -460,9 +460,9 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
                     startat = cur_b*max_chunk_size
                     stopat = min((cur_b+1)*max_chunk_size,nframes)
                     frames_read = stopat-startat
-                    predList = PoseTools.classifyMovie(conf,localdirs[ndx],outtype,
-                                                       self,sess,maxframes=frames_read,
-                                                       startat=startat)
+                    predList = PoseTools.classifyMovie(conf, localdirs[ndx], outtype,
+                                                       self, sess, max_frames=frames_read,
+                                                       start_at=startat)
                     scale_fac = conf.pool_scale*conf.rescale
                     crop_loc = [old_div(x,scale_fac) for x in orig_crop_loc]
                     end_pad = [old_div(height,scale_fac)-crop_loc[0]-old_div(conf.imsz[0],scale_fac),
@@ -558,9 +558,9 @@ def classifyfold_fine(conffile,curfold,curgpu,batch_size,
                     stopat = min((cur_b+1)*max_chunk_size,nframes)
                     frames_read = stopat-startat
 
-                    predLocs = PoseTools.classify_movie_fine(conf,localdirs[ndx],locs,
-                                                             self,sess,maxframes=frames_read,
-                                                             startat=startat)
+                    predLocs = PoseTools.classify_movie_fine(conf, localdirs[ndx], locs,
+                                                             self, sess, max_frames=frames_read,
+                                                             start_at=startat)
 
                     predLocs[:,:,0] += orig_crop_loc[1]
                     predLocs[:,:,1] += orig_crop_loc[0]

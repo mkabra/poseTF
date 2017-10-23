@@ -174,6 +174,7 @@ class myconfig(object):
     gendataname = genoutname + 'traindata'
     
     mrf_psz = 54
+    dilation_rate = 1
 
     # ----- project specific functions
 
