@@ -49,7 +49,6 @@ def fully_conn(X, out_wts, trainPhase, sc_name):
                             is_training=trainPhase)
     return tf.nn.relu(hidden + biases)
 
-
 class PoseMDN(PoseTrain):
     def __init__(self, conf):
         super(self.__class__, self).__init__(conf)
@@ -903,6 +902,9 @@ class PoseMDN(PoseTrain):
     def my_loss_joint(self):
         cur_comp = []
         ll = tf.nn.softmax(self.mdn_logits, dim=1)
+# All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
+#            ll = tf.cond(self.ph['phase_train_mdn'],lambda: ll+0.000001,lambda: tf.identity(ll))
+#            ll = ll/tf.reduce_sum(ll,axis=1,keep_dims=True)
         for cls in range(self.conf.n_classes):
 
             cur_scales = self.mdn_scales[:,:,cls]
@@ -1050,6 +1052,7 @@ class PoseMDN(PoseTrain):
                 self.feed_dict[self.ph['base_locs']] = np.zeros([self.conf.batch_size,
                                                  self.conf.n_classes, 2])
                 base_pred = sess.run(self.basePred, self.feed_dict)
+                self.feed_dict[self.ph['phase_train_mdn']] = True
                 self.feed_dict[self.ph['base_locs']] = \
                     PoseTools.getBasePredLocs(base_pred, self.conf)
                 # self.feed_dict[self.ph['layer7']] = np.zeros(l7_shape)
@@ -1060,6 +1063,7 @@ class PoseMDN(PoseTrain):
                 if step % self.conf.display_step == 0:
                     self.updateFeedDict(self.DBType.Train, sess=sess,
                                         distort=False)
+                    self.feed_dict[self.ph['phase_train_mdn']] = False
                     self.feed_dict[self.ph['keep_prob']] = mdn_dropout
                     self.feed_dict[self.ph['base_locs']] = np.zeros([self.conf.batch_size,
                                                                      self.conf.n_classes, 2])
