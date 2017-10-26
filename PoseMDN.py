@@ -903,7 +903,8 @@ class PoseMDN(PoseTrain):
         cur_comp = []
         ll = tf.nn.softmax(self.mdn_logits, dim=1)
 # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
-        ll = tf.cond(self.ph['phase_train_mdn'],lambda: ll+0.01,lambda: tf.identity(ll))
+        logit_eps = self.conf.mdn_logit_eps_training
+        ll = tf.cond(self.ph['phase_train_mdn'],lambda: ll+logit_eps,lambda: tf.identity(ll))
         ll = ll/tf.reduce_sum(ll,axis=1,keep_dims=True)
         for cls in range(self.conf.n_classes):
 

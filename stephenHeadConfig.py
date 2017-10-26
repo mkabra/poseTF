@@ -149,6 +149,7 @@ class myconfig(object):
     # ----- MDN params
     mdn_min_sigma = 3.
     mdn_max_sigma = 4.
+    mdn_logit_eps_training = 0.01
 
     # ----- Save parameters
 
