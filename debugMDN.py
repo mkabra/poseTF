@@ -441,13 +441,13 @@ for ndx in range(10):
 from stephenHeadConfig import conf as conf
 import os
 import tensorflow as tf
-os.environ['CUDA_VISIBLE_DEVICES']= '0'
+os.environ['CUDA_VISIBLE_DEVICES']= ''
 import PoseMDN
 import localSetup
 import PoseTools
 
 conf.cachedir = os.path.join(localSetup.bdir,'cacheHead_MDN')
-conf.expname = 'head_MDN_0p9dropout'
+conf.expname = 'head_dw_logits_1e4'
 self = PoseMDN.PoseMDN(conf)
 restore = True
 trainType = 0
@@ -627,7 +627,7 @@ def createPredImage(pred_scores, n_classes):
     return cv2.cvtColor(im,cv2.COLOR_HSV2RGB)
 
 
-sel = 16
+sel = 1
 ll = np.where(mod_w[sel,:]>0.2)[0]
 f = plt.figure()
 ax = f.add_subplot(111)
@@ -673,8 +673,9 @@ for x in range(8):
         y_s = 64*y-sz; y_e = 64*y+sz
         ax.plot([x_s,x_s,x_e,x_e,x_s],[y_s,y_e,y_e,y_s,y_s],c='r')
         ax.imshow(mod_x[sel,...],cmap='gray',vmax=255)
-        f.savefig('/groups/branson/home/kabram/temp/mdn_plots/ex_x{}_y{}.jpg'.format(x,y),
-                  dpi=240)
+        plt.pause(0.5)
+        # f.savefig('/groups/branson/home/kabram/temp/mdn_plots/ex_x{}_y{}.jpg'.format(x,y),
+        #           dpi=240)
         # ax.set_xlim([0,512]); ax.set_ylim([0,512])
 
 

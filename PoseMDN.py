@@ -903,8 +903,8 @@ class PoseMDN(PoseTrain):
         cur_comp = []
         ll = tf.nn.softmax(self.mdn_logits, dim=1)
 # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
-#            ll = tf.cond(self.ph['phase_train_mdn'],lambda: ll+0.000001,lambda: tf.identity(ll))
-#            ll = ll/tf.reduce_sum(ll,axis=1,keep_dims=True)
+        ll = tf.cond(self.ph['phase_train_mdn'],lambda: ll+0.01,lambda: tf.identity(ll))
+        ll = ll/tf.reduce_sum(ll,axis=1,keep_dims=True)
         for cls in range(self.conf.n_classes):
 
             cur_scales = self.mdn_scales[:,:,cls]
@@ -1167,7 +1167,10 @@ class PoseMDN(PoseTrain):
         learning_rate = tf.train.exponential_decay(
             starter_learning_rate,self.ph['step'],decay_steps, 0.9)
 
-        mdn_steps = 50000 * 8 / self.conf.batch_size
+        if full:
+            mdn_steps = 50000 * 8 / self.conf.batch_size
+        else:
+            mdn_steps = 20000 * 8 / self.conf.batch_size
 
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
@@ -1191,9 +1194,11 @@ class PoseMDN(PoseTrain):
                                     distort=False)
                 self.feed_dict[self.ph['keep_prob']] = mdn_dropout
                 self.feed_dict[self.ph['step']] = step
+                self.feed_dict[self.ph['phase_train_mdn']] = True
                 sess.run(self.opt, self.feed_dict)
 
                 if step % self.conf.display_step == 0:
+                    self.feed_dict[self.ph['phase_train_mdn']] = False
                     self.updateFeedDict(self.DBType.Train, sess=sess,
                                         distort=False)
                     self.feed_dict[self.ph['keep_prob']] = mdn_dropout
