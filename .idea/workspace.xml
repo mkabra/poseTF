@@ -1,43 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/codeStyleSettings.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseUNet.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/felipe.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/mayank.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/mayank.xml" />
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Minor bug fix">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseCommon.py" afterPath="$PROJECT_DIR$/PoseCommon.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseMDN.py" afterPath="$PROJECT_DIR$/PoseMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseRegression.py" afterPath="$PROJECT_DIR$/PoseRegression.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTrain.py" afterPath="$PROJECT_DIR$/PoseTrain.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCode.py" afterPath="$PROJECT_DIR$/cellCode.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCodeBody.py" afterPath="$PROJECT_DIR$/cellCodeBody.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCodeHead.py" afterPath="$PROJECT_DIR$/cellCodeHead.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellPoseEval2.py" afterPath="$PROJECT_DIR$/cellPoseEval2.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellRomain.py" afterPath="$PROJECT_DIR$/cellRomain.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/debugMDN.py" afterPath="$PROJECT_DIR$/debugMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/janLegCell.py" afterPath="$PROJECT_DIR$/janLegCell.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResData.py" afterPath="$PROJECT_DIR$/multiResData.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseEval.py" afterPath="$PROJECT_DIR$/poseEval.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseEval2.py" afterPath="$PROJECT_DIR$/poseEval2.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseGen.py" afterPath="$PROJECT_DIR$/poseGen.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseShape.py" afterPath="$PROJECT_DIR$/poseShape.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scratch.py" afterPath="$PROJECT_DIR$/scratch.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scratch_ssf.py" afterPath="$PROJECT_DIR$/scratch_ssf.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_conv_MDN.py" afterPath="$PROJECT_DIR$/script_conv_MDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_offline_MDN.py" afterPath="$PROJECT_DIR$/script_offline_MDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_offline_MDN_joint.py" afterPath="$PROJECT_DIR$/script_offline_MDN_joint.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/singleViewCV.py" afterPath="$PROJECT_DIR$/singleViewCV.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenCV.py" afterPath="$PROJECT_DIR$/stephenCV.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenHeadConfig.py" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testEdward_ims.py" afterPath="$PROJECT_DIR$/testEdward_ims.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead.py" afterPath="$PROJECT_DIR$/trackStephenHead.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead_KB.py" afterPath="$PROJECT_DIR$/trackStephenHead_KB.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead_KB_CV.py" afterPath="$PROJECT_DIR$/trackStephenHead_KB_CV.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -68,17 +33,17 @@
     <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="8568">
-                  <caret line="536" column="20" lean-forward="false" selection-start-line="536" selection-start-column="20" selection-end-line="536" selection-end-column="20" />
+                <state relative-caret-position="576">
+                  <caret line="311" column="32" lean-forward="true" selection-start-line="311" selection-start-column="32" selection-end-line="311" selection-end-column="32" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
-                    <element signature="e#34401#36683#0" expanded="false" />
-                    <element signature="e#36767#38671#0" expanded="false" />
-                    <element signature="e#39215#39563#0" expanded="false" />
-                    <element signature="e#39602#39661#0" expanded="false" />
+                    <element signature="e#34452#36734#0" expanded="false" />
+                    <element signature="e#36818#38722#0" expanded="false" />
+                    <element signature="e#39266#39614#0" expanded="false" />
+                    <element signature="e#39653#39712#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -99,7 +64,7 @@
           <file leaf-file-name="scratch_6.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="459">
+                <state relative-caret-position="-2244">
                   <caret line="141" column="0" lean-forward="false" selection-start-line="141" selection-start-column="0" selection-end-line="141" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#13#0" expanded="true" />
@@ -108,12 +73,14 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="289">
-                  <caret line="17" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
-                  <folding />
+                <state relative-caret-position="321">
+                  <caret line="154" column="26" lean-forward="false" selection-start-line="154" selection-start-column="26" selection-end-line="154" selection-end-column="26" />
+                  <folding>
+                    <element signature="e#0#31#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -121,8 +88,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="5831">
-                  <caret line="481" column="0" lean-forward="false" selection-start-line="481" selection-start-column="0" selection-end-line="481" selection-end-column="0" />
+                <state relative-caret-position="63">
+                  <caret line="457" column="33" lean-forward="true" selection-start-line="457" selection-start-column="33" selection-end-line="457" selection-end-column="33" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1778#9097#0" expanded="false" />
@@ -134,8 +101,8 @@
           <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/multiResData.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="12478">
-                  <caret line="766" column="22" lean-forward="false" selection-start-line="766" selection-start-column="22" selection-end-line="766" selection-end-column="22" />
+                <state relative-caret-position="318">
+                  <caret line="123" column="4" lean-forward="false" selection-start-line="123" selection-start-column="4" selection-end-line="123" selection-end-column="4" />
                   <folding />
                 </state>
               </provider>
@@ -189,11 +156,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="612">
-                  <caret line="44" column="48" lean-forward="false" selection-start-line="44" selection-start-column="48" selection-end-line="44" selection-end-column="48" />
+                <state relative-caret-position="117">
+                  <caret line="118" column="19" lean-forward="true" selection-start-line="118" selection-start-column="19" selection-end-line="118" selection-end-column="19" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                   </folding>
@@ -214,16 +181,14 @@
           <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2210">
-                  <caret line="131" column="23" lean-forward="false" selection-start-line="131" selection-start-column="23" selection-end-line="131" selection-end-column="23" />
-                  <folding>
-                    <element signature="e#13#47#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="17">
+                  <caret line="1" column="9" lean-forward="true" selection-start-line="1" selection-start-column="9" selection-end-line="1" selection-end-column="9" />
+                  <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="felipe.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="felipe.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/felipe.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="319">
@@ -362,11 +327,11 @@
         <option value="$PROJECT_DIR$/PoseCommonMulti.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/PoseUNet.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
-        <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/PoseUMDN.py" />
         <option value="$PROJECT_DIR$/felipe.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
+        <option value="$PROJECT_DIR$/PoseTools.py" />
       </list>
     </option>
   </component>
@@ -863,7 +828,21 @@
       <option name="project" value="LOCAL" />
       <updated>1510234765555</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="multipose MDN is now working.">
+      <created>1512562167526</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1512562167527</updated>
+    </task>
+    <task id="LOCAL-00023" summary="multipose MDN is now working.">
+      <created>1512563836377</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1512563836377</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -959,7 +938,8 @@
     <MESSAGE value="MDN is working. Adding trx file stuff for Alice" />
     <MESSAGE value="weight manipulation for logits to improve accuracy" />
     <MESSAGE value="Creating PoseCommon.py superclass for training pose networks." />
-    <option name="LAST_COMMIT_MESSAGE" value="Creating PoseCommon.py superclass for training pose networks." />
+    <MESSAGE value="multipose MDN is now working." />
+    <option name="LAST_COMMIT_MESSAGE" value="multipose MDN is now working." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -986,7 +966,7 @@
           </selected-grouping-rules>
         </breakpoints-dialog>
       </breakpoints-dialog>
-      <option name="time" value="229" />
+      <option name="time" value="231" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1172,14 +1152,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommonMulti.py" />
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="12478">
-          <caret line="766" column="22" lean-forward="false" selection-start-line="766" selection-start-column="22" selection-end-line="766" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/common_shapes.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="176">
@@ -1223,16 +1195,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="44" column="48" lean-forward="false" selection-start-line="44" selection-start-column="48" selection-end-line="44" selection-end-column="48" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTrain.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="8500">
@@ -1253,9 +1215,19 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/felipe.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="431" column="0" lean-forward="false" selection-start-line="431" selection-start-column="0" selection-end-line="431" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
+        <state relative-caret-position="-2244">
           <caret line="141" column="0" lean-forward="false" selection-start-line="141" selection-start-column="0" selection-end-line="141" selection-end-column="0" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
@@ -1273,34 +1245,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8568">
-          <caret line="536" column="20" lean-forward="false" selection-start-line="536" selection-start-column="20" selection-end-line="536" selection-end-column="20" />
+        <state relative-caret-position="17">
+          <caret line="1" column="9" lean-forward="true" selection-start-line="1" selection-start-column="9" selection-end-line="1" selection-end-column="9" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="117">
+          <caret line="118" column="19" lean-forward="true" selection-start-line="118" selection-start-column="19" selection-end-line="118" selection-end-column="19" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#34401#36683#0" expanded="false" />
-            <element signature="e#36767#38671#0" expanded="false" />
-            <element signature="e#39215#39563#0" expanded="false" />
-            <element signature="e#39602#39661#0" expanded="false" />
+            <element signature="e#0#17#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2210">
-          <caret line="131" column="23" lean-forward="false" selection-start-line="131" selection-start-column="23" selection-end-line="131" selection-end-column="23" />
-          <folding>
-            <element signature="e#13#47#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="318">
+          <caret line="123" column="4" lean-forward="false" selection-start-line="123" selection-start-column="4" selection-end-line="123" selection-end-column="4" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5831">
-          <caret line="481" column="0" lean-forward="false" selection-start-line="481" selection-start-column="0" selection-end-line="481" selection-end-column="0" />
+        <state relative-caret-position="63">
+          <caret line="457" column="33" lean-forward="true" selection-start-line="457" selection-start-column="33" selection-end-line="457" selection-end-column="33" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1778#9097#0" expanded="false" />
@@ -1308,21 +1282,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/felipe.py">
+    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="319">
-          <caret line="431" column="0" lean-forward="false" selection-start-line="431" selection-start-column="0" selection-end-line="431" selection-end-column="0" />
+        <state relative-caret-position="321">
+          <caret line="154" column="26" lean-forward="false" selection-start-line="154" selection-start-column="26" selection-end-line="154" selection-end-column="26" />
           <folding>
-            <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="576">
+          <caret line="311" column="32" lean-forward="true" selection-start-line="311" selection-start-column="32" selection-end-line="311" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#34452#36734#0" expanded="false" />
+            <element signature="e#36818#38722#0" expanded="false" />
+            <element signature="e#39266#39614#0" expanded="false" />
+            <element signature="e#39653#39712#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
