@@ -319,6 +319,7 @@ def randomly_rotate(img, locs, conf):
         locs[ndx, ...] = lr
         img[ndx, ...] = ii
 
+    locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
 
 
