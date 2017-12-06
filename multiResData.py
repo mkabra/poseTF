@@ -355,7 +355,7 @@ def createTFRecord(conf):
                 continue
             framein = myutils.readframe(cap,fnum-1)
             cloc = conf.cropLoc[tuple(framein.shape[0:2])]
-            framein = PoseTools.cropImages(framein,conf)
+            framein = PoseTools.crop_images(framein, conf)
             framein = framein[:,:,0:1]
 
             curloc = np.round(pts[curl,:,view,:]).astype('int')
@@ -439,7 +439,7 @@ def createFullTFRecord(conf):
                 continue
             framein = myutils.readframe(cap,fnum-1)
             cloc = conf.cropLoc[tuple(framein.shape[0:2])]
-            framein = PoseTools.cropImages(framein,conf)
+            framein = PoseTools.crop_images(framein, conf)
             framein = framein[:,:,0:1]
 
             curloc = np.round(pts[curl,:,view,:]).astype('int')
@@ -486,7 +486,7 @@ def createTFRecordFromLbl(conf,split=True):
     
     createValdata(conf)
     isval,localdirs,seldirs = loadValdata(conf)
-    trx_files = get_trx_files(L,localdirs)
+    # trx_files = get_trx_files(L,localdirs)
 
     if split:
         trainfilename =os.path.join(conf.cachedir,conf.trainfilename)
@@ -532,7 +532,7 @@ def createTFRecordFromLbl(conf,split=True):
                 continue
             framein = myutils.readframe(cap,fnum)
             cloc = conf.cropLoc[tuple(framein.shape[0:2])]
-            framein = PoseTools.cropImages(framein,conf)
+            framein = PoseTools.crop_images(framein, conf)
             framein = framein[:,:,0:1]
 
             nptsPerView = np.array(L['cfg']['NumLabelPoints'])[0,0]
@@ -744,4 +744,35 @@ def read_and_decode(filename_queue,conf):
     ts = tf.cast(features['ts'],tf.float64) #tf.constant([0]); #
 
     return image, locs, [expndx,ts]
+
+def read_and_decode_multi(filename_queue,conf):
+    reader = tf.TFRecordReader()
+    _, serialized_example = reader.read(filename_queue)
+    n_max = conf.max_n_animals
+    features = tf.parse_single_example(
+        serialized_example,
+        features={'height':tf.FixedLenFeature([], dtype=tf.int64),
+          'width':tf.FixedLenFeature([], dtype=tf.int64),
+          'depth':tf.FixedLenFeature([], dtype=tf.int64),
+          'locs':tf.FixedLenFeature(shape=[n_max, conf.n_classes, 2], dtype=tf.float32),
+          'n_animals': tf.FixedLenFeature(1, dtype=tf.int64),
+          'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+          'ts': tf.FixedLenFeature([], dtype=tf.float32),
+          'image_raw':tf.FixedLenFeature([], dtype=tf.string)
+                 })
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
+    height = tf.cast(features['height'],tf.int64)
+    width = tf.cast(features['width'],tf.int64)
+    depth = tf.cast(features['depth'],tf.int64)
+    n_animals = tf.cast(features['n_animals'],tf.int64)
+    if conf.imgDim > 1:
+        image = tf.reshape(image,conf.imsz + (conf.imgDim,) )
+    else:
+        image = tf.reshape(image, conf.imsz)
+
+    locs = tf.cast(features['locs'], tf.float64)
+    expndx = tf.cast(features['expndx'],tf.float64)
+    ts = tf.cast(features['ts'],tf.float64) #tf.constant([0]); #
+
+    return image, locs, [expndx,ts,n_animals]
 

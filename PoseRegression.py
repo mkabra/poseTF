@@ -50,10 +50,10 @@ class PoseRegression(PoseTrain.PoseTrain):
     def updateFeedDict(self,dbtype,distort):
         super(PoseRegression,self).updateFeedDict(dbtype,distort)
         
-        labelims,regimsx,regimsy = PoseTools.createRegLabelImages(self.locs,
-                                   self.conf.imsz,
-                                   self.conf.pool_scale*self.conf.rescale,
-                                   self.conf.label_blur_rad)
+        labelims,regimsx,regimsy = PoseTools.create_reg_label_images(self.locs,
+                                                                     self.conf.imsz,
+                                                                     self.conf.pool_scale * self.conf.rescale,
+                                                                     self.conf.label_blur_rad)
         self.feed_dict[self.ph['y']] = labelims
         self.feed_dict[self.ph['regx']] = regimsx
         self.feed_dict[self.ph['regy']] = regimsy
@@ -85,8 +85,8 @@ class PoseRegression(PoseTrain.PoseTrain):
         self.baseLayers = layers
         
     def createBaseRegSaver(self):
-        self.baseregsaver = tf.train.Saver(var_list = PoseTools.getvars('regbase'),
-                                        max_to_keep=self.conf.maxckpt)
+        self.baseregsaver = tf.train.Saver(var_list = PoseTools.get_vars('regbase'),
+                                           max_to_keep=self.conf.maxckpt)
         
     def restoreBaseReg(self,sess,restore):
         outfilename = os.path.join(self.conf.cachedir,self.conf.baseregoutname)
@@ -97,7 +97,7 @@ class PoseRegression(PoseTrain.PoseTrain):
             self.baseregstartat = 0
             self.baseregtrainData = {'train_err':[], 'val_err':[], 'step_no':[],
                                   'train_dist':[], 'val_dist':[] }
-            sess.run(tf.initialize_variables(PoseTools.getvars('base')))
+            sess.run(tf.initialize_variables(PoseTools.get_vars('base')))
             print("Not loading base variables. Initializing them")
             return False
         else:
@@ -109,7 +109,7 @@ class PoseRegression(PoseTrain.PoseTrain):
                 if not isinstance(inData,dict):
                     self.baseregtrainData, loadconf = inData
                     print('Parameters that dont match for base:')
-                    PoseTools.compareConf(self.conf, loadconf)
+                    PoseTools.compare_conf(self.conf, loadconf)
                 else:
                     print("No config was stored for base. Not comparing conf")
                     self.baseregtrainData = inData

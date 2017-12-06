@@ -446,8 +446,12 @@ import PoseMDN
 import localSetup
 import PoseTools
 
+if os.environ['CUDA_VISIBLE_DEVICES'] is '':
+    print('!!!!!Not USING GPU!!!!!')
+
 conf.cachedir = os.path.join(localSetup.bdir,'cacheHead_MDN')
-conf.expname = 'head_dw_logits_1e4'
+conf.expname = 'head_dw_logits_1e2'
+conf.psz = 8
 self = PoseMDN.PoseMDN(conf)
 restore = True
 trainType = 0
@@ -501,9 +505,6 @@ learning_rate = tf.train.exponential_decay(
 
 mdn_steps = 50000 * 8 / self.conf.batch_size
 
-# self.opt = tf.train.AdamOptimizer(
-#     learning_rate=learning_rate).minimize(self.loss)
-
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     self.opt = tf.train.AdamOptimizer(
@@ -533,20 +534,24 @@ for cls in range(self.conf.n_classes):
     kk = tf.reduce_sum(tf.square(pp - self.mdn_locs[:, :, cls, :]), axis=2)
     cur_comp = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
 
-    # cur_comp = [i.prob(self.mdn_label[:,cls,:]) for i in self.components[cls]]
-    # cur_comp = tf.stack(cur_comp)
     pp = cur_comp * ll
     cur_loss = tf.log(tf.reduce_sum(pp, axis=1))
     ind_loss.append(cur_loss)
 ind_loss = tf.transpose(tf.stack(ind_loss), [1, 0])
 
-##
+#
 mod_tt = []
 mod_locs = []
 mod_preds = []
 mod_x = []
 mod_bpred = []
-for step in range(100):
+
+val_file = os.path.join(conf.cachedir, conf.valfilename + '.tfrecords')
+c = 0
+for record in tf.python_io.tf_record_iterator(val_file):
+    c += 1
+
+for step in range(c/conf.batch_size):
     self.updateFeedDict(self.DBType.Val, sess=sess, distort=False)
     self.feed_dict[self.ph['keep_prob']] = 1
 
@@ -584,9 +589,12 @@ mod_loss = np.array([i[4] for i in mod_preds]).reshape([-1, 5])
 mod_lm = (mod_l / 4) % 16
 mod_x = np.array(mod_x).reshape([-1, 512, 512])
 mod_bpred = np.array(mod_bpred).reshape([-1, 128, 128, 5])
+gg = PoseTools.get_base_error(mod_l, mod_bpred, conf)
+mod_ot = np.sqrt(np.sum(gg**2,2))
+
 print(np.argmax(mod_t,axis=0))
 print(np.max(mod_t,axis=0))
-blocs = PoseTools.getBasePredLocs(mod_bpred,conf)
+blocs = PoseTools.get_base_pred_locs(mod_bpred, conf)
 sc = -1
 ##
 sc += 1
@@ -602,11 +610,11 @@ print(mod_t[sel,:])
 f = plt.figure(figsize=[12,12])
 ax = f.add_subplot(111)
 plt.imshow(mod_x[sel,:,:],cmap='gray')
-plt.scatter(mod_l[sel,:,0], mod_l[sel,:,1])
+plt.scatter(mod_l[sel,:,0], mod_l[sel,:,1],s=20)
 w_sort = np.flipud(np.argsort(mod_w[sel,...]))
 jx = w_sort[0]
 plt.scatter(mod_m[sel,jx,:,0]*4,mod_m[sel,jx,:,1]*4,c='r')
-plt.scatter(blocs[sel,:,0],blocs[sel,:,1],c='g')
+# plt.scatter(blocs[sel,:,0],blocs[sel,:,1],c='g')
 jx1 = w_sort[1]
 plt.scatter(mod_m[sel,jx1,:,0]*4,mod_m[sel,jx1,:,1]*4,c='w')
 tt = mod_m[sel,...]
@@ -690,7 +698,7 @@ for cls in range(conf.n_classes):
         cur_locs = mod_m[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
         # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
         cur_scale = mod_s[sel, ndx, cls].astype('int')
-        curl = (PoseTools.createLabelImages(cur_locs, [128,128], 1, cur_scale) + 1) / 2
+        curl = (PoseTools.create_label_images(cur_locs, [128, 128], 1, cur_scale) + 1) / 2
         mdn_pred_out[:, :, cls] += mod_w[sel, ndx] * curl[0, ..., 0]
 
 mdn_pred_out = mdn_pred_out*2-1

@@ -60,20 +60,13 @@ def initialize_remaining_vars(sess):
             sess.run(tf.variables_initializer([var]))
             print('Initializing variable:%s' % var.name)
 
-
-def compute_dist(preds, locs):
-    tt1 = PoseTools.get_pred_locs(preds) - locs
-    tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
-    nantt1 = np.invert(np.isnan(tt1.flatten()))
-    nantt1_mean = tt1.flatten()[nantt1].mean()
-    return nantt1_mean
-
-
 def moving_average(a, n=3) :
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
     return ret[n - 1:] / n
 
+def l2_dist(x,y):
+    return np.sqrt(np.sum((x-y)**2,axis=-1))
 
 class PoseCommon(object):
 
@@ -152,12 +145,12 @@ class PoseCommon(object):
 
         if distort:
             if conf.horzFlip:
-                xs, locs = PoseTools.randomlyFlipLR(xs, locs)
+                xs, locs = PoseTools.randomly_flip_lr(xs, locs)
             if conf.vertFlip:
-                xs, locs = PoseTools.randomlyFlipUD(xs, locs)
-            xs, locs = PoseTools.randomlyRotate(xs, locs, conf)
-            xs, locs = PoseTools.randomlyTranslate(xs, locs, conf)
-            xs = PoseTools.randomlyAdjust(xs, conf)
+                xs, locs = PoseTools.randomly_flip_ud(xs, locs)
+            xs, locs = PoseTools.randomly_rotate(xs, locs, conf)
+            xs, locs = PoseTools.randomly_translate(xs, locs, conf)
+            xs = PoseTools.randomly_adjust(xs, conf)
 
         self.xs = np.transpose(xs, [0, 2, 3, 1])
         self.locs = locs
@@ -175,7 +168,7 @@ class PoseCommon(object):
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
-        saver['saver'] = (tf.train.Saver(var_list=PoseTools.getvars(name),
+        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(name),
                                          max_to_keep=self.conf.maxckpt))
         self.saver = saver
         if self.dep_nets:
@@ -193,7 +186,7 @@ class PoseCommon(object):
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
-        saver['saver'] = (tf.train.Saver(var_list=PoseTools.getvars(self.name),
+        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(self.name),
                                          max_to_keep=self.conf.maxckpt))
         self.saver = saver
         if self.dep_nets:
@@ -208,7 +201,7 @@ class PoseCommon(object):
         if not latest_ckpt or not do_restore:
             start_at = 0
             sess.run(tf.variables_initializer(
-                PoseTools.getvars(name)),
+                PoseTools.get_vars(name)),
                 feed_dict=self.fd)
             print("Not loading {:s} variables. Initializing them".format(name))
         else:
@@ -282,7 +275,7 @@ class PoseCommon(object):
             if not isinstance(in_data, dict):
                 train_info, load_conf = in_data
                 print('Parameters that do not match for {:s}:'.format(train_data_file))
-                PoseTools.compareConf(self.conf, load_conf)
+                PoseTools.compare_conf(self.conf, load_conf)
             else:
                 print("No config was stored for base. Not comparing conf")
                 train_info = in_data
@@ -358,12 +351,17 @@ class PoseCommon(object):
             self.opt = tf.train.AdamOptimizer(
                 learning_rate=self.ph['learning_rate']).minimize(self.cost)
 
+    def compute_dist(self, preds, locs):
+        tt1 = PoseTools.get_pred_locs(preds) - locs
+        tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
+        return np.nanmean(tt1)
+
     def compute_train_data(self, sess, db_type):
         self.setup_train(sess) if db_type is self.DBType.Train \
             else self.setup_val(sess)
         cur_loss, cur_pred = sess.run(
             [self.cost, self.pred], self.fd)
-        cur_dist = compute_dist(cur_pred, self.locs)
+        cur_dist = self.compute_dist(cur_pred, self.locs)
         return cur_loss, cur_dist
 
     def train(self, restore, train_type, create_network,
@@ -404,7 +402,7 @@ class PoseCommon(object):
                 print("Optimization Finished!")
                 self.save(sess, training_iters)
                 self.save_td()
-            self.closeCursors()
+            self.close_cursors()
 
     def plot_results(self):
         saver = {}
@@ -446,7 +444,7 @@ class PoseCommon(object):
                 val_locs.append(self.locs)
                 val_preds.append(cur_pred)
                 val_predlocs.append(cur_predlocs)
-            self.closeCursors()
+            self.close_cursors()
 
         def val_reshape(in_a):
             in_a = np.array(in_a)
@@ -460,3 +458,70 @@ class PoseCommon(object):
         return val_dist, val_ims, val_preds, val_predlocs, val_locs
 
 
+class PoseCommonMulti(PoseCommon):
+
+    def create_cursors(self, sess):
+        train_ims, train_locs, train_info = \
+            multiResData.read_and_decode_multi(self.train_queue, self.conf)
+        val_ims, val_locs, val_info = \
+            multiResData.read_and_decode_multi(self.val_queue, self.conf)
+        self.train_data = [train_ims, train_locs, train_info]
+        self.val_data = [val_ims, val_locs, val_info]
+        self.coord = tf.train.Coordinator()
+        self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
+
+    def compute_dist_m(self,preds,locs):
+        pred_locs = PoseTools.get_pred_locs_multi(
+            preds, self.conf.max_n_animals,
+            self.conf.label_blur_rad * 2)
+
+        dist = np.zeros(locs.shape[:-1])
+        dist[:] = np.nan
+
+        for ndx in range(self.conf.batch_size):
+            for cls in range(self.conf.n_classes):
+                for i_ndx in range(self.info[ndx][2][0]):
+                    cur_locs = locs[ndx, i_ndx, cls, ...]
+                    if np.isnan(cur_locs[0]):
+                        continue
+                    cur_dist = l2_dist(pred_locs[ndx, :, cls, :], cur_locs)
+                    closest = np.argmin(cur_dist)
+                    dist[ndx,i_ndx,cls] += cur_dist.min()
+
+    def classify_val_m(self):
+        val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        num_val = 0
+        for record in tf.python_io.tf_record_iterator(val_file):
+            num_val += 1
+
+        self.init_train(train_type=0)
+        self.pred = self.create_network()
+        saver = self.create_saver()
+
+        with tf.Session() as sess:
+            start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+
+            val_dist = []
+            val_ims = []
+            val_preds = []
+            val_locs = []
+            for step in range(num_val/self.conf.batch_size):
+                self.setup_val(sess)
+                cur_pred = sess.run(self.pred, self.fd)
+                cur_dist = self.compute_dist_m(cur_pred,self.locs)
+                val_ims.append(self.xs)
+                val_locs.append(self.locs)
+                val_preds.append(cur_pred)
+                val_dist.append(cur_dist)
+            self.close_cursors()
+
+        def val_reshape(in_a):
+            in_a = np.array(in_a)
+            return in_a.reshape( (-1,) + in_a.shape[2:])
+
+        val_dist = val_reshape(val_dist)
+        val_ims = val_reshape(val_ims)
+        val_preds = val_reshape(val_preds)
+        val_locs = val_reshape(val_locs)
+
+        return val_dist, val_ims, val_preds, val_locs

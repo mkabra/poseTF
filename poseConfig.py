@@ -63,9 +63,6 @@ class config(object):
     baseIter4MRFTrain = 5000  # without batch_norm
     baseIter4ACTrain = 5000  # without batch_norm
 
-    # ------ Pose Generation Network Params
-    gen_minlen = 8
-
     # ----- Learning parameters
 
     base_learning_rate = 0.0003  # 0.0001 --without batch norm
@@ -104,7 +101,9 @@ class config(object):
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = True
+    normalize_mean_img = False
+    normalize_mean = False
+    perturb_color = False
 
     # fine_batch_size = 8
 
@@ -120,10 +119,12 @@ class config(object):
     valdatafilename = 'valdata'
     valratio = 0.3
     holdoutratio = 0.8
+    max_n_animals = 1
 
     # ----- MDN params
     mdn_min_sigma = 3.
     mdn_max_sigma = 4.
+    mdn_logit_eps_training = 0.01
 
     # ----- Save parameters
 
@@ -170,6 +171,7 @@ class config(object):
     # gendataname = genoutname + 'traindata'
 
 
+# -- alice fly --
 
 aliceConfig = config()
 aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice')
@@ -198,3 +200,64 @@ aliceConfig.dilation_rate = 2
 aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
 aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
 aliceConfig.valratio = 0.15
+
+
+# -- felipe bees --
+
+felipeConfig = config()
+felipeConfig.cachedir = os.path.join(localSetup.bdir, 'cache','felipe')
+felipeConfig.labelfile = os.path.join(localSetup.bdir,'data','felipe','doesnt_exist.lbl')
+def felipe_exp_name(dirname):
+    return dirname
+
+def felipe_get_exp_list(L):
+    return 0
+
+felipeConfig.getexpname = felipe_exp_name
+felipeConfig.getexplist = felipe_get_exp_list
+felipeConfig.view = 0
+felipeConfig.imsz = (300, 300)
+felipeConfig.selpts = np.arange(0, 5)
+felipeConfig.imgDim = 3
+felipeConfig.n_classes = len(felipeConfig.selpts)
+felipeConfig.splitType = 'frame'
+felipeConfig.set_exp_name('felipeBees')
+felipeConfig.trange = 20
+felipeConfig.nfcfilt = 128
+felipeConfig.sel_sz = 144
+felipeConfig.num_pools = 2
+felipeConfig.dilation_rate = 1
+felipeConfig.pool_scale = felipeConfig.pool_stride**felipeConfig.num_pools
+felipeConfig.psz = felipeConfig.sel_sz / 4 / felipeConfig.pool_scale / felipeConfig.dilation_rate
+
+
+##  -- felipe multi bees
+
+# -- felipe bees --
+
+felipe_config_multi = config()
+felipe_config_multi.cachedir = os.path.join(localSetup.bdir, 'cache', 'felipe_m')
+felipe_config_multi.labelfile = os.path.join(localSetup.bdir, 'data', 'felipe_m', 'doesnt_exist.lbl')
+def felipe_exp_name(dirname):
+    return dirname
+
+def felipe_get_exp_list(L):
+    return 0
+
+felipe_config_multi.getexpname = felipe_exp_name
+felipe_config_multi.getexplist = felipe_get_exp_list
+felipe_config_multi.view = 0
+felipe_config_multi.imsz = (360, 380)
+felipe_config_multi.selpts = np.array([1, 3, 4])
+felipe_config_multi.imgDim = 3
+felipe_config_multi.n_classes = len(felipe_config_multi.selpts)
+felipe_config_multi.splitType = 'frame'
+felipe_config_multi.set_exp_name('felipeBeesMulti')
+felipe_config_multi.trange = 20
+felipe_config_multi.nfcfilt = 128
+felipe_config_multi.sel_sz = 256
+felipe_config_multi.num_pools = 2
+felipe_config_multi.dilation_rate = 1
+felipe_config_multi.pool_scale = felipe_config_multi.pool_stride ** felipe_config_multi.num_pools
+felipe_config_multi.psz = felipe_config_multi.sel_sz / 4 / felipe_config_multi.pool_scale / felipe_config_multi.dilation_rate
+felipe_config_multi.max_n_animals = 17

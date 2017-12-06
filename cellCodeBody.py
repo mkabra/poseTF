@@ -118,9 +118,9 @@ for view in range(2):
 
     # conf.batch_size = 1
 
-    self = PoseTools.createNetwork(conf,outtype)
+    self = PoseTools.create_network(conf, outtype)
     sess = tf.InteractiveSession()
-    PoseTools.initNetwork(self,sess,outtype)
+    PoseTools.init_network(self, sess, outtype)
 
     scale = conf.rescale*conf.pool_scale
     _,valmovies = multiResData.getMovieLists(conf)
@@ -135,7 +135,7 @@ for view in range(2):
         if not os.path.isfile(valmovies[ndx]):
             continue
 
-        predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+        predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
     #     PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
 
 

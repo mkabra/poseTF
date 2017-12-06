@@ -772,9 +772,9 @@ redo = False
 
 # conf.batch_size = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 from scipy import io
 import cv2
@@ -806,9 +806,9 @@ for ndx in range(len(valmovies)):
     if os.path.isfile(pname + '.mat') and not redo:
         continue
         
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+    predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
     if ndx<5:
-        PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+        PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
@@ -861,9 +861,9 @@ redo = False
 
 # conf.batch_size = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 from scipy import io
 import cv2
@@ -881,9 +881,9 @@ for ndx in [0,3,-3,-1]:
     if os.path.isfile(pname + '.mat') and not redo:
         continue
         
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+    predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
     if ndx<5:
-        PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+        PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
 
 #     cap = cv2.VideoCapture(valmovies[ndx])
@@ -924,11 +924,11 @@ conf.useMRF = True
 conf.useAC = False
 conf.batch_size = 1;
 outtype = 3 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 self.open_dbs()
 
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 nval = int(self.valenv.stat()['entries'])
 
 predErr = np.zeros([3,conf.n_classes,2,nval])
@@ -940,8 +940,8 @@ with self.valenv.begin() as valtxn:
         self.feed_dict[self.ph['learning_rate']] = 1.
         self.updateFeedDict(self.DBType.Val)
         preds = sess.run([self.basePred,self.mrfPred,self.finePred],feed_dict=self.feed_dict)
-        predErr[0,:,:,ndx] = PoseTools.getBaseError(self.locs,preds[0],conf)[0,...]
-        mrfErr,fineErr = PoseTools.getFineError(self.locs,preds[1],preds[2],conf)
+        predErr[0,:,:,ndx] = PoseTools.get_base_error(self.locs, preds[0], conf)[0, ...]
+        mrfErr,fineErr = PoseTools.get_fine_error(self.locs, preds[1], preds[2], conf)
         predErr[1,:,:,ndx] = mrfErr[0,...]
         predErr[2,:,:,ndx] = fineErr[0,...]
         
@@ -1063,7 +1063,7 @@ for ndx in range(nfr):
     aim1[...,ndx] = i
 cap.release()
 
-cap,nframes = PoseTools.openMovie(moviename)
+cap,nframes = PoseTools.open_movie(moviename)
 for ndx in range(nfr):
     i = myutils.readframe(cap,ndx)
     aim2[...,ndx] = i
@@ -1083,7 +1083,7 @@ from romainLegConfig import bottomconf as conf
 import PoseTools
 reload(PoseTools)
 
-o,d,l = PoseTools.genDistortedImages(conf)
+o,d,l = PoseTools.gen_distorted_images(conf)
 
 
 # In[4]:

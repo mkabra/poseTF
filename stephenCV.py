@@ -191,9 +191,9 @@ def classifyfold_fine(curfold,curgpu,batch_size,
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
 
     outtype = 3
-    self = PoseTools.createNetwork(conf,outtype)
+    self = PoseTools.create_network(conf, outtype)
     sess = tf.Session()
-    PoseTools.initNetwork(self,sess,outtype)
+    PoseTools.init_network(self, sess, outtype)
 
 
     for ndx in range(len(movies)):

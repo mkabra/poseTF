@@ -65,7 +65,7 @@ class PoseMDN(PoseTrain):
         self.opt = None
 
     def create_saver(self):
-        self.mdn_saver = tf.train.Saver(var_list=PoseTools.getvars('mdn'),
+        self.mdn_saver = tf.train.Saver(var_list=PoseTools.get_vars('mdn'),
                                         max_to_keep=self.conf.maxckpt)
 
     def restore(self, sess, restore):
@@ -79,7 +79,7 @@ class PoseMDN(PoseTrain):
             self.mdn_start_at = 0
             self.mdn_train_data = {'train_err': [], 'val_err': [], 'step_no': [],
                                    'train_dist': [], 'val_dist': []}
-            sess.run(tf.variables_initializer(PoseTools.getvars('mdn')), feed_dict=self.feed_dict)
+            sess.run(tf.variables_initializer(PoseTools.get_vars('mdn')), feed_dict=self.feed_dict)
             print("Not loading MDN variables. Initializing them")
             return False
         else:
@@ -95,7 +95,7 @@ class PoseMDN(PoseTrain):
                 if not isinstance(in_data, dict):
                     self.mdn_train_data, load_conf = in_data
                     print('Parameters that dont match for base:')
-                    PoseTools.compareConf(self.conf, load_conf)
+                    PoseTools.compare_conf(self.conf, load_conf)
                 else:
                     print("No config was stored for base. Not comparing conf")
                     self.mdn_train_data = in_data
@@ -136,7 +136,7 @@ class PoseMDN(PoseTrain):
                 if not isinstance(inData, dict):
                     self.basetrainData, loadconf = inData
                     print('Parameters that dont match for base:')
-                    PoseTools.compareConf(self.conf, loadconf)
+                    PoseTools.compare_conf(self.conf, loadconf)
                 else:
                     print("No config was stored for base. Not comparing conf")
                     self.basetrainData = inData
@@ -956,7 +956,7 @@ class PoseMDN(PoseTrain):
                     cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
                     # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
                     cur_scale = pred_std[sel, ndx, cls].astype('int')
-                    curl = (PoseTools.createLabelImages(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
+                    curl = (PoseTools.create_label_images(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
                     mdn_pred_out[sel,:, :, cls] += pred_weights[sel, ndx, cls] * curl[0, ..., 0]
         return  mdn_pred_out
 
@@ -976,7 +976,7 @@ class PoseMDN(PoseTrain):
                     cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
                     # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
                     cur_scale = pred_std[sel, ndx, cls].astype('int')
-                    curl = (PoseTools.createLabelImages(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
+                    curl = (PoseTools.create_label_images(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
                     mdn_pred_out[sel,:, :, cls] += pred_weights[sel, ndx] * curl[0, ..., 0]
         return  mdn_pred_out
 
@@ -1055,7 +1055,7 @@ class PoseMDN(PoseTrain):
                 base_pred = sess.run(self.basePred, self.feed_dict)
                 self.feed_dict[self.ph['phase_train_mdn']] = True
                 self.feed_dict[self.ph['base_locs']] = \
-                    PoseTools.getBasePredLocs(base_pred, self.conf)
+                    PoseTools.get_base_pred_locs(base_pred, self.conf)
                 # self.feed_dict[self.ph['layer7']] = np.zeros(l7_shape)
                 # l7_cur = sess.run(self.baseLayers['conv7'], feed_dict=self.feed_dict)
                 # self.feed_dict[self.ph['layer7']] = l7_cur
@@ -1070,7 +1070,7 @@ class PoseMDN(PoseTrain):
                                                                      self.conf.n_classes, 2])
                     base_pred = sess.run(self.basePred, self.feed_dict)
                     self.feed_dict[self.ph['base_locs']] = \
-                        PoseTools.getBasePredLocs(base_pred, self.conf)
+                        PoseTools.get_base_pred_locs(base_pred, self.conf)
                     # self.feed_dict[self.ph['layer7']] = np.zeros(l7_shape)
                     # l7_cur = sess.run(self.baseLayers['conv7'], feed_dict=self.feed_dict)
                     # self.feed_dict[self.ph['layer7']] = l7_cur
@@ -1079,7 +1079,7 @@ class PoseMDN(PoseTrain):
                     self.mdn_train_data['step_no'].append(step)
 
                     mdn_pred = self.mdn_pred(sess)
-                    bee = PoseTools.getBaseError(
+                    bee = PoseTools.get_base_error(
                         self.feed_dict[self.ph['base_locs']],
                         mdn_pred, self.conf)
                     tt1 = np.sqrt(np.sum(np.square(bee), 2))
@@ -1098,7 +1098,7 @@ class PoseMDN(PoseTrain):
                                                                          self.conf.n_classes, 2])
                         base_pred = sess.run(self.basePred, self.feed_dict)
                         self.feed_dict[self.ph['base_locs']] = \
-                            PoseTools.getBasePredLocs(base_pred, self.conf)
+                            PoseTools.get_base_pred_locs(base_pred, self.conf)
                         # self.feed_dict[self.ph['layer7']] = np.zeros(l7_shape)
                         # l7_cur = sess.run(self.baseLayers['conv7'], feed_dict=self.feed_dict)
                         # self.feed_dict[self.ph['layer7']] = l7_cur
@@ -1106,7 +1106,7 @@ class PoseMDN(PoseTrain):
                         val_loss += cur_te_loss
                         if rep == 0:
                             mdn_pred = self.mdn_pred(sess)
-                            bee = PoseTools.getBaseError(
+                            bee = PoseTools.get_base_error(
                                 self.feed_dict[self.ph['base_locs']],
                                 mdn_pred, self.conf)
                             tt1 = np.sqrt(np.sum(np.square(bee), 2))
@@ -1208,7 +1208,7 @@ class PoseMDN(PoseTrain):
                     self.mdn_train_data['step_no'].append(step)
 
                     mdn_pred = self.mdn_pred_joint(sess)
-                    bee = PoseTools.getBaseError(
+                    bee = PoseTools.get_base_error(
                         self.feed_dict[self.ph['locs']],
                         mdn_pred, self.conf)
                     tt1 = np.sqrt(np.sum(np.square(bee), 2))
@@ -1227,7 +1227,7 @@ class PoseMDN(PoseTrain):
                         val_loss += cur_te_loss
                         if rep == 0:
                             mdn_pred = self.mdn_pred_joint(sess)
-                            bee = PoseTools.getBaseError(
+                            bee = PoseTools.get_base_error(
                                 self.feed_dict[self.ph['locs']],
                                 mdn_pred, self.conf)
                             tt1 = np.sqrt(np.sum(np.square(bee), 2))
@@ -1405,7 +1405,7 @@ class PoseMDN(PoseTrain):
                 cur_bpred = cur_bpred[:, dyy:(128 + dyy), dxx:(128 + dxx), :]
                 # self.feed_dict[self.ph['step']] = cur_step
                 self.feed_dict[self.ph['base_locs']] = \
-                    PoseTools.getBasePredLocs(cur_bpred, self.conf)
+                    PoseTools.get_base_pred_locs(cur_bpred, self.conf)
                 self.feed_dict[self.ph['base_pred']] = cur_bpred
                 sess.run(self.opt, self.feed_dict)
 
@@ -1413,14 +1413,14 @@ class PoseMDN(PoseTrain):
                     data_ndx = (step + 1) % len(m_train_data)
                     cur_bpred = m_train_data[data_ndx][0]
                     self.feed_dict[self.ph['base_locs']] = \
-                        PoseTools.getBasePredLocs(cur_bpred, self.conf)
+                        PoseTools.get_base_pred_locs(cur_bpred, self.conf)
                     self.feed_dict[self.ph['base_pred']] = cur_bpred
                     tr_loss = sess.run(self.loss, feed_dict=self.feed_dict)
                     self.mdn_train_data['train_err'].append(tr_loss)
                     self.mdn_train_data['step_no'].append(step)
 
                     mdn_pred = self.mdn_pred(sess)
-                    bee = PoseTools.getBaseError(
+                    bee = PoseTools.get_base_error(
                         self.feed_dict[self.ph['base_locs']], mdn_pred, self.conf)
                     tt1 = np.sqrt(np.sum(np.square(bee), 2))
                     nantt1 = np.invert(np.isnan(tt1.flatten()))
@@ -1430,12 +1430,12 @@ class PoseMDN(PoseTrain):
                     data_ndx = (test_step + 1) % len(m_test_data)
                     cur_bpred = m_test_data[data_ndx][0]
                     self.feed_dict[self.ph['base_locs']] = \
-                        PoseTools.getBasePredLocs(cur_bpred, self.conf)
+                        PoseTools.get_base_pred_locs(cur_bpred, self.conf)
                     self.feed_dict[self.ph['base_pred']] = cur_bpred
                     cur_te_loss = sess.run(self.loss, feed_dict=self.feed_dict)
                     val_loss = cur_te_loss
                     mdn_pred = self.mdn_pred(sess)
-                    bee = PoseTools.getBaseError(
+                    bee = PoseTools.get_base_error(
                         self.feed_dict[self.ph['base_locs']], mdn_pred, conf)
                     tt1 = np.sqrt(np.sum(np.square(bee), 2))
                     nantt1 = np.invert(np.isnan(tt1.flatten()))

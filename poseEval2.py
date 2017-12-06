@@ -329,11 +329,11 @@ def readImages(conf,dbType,distort,sess,data):
     locs = multiResData.sanitizelocs(locs)
     if distort:
         if conf.horzFlip:
-            xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+            xs,locs = PoseTools.randomly_flip_lr(xs, locs)
         if conf.vertFlip:
-            xs,locs = PoseTools.randomlyFlipUD(xs,locs)
-        xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
-        xs = PoseTools.randomlyAdjust(xs,conf)
+            xs,locs = PoseTools.randomly_flip_ud(xs, locs)
+        xs,locs = PoseTools.randomly_rotate(xs, locs, conf)
+        xs = PoseTools.randomly_adjust(xs, conf)
 
     return xs,locs
 
@@ -357,8 +357,8 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     ind_labels = ind_labels.clip(min=-1,max=1)
 
     psz = conf.poseEval2_psz
-    x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
-                                          conf.rescale,conf.scale, conf.l1_cropsz,conf)
+    x0,x1,x2 = PoseTools.multi_scale_images(xs.transpose([0, 2, 3, 1]),
+                                            conf.rescale, conf.scale, conf.l1_cropsz, conf)
 #     jj = np.random.randint(3)
 #change 3 22022017
     jj = 2
@@ -507,8 +507,8 @@ def saveEval(sess,evalsaver,step,conf):
     print('Saved state to %s-%d' %(outfilename,step))
 
 def createEvalSaver(conf):
-    evalsaver = tf.train.Saver(var_list = PoseTools.getvars('eval'),
-                                    max_to_keep=conf.maxckpt)
+    evalsaver = tf.train.Saver(var_list = PoseTools.get_vars('eval'),
+                               max_to_keep=conf.maxckpt)
     return evalsaver
 
 def initializeRemainingVars(sess,feed_dict):

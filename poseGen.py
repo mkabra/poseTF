@@ -152,7 +152,7 @@ def createFeedDict(phDict):
 # In[ ]:
 
 def createGenSaver(conf):
-    genSaver = tf.train.Saver(var_list = PoseTools.getvars('poseGen'),max_to_keep=conf.maxckpt)
+    genSaver = tf.train.Saver(var_list = PoseTools.get_vars('poseGen'), max_to_keep=conf.maxckpt)
     return genSaver
 
 
@@ -164,7 +164,7 @@ def restoreGen(sess,conf,genSaver,restore=True):
                                         latest_filename = conf.genckptname)
     if not latest_ckpt or not restore:
         startat = 0
-        sess.run(tf.initialize_variables(PoseTools.getvars('poseGen')))
+        sess.run(tf.initialize_variables(PoseTools.get_vars('poseGen')))
         print("Not loading gen variables. Initializing them")
         didRestore = False
     else:
@@ -234,7 +234,7 @@ def prepareOpt(baseNet,l8,dbtype,feed_dict,sess,conf,phDict,distort,nsamples=10)
     baseNet.updateFeedDict(dbtype,distort)
     locs = baseNet.locs
     bout = sess.run(l8,feed_dict=baseNet.feed_dict)
-    predlocs = PoseTools.getBasePredLocs(bout,conf)
+    predlocs = PoseTools.get_base_pred_locs(bout, conf)
     
     #repeat locs nsamples times
     ls = locs.shape
@@ -277,7 +277,7 @@ def train(conf,restore=True):
     feed_dict[phDict['phase_train']] = True
     feed_dict[phDict['dropout']] = 0.5
     feed_dict[phDict['y']] = np.zeros((conf.batch_size,conf.n_classes*2))
-    baseNet = PoseTools.createNetwork(conf,1)
+    baseNet = PoseTools.create_network(conf, 1)
     l8 = addDropoutLayer(baseNet,phDict['dropout'],conf)
     with tf.variable_scope('poseGen'):
         out,out_m,layer_dict = poseGenNet(phDict['locs'],phDict['scores'],l8,

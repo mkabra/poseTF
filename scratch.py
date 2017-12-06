@@ -42,7 +42,7 @@ data_dict = {}
 for ndx in range(self.conf.n_classes):
     data_dict[y[ndx]] = y_label[:, ndx, :]
 inference = mymap.MAP(data=data_dict)
-inference.initialize(var_list=PoseTools.getvars('mdn'))
+inference.initialize(var_list=PoseTools.get_vars('mdn'))
 self.loss = inference.loss
 
 starter_learning_rate = 0.00003
@@ -88,7 +88,7 @@ for cls in range(conf.n_classes):
     for ndx in range(pred_means.shape[1]):
         cur_locs = pred_means[sel:sel+1,ndx:ndx+1,cls,:].astype('int')
         cur_scale = pred_std[sel,ndx,cls,:].mean().astype('int')
-        curl = (PoseTools.createLabelImages(cur_locs,[osz,osz],1,cur_scale)+1)/2
+        curl = (PoseTools.create_label_images(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
         out_test[:,:,cls] += pred_weights[sel,ndx,cls]*curl[0,...,0]
 
     ax = f.add_subplot(2,3,cls+2)
@@ -109,7 +109,7 @@ def create_mdn_pred(self, pred_weights, pred_means, pred_std):
                     continue
                 cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
                 cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
-                curl = (PoseTools.createLabelImages(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
+                curl = (PoseTools.create_label_images(cur_locs, [osz, osz], 1, cur_scale) + 1) / 2
                 mdn_pred_out[sel,:, :, cls] += pred_weights[sel, ndx, cls] * curl[0, ..., 0]
     return  mdn_pred_out
 
@@ -137,7 +137,7 @@ for count in range(20):
     lbl_imgs = self.feed_dict[self.ph['y']]
 
     mdn_pred = create_mdn_pred(self,pred_weights,pred_means,pred_std)
-    bee = PoseTools.getBaseError(self.locs, mdn_pred, self.conf)
+    bee = PoseTools.get_base_error(self.locs, mdn_pred, self.conf)
     tt1 = np.sqrt(np.sum(np.square(bee), 2))
     allinfo.append([tt1,self.xs,self.locs,
                     pred_weights,pred_means,
@@ -173,7 +173,7 @@ for count in range(10):
     lbl_imgs = self.feed_dict[self.ph['y']]
 
     mdn_pred = create_mdn_pred(self,pred_weights,pred_means,pred_std)
-    bee = PoseTools.getBaseError(self.locs, mdn_pred, self.conf)
+    bee = PoseTools.get_base_error(self.locs, mdn_pred, self.conf)
     tt1 = np.sqrt(np.sum(np.square(bee), 2))
     alltinfo.append([tt1,self.xs,self.locs,
                     pred_weights,pred_means,
