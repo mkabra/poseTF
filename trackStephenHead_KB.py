@@ -145,9 +145,9 @@ def main(argv):
         # conf.batch_size = 1
 
         if args.detect:        
-            self = PoseTools.createNetwork(conf,outtype)
+            self = PoseTools.create_network(conf, outtype)
             sess = tf.Session()
-            PoseTools.initNetwork(self,sess,outtype)
+            PoseTools.init_network(self, sess, outtype)
 
         for ndx in range(len(valmovies)):
             mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
@@ -160,10 +160,10 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+                predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
 
                 if args.makemovie:
-                    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+                    PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
                 cap = cv2.VideoCapture(valmovies[ndx])
                 height = int(cap.get(cvc.FRAME_HEIGHT))

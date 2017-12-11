@@ -111,18 +111,30 @@ def upscale(name,l_input,sz):
 #                }
 #     return conv5, out_dict
 
-def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size):
+def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size,conf):
     inDim = X.get_shape()[3]
     with tf.variable_scope('layer1'):
         conv1 = conv_relu(X,[5, 5, inDim, 48],0.01,0,doBatchNorm,trainPhase)
-        pool1 = max_pool('pool1', conv1, k=pool_size,s=pool_stride)
+        if hasattr(conf,'num_pools'):
+            if conf.num_pools > 0:
+                pool1 = max_pool('pool1', conv1, k=pool_size,s=pool_stride)
+            else:
+                pool1 = conv1
+        else:
+            pool1 = max_pool('pool1', conv1, k=pool_size, s=pool_stride)
         norm1 = norm('norm1', pool1, lsize=2)
     
     with tf.variable_scope('layer2'):
         conv2 = conv_relu(norm1,[3,3,48,nfilt],0.01,1,doBatchNorm,trainPhase)
-        pool2 = max_pool('pool2', conv2, k=pool_size,s=pool_stride)
+        if hasattr(conf,'num_pools'):
+            if conf.num_pools > 1:
+                pool2 = max_pool('pool2', conv2, k=pool_size, s=pool_stride)
+            else:
+                pool2 = conv2
+        else:
+            pool2 = max_pool('pool2', conv2, k=pool_size, s=pool_stride)
         norm2 = norm('norm2', pool2, lsize=4)
-            
+
     with tf.variable_scope('layer3'):
         conv3 = conv_relu(norm2,[3,3,nfilt,nfilt],0.01,1,doBatchNorm,trainPhase)
     with tf.variable_scope('layer4'):
@@ -135,7 +147,47 @@ def net_multi_base_named(X,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size):
                 'pool2':pool2,'norm1':norm1,'norm2':norm2,
                }
     return conv5,out_dict
-        
+
+
+def net_multi_base_named_dilated(X, nfilt, doBatchNorm, trainPhase, pool_stride, pool_size, conf):
+    inDim = X.get_shape()[3]
+    with tf.variable_scope('layer1'):
+        conv1 = conv_relu(X, [5, 5, inDim, 48], 0.01, 0, doBatchNorm, trainPhase)
+        norm1 = norm('norm1', conv1, lsize=2)
+
+    with tf.variable_scope('layer2'):
+        weights = tf.get_variable("weights", [3,3,48,nfilt],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("biases", nfilt,
+                                 initializer=tf.constant_initializer(1))
+        conv2 = tf.nn.convolution(norm1, weights,
+                            strides=[1, 1], padding='SAME',dilation_rate=[4,4])
+        if doBatchNorm:
+            conv2 = batch_norm(conv2, trainPhase)
+        conv2 = tf.nn.relu(conv2 + biases)
+        norm2 = norm('norm2',conv2 , lsize=4)
+
+    with tf.variable_scope('layer3'):
+        weights = tf.get_variable("weights", [3,3,nfilt,nfilt],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("biases",nfilt,
+                                 initializer=tf.constant_initializer(1))
+        conv3 = tf.nn.convolution(norm2, weights,
+                                  strides=[1, 1], padding='SAME', dilation_rate=[2, 2])
+        if doBatchNorm:
+            conv3 = batch_norm(conv3, trainPhase)
+        conv3 = tf.nn.relu(conv3 + biases)
+
+    with tf.variable_scope('layer4'):
+        conv4 = conv_relu(conv3, [3, 3, nfilt, nfilt], 0.01, 1, doBatchNorm, trainPhase)
+    with tf.variable_scope('layer5'):
+        conv5 = conv_relu(conv4, [3, 3, nfilt, nfilt], 0.01, 1, doBatchNorm, trainPhase)
+
+    out_dict = {'conv1': conv1, 'conv2': conv2, 'conv3': conv3,
+                'conv4': conv4, 'conv5': conv5, 'norm1': norm1, 'norm2': norm2,
+                }
+    return conv5, out_dict
+
 
 def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     imsz = conf.imsz; rescale = conf.rescale
@@ -143,16 +195,24 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
     nfilt = conf.nfilt
     pool_stride = conf.pool_stride
     pool_size = conf.pool_size
-    
+
     #     conv5_0,base_dict_0 = net_multi_base(X0,_weights['base0'])
     #     conv5_1,base_dict_1 = net_multi_base(X1,_weights['base1'])
     #     conv5_2,base_dict_2 = net_multi_base(X2,_weights['base2'])
+    if conf.dilation_rate is 4:
+        net_to_use = net_multi_base_named_dilated
+    else:
+        net_to_use = net_multi_base_named
+
     with tf.variable_scope('scale0'):
-        conv5_0,base_dict_0 = net_multi_base_named(X0,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
+        conv5_0,base_dict_0 = net_to_use(X0,nfilt,doBatchNorm,trainPhase,
+                                                   pool_stride,pool_size,conf)
     with tf.variable_scope('scale1'):
-        conv5_1,base_dict_1 = net_multi_base_named(X1,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
+        conv5_1,base_dict_1 = net_to_use(X1,nfilt,doBatchNorm,trainPhase,
+                                                   pool_stride,pool_size,conf)
     with tf.variable_scope('scale2'):
-        conv5_2,base_dict_2 = net_multi_base_named(X2,nfilt,doBatchNorm,trainPhase,pool_stride,pool_size)
+        conv5_2,base_dict_2 = net_to_use(X2,nfilt,doBatchNorm,trainPhase,
+                                                   pool_stride,pool_size,conf)
 
     sz0 = int(math.ceil(float(imsz[0])/pool_scale/rescale))
     sz1 = int(math.ceil(float(imsz[1])/pool_scale/rescale))
@@ -185,10 +245,19 @@ def net_multi_conv(X0,X1,X2,_dropout,conf,doBatchNorm,trainPhase):
 #     conv7 = tf.nn.dropout(conv7,_dropout)
 
     with tf.variable_scope('layer6'):
-        conv6 = conv_relu(conv5_cat,
-                         [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
-                          0.005,1,doBatchNorm,trainPhase) 
-        # if not doBatchNorm:
+        if hasattr(conf, 'dilation_rate'):
+            dilation_rate = [conf.dilation_rate, conf.dilation_rate]
+        else:
+            dilation_rate = [1, 1]
+        weights = tf.get_variable("weights", [conf.psz,conf.psz,conf.numscale*nfilt,conf.nfcfilt],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("biases", conf.nfcfilt,
+                                 initializer=tf.constant_initializer(1))
+        conv6 = tf.nn.convolution(conv5_cat, weights,
+                            strides=[1, 1], padding='SAME',dilation_rate=dilation_rate)
+        if doBatchNorm:
+            conv6 = batch_norm(conv6, trainPhase)
+        conv6 = tf.nn.relu(conv6 + biases)
         conv6 = tf.nn.dropout(conv6,_dropout,
                           [conf.batch_size,1,1,conf.nfcfilt])
 

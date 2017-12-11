@@ -37,7 +37,7 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512/2/2
+    sel_sz = 512/2 #/2 for alex net
     psz = sel_sz/(scale**(numscale-1))/rescale/pool_scale
     dist2pos = 5
     label_blur_rad = 3 #1.5
@@ -95,7 +95,7 @@ class myconfig(object):
     eval_training_iters = 500*mult_fac
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
-    step_size = 100000
+    step_size = 50000
     display_step = 30
     numTest = 100
     
@@ -147,8 +147,13 @@ class myconfig(object):
 
 
     # ----- MDN params
-    mdn_min_sigma = 3.
-    mdn_max_sigma = 4.
+    # for 1/4 res.
+    # mdn_min_sigma = 3.
+    # mdn_max_sigma = 4.
+    # for full res.
+    mdn_min_sigma = 24.
+    mdn_max_sigma = 32.
+    mdn_logit_eps_training = 0.01
 
     # ----- Save parameters
 
@@ -174,6 +179,7 @@ class myconfig(object):
     gendataname = genoutname + 'traindata'
     
     mrf_psz = 54
+    dilation_rate = 1
 
     # ----- project specific functions
 

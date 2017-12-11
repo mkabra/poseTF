@@ -12,10 +12,9 @@ import localSetup
 import numpy as np
 
 
-class myconfig(object):
+class config(object):
     # ----- Names
 
-    expname = 'head'
     baseName = 'Base'
     fineName = 'Fine'  # _resize'
     mrfName = 'MRF'  # _identity'
@@ -37,12 +36,9 @@ class myconfig(object):
     # ideally as large as possible but limited by
     # a) gpu memory size
     # b) overfitting due to large number of variables.
-    sel_sz = 512 / 2 / 2
-    psz = sel_sz / (scale ** (numscale - 1)) / rescale / pool_scale
     dist2pos = 5
     label_blur_rad = 3  # 1.5
     fine_label_blur_rad = 1.5
-    n_classes = 5  #
     # dropout = 0.5 # Dropout, probability to keep units
     nfilt = 128
     nfcfilt = 512
@@ -66,9 +62,6 @@ class myconfig(object):
     # baseIter4MRFTrain = 4000 # without batch_norm
     baseIter4MRFTrain = 5000  # without batch_norm
     baseIter4ACTrain = 5000  # without batch_norm
-
-    # ------ Pose Generation Network Params
-    gen_minlen = 8
 
     # ----- Learning parameters
 
@@ -108,7 +101,9 @@ class myconfig(object):
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = True
+    normalize_mean_img = False
+    normalize_mean = False
+    perturb_color = False
 
     # fine_batch_size = 8
 
@@ -124,55 +119,145 @@ class myconfig(object):
     valdatafilename = 'valdata'
     valratio = 0.3
     holdoutratio = 0.8
+    max_n_animals = 1
 
     # ----- MDN params
     mdn_min_sigma = 3.
     mdn_max_sigma = 4.
+    mdn_logit_eps_training = 0.01
 
     # ----- Save parameters
 
     save_step = 500
     maxckpt = 20
-    # def __init__(self):
-    #     self.baseoutname = lambda : self.expname + self.baseName
-    #     self.baseckptname = lambda: self.baseoutname() + 'ckpt'
-    #     self.basedataname = lambda: self.baseoutname() + 'traindata'
-    baseoutname = expname + baseName
-    baseckptname = baseoutname + 'ckpt'
-    basedataname = baseoutname + 'traindata'
-    fineoutname = expname + fineName
-    mrfoutname = expname + mrfName
-    evaloutname = expname + evalName
-    genoutname = expname + genName
-    baseregoutname = expname + regName
-    baseregckptname = baseregoutname + 'ckpt'
-    fineckptname = fineoutname + 'ckpt'
-    mrfckptname = mrfoutname + 'ckpt'
-    evalckptname = evaloutname + 'ckpt'
-    genckptname = genoutname + 'ckpt'
-    baseregdataname = baseregoutname + 'traindata'
-    finedataname = fineoutname + 'traindata'
-    mrfdataname = mrfoutname + 'traindata'
-    evaldataname = evaloutname + 'traindata'
-    gendataname = genoutname + 'traindata'
+    def set_exp_name(self, exp_name):
+        self.expname = exp_name
+        self.baseoutname = self.expname + self.baseName
+        self.baseckptname = self.baseoutname + 'ckpt'
+        self.basedataname = self.baseoutname + 'traindata'
+        self.fineoutname = self.expname + self.fineName
+        self.fineckptname = self.fineoutname + 'ckpt'
+        self.finedataname = self.fineoutname + 'traindata'
+        self.mrfoutname = self.expname + self.mrfName
+        self.mrfckptname = self.mrfoutname + 'ckpt'
+        self.mrfdataname = self.mrfoutname + 'traindata'
+        # self.evaloutname = self.expname + evalName
+        # self.evalckptname = self.evaloutname + 'ckpt'
+        # self.evaldataname = self.evaloutname + 'traindata'
+        # self.genoutname = self.expname + genName
+        # self.genckptname = self.genoutname + 'ckpt'
+        # self.gendataname = self.genoutname + 'traindata'
+        self.baseregoutname = self.expname + self.regName
+        self.baseregckptname = self.baseregoutname + 'ckpt'
+        self.baseregdataname = self.baseregoutname + 'traindata'
 
-    mrf_psz = 54
+    # baseoutname = expname + baseName
+    # baseckptname = baseoutname + 'ckpt'
+    # basedataname = baseoutname + 'traindata'
+    # fineoutname = expname + fineName
+    # mrfoutname = expname + mrfName
+    # evaloutname = expname + evalName
+    # genoutname = expname + genName
+    # baseregoutname = expname + regName
+    # baseregckptname = baseregoutname + 'ckpt'
+    # fineckptname = fineoutname + 'ckpt'
+    # mrfckptname = mrfoutname + 'ckpt'
+    # evalckptname = evaloutname + 'ckpt'
+    # genckptname = genoutname + 'ckpt'
+    # baseregdataname = baseregoutname + 'traindata'
+    # finedataname = fineoutname + 'traindata'
+    # mrfdataname = mrfoutname + 'traindata'
+    # evaldataname = evaloutname + 'traindata'
+    # gendataname = genoutname + 'traindata'
 
 
-aliceConfig = myconfig()
-aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cacheAlice')
+# -- alice fly --
+
+aliceConfig = config()
+aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice')
 aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
-def aliceexpname(dirname):
+def alice_exp_name(dirname):
     return os.path.basename(os.path.dirname(dirname))
 
-def alicegetexplist(L):
+def alice_get_exp_list(L):
     return L['movieFilesAll'][0,:]
 
-aliceConfig.getexpname = aliceexpname
-aliceConfig.getexplist = alicegetexplist
+aliceConfig.getexpname = alice_exp_name
+aliceConfig.getexplist = alice_get_exp_list
 aliceConfig.has_trx_file = True
 aliceConfig.view = 0
 aliceConfig.imsz = (180, 180)
 aliceConfig.selpts = np.arange(0, 17)
 aliceConfig.imgDim = 1
+aliceConfig.n_classes = len(aliceConfig.selpts)
+aliceConfig.splitType = 'frame'
+aliceConfig.set_exp_name('aliceFly')
+aliceConfig.trange = 20
+aliceConfig.nfcfilt = 128
+aliceConfig.sel_sz = 144
+aliceConfig.num_pools = 1
+aliceConfig.dilation_rate = 2
+aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
+aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
+aliceConfig.valratio = 0.15
 
+
+# -- felipe bees --
+
+felipeConfig = config()
+felipeConfig.cachedir = os.path.join(localSetup.bdir, 'cache','felipe')
+felipeConfig.labelfile = os.path.join(localSetup.bdir,'data','felipe','doesnt_exist.lbl')
+def felipe_exp_name(dirname):
+    return dirname
+
+def felipe_get_exp_list(L):
+    return 0
+
+felipeConfig.getexpname = felipe_exp_name
+felipeConfig.getexplist = felipe_get_exp_list
+felipeConfig.view = 0
+felipeConfig.imsz = (300, 300)
+felipeConfig.selpts = np.arange(0, 5)
+felipeConfig.imgDim = 3
+felipeConfig.n_classes = len(felipeConfig.selpts)
+felipeConfig.splitType = 'frame'
+felipeConfig.set_exp_name('felipeBees')
+felipeConfig.trange = 20
+felipeConfig.nfcfilt = 128
+felipeConfig.sel_sz = 144
+felipeConfig.num_pools = 2
+felipeConfig.dilation_rate = 1
+felipeConfig.pool_scale = felipeConfig.pool_stride**felipeConfig.num_pools
+felipeConfig.psz = felipeConfig.sel_sz / 4 / felipeConfig.pool_scale / felipeConfig.dilation_rate
+
+
+##  -- felipe multi bees
+
+# -- felipe bees --
+
+felipe_config_multi = config()
+felipe_config_multi.cachedir = os.path.join(localSetup.bdir, 'cache', 'felipe_m')
+felipe_config_multi.labelfile = os.path.join(localSetup.bdir, 'data', 'felipe_m', 'doesnt_exist.lbl')
+def felipe_exp_name(dirname):
+    return dirname
+
+def felipe_get_exp_list(L):
+    return 0
+
+felipe_config_multi.getexpname = felipe_exp_name
+felipe_config_multi.getexplist = felipe_get_exp_list
+felipe_config_multi.view = 0
+felipe_config_multi.imsz = (360, 380)
+felipe_config_multi.selpts = np.array([1, 3, 4])
+felipe_config_multi.imgDim = 3
+felipe_config_multi.n_classes = len(felipe_config_multi.selpts)
+felipe_config_multi.splitType = 'frame'
+felipe_config_multi.set_exp_name('felipeBeesMulti')
+felipe_config_multi.trange = 20
+felipe_config_multi.nfcfilt = 128
+felipe_config_multi.sel_sz = 256
+felipe_config_multi.num_pools = 2
+felipe_config_multi.dilation_rate = 1
+felipe_config_multi.pool_scale = felipe_config_multi.pool_stride ** felipe_config_multi.num_pools
+felipe_config_multi.psz = felipe_config_multi.sel_sz / 4 / felipe_config_multi.pool_scale / felipe_config_multi.dilation_rate
+felipe_config_multi.max_n_animals = 17

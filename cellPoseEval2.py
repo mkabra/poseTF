@@ -566,8 +566,8 @@ ind_labels = ddist/conf.eval_minlen/2
 ind_labels = 1-2*ind_labels
 ind_labels = ind_labels.clip(min=-1,max=1)
 psz = conf.poseEval2_psz
-x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
-                                      conf.rescale,conf.scale, conf.l1_cropsz,conf)
+x0,x1,x2 = PoseTools.multi_scale_images(xs.transpose([0, 2, 3, 1]),
+                                        conf.rescale, conf.scale, conf.l1_cropsz, conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
     feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)
@@ -584,8 +584,8 @@ ind_labels = ddist/conf.eval_minlen/2
 ind_labels = 1-2*ind_labels
 ind_labels = ind_labels.clip(min=-1,max=1)
 psz = conf.poseEval2_psz
-x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
-                                      conf.rescale,conf.scale, conf.l1_cropsz,conf)
+x0,x1,x2 = PoseTools.multi_scale_images(xs.transpose([0, 2, 3, 1]),
+                                        conf.rescale, conf.scale, conf.l1_cropsz, conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
     feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)
@@ -602,8 +602,8 @@ ind_labels = ddist/conf.eval_minlen/2
 ind_labels = 1-2*ind_labels
 ind_labels = ind_labels.clip(min=-1,max=1)
 psz = conf.poseEval2_psz
-x0,x1,x2 = PoseTools.multiScaleImages(xs.transpose([0,2,3,1]),
-                                      conf.rescale,conf.scale, conf.l1_cropsz,conf)
+x0,x1,x2 = PoseTools.multi_scale_images(xs.transpose([0, 2, 3, 1]),
+                                        conf.rescale, conf.scale, conf.l1_cropsz, conf)
 for ndx in range(conf.n_classes):
     feed_dict[ph['X'][0][ndx]] = extract_patches(x0,alllocs[:,ndx,:],psz)
     feed_dict[ph['X'][1][ndx]] = extract_patches(x1,old_div((alllocs[:,ndx,:]),conf.scale),psz)

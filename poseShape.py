@@ -326,10 +326,10 @@ def read_images(conf, db_type, distort, sess, data):
     locs = np.array(locs)
     if distort:
         if conf.horzFlip:
-            xs, locs = PoseTools.randomlyFlipLR(xs, locs)
+            xs, locs = PoseTools.randomly_flip_lr(xs, locs)
         if conf.vertFlip:
-            xs, locs = PoseTools.randomlyFlipUD(xs, locs)
-        xs, locs = PoseTools.randomlyRotate(xs, locs, conf)
+            xs, locs = PoseTools.randomly_flip_ud(xs, locs)
+        xs, locs = PoseTools.randomly_rotate(xs, locs, conf)
         # xs = PoseTools.randomlyAdjust(xs, conf)
 
     return xs, locs, exp_data
@@ -365,7 +365,7 @@ def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
         label_locs -= (label_locs[:,count:count+1,:]-psz/2)
         label_locs[label_locs<0] = np.nan
         label_locs[label_locs>=psz] = np.nan
-        label_ims = PoseTools.createLabelImages(label_locs,[psz,psz],1,conf.label_blur_rad)
+        label_ims = PoseTools.create_label_images(label_locs, [psz, psz], 1, conf.label_blur_rad)
         label_ims = label_ims[...,sel_pt2[ndx]]
         all_label_locs.append(label_locs[:,sel_pt2[ndx],:])
         all_label_ims.append(label_ims)
@@ -378,8 +378,8 @@ def update_feed_dict(conf, db_type, distort, sess, data, feed_dict, ph):
     # labels = np.concatenate(labels,1)
     feed_dict[ph['y']] = np.concatenate(all_label_ims,axis=3)
 
-    x0, x1, x2 = PoseTools.multiScaleImages(xs.transpose([0, 2, 3, 1]),
-                                            conf.rescale, conf.scale, conf.l1_cropsz, conf)
+    x0, x1, x2 = PoseTools.multi_scale_images(xs.transpose([0, 2, 3, 1]),
+                                              conf.rescale, conf.scale, conf.l1_cropsz, conf)
 
     for ndx, count in enumerate(sel_pt1):
         cur_locs = sel_locs[ndx]
@@ -519,7 +519,7 @@ def save_shape(sess, shape_saver, step, conf):
 
 
 def create_shape_saver(conf):
-    shape_saver = tf.train.Saver(var_list=PoseTools.getvars('shape'), max_to_keep=conf.maxckpt)
+    shape_saver = tf.train.Saver(var_list=PoseTools.get_vars('shape'), max_to_keep=conf.maxckpt)
     return shape_saver
 
 

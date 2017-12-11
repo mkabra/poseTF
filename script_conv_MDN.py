@@ -98,8 +98,8 @@ for ndx in range(len(test_data)):
     tr_ndx = np.random.choice(len(train_data))
     bpred_tr = train_data[tr_ndx][0]
     bpred_out = -1 * np.ones(bpred_in.shape)
-    tr_locs = PoseTools.getBasePredLocs(bpred_tr, self.conf)/4
-    in_locs = PoseTools.getBasePredLocs(bpred_in, self.conf)/4
+    tr_locs = PoseTools.get_base_pred_locs(bpred_tr, self.conf) / 4
+    in_locs = PoseTools.get_base_pred_locs(bpred_in, self.conf) / 4
 
     # training blobs test locations
     # for ex in range(bpred_in.shape[0]):
@@ -150,7 +150,7 @@ for cur_step in range(self.mdn_start_at, mdn_steps):
     cur_bpred = cur_bpred[:,dyy:(128+dyy),dxx:(128+dxx),:]
     # self.feed_dict[self.ph['step']] = step
     self.feed_dict[self.ph['base_locs']] = \
-        PoseTools.getBasePredLocs(cur_bpred, self.conf)
+        PoseTools.get_base_pred_locs(cur_bpred, self.conf)
     self.feed_dict[self.ph['base_pred']] = cur_bpred
     sess.run(self.opt, self.feed_dict)
 
@@ -158,14 +158,14 @@ for cur_step in range(self.mdn_start_at, mdn_steps):
         data_ndx = (cur_step+1) % len(m_train_data)
         cur_bpred = m_train_data[data_ndx][0]
         self.feed_dict[self.ph['base_locs']] = \
-            PoseTools.getBasePredLocs(cur_bpred, self.conf)
+            PoseTools.get_base_pred_locs(cur_bpred, self.conf)
         self.feed_dict[self.ph['base_pred']] = cur_bpred
         tr_loss = sess.run(self.loss, feed_dict=self.feed_dict)
         self.mdn_train_data['train_err'].append(tr_loss)
         self.mdn_train_data['step_no'].append(cur_step)
 
         mdn_pred = self.mdn_pred(sess)
-        bee = PoseTools.getBaseError(
+        bee = PoseTools.get_base_error(
             self.feed_dict[self.ph['base_locs']], mdn_pred, conf)
         tt1 = np.sqrt(np.sum(np.square(bee), 2))
         nantt1 = np.invert(np.isnan(tt1.flatten()))
@@ -175,12 +175,12 @@ for cur_step in range(self.mdn_start_at, mdn_steps):
         data_ndx = (test_step + 1) % len(m_test_data)
         cur_bpred = m_test_data[data_ndx][0]
         self.feed_dict[self.ph['base_locs']] = \
-            PoseTools.getBasePredLocs(cur_bpred, self.conf)
+            PoseTools.get_base_pred_locs(cur_bpred, self.conf)
         self.feed_dict[self.ph['base_pred']] = cur_bpred
         cur_te_loss = sess.run(self.loss, feed_dict=self.feed_dict)
         val_loss = cur_te_loss
         mdn_pred = self.mdn_pred(sess)
-        bee = PoseTools.getBaseError(
+        bee = PoseTools.get_base_error(
             self.feed_dict[self.ph['base_locs']],mdn_pred,conf)
         tt1 = np.sqrt(np.sum(np.square(bee), 2))
         nantt1 = np.invert(np.isnan(tt1.flatten()))

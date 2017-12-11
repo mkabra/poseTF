@@ -114,7 +114,7 @@ for ndx in range(np.random.randint(15)):
     self.updateFeedDict(self.DBType.Val, sess=sess, distort=True)
 
 pred = sess.run(self.basePred,feed_dict=self.feed_dict)
-plocs = PoseTools.getBasePredLocs(pred,conf)
+plocs = PoseTools.get_base_pred_locs(pred, conf)
 
 selim = np.random.randint(conf.batch_size)
 plt.imshow(self.xs[selim,0,:,:],cmap='gray')

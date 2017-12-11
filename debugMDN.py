@@ -441,13 +441,17 @@ for ndx in range(10):
 from stephenHeadConfig import conf as conf
 import os
 import tensorflow as tf
-os.environ['CUDA_VISIBLE_DEVICES']= '0'
+os.environ['CUDA_VISIBLE_DEVICES']= ''
 import PoseMDN
 import localSetup
 import PoseTools
 
+if os.environ['CUDA_VISIBLE_DEVICES'] is '':
+    print('!!!!!Not USING GPU!!!!!')
+
 conf.cachedir = os.path.join(localSetup.bdir,'cacheHead_MDN')
-conf.expname = 'head_MDN_0p8dropout'
+conf.expname = 'head_dw_logits_1e2'
+conf.psz = 8
 self = PoseMDN.PoseMDN(conf)
 restore = True
 trainType = 0
@@ -501,9 +505,6 @@ learning_rate = tf.train.exponential_decay(
 
 mdn_steps = 50000 * 8 / self.conf.batch_size
 
-# self.opt = tf.train.AdamOptimizer(
-#     learning_rate=learning_rate).minimize(self.loss)
-
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
     self.opt = tf.train.AdamOptimizer(
@@ -533,20 +534,24 @@ for cls in range(self.conf.n_classes):
     kk = tf.reduce_sum(tf.square(pp - self.mdn_locs[:, :, cls, :]), axis=2)
     cur_comp = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
 
-    # cur_comp = [i.prob(self.mdn_label[:,cls,:]) for i in self.components[cls]]
-    # cur_comp = tf.stack(cur_comp)
     pp = cur_comp * ll
     cur_loss = tf.log(tf.reduce_sum(pp, axis=1))
     ind_loss.append(cur_loss)
 ind_loss = tf.transpose(tf.stack(ind_loss), [1, 0])
 
-##
+#
 mod_tt = []
 mod_locs = []
 mod_preds = []
 mod_x = []
 mod_bpred = []
-for step in range(100):
+
+val_file = os.path.join(conf.cachedir, conf.valfilename + '.tfrecords')
+c = 0
+for record in tf.python_io.tf_record_iterator(val_file):
+    c += 1
+
+for step in range(c/conf.batch_size):
     self.updateFeedDict(self.DBType.Val, sess=sess, distort=False)
     self.feed_dict[self.ph['keep_prob']] = 1
 
@@ -584,9 +589,12 @@ mod_loss = np.array([i[4] for i in mod_preds]).reshape([-1, 5])
 mod_lm = (mod_l / 4) % 16
 mod_x = np.array(mod_x).reshape([-1, 512, 512])
 mod_bpred = np.array(mod_bpred).reshape([-1, 128, 128, 5])
+gg = PoseTools.get_base_error(mod_l, mod_bpred, conf)
+mod_ot = np.sqrt(np.sum(gg**2,2))
+
 print(np.argmax(mod_t,axis=0))
 print(np.max(mod_t,axis=0))
-blocs = PoseTools.getBasePredLocs(mod_bpred,conf)
+blocs = PoseTools.get_base_pred_locs(mod_bpred, conf)
 sc = -1
 ##
 sc += 1
@@ -602,11 +610,11 @@ print(mod_t[sel,:])
 f = plt.figure(figsize=[12,12])
 ax = f.add_subplot(111)
 plt.imshow(mod_x[sel,:,:],cmap='gray')
-plt.scatter(mod_l[sel,:,0], mod_l[sel,:,1])
+plt.scatter(mod_l[sel,:,0], mod_l[sel,:,1],s=20)
 w_sort = np.flipud(np.argsort(mod_w[sel,...]))
 jx = w_sort[0]
 plt.scatter(mod_m[sel,jx,:,0]*4,mod_m[sel,jx,:,1]*4,c='r')
-plt.scatter(blocs[sel,:,0],blocs[sel,:,1],c='g')
+# plt.scatter(blocs[sel,:,0],blocs[sel,:,1],c='g')
 jx1 = w_sort[1]
 plt.scatter(mod_m[sel,jx1,:,0]*4,mod_m[sel,jx1,:,1]*4,c='w')
 tt = mod_m[sel,...]
@@ -614,3 +622,95 @@ zz = np.sqrt(np.sum((tt*4-mod_l[sel,...])**2,axis=(1,2)))
 jx2 = zz.argmin()
 plt.scatter(mod_m[sel,jx2,:,0]*4,mod_m[sel,jx2,:,1]*4,c='c')
 ax.set_title('{}, {:.2f}, {:.2f}, {:.2f}'.format(sel,mod_w[sel,jx],mod_w[sel,jx1],mod_w[sel,jx2]))
+
+##
+import cv2
+def createPredImage(pred_scores, n_classes):
+    im = np.zeros(pred_scores.shape[0:2] + (3,))
+    im[:,:,0] = np.argmax(pred_scores, 2).astype('float32') / (n_classes) * 180
+    im[:,:,1] = (np.max(pred_scores, 2) + 1) / 2 * 255
+    im[:,:,2] = 255.
+    im = np.clip(im,0,255)
+    im = im.astype('uint8')
+    return cv2.cvtColor(im,cv2.COLOR_HSV2RGB)
+
+
+sel = 1
+ll = np.where(mod_w[sel,:]>0.2)[0]
+f = plt.figure()
+ax = f.add_subplot(111)
+ax.imshow(mod_x[sel,:,:],cmap='gray',vmax=255)
+for curl in ll:
+    ax.scatter(mod_m[sel,curl,:,0]*4,mod_m[sel,curl,:,1]*4)
+
+plt.figure()
+from scipy import misc
+pimg = createPredImage(mod_bpred[sel,...],5)
+pimg = misc.imresize(pimg,4.)
+hh1 = cv2.cvtColor(pimg,cv2.COLOR_RGB2HSV)
+hh = cv2.cvtColor(np.tile(mod_x[sel,:,:,np.newaxis],[1,1,3]),cv2.COLOR_RGB2HSV)
+kk = hh
+kk[:,:,0] = hh1[:,:,0]
+kk[:,:,1] = np.maximum(hh1[:,:,1],hh[:,:,1])
+rr = cv2.cvtColor(kk,cv2.COLOR_HSV2RGB)
+plt.imshow(rr)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/part_detector_hmap.png',dpi=240)
+plt.figure()
+plt.imshow(mod_x[sel,:,:],cmap='gray',vmax=255)
+plt.scatter(mod_l[sel,:,0],mod_l[sel,:,1],c='r',vmax=255)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/orig_img.png',dpi=240)
+
+##
+f = plt.figure()
+ax = f.add_subplot(111)
+ll = np.zeros([800,256,6,2])
+ll[:,:,0,:] = mod_m[:,:,0,:]
+ll[:,:,1,:] = mod_m[:,:,2,:]
+ll[:,:,2,:] = mod_m[:,:,3,:]
+ll[:,:,3,:] = mod_m[:,:,1,:]
+ll[:,:,4,:] = mod_m[:,:,4,:]
+ll[:,:,5,:] = mod_m[:,:,0,:]
+for x in range(8):
+    for y in range(8):
+        f.clf()
+        ax = f.add_subplot(111)
+        cur_idx = np.arange(4*(8*y+x),4*(8*y+x+1))
+        ax.plot(ll[sel,cur_idx,:,0].T*4,ll[sel,cur_idx,:,1].T*4,c='r')
+        sz = 208
+        x_s = 64*x-sz; x_e = 64*x+sz
+        y_s = 64*y-sz; y_e = 64*y+sz
+        ax.plot([x_s,x_s,x_e,x_e,x_s],[y_s,y_e,y_e,y_s,y_s],c='r')
+        ax.imshow(mod_x[sel,...],cmap='gray',vmax=255)
+        plt.pause(0.5)
+        # f.savefig('/groups/branson/home/kabram/temp/mdn_plots/ex_x{}_y{}.jpg'.format(x,y),
+        #           dpi=240)
+        # ax.set_xlim([0,512]); ax.set_ylim([0,512])
+
+
+
+##
+
+mdn_pred_out = np.zeros([128, 128, conf.n_classes])
+for cls in range(conf.n_classes):
+    for ndx in range(pred_means.shape[1]):
+        if mod_w[sel,ndx] < 0.02:
+            continue
+        cur_locs = mod_m[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
+        # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
+        cur_scale = mod_s[sel, ndx, cls].astype('int')
+        curl = (PoseTools.create_label_images(cur_locs, [128, 128], 1, cur_scale) + 1) / 2
+        mdn_pred_out[:, :, cls] += mod_w[sel, ndx] * curl[0, ..., 0]
+
+mdn_pred_out = mdn_pred_out*2-1
+plt.figure()
+from scipy import misc
+pimg = createPredImage(mdn_pred_out,5)
+pimg = misc.imresize(pimg,4.)
+hh1 = cv2.cvtColor(pimg,cv2.COLOR_RGB2HSV)
+hh = cv2.cvtColor(np.tile(mod_x[sel,:,:,np.newaxis],[1,1,3]),cv2.COLOR_RGB2HSV)
+kk = hh
+kk[:,:,0] = hh1[:,:,0]
+kk[:,:,1] = np.maximum(hh1[:,:,1],hh[:,:,1])
+rr = cv2.cvtColor(kk,cv2.COLOR_HSV2RGB)
+plt.imshow(rr)
+plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/part_detector_mdn_hmap.png',dpi=240)
