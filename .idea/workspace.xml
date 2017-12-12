@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseCommon.py" afterPath="$PROJECT_DIR$/PoseCommon.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -105,7 +103,35 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="1547">
                   <caret line="123" column="4" lean-forward="false" selection-start-line="123" selection-start-column="4" selection-end-line="123" selection-end-column="4" />
-                  <folding />
+                  <folding>
+                    <marker date="1513076177119" expanded="true" signature="16372:19868" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="16535:16813" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="16823:16989" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="17144:19708" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="17616:19566" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="17665:18060" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="17719:18035" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="19047:19394" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="19922:24649" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="20198:20484" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="20494:20664" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="20765:24472" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="21182:24327" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="21401:24327" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="21428:21996" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="21478:21890" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="21532:21657" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="22098:22559" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="22168:22530" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="23766:24141" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="24694:25623" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="24764:25047" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="25057:25446" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="25667:26840" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="25843:26288" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="26889:28229" ph="..." />
+                    <marker date="1513076177119" expanded="true" signature="27096:27611" ph="..." />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -411,6 +437,117 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
+  </component>
+  <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
+    <UpdatedFiles>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Updated from server" />
+        <option name="myStatusName" value="Changed on server" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="CHANGED_ON_SERVER" />
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Updated" />
+          <option name="myStatusName" value="Changed" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="UPDATED" />
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/multiResData.py</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/stephenHeadConfig.py</PATH>
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Created" />
+          <option name="myStatusName" value="Created" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="CREATED" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Deleted" />
+          <option name="myStatusName" value="Deleted" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="true" />
+          <option name="myId" value="REMOVED_FROM_REPOSITORY" />
+        </FILE-GROUP>
+        <FILE-GROUP>
+          <option name="myUpdateName" value="Restored" />
+          <option name="myStatusName" value="Will be restored" />
+          <option name="mySupportsDeletion" value="false" />
+          <option name="myCanBeAbsent" value="false" />
+          <option name="myId" value="RESTORED" />
+        </FILE-GROUP>
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Modified" />
+        <option name="myStatusName" value="Modified" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MODIFIED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Skipped" />
+        <option name="myStatusName" value="Skipped" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SKIPPED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with conflicts" />
+        <option name="myStatusName" value="Will be merged with conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_CONFLICTS" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with tree conflicts" />
+        <option name="myStatusName" value="Merged with tree conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_TREE_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged with property conflicts" />
+        <option name="myStatusName" value="Will be merged with property conflicts" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED_WITH_PROPERTY_CONFLICT" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Merged" />
+        <option name="myStatusName" value="Will be merged" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="MERGED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Not in repository" />
+        <option name="myStatusName" value="Not in repository" />
+        <option name="mySupportsDeletion" value="true" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="UNKNOWN" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally added" />
+        <option name="myStatusName" value="Locally added" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_ADDED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Locally removed" />
+        <option name="myStatusName" value="Locally removed" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="LOCALLY_REMOVED" />
+      </FILE-GROUP>
+      <FILE-GROUP>
+        <option name="myUpdateName" value="Switched" />
+        <option name="myStatusName" value="Switched" />
+        <option name="mySupportsDeletion" value="false" />
+        <option name="myCanBeAbsent" value="false" />
+        <option name="myId" value="SWITCHED" />
+      </FILE-GROUP>
+    </UpdatedFiles>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -851,7 +988,14 @@
       <option name="project" value="LOCAL" />
       <updated>1512563915836</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="removing edges predictions while computing distance">
+      <created>1513076167358</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1513076167358</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -949,7 +1093,8 @@
     <MESSAGE value="Creating PoseCommon.py superclass for training pose networks." />
     <MESSAGE value="multipose MDN is now working." />
     <MESSAGE value="Minor bug fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fix" />
+    <MESSAGE value="removing edges predictions while computing distance" />
+    <option name="LAST_COMMIT_MESSAGE" value="removing edges predictions while computing distance" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1249,7 +1394,35 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1547">
           <caret line="123" column="4" lean-forward="false" selection-start-line="123" selection-start-column="4" selection-end-line="123" selection-end-column="4" />
-          <folding />
+          <folding>
+            <marker date="1513076177119" expanded="true" signature="16372:19868" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="16535:16813" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="16823:16989" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="17144:19708" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="17616:19566" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="17665:18060" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="17719:18035" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="19047:19394" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="19922:24649" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="20198:20484" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="20494:20664" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="20765:24472" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="21182:24327" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="21401:24327" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="21428:21996" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="21478:21890" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="21532:21657" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="22098:22559" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="22168:22530" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="23766:24141" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="24694:25623" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="24764:25047" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="25057:25446" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="25667:26840" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="25843:26288" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="26889:28229" ph="..." />
+            <marker date="1513076177119" expanded="true" signature="27096:27611" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
