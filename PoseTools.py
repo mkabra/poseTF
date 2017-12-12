@@ -508,12 +508,17 @@ def get_base_pred_locs(pred, conf):
     return pred_locs
 
 
-def get_pred_locs(pred):
+def get_pred_locs(pred, edge_ignore=0):
     n_classes = pred.shape[3]
     pred_locs = np.zeros([pred.shape[0], n_classes, 2])
     for ndx in range(pred.shape[0]):
         for cls in range(n_classes):
-            maxndx = np.argmax(pred[ndx, :, :, cls])
+            cur_pred = pred[ndx, :, :, cls].copy()
+            cur_pred[:edge_ignore,:] = cur_pred.min()
+            cur_pred[:,:edge_ignore] = cur_pred.min()
+            cur_pred[-edge_ignore:,:] = cur_pred.min()
+            cur_pred[:,-edge_ignore:] = cur_pred.min()
+            maxndx = np.argmax(cur_pred)
             curloc = np.array(np.unravel_index(maxndx, pred.shape[1:3]))
             pred_locs[ndx, cls, 0] = curloc[1]
             pred_locs[ndx, cls, 1] = curloc[0]
