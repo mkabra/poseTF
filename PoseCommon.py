@@ -417,13 +417,17 @@ class PoseCommon(object):
         plt.plot(moving_average(self.train_info['val_dist'],n),c='r')
         plt.plot(moving_average(self.train_info['train_dist'],n),c='g')
 
-    def classify_val(self):
-        val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+    def classify_val(self,train_type=0):
+
+        if train_type is 0:
+            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        else:
+            val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
         num_val = 0
         for record in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
-        self.init_train(train_type=0)
+        self.init_train(train_type)
         self.pred = self.create_network()
         saver = self.create_saver()
 

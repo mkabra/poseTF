@@ -133,14 +133,14 @@ class PoseUNet(PoseCommon.PoseCommon):
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=40000/self.conf.batch_size*8,
+            training_iters=60000/self.conf.batch_size*8,
             loss=loss,
             pred_in_key='y',
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def classify_val(self, name='pose_unet'):
-        PoseCommon.PoseCommon.classify_val(self)
+    def classify_val(self, train_type=0):
+        PoseCommon.PoseCommon.classify_val(self,train_type)
 
 
 class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
