@@ -14,6 +14,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         PoseCommon.PoseCommon.__init__(self, conf, name)
         self.down_layers = [] # layers created while down sampling
         self.up_layers = [] # layers created while up sampling
+        self.edge_ignore = 10
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)

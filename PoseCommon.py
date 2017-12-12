@@ -96,6 +96,7 @@ class PoseCommon(object):
         self.saver = None
         self.dep_nets = None
         self.joint = False
+        self.edge_ignore = 0 # amount of edge to ignore while computing prediction locations
 
     def open_dbs(self):
         assert self.train_type is not None, 'traintype has not been set'
@@ -353,7 +354,7 @@ class PoseCommon(object):
                 learning_rate=self.ph['learning_rate']).minimize(self.cost)
 
     def compute_dist(self, preds, locs):
-        tt1 = PoseTools.get_pred_locs(preds) - locs
+        tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - locs
         tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
         return np.nanmean(tt1)
 
