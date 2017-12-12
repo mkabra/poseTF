@@ -486,7 +486,6 @@ def createTFRecordFromLbl(conf,split=True):
     
     createValdata(conf)
     isval,localdirs,seldirs = loadValdata(conf)
-    # trx_files = get_trx_files(L,localdirs)
 
     if split:
         trainfilename =os.path.join(conf.cachedir,conf.trainfilename)
