@@ -406,17 +406,6 @@ class PoseCommon(object):
                 self.save_td()
             self.close_cursors()
 
-    def plot_results(self):
-        saver = {}
-        saver['train_data_file'] = os.path.join(
-            self.conf.cachedir,
-            self.conf.expname + '_' + self.name + '_traindata')
-        self.saver = saver
-        self.restore_td()
-        n = 50
-        plt.plot(moving_average(self.train_info['val_dist'],n),c='r')
-        plt.plot(moving_average(self.train_info['train_dist'],n),c='g')
-
     def classify_val(self,train_type=0):
 
         if train_type is 0:
@@ -462,6 +451,17 @@ class PoseCommon(object):
         val_locs = val_reshape(val_locs)
 
         return val_dist, val_ims, val_preds, val_predlocs, val_locs
+
+    def plot_results(self):
+        saver = {}
+        saver['train_data_file'] = os.path.join(
+            self.conf.cachedir,
+            self.conf.expname + '_' + self.name + '_traindata')
+        self.saver = saver
+        self.restore_td()
+        n = 50
+        plt.plot(moving_average(self.train_info['val_dist'],n),c='r')
+        plt.plot(moving_average(self.train_info['train_dist'],n),c='g')
 
 
 class PoseCommonMulti(PoseCommon):

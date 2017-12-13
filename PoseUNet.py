@@ -7,6 +7,7 @@ import math
 from tensorflow.contrib.layers import batch_norm
 import convNetBase as CNB
 import numpy as np
+from PoseTools import scale_images
 
 class PoseUNet(PoseCommon.PoseCommon):
 
@@ -19,11 +20,12 @@ class PoseUNet(PoseCommon.PoseCommon):
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
         imsz = self.conf.imsz
+        rescale = self.conf.unet_rescale
         self.ph['x'] = tf.placeholder(tf.float32,
-                           [None,imsz[0],imsz[1], self.conf.imgDim],
+                           [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
                            name='x')
         self.ph['y'] = tf.placeholder(tf.float32,
-                           [None,imsz[0],imsz[1], self.conf.n_classes],
+                           [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
                            name='y')
 
     def create_fd(self):
@@ -39,11 +41,17 @@ class PoseUNet(PoseCommon.PoseCommon):
         with tf.variable_scope(self.name):
             return self.create_network1()
 
+    def compute_dist(self, preds, locs):
+        tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - \
+              locs/self.conf.unet_rescale
+        tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
+        return np.nanmean(tt1)
+
     def create_network1(self):
-        m_sz = min(self.conf.imsz)
-        max_layers = int(math.floor(math.log(m_sz)))
+        m_sz = min(self.conf.imsz)/self.conf.unet_rescale
+        max_layers = int(math.floor(math.log(m_sz,2)))-1
         sel_sz = self.conf.sel_sz
-        n_layers = int(math.ceil(math.log(sel_sz)))+2
+        n_layers = int(math.ceil(math.log(sel_sz,2)))+2
         n_layers = min(max_layers,n_layers)
 
         n_conv = 3
@@ -85,7 +93,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # upsample
         for ndx in reversed(range(n_layers)):
             if ndx is 0:
-                n_filt = 32
+                n_filt = 64
             elif ndx is 1:
                 n_filt = 64
             # elif ndx is 2:
@@ -118,9 +126,12 @@ class PoseUNet(PoseCommon.PoseCommon):
 
     def update_fd(self, db_type, sess, distort):
         self.read_images(db_type, distort, sess)
-        self.fd[self.ph['x']] = self.xs
+        rescale = self.conf.unet_rescale
+        self.fd[self.ph['x']] = scale_images(
+            self.xs, rescale, self.conf)
+        imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
         label_ims = PoseTools.create_label_images(
-            self.locs, self.conf.imsz, 1, self.conf.label_blur_rad)
+            self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
 

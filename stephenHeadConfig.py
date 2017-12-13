@@ -145,6 +145,8 @@ class myconfig(object):
     valratio = 0.3
     holdoutratio = 0.8
 
+    # ----- Unet params
+    unet_rescale = 2
 
     # ----- MDN params
     # for 1/4 res.
