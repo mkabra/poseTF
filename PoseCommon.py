@@ -134,7 +134,7 @@ class PoseCommon(object):
         # Tfrecords doesn't allow suffling. So using this
         # as a way to introduce shuffle. very hacky.
         if distort:
-            for _ in range(np.random.randint(500)):
+            for _ in range(np.random.randint(100)):
                 sess.run(cur_data)
 
         for _ in range(conf.batch_size):
