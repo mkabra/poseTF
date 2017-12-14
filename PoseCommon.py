@@ -131,6 +131,12 @@ class PoseCommon(object):
         locs = []
         info = []
 
+        # Tfrecords doesn't allow suffling. So using this
+        # as a way to introduce shuffle. very hacky.
+        if distort:
+            for _ in range(np.random.randint(500)):
+                sess.run(cur_data)
+
         for _ in range(conf.batch_size):
             [cur_xs, cur_locs, cur_info] = sess.run(cur_data)
             if np.ndim(cur_xs) < 3:
@@ -208,7 +214,7 @@ class PoseCommon(object):
             print("Not loading {:s} variables. Initializing them".format(name))
         else:
             saver['saver'].restore(sess, latest_ckpt.model_checkpoint_path)
-            print("Loading {:s} variables from {:s}".format(name, latest_ckpt.model_checkpoint_path))
+            # print("Loading {:s} variables from {:s}".format(name, latest_ckpt.model_checkpoint_path))
             match_obj = re.match(out_file + '-(\d*)', latest_ckpt.model_checkpoint_path)
             start_at = int(match_obj.group(1)) + 1
 
@@ -322,8 +328,6 @@ class PoseCommon(object):
         self.open_dbs()
 
     def init_and_restore(self, sess, restore, td_fields):
-        saver = self.saver
-        name = self.name
         self.create_cursors(sess)
         self.update_fd(self.DBType.Train, sess=sess, distort=True)
         start_at = self.restore(sess, restore)

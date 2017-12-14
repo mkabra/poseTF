@@ -121,6 +121,9 @@ class config(object):
     holdoutratio = 0.8
     max_n_animals = 1
 
+    # ----- UNet params
+    unet_rescale = 1
+
     # ----- MDN params
     mdn_min_sigma = 3.
     mdn_max_sigma = 4.

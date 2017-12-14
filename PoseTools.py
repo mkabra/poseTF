@@ -508,7 +508,7 @@ def get_base_pred_locs(pred, conf):
     return pred_locs
 
 
-def get_pred_locs(pred, edge_ignore=0):
+def get_pred_locs(pred, edge_ignore=1):
     n_classes = pred.shape[3]
     pred_locs = np.zeros([pred.shape[0], n_classes, 2])
     for ndx in range(pred.shape[0]):

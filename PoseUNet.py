@@ -7,6 +7,8 @@ import math
 from tensorflow.contrib.layers import batch_norm
 import convNetBase as CNB
 import numpy as np
+import cv2
+from cvc import cvc
 from PoseTools import scale_images
 
 class PoseUNet(PoseCommon.PoseCommon):
@@ -52,6 +54,9 @@ class PoseUNet(PoseCommon.PoseCommon):
         max_layers = int(math.floor(math.log(m_sz,2)))-1
         sel_sz = self.conf.sel_sz
         n_layers = int(math.ceil(math.log(sel_sz,2)))+2
+        # max_layers = int(math.floor(math.log(m_sz)))
+        # sel_sz = self.conf.sel_sz
+        # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers)
 
         n_conv = 3
@@ -151,8 +156,103 @@ class PoseUNet(PoseCommon.PoseCommon):
             td_fields=('loss','dist'))
 
     def classify_val(self, train_type=0):
-        PoseCommon.PoseCommon.classify_val(self,train_type)
+        if train_type is 0:
+            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        else:
+            val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+        num_val = 0
+        for _ in tf.python_io.tf_record_iterator(val_file):
+            num_val += 1
 
+        self.init_train(train_type)
+        self.pred = self.create_network()
+        self.create_saver()
+
+        with tf.Session() as sess:
+            self.init_and_restore(sess, True, ['loss', 'dist'])
+            val_dist = []
+            val_ims = []
+            val_preds = []
+            val_predlocs = []
+            val_locs = []
+            for step in range(num_val/self.conf.batch_size):
+                self.setup_val(sess)
+                cur_pred = sess.run(self.pred, self.fd)
+                cur_predlocs = PoseTools.get_pred_locs(cur_pred)
+                cur_dist = np.sqrt(np.sum(
+                    (cur_predlocs-self.locs/self.conf.unet_rescale) ** 2, 2))
+                val_dist.append(cur_dist)
+                val_ims.append(self.xs)
+                val_locs.append(self.locs)
+                val_preds.append(cur_pred)
+                val_predlocs.append(cur_predlocs)
+            self.close_cursors()
+
+        def val_reshape(in_a):
+            in_a = np.array(in_a)
+            return in_a.reshape( (-1,) + in_a.shape[2:])
+        val_dist = val_reshape(val_dist)
+        val_ims = val_reshape(val_ims)
+        val_preds = val_reshape(val_preds)
+        val_predlocs = val_reshape(val_predlocs)
+        val_locs = val_reshape(val_locs)
+
+        return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale
+
+    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0):
+        # maxframes if specificied reads that many frames
+        # start at specifies where to start reading.
+        conf = self.conf
+
+        cap = cv2.VideoCapture(movie_name)
+        n_frames = int(cap.get(cvc.FRAME_COUNT))
+
+        # figure out how many frames to read
+        if max_frames > 0:
+            if max_frames + start_at > n_frames:
+                n_frames = n_frames - start_at
+            else:
+                n_frames = max_frames
+        else:
+            n_frames = n_frames - start_at
+
+        # since out of order frame access in python sucks, do it one by one
+        for _ in range(start_at):
+            cap.read()
+
+        # pre allocate results
+        bsize = conf.batch_size
+        n_batches = int(math.ceil(float(n_frames)/ bsize))
+        pred_locs = np.zeros([n_frames, conf.n_classes, 2])
+        pred_max_scores = np.zeros([n_frames, conf.n_classes])
+        pred_scores = np.zeros([n_frames,] + self.pred.get_shape().as_list()[1:])
+        all_f = np.zeros((bsize,) + conf.imsz + (1,))
+
+        for curl in range(n_batches):
+            ndx_start = curl * bsize
+            ndx_end = min(n_frames, (curl + 1) * bsize)
+            ppe = min(ndx_end - ndx_start, bsize)
+            for ii in range(ppe):
+                success, frame_in = cap.read()
+                assert success, "Could not read frame"
+                frame_in = PoseTools.crop_images(frame_in, conf)
+                all_f[ii, ...] = frame_in[..., 0:1]
+
+            x0 = scale_images(all_f, conf.unet_rescale, conf)
+            self.fd[self.ph['x']] = x0
+            self.fd[self.ph['phase_train']] = False
+            pred = sess.run(self.pred, self.fd)
+
+            base_locs = PoseTools.get_base_pred_locs(pred, conf)
+            pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe, :, :]
+            pred_max_scores[ndx_start:ndx_end, :] = pred[:ppe, :, :, :].max(axis=(1,2))
+            pred_scores[ndx_start:ndx_end, :, :, :] = pred[:ppe, :, :, :]
+            sys.stdout.write('.')
+            if curl % 20 == 19:
+                sys.stdout.write('\n')
+
+        cap.release()
+        return pred_locs, pred_scores, pred_max_scores
 
 class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 
