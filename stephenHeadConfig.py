@@ -105,11 +105,11 @@ class myconfig(object):
     brange = [-0.2,0.2] 
     crange = [0.7,1.3]
     rrange = 30
-    trange = 0
+    trange = 50
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = True
+    normalize_mean_img = False
 
 
     # fine_batch_size = 8

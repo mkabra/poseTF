@@ -131,8 +131,9 @@ class PoseCommon(object):
         locs = []
         info = []
 
-        # Tfrecords doesn't allow suffling. So using this
-        # as a way to introduce shuffle. very hacky.
+        # Tfrecords doesn't allow shuffling. Skipping a random
+        # number of records
+        # as a way to simulate shuffling. very hacky.
         if distort:
             for _ in range(np.random.randint(100)):
                 sess.run(cur_data)
