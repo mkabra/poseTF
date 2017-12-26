@@ -97,6 +97,7 @@ class PoseCommon(object):
         self.dep_nets = None
         self.joint = False
         self.edge_ignore = 0 # amount of edge to ignore while computing prediction locations
+        self.train_loss = np.zeros(500) # keep track of past loss for importance sampling
 
     def open_dbs(self):
         assert self.train_type is not None, 'traintype has not been set'
@@ -341,7 +342,16 @@ class PoseCommon(object):
         cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
         self.fd[self.ph['learning_rate']] = cur_lr
         self.fd_train()
-        self.update_fd(self.DBType.Train, sess, True)
+        doTrain = False
+        while not doTrain: # importance sampling
+            self.update_fd(self.DBType.Train, sess, True)
+            cur_loss = sess.run(self.cost,self.fd)
+            cur_tr = np.mean(self.train_loss)*np.random.rand()*2
+            # if loss is approx mean, then train half the time.
+            # if loss > 2*mean, then always train.
+            doTrain = (cur_loss > cur_tr)
+            self.train_loss[:-1] = self.train_loss[1:]
+            self.train_loss[-1] = cur_loss
         sess.run(self.opt, self.fd)
 
     def setup_train(self, sess):

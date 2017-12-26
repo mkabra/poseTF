@@ -178,7 +178,8 @@ class PoseUNet(PoseCommon.PoseCommon):
             for step in range(num_val/self.conf.batch_size):
                 self.setup_val(sess)
                 cur_pred = sess.run(self.pred, self.fd)
-                cur_predlocs = PoseTools.get_pred_locs(cur_pred)
+                cur_predlocs = PoseTools.get_pred_locs(
+                    cur_pred, self.edge_ignore)
                 cur_dist = np.sqrt(np.sum(
                     (cur_predlocs-self.locs/self.conf.unet_rescale) ** 2, 2))
                 val_dist.append(cur_dist)

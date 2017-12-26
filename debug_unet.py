@@ -55,10 +55,12 @@ for ndx in range(30):
     ax[0].cla()
     ax[0].imshow(val_ims[curs,...,0], cmap='gray')
     ax[0].scatter(val_locs[curs,:,0]*2,val_locs[curs,:,1]*2)
+    ax[0].scatter(val_predlocs[curs,:,0]*2,val_predlocs[curs,:,1]*2)
     for cls in range(5):
         ax[cls+1].cla()
         ax[cls+1].imshow(val_preds[curs,...,cls],vmax=1,vmin=-1)
         ax[cls+1].scatter(val_locs[curs,cls,0],val_locs[curs,cls,1])
+        ax[cls+1].scatter(val_predlocs[curs,cls,0],val_predlocs[curs,cls,1])
 
     plt.pause(2)
 
