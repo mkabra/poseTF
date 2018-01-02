@@ -5,7 +5,7 @@ import PoseUNet
 import os
 import sys
 import math
-from tensorflow.contrib.layers import batch_norm
+from batch_norm import batch_norm_new as batch_norm
 import convNetBase as CNB
 import numpy as np
 
@@ -19,6 +19,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         PoseCommon.PoseCommon.__init__(self, conf, name)
         self.dep_nets = PoseUNet.PoseUNet(conf)
         self.net_type = net_type
+        self.net_name = 'pose_umdn'
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -364,7 +365,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.dep_nets.fd[self.ph['phase_train']] = False
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess)
+        self.read_images(db_type, distort, sess, distort)
         self.fd[self.ph['x']] = self.xs
         self.locs[np.isnan(self.locs)] = -500000.
         self.fd[self.ph['locs']] = self.locs

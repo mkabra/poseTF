@@ -159,8 +159,8 @@ class myconfig(object):
 
     # ----- Save parameters
 
-    save_step = 500
-    maxckpt = 20
+    save_step = 2000
+    maxckpt = 30
     baseoutname = expname + baseName
     fineoutname = expname + fineName
     mrfoutname = expname + mrfName

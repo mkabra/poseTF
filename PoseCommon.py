@@ -15,7 +15,8 @@ import pickle
 import sys
 import math
 from past.utils import old_div
-from tensorflow.contrib.layers import batch_norm
+# from tensorflow.contrib.layers import batch_norm
+from batch_norm import batch_norm_new as batch_norm
 from matplotlib import pyplot as plt
 
 
@@ -40,6 +41,18 @@ def conv_relu3(x_in, n_filt, train_phase):
     conv = batch_norm(conv, decay=0.99, is_training=train_phase)
     return tf.nn.relu(conv + biases)
 
+def conv_relu3_noscaling(x_in, n_filt, train_phase):
+    in_dim = x_in.get_shape().as_list()[3]
+    kernel_shape = [3, 3, in_dim, n_filt]
+    weights = tf.get_variable(
+        "weights", kernel_shape,
+        initializer=
+        tf.contrib.layers.variance_scaling_initializer())
+    biases = tf.get_variable("biases", kernel_shape[-1],
+                             initializer=tf.constant_initializer(0.))
+    conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
+    conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    return tf.nn.relu(conv + biases)
 
 def print_train_data(cur_dict):
     p_str = ''
@@ -49,16 +62,20 @@ def print_train_data(cur_dict):
 
 
 def initialize_remaining_vars(sess):
-    # var_list = tf.report_uninitialized_variables()
-    # sess.run(tf.variables_initializer(var_list))
+    var_list = set(sess.run(tf.report_uninitialized_variables()))
+    vlist = [v for v in tf.global_variables() if \
+             v.name.split(':')[0] in var_list]
+    sess.run(tf.variables_initializer(vlist))
     # at some stage do faster initialization.
-    var_list = tf.global_variables()
-    for var in var_list:
-        try:
-            sess.run(tf.assert_variables_initialized([var]))
-        except tf.errors.FailedPreconditionError:
-            sess.run(tf.variables_initializer([var]))
-            print('Initializing variable:%s' % var.name)
+    # var_list = tf.global_variables()
+    # for var in var_list:
+    #     # if ignore_name is not None and var.name.startswith(ignore_name):
+    #     #     continue
+    #     try:
+    #         sess.run(tf.assert_variables_initialized([var]))
+    #     except tf.errors.FailedPreconditionError:
+    #         sess.run(tf.variables_initializer([var]))
+    #         print('Initializing variable:%s' % var.name)
 
 def moving_average(a, n=3) :
     ret = np.cumsum(a, dtype=float)
@@ -79,6 +96,7 @@ class PoseCommon(object):
         self.threads = None
         self.conf = conf
         self.name = name
+        self.net_name = 'pose_common'
         self.train_type = None
         self.train_data = None
         self.val_data = None
@@ -124,7 +142,7 @@ class PoseCommon(object):
         self.coord.request_stop()
         self.coord.join(self.threads)
 
-    def read_images(self, db_type, distort, sess):
+    def read_images(self, db_type, distort, sess, shuffle=None):
         conf = self.conf
         cur_data = self.val_data if (db_type == self.DBType.Val)\
             else self.train_data
@@ -132,10 +150,13 @@ class PoseCommon(object):
         locs = []
         info = []
 
+        if shuffle is None:
+            shuffle = distort
+
         # Tfrecords doesn't allow shuffling. Skipping a random
         # number of records
         # as a way to simulate shuffling. very hacky.
-        if distort:
+        if shuffle:
             for _ in range(np.random.randint(100)):
                 sess.run(cur_data)
 
@@ -168,6 +189,7 @@ class PoseCommon(object):
     def create_saver(self):
         saver = {}
         name = self.name
+        net_name = self.net_name
         saver['out_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name)
@@ -177,7 +199,7 @@ class PoseCommon(object):
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
-        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(name),
+        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(net_name),
                                          max_to_keep=self.conf.maxckpt,
                                          save_relative_paths=True))
         self.saver = saver
@@ -202,9 +224,9 @@ class PoseCommon(object):
         if self.dep_nets:
             self.dep_nets.create_joint_saver(name)
 
-    def restore(self, sess, do_restore):
+    def restore(self, sess, do_restore, at_step=-1):
         saver = self.saver
-        name = self.name
+        name = self.net_name
         out_file = saver['out_file'].replace('\\', '/')
         latest_ckpt = tf.train.get_checkpoint_state(
             self.conf.cachedir, saver['ckpt_file'])
@@ -215,10 +237,22 @@ class PoseCommon(object):
                 feed_dict=self.fd)
             print("Not loading {:s} variables. Initializing them".format(name))
         else:
-            saver['saver'].restore(sess, latest_ckpt.model_checkpoint_path)
-            # print("Loading {:s} variables from {:s}".format(name, latest_ckpt.model_checkpoint_path))
-            match_obj = re.match(out_file + '-(\d*)', latest_ckpt.model_checkpoint_path)
-            start_at = int(match_obj.group(1)) + 1
+            if at_step < 0:
+                saver['saver'].restore(sess, latest_ckpt.model_checkpoint_path)
+                match_obj = re.match(out_file + '-(\d*)', latest_ckpt.model_checkpoint_path)
+                start_at = int(match_obj.group(1)) + 1
+            else:
+                aa = latest_ckpt.all_model_checkpoint_paths
+                model_file = ''
+                for a in aa:
+                    match_obj = re.match(out_file + '-(\d*)', a)
+                    step = int(match_obj.group(1))
+                    if step >= at_step:
+                        model_file = a
+                        break
+                saver['saver'].restore(sess, model_file)
+                match_obj = re.match(out_file + '-(\d*)', model_file)
+                start_at = int(match_obj.group(1)) + 1
 
         if self.dep_nets:
             self.dep_nets.restore_joint(sess, self.name, self.joint, do_restore)
@@ -329,10 +363,10 @@ class PoseCommon(object):
         self.create_fd()
         self.open_dbs()
 
-    def init_and_restore(self, sess, restore, td_fields):
+    def init_and_restore(self, sess, restore, td_fields, at_step=-1):
         self.create_cursors(sess)
         self.update_fd(self.DBType.Train, sess=sess, distort=True)
-        start_at = self.restore(sess, restore)
+        start_at = self.restore(sess, restore, at_step)
         initialize_remaining_vars(sess)
         self.init_td(td_fields) if start_at is 0 else self.restore_td()
         return start_at
@@ -342,16 +376,21 @@ class PoseCommon(object):
         cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
         self.fd[self.ph['learning_rate']] = cur_lr
         self.fd_train()
-        doTrain = False
-        while not doTrain: # importance sampling
-            self.update_fd(self.DBType.Train, sess, True)
-            cur_loss = sess.run(self.cost,self.fd)
-            cur_tr = np.mean(self.train_loss)*np.random.rand()*2
-            # if loss is approx mean, then train half the time.
-            # if loss > 2*mean, then always train.
-            doTrain = (cur_loss > cur_tr)
-            self.train_loss[:-1] = self.train_loss[1:]
-            self.train_loss[-1] = cur_loss
+        self.update_fd(self.DBType.Train, sess, True)
+        # doTrain = False
+        # while not doTrain: # importance sampling
+        #     self.update_fd(self.DBType.Train, sess, True)
+        #     cur_loss = sess.run(self.cost,self.fd)
+        #     x0 = np.median(self.train_loss)
+        #     # x1 = np.percentile(self.train_loss,75)
+        #     cur_tr = 1/(1+np.exp(-(cur_loss-x0)/x0))
+        #     doTrain = (np.random.rand() < cur_tr)
+        #     # cur_tr = np.percentile(self.train_loss,50)*np.random.rand()*2
+        #     # if loss is approx 80 perc, then train half the time.
+        #     # if loss > 2 * 80 perc, then always train.
+        #     # doTrain = (cur_loss > cur_tr)
+        #     self.train_loss[:-1] = self.train_loss[1:]
+        #     self.train_loss[-1] = cur_loss
         sess.run(self.opt, self.fd)
 
     def setup_train(self, sess):
@@ -421,7 +460,7 @@ class PoseCommon(object):
                 self.save_td()
             self.close_cursors()
 
-    def classify_val(self,train_type=0):
+    def classify_val(self,train_type=0, at_step=-1):
 
         if train_type is 0:
             val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
@@ -436,7 +475,7 @@ class PoseCommon(object):
         saver = self.create_saver()
 
         with tf.Session() as sess:
-            start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+            start_at = self.init_and_restore(sess, True, ['loss', 'dist'],at_step)
 
             val_dist = []
             val_ims = []

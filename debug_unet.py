@@ -1,6 +1,10 @@
 
+device = '0'
+name = '_mybnorm'
+iter = -1
+
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = device
 
 from stephenHeadConfig import conf
 conf.cachedir = '/home/mayank/temp/cacheHead_Round2'
@@ -8,59 +12,163 @@ conf.cachedir = '/home/mayank/temp/cacheHead_Round2'
 import PoseUNet
 import tensorflow as tf
 import PoseTools
+import math
+import PoseCommon
 
 # conf.batch_size = 4
-self = PoseUNet.PoseUNet(conf,'pose_unet')
+self = PoseUNet.PoseUNet(conf,'pose_unet'+name)
 val_dist, val_ims, val_preds, val_predlocs, val_locs = \
-    self.classify_val(1)
+    self.classify_val(1, iter)
 
 sel = np.where(val_dist.sum(axis=1)>80)[0]
 usel = np.where(val_dist.sum(axis=1)<20)[0]
 
 sess = tf.InteractiveSession()
-self.init_and_restore(sess,True,['loss','dist'])
+self.init_and_restore(sess,True,['loss','dist'],iter)
 
-##
+#
 
-ll = self.down_layers + self.up_layers
-
+bnum = 13 #9
 self.fd[self.ph['phase_train']] = False
 bb = self.conf.batch_size
 
-in1 = PoseTools.scale_images(val_ims[sel[:bb],...],2,conf)
+sel_im = val_ims[sel[bb*bnum:bb*(bnum+1)],...]
+sel_locs = val_locs[sel[bb*bnum:bb*(bnum+1)],...]
+pred_locs = val_predlocs[sel[bb*bnum:bb*(bnum+1)],...]
+
+in1 = PoseTools.scale_images(sel_im,2,conf)
 self.fd[self.ph['x']] = in1
-pp = sess.run(ll,self.fd)
+rescale = self.conf.unet_rescale
+imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
+label_ims = PoseTools.create_label_images(
+    sel_locs, imsz, 1, self.conf.label_blur_rad)
+self.fd[self.ph['y']] = label_ims
+b_pred = sess.run(self.pred,self.fd)
 
-in2 = PoseTools.scale_images(val_ims[usel[:bb],...],2,conf)
-self.fd[self.ph['x']] = in2
-qq = sess.run(ll,self.fd)
-
-##
-fig, ax = plt.subplots(2,7)
-
-for ndx in range(7):
-    dd1 = pp[ndx].flatten()
-    dd2 = qq[ndx].flatten()
-    ax[0,ndx].hist([dd1,dd2])
-
-    dd1 = pp[-ndx-1].flatten()
-    dd2 = qq[-ndx-1].flatten()
-    ax[1,ndx].hist([dd1,dd2])
-
-##
-fig,ax = plt.subplots(2,3)
+f, ax = plt.subplots(2, 4)
 ax = ax.flatten()
-for ndx in range(30):
-    curs = np.random.choice(sel)
-    ax[0].cla()
-    ax[0].imshow(val_ims[curs,...,0], cmap='gray')
-    ax[0].scatter(val_locs[curs,:,0]*2,val_locs[curs,:,1]*2)
-    ax[0].scatter(val_predlocs[curs,:,0]*2,val_predlocs[curs,:,1]*2)
-    for cls in range(5):
-        ax[cls+1].cla()
-        ax[cls+1].imshow(val_preds[curs,...,cls],vmax=1,vmin=-1)
-        ax[cls+1].scatter(val_locs[curs,cls,0],val_locs[curs,cls,1])
-        ax[cls+1].scatter(val_predlocs[curs,cls,0],val_predlocs[curs,cls,1])
+for ndx in range(8):
+    ax[ndx].imshow(sel_im[ndx, ..., 0], cmap='gray')
+    ax[ndx].scatter(sel_locs[ndx, :, 0] * 2, sel_locs[ndx, :, 1] * 2)
+    ax[ndx].scatter(pred_locs[ndx, :, 0] * 2, pred_locs[ndx, :, 1] * 2)
 
-    plt.pause(2)
 
+#
+
+val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+num_val = 0
+for record in tf.python_io.tf_record_iterator(val_file):
+    num_val += 1
+
+# self.close_cursors()
+self.create_cursors(sess)
+
+train_ims = []
+train_locs = []
+self.conf.brange = [0,0]
+self.conf.crange = [1,1]
+for step in range(num_val / self.conf.batch_size):
+    self.read_images(self.DBType.Train, True, sess, False)
+    rescale = self.conf.unet_rescale
+    self.fd[self.ph['x']] = PoseTools.scale_images(
+        self.xs, rescale, self.conf)
+    imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
+    label_ims = PoseTools.create_label_images(
+        self.locs / rescale, imsz, 1, self.conf.label_blur_rad)
+    self.fd[self.ph['y']] = label_ims
+    train_ims.append(self.xs)
+    train_locs.append(self.locs)
+
+def val_reshape(in_a):
+    in_a = np.array(in_a)
+    return in_a.reshape((-1,) + in_a.shape[2:])
+
+train_ims = val_reshape(train_ims)
+train_locs = val_reshape(train_locs)
+self.close_cursors()
+#
+def loss(pred_in, pred_out):
+    return tf.nn.l2_loss(pred_in - pred_out)
+
+self.cost = loss(self.pred, self.ph['y'])
+self.create_optimizer()
+self.init_and_restore(sess,True,['loss','dist'],iter)
+
+sel_im = val_ims[sel[bb*bnum:bb*(bnum+1)],...]
+sel_locs = val_locs[sel[bb*bnum:bb*(bnum+1)],...]
+pred_locs = val_predlocs[sel[bb*bnum:bb*(bnum+1)],...]
+
+in1 = PoseTools.scale_images(sel_im,2,conf)
+self.fd[self.ph['x']] = in1
+rescale = self.conf.unet_rescale
+imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
+label_ims = PoseTools.create_label_images(
+    sel_locs, imsz, 1, self.conf.label_blur_rad)
+self.fd[self.ph['y']] = label_ims
+
+c_pred = sess.run(self.pred,self.fd)
+
+learning_rate=0.0001
+ex_count = iter*conf.batch_size
+cur_lr = learning_rate * self.conf.gamma ** math.floor(ex_count/ self.conf.step_size)
+self.fd[self.ph['learning_rate']] = cur_lr
+self.fd[self.ph['phase_train']] = True
+
+for _ in range(100):
+    sess.run(self.opt, self.fd)
+
+self.fd[self.ph['phase_train']] = False
+
+a_pred = sess.run(self.pred, self.fd)
+
+#
+val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+num_val = 0
+for record in tf.python_io.tf_record_iterator(val_file):
+    num_val += 1
+
+# self.close_cursors()
+self.create_cursors(sess)
+
+val_dist_a = []
+val_ims_a = []
+val_preds_a = []
+val_predlocs_a = []
+val_locs_a = []
+for step in range(num_val / self.conf.batch_size):
+    # self.setup_val(sess)
+    # self.read_images(self.DBType.Train, True, sess, False)
+    # rescale = self.conf.unet_rescale
+    # self.fd[self.ph['x']] = PoseTools.scale_images(
+    #     self.xs, rescale, self.conf)
+    # imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
+    # label_ims = PoseTools.create_label_images(
+    #     self.locs / rescale, imsz, 1, self.conf.label_blur_rad)
+    # self.fd[self.ph['y']] = label_ims
+
+    cur_pred = sess.run(self.pred, self.fd)
+    cur_predlocs = PoseTools.get_pred_locs(cur_pred)
+    cur_dist = np.sqrt(np.sum(
+        (cur_predlocs - self.locs/2) ** 2, 2))
+    val_dist_a.append(cur_dist)
+    val_ims_a.append(self.xs)
+    val_locs_a.append(self.locs)
+    val_preds_a.append(cur_pred)
+    val_predlocs_a.append(cur_predlocs)
+
+
+def val_reshape(in_a):
+    in_a = np.array(in_a)
+    return in_a.reshape((-1,) + in_a.shape[2:])
+
+val_dist_a = val_reshape(val_dist_a)
+val_ims_a = val_reshape(val_ims_a)
+val_preds_a = val_reshape(val_preds_a)
+val_predlocs_a = val_reshape(val_predlocs_a)
+val_locs_a = val_reshape(val_locs_a)
+
+mm = PoseTools.create_label_images(val_locs,[256,256],1,self.conf.label_blur_rad)
+print(((mm-val_preds)**2).mean())
+print(((mm-val_preds_a)**2).mean())
+print(np.sum(val_dist_a>20,axis=0))
+print(np.sum(val_dist>20,axis=0))

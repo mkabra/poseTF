@@ -18,6 +18,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.down_layers = [] # layers created while down sampling
         self.up_layers = [] # layers created while up sampling
         self.edge_ignore = 10
+        self.net_name = 'pose_unet'
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -40,7 +41,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                    }
 
     def create_network(self):
-        with tf.variable_scope(self.name):
+        with tf.variable_scope(self.net_name):
             return self.create_network1()
 
     def compute_dist(self, preds, locs):
@@ -61,11 +62,13 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         n_conv = 3
         conv = PoseCommon.conv_relu3
+        # conv = PoseCommon.conv_relu3_noscaling
         layers = []
         up_layers = []
         layers_sz = []
         X = self.ph['x']
         n_out = self.conf.n_classes
+        debug_layers = []
 
         # downsample
         for ndx in range(n_layers):
@@ -82,13 +85,14 @@ class PoseUNet(PoseCommon.PoseCommon):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'])
-
+                debug_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
             X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
                                padding='SAME')
 
         self.down_layers = layers
+        self.debug_layers = debug_layers
         # few more convolution for the final layers
         for cndx in range(n_conv):
             sc_name = 'layer_{}_{}'.format(n_layers,cndx)
@@ -130,7 +134,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['phase_train']] = False
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess)
+        self.read_images(db_type, distort, sess, distort)
         rescale = self.conf.unet_rescale
         self.fd[self.ph['x']] = scale_images(
             self.xs, rescale, self.conf)
@@ -155,7 +159,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def classify_val(self, train_type=0):
+    def classify_val(self, train_type=0, at_step=-1):
         if train_type is 0:
             val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
         else:
@@ -169,7 +173,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.create_saver()
 
         with tf.Session() as sess:
-            self.init_and_restore(sess, True, ['loss', 'dist'])
+            self.init_and_restore(sess, True, ['loss', 'dist'], at_step)
             val_dist = []
             val_ims = []
             val_preds = []
@@ -261,7 +265,7 @@ class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
         PoseUNet.__init__(self, conf, name)
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess)
+        self.read_images(db_type, distort, sess, distort)
         self.fd[self.ph['x']] = self.xs
         n_classes = self.locs.shape[2]
         sz0 = self.conf.imsz[0]
