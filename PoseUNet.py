@@ -90,6 +90,8 @@ class PoseUNet(PoseCommon.PoseCommon):
             layers_sz.append(X.get_shape().as_list()[1:3])
             X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
                                padding='SAME')
+            # X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
+            #                    padding='SAME')
 
         self.down_layers = layers
         self.debug_layers = debug_layers
@@ -153,7 +155,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=20000/self.conf.batch_size*8,
+            training_iters=30000/self.conf.batch_size*8,
             loss=loss,
             pred_in_key='y',
             learning_rate=0.0001,

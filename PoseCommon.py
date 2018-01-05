@@ -18,6 +18,8 @@ from past.utils import old_div
 # from tensorflow.contrib.layers import batch_norm
 from batch_norm import batch_norm_new as batch_norm
 from matplotlib import pyplot as plt
+import copy
+import cv2
 
 
 def conv_relu(x_in, kernel_shape, train_phase):
@@ -181,6 +183,17 @@ class PoseCommon(object):
             xs, locs = PoseTools.randomly_rotate(xs, locs, conf)
             xs, locs = PoseTools.randomly_translate(xs, locs, conf)
             xs = PoseTools.randomly_adjust(xs, conf)
+        # else:
+        #     rows, cols = xs.shape[2:]
+        #     for ndx in range(xs.shape[0]):
+        #         orig_im = copy.deepcopy(xs[ndx, ...])
+        #         ii = copy.deepcopy(orig_im).transpose([1, 2, 0])
+        #         mat = np.float32([[1, 0, 0], [0, 1, 0]])
+        #         ii = cv2.warpAffine(ii, mat, (cols, rows))
+        #         if ii.ndim == 2:
+        #             ii = ii[..., np.newaxis]
+        #         ii = ii.transpose([2, 0, 1])
+        #         xs[ndx, ...] = ii
 
         self.xs = np.transpose(xs, [0, 2, 3, 1])
         self.locs = locs
@@ -373,7 +386,8 @@ class PoseCommon(object):
 
     def train_step(self, step, sess, learning_rate):
         ex_count = step * self.conf.batch_size
-        cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
+        # cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
+        cur_lr = learning_rate * (self.conf.gamma ** (ex_count/ self.conf.step_size))
         self.fd[self.ph['learning_rate']] = cur_lr
         self.fd_train()
         self.update_fd(self.DBType.Train, sess, True)
@@ -391,7 +405,9 @@ class PoseCommon(object):
         #     # doTrain = (cur_loss > cur_tr)
         #     self.train_loss[:-1] = self.train_loss[1:]
         #     self.train_loss[-1] = cur_loss
+
         sess.run(self.opt, self.fd)
+
 
     def setup_train(self, sess):
         self.fd_train()
@@ -404,8 +420,18 @@ class PoseCommon(object):
     def create_optimizer(self):
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            self.opt = tf.train.AdamOptimizer(
-                learning_rate=self.ph['learning_rate']).minimize(self.cost)
+            # plain vanilla.
+            # self.opt = tf.train.AdamOptimizer(
+            #     learning_rate=self.ph['learning_rate']).minimize(self.cost)
+
+            # clipped gradients.
+            optimizer = tf.train.AdamOptimizer(
+                learning_rate=self.ph['learning_rate'])
+            gradients, variables = zip(*optimizer.compute_gradients(self.cost))
+            # gradients = [ None if gradient is None else
+            #               tf.clip_by_norm(gradient, 5.0)
+            #         for gradient in gradients]
+            self.opt = optimizer.apply_gradients(zip(gradients,variables))
 
     def compute_dist(self, preds, locs):
         tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - locs

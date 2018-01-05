@@ -333,13 +333,14 @@ def randomly_adjust(img, conf):
     bdiff = brange[1] - brange[0]
     crange = conf.crange
     cdiff = crange[1] - crange[0]
+    imax = conf.imax
     for ndx in range(num):
         mm = img[ndx, ...].mean()
         bfactor = np.random.rand() * bdiff + brange[0]
-        jj = img[ndx, ...] + bfactor * 255.0
+        jj = img[ndx, ...] + bfactor * imax
         cfactor = np.random.rand() * cdiff + crange[0]
-        jj = np.minimum(255, (jj - mm) * cfactor + mm)
-        jj = jj.clip(0, 255)
+        jj = np.minimum(imax, (jj - mm) * cfactor + mm)
+        jj = jj.clip(0, imax)
         img[ndx, ...] = jj
     return img
 
@@ -1095,3 +1096,10 @@ def analyze_gradients(exclude):
     var = tf.global_variables()
     for vv in var:
         ("")
+
+
+def count_records(filename):
+    num = 0
+    for record in tf.python_io.tf_record_iterator(filename):
+        num += 1
+    return num

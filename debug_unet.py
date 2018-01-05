@@ -1,7 +1,7 @@
 
-device = '0'
-name = '_mybnorm'
-iter = -1
+name = '_gradclip'
+device = ''
+iter = 8000
 
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = device
@@ -26,34 +26,39 @@ usel = np.where(val_dist.sum(axis=1)<20)[0]
 sess = tf.InteractiveSession()
 self.init_and_restore(sess,True,['loss','dist'],iter)
 
-#
-
-bnum = 13 #9
-self.fd[self.ph['phase_train']] = False
-bb = self.conf.batch_size
-
-sel_im = val_ims[sel[bb*bnum:bb*(bnum+1)],...]
-sel_locs = val_locs[sel[bb*bnum:bb*(bnum+1)],...]
-pred_locs = val_predlocs[sel[bb*bnum:bb*(bnum+1)],...]
-
-in1 = PoseTools.scale_images(sel_im,2,conf)
-self.fd[self.ph['x']] = in1
-rescale = self.conf.unet_rescale
-imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
-label_ims = PoseTools.create_label_images(
-    sel_locs, imsz, 1, self.conf.label_blur_rad)
-self.fd[self.ph['y']] = label_ims
-b_pred = sess.run(self.pred,self.fd)
+##
 
 f, ax = plt.subplots(2, 4)
 ax = ax.flatten()
-for ndx in range(8):
-    ax[ndx].imshow(sel_im[ndx, ..., 0], cmap='gray')
-    ax[ndx].scatter(sel_locs[ndx, :, 0] * 2, sel_locs[ndx, :, 1] * 2)
-    ax[ndx].scatter(pred_locs[ndx, :, 0] * 2, pred_locs[ndx, :, 1] * 2)
+
+for bnum in range(int(sel.size/conf.batch_size)):
+    # bnum = 0  # 13 #9
+    self.fd[self.ph['phase_train']] = False
+    bb = self.conf.batch_size
+
+    sel_im = val_ims[sel[bb*bnum:bb*(bnum+1)],...]
+    sel_locs = val_locs[sel[bb*bnum:bb*(bnum+1)],...]
+    pred_locs = val_predlocs[sel[bb*bnum:bb*(bnum+1)],...]
+
+    in1 = PoseTools.scale_images(sel_im,2,conf)
+    self.fd[self.ph['x']] = in1
+    rescale = self.conf.unet_rescale
+    imsz = [self.conf.imsz[0] / rescale, self.conf.imsz[1] / rescale, ]
+    label_ims = PoseTools.create_label_images(
+        sel_locs, imsz, 1, self.conf.label_blur_rad)
+    self.fd[self.ph['y']] = label_ims
+    b_pred = sess.run(self.pred,self.fd)
 
 
-#
+    for ndx in range(8):
+        ax[ndx].cla()
+        ax[ndx].imshow(sel_im[ndx, ..., 0], cmap='gray')
+        ax[ndx].scatter(sel_locs[ndx, :, 0] , sel_locs[ndx, :, 1] )
+        ax[ndx].scatter(pred_locs[ndx, :, 0] * 2, pred_locs[ndx, :, 1] * 2)
+
+    plt.pause(2)
+
+##
 
 val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
 num_val = 0
@@ -172,3 +177,37 @@ print(((mm-val_preds)**2).mean())
 print(((mm-val_preds_a)**2).mean())
 print(np.sum(val_dist_a>20,axis=0))
 print(np.sum(val_dist>20,axis=0))
+
+##
+def loss(pred_in, pred_out):
+    return tf.nn.l2_loss(pred_in - pred_out)
+
+self.cost = loss(self.pred, self.ph['y'])
+
+if not sess._closed:
+    sess.close()
+sess = tf.InteractiveSession()
+self.init_and_restore(sess,True,['loss','dist'],iter)
+ex_num = 3444
+bnum = int(np.floor(ex_num/self.conf.batch_size))
+ex_off = ex_num - bnum*self.conf.batch_size
+# ll = self.down_layers + self.up_layers
+ll = self.debug_layers
+vv = tf.global_variables()
+for ndx in reversed(range(len(vv))):
+    if vv[ndx].name.find('weight')<0:
+        vv.pop(ndx)
+gg = tf.gradients(self.cost,vv)
+for ndx in range(bnum+1):
+    self.setup_val(sess)
+
+
+ll_out = sess.run([ll, self.pred,gg],self.fd)
+im1 = self.xs.copy()
+for ndx in range(5):
+    self.setup_val(sess)
+ll_outt = sess.run([ll, self.pred,gg],self.fd)
+pq = PoseTools.get_pred_locs(ll_outt[1])
+dist_1 = np.sqrt(np.sum( (pq-self.locs/2)**2,axis=2))
+im2 = self.xs.copy()
+
