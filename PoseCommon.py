@@ -428,9 +428,9 @@ class PoseCommon(object):
             optimizer = tf.train.AdamOptimizer(
                 learning_rate=self.ph['learning_rate'])
             gradients, variables = zip(*optimizer.compute_gradients(self.cost))
-            # gradients = [ None if gradient is None else
-            #               tf.clip_by_norm(gradient, 5.0)
-            #         for gradient in gradients]
+            gradients = [ None if gradient is None else
+                          tf.clip_by_norm(gradient, 5.0)
+                    for gradient in gradients]
             self.opt = optimizer.apply_gradients(zip(gradients,variables))
 
     def compute_dist(self, preds, locs):
