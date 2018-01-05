@@ -88,10 +88,10 @@ class PoseUNet(PoseCommon.PoseCommon):
                 debug_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
-            X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
-                               padding='SAME')
-            # X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
+            # X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
             #                    padding='SAME')
+            X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
+                               padding='SAME')
 
         self.down_layers = layers
         self.debug_layers = debug_layers
