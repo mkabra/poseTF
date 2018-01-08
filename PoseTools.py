@@ -69,10 +69,13 @@ def scale_images(img, scale, conf):
             simg[ndx, :, :, 0] = misc.imresize(img[ndx, :, :, 0], old_div(1., scale))
         else:
             simg[ndx, :, :, :] = misc.imresize(img[ndx, :, :, :], old_div(1., scale))
+    return simg
 
-            #     return simg
-    zz = simg.astype('float')
+
+def normalize_mean(in_img, conf):
+    zz = in_img.astype('float')
     if conf.normalize_mean_img:
+        # subtract mean for each img.
         mm = zz.mean(1).mean(1)
         xx = zz - mm[:, np.newaxis, np.newaxis, :]
         if conf.imgDim == 3:
@@ -81,6 +84,8 @@ def scale_images(img, scale, conf):
                     to_add = old_div(((np.random.rand(conf.batch_size) - 0.5) * conf.imax), 8)
                     xx[:, :, :, dim] += to_add[:, np.newaxis, np.newaxis]
     elif not hasattr(conf, 'normalize_mean') or conf.normalize_mean:
+        # subtract the global mean.
+        # don't know why I have it. :/
         xx = zz - zz.mean()
     else:
         xx = zz
@@ -116,11 +121,13 @@ def multi_scale_label_images(in_img, rescale, scale):
 
 def adjust_contrast(in_img, conf):
     if conf.adjustContrast:
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(conf.clahegridsize, conf.clahegridsize))
+        clahe = cv2.createCLAHE(
+            clipLimit=2.0,
+            tileGridSize=(conf.clahegridsize, conf.clahegridsize))
         simg = np.zeros(in_img.shape)
-        assert in_img.shape[3] == 1, 'cant adjust contrast on color images'
+        assert in_img.shape[1] == 1, 'cant adjust contrast on color images'
         for ndx in range(in_img.shape[0]):
-            simg[ndx, :, :, 0] = clahe.apply(in_img[ndx, ..., 0].astype('uint8')).astype('float')
+            simg[ndx, 0,:, :] = clahe.apply(in_img[ndx,0, ...].astype('uint8')).astype('float')
         return simg
     else:
         return in_img
@@ -1103,3 +1110,11 @@ def count_records(filename):
     for record in tf.python_io.tf_record_iterator(filename):
         num += 1
     return num
+
+def show_stack(im_s,xx,yy,cmap='gray'):
+    isz1 = im_s.shape[1]
+    isz2 = im_s.shape[2]
+    im_s = im_s.reshape([xx,yy,isz1, isz2])
+    im_s = im_s.transpose([0, 2, 1, 3])
+    im_s = im_s.reshape([xx * isz1, yy * isz2])
+    plt.figure(); plt.imshow(im_s,cmap=cmap)

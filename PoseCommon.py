@@ -175,6 +175,8 @@ class PoseCommon(object):
         locs = np.array(locs)
         locs = multiResData.sanitizelocs(locs)
 
+        xs = PoseTools.adjust_contrast(xs, conf)
+        xs = PoseTools.normalize_mean(xs, conf)
         if distort:
             if conf.horzFlip:
                 xs, locs = PoseTools.randomly_flip_lr(xs, locs)
