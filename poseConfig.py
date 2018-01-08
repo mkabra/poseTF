@@ -101,7 +101,7 @@ class config(object):
     imax = 255.
     adjustContrast = False
     clahegridsize = 20
-    normalize_mean_img = False
+    normalize_mean_img = True
     normalize_mean = False
     perturb_color = False
 
