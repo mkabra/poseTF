@@ -77,7 +77,7 @@ def normalize_mean(in_img, conf):
     if conf.normalize_mean_img:
         # subtract mean for each img.
         mm = zz.mean(axis=(2,3))
-        xx = zz - mm[:, np.newaxis, np.newaxis, :]
+        xx = zz - mm[:, :, np.newaxis, np.newaxis]
         if conf.imgDim == 3:
             if conf.perturb_color:
                 for dim in range(3):
@@ -1112,6 +1112,9 @@ def count_records(filename):
     return num
 
 def show_stack(im_s,xx,yy,cmap='gray'):
+    pad_amt = xx*yy - im_s.shape[0]
+    if pad_amt > 0:
+        im_s = np.concatenate([im_s,im_s[:pad_amt,...]],axis=0)
     isz1 = im_s.shape[1]
     isz2 = im_s.shape[2]
     im_s = im_s.reshape([xx,yy,isz1, isz2])
