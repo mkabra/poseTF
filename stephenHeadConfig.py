@@ -109,8 +109,8 @@ class myconfig(object):
     imax = 255.
     adjustContrast = True
     clahegridsize = 20
-    normalize_mean_img = True
-
+    normalize_mean_img = False
+    normalize_mean = False
 
     # fine_batch_size = 8
 
