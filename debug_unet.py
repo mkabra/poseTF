@@ -1,6 +1,6 @@
 
 name = '_gradclip'
-device = '0'
+device = ''
 iter = 8000
 
 import os

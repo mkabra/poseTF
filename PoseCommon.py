@@ -176,7 +176,11 @@ class PoseCommon(object):
         locs = multiResData.sanitizelocs(locs)
 
         xs = PoseTools.adjust_contrast(xs, conf)
-        xs = PoseTools.normalize_mean(xs, conf)
+
+        # ideally normalize_mean should be here, but misc.imresize in scale_images
+        # messes up dtypes. It converts float64 back to uint8.
+        # so for now it'll be in update_fd.
+        # xs = PoseTools.normalize_mean(xs, conf)
         if distort:
             if conf.horzFlip:
                 xs, locs = PoseTools.randomly_flip_lr(xs, locs)
