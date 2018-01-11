@@ -7,8 +7,6 @@
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenHeadConfig.py" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -102,8 +100,8 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="490">
-                  <caret line="85" column="8" lean-forward="true" selection-start-line="85" selection-start-column="8" selection-end-line="85" selection-end-column="8" />
+                <state relative-caret-position="337">
+                  <caret line="76" column="30" lean-forward="false" selection-start-line="76" selection-start-column="30" selection-end-line="76" selection-end-column="30" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#34949#37231#0" expanded="false" />
@@ -958,7 +956,14 @@
       <option name="project" value="LOCAL" />
       <updated>1515578916007</updated>
     </task>
-    <option name="localTasksCounter" value="45" />
+    <task id="LOCAL-00045" summary="redoing mean/contrast normalization exps">
+      <created>1515665550388</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1515665550388</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1069,7 +1074,8 @@
     <MESSAGE value="updating stephens config file for normalize_mean_img" />
     <MESSAGE value="bug fix for normalize_mean_img" />
     <MESSAGE value="removing mean normalize for stephen" />
-    <option name="LAST_COMMIT_MESSAGE" value="removing mean normalize for stephen" />
+    <MESSAGE value="redoing mean/contrast normalization exps" />
+    <option name="LAST_COMMIT_MESSAGE" value="redoing mean/contrast normalization exps" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1448,8 +1454,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="490">
-          <caret line="85" column="8" lean-forward="true" selection-start-line="85" selection-start-column="8" selection-end-line="85" selection-end-column="8" />
+        <state relative-caret-position="337">
+          <caret line="76" column="30" lean-forward="false" selection-start-line="76" selection-start-column="30" selection-end-line="76" selection-end-column="30" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#34949#37231#0" expanded="false" />

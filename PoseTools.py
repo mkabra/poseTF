@@ -74,7 +74,7 @@ def scale_images(img, scale, conf):
 
 def normalize_mean(in_img, conf):
     zz = in_img.astype('float')
-    if conf.normalize_mean_img:
+    if conf.normalize_img_mean:
         # subtract mean for each img.
         mm = zz.mean(axis=(2,3))
         xx = zz - mm[:, :, np.newaxis, np.newaxis]
