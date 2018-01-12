@@ -47,7 +47,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         if not self.joint:
             X = tf.stop_gradient(X)
 
-        with tf.variable_scope(self.name):
+        with tf.variable_scope(self.net_name):
             if self.net_type is 'fixed':
                 return self.create_network_fixed(X)
             else:
