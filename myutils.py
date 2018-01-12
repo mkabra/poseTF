@@ -118,9 +118,9 @@ def nms(image,rad=3,thresh=0):
     return np.transpose(image_t.nonzero())
 
 
-def save_dbox(name, fig = None, dest = 'temp'):
+def save_dbox(name, fig = None, dest = 'temp', dpi=500):
     if fig is None:
       fig = plt.gcf()
     tname = '/groups/branson/home/kabram/temp/' + name
-    fig.savefig(tname)
+    fig.savefig(tname,dpi=dpi)
     os.system('/groups/branson/home/kabram/bin/dbox_to.sh ' + tname + ' ' + dest)
