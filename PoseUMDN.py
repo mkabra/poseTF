@@ -15,9 +15,10 @@ def softmax(x,axis=0):
 
 class PoseUMDN(PoseCommon.PoseCommon):
 
-    def __init__(self, conf, name='pose_umdn',net_type='conv'):
+    def __init__(self, conf, name='pose_umdn',net_type='conv',
+                 unet_name = 'pose_unet'):
         PoseCommon.PoseCommon.__init__(self, conf, name)
-        self.dep_nets = PoseUNet.PoseUNet(conf)
+        self.dep_nets = PoseUNet.PoseUNet(conf, unet_name)
         self.net_type = net_type
         self.net_name = 'pose_umdn'
 
@@ -528,9 +529,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
 class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
 
-    def __init__(self, conf, name='pose_umdn_multi',net_type='conv'):
+    def __init__(self, conf, name='pose_umdn_multi',net_type='conv',
+                 unet_name = 'pose_unet_multi'):
         PoseCommon.PoseCommon.__init__(self, conf, name)
-        self.dep_nets = PoseUNet.PoseUNetMulti(conf)
+        self.dep_nets = PoseUNet.PoseUNetMulti(conf, unet_name)
         self.net_type = net_type
 
     def create_cursors(self, sess):
