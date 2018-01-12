@@ -367,9 +367,11 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def update_fd(self, db_type, sess, distort):
         self.read_images(db_type, distort, sess, distort)
-        self.fd[self.ph['x']] = self.xs
+        rescale = self.conf.unet_rescale
+        xs = PoseTools.scale_images(self.xs, rescale, self.conf)
+        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
         self.locs[np.isnan(self.locs)] = -500000.
-        self.fd[self.ph['locs']] = self.locs
+        self.fd[self.ph['locs']] = self.locs/rescale
 
     def my_loss(self, X, y):
         mdn_locs, mdn_scales, mdn_logits = X
@@ -393,6 +395,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return tf.reduce_sum(loss)
 
     def compute_dist(self, preds, locs):
+        locs = locs.copy()
+        if locs.ndim == 3:
+            locs = locs[:,np.newaxis,:,:]
         val_means, val_std, val_wts = preds
         val_dist = np.zeros(locs.shape[:-1])
         pred_dist = np.zeros(val_means.shape[:-1])

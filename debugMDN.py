@@ -1,3 +1,26 @@
+
+
+
+device = ''
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = device
+
+from stephenHeadConfig import conf
+conf.cachedir = '/home/mayank/temp/cacheHead_Round2'
+
+import PoseUMDN
+import tensorflow as tf
+import PoseTools
+import math
+import PoseCommon
+
+
+self = PoseUMDN.PoseUMDN(conf,unet_name='pose_unet_nomean_contrast')
+self.train_umdn(False,0)
+
+
+##
+
 import pickle
 import os
 import copy
@@ -714,3 +737,7 @@ kk[:,:,1] = np.maximum(hh1[:,:,1],hh[:,:,1])
 rr = cv2.cvtColor(kk,cv2.COLOR_HSV2RGB)
 plt.imshow(rr)
 plt.savefig('/groups/branson/home/kabram/temp/mdn_plots/part_detector_mdn_hmap.png',dpi=240)
+
+
+
+##
