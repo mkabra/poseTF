@@ -90,7 +90,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
                                           initializer=tf.contrib.layers.xavier_initializer())
                 biases = tf.get_variable("biases", kernel_shape[-1],
                                          initializer=tf.constant_initializer(0.))
-                cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
+                cur_conv = tf.nn.conv2d(
+                    X, weights,strides=[1, 2, 2, 1], padding='SAME')
                 cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
                 X = tf.nn.relu(cur_conv + biases)
 
