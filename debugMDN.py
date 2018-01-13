@@ -1,7 +1,7 @@
 
 
 
-device = ''
+device = '0'
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = device
 
@@ -16,8 +16,19 @@ import PoseCommon
 
 
 self = PoseUMDN.PoseUMDN(conf,unet_name='pose_unet_nomean_contrast')
-self.train_umdn(False,0)
+# self.train_umdn(False,0)
+self.init_train(0)
+self.pred = self.create_network()
+self.cost = self.my_loss(self.pred, self.ph['locs'])
+self.create_optimizer()
+self.create_saver()
 
+sess = tf.InteractiveSession()
+start_at = self.init_and_restore(
+    sess, False, ['loss','dist'])
+self.fd[self.ph['learning_rate']] = 0.0001
+self.fd_train()
+self.update_fd(self.DBType.Train, sess, True)
 
 ##
 

@@ -61,7 +61,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2
-        layer_off = 0
+        layer_off = 2
         n_layers_u = len(self.dep_nets.up_layers) - layer_off
         locs_offset = 2**n_layers_u
 

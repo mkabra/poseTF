@@ -153,8 +153,8 @@ class myconfig(object):
     # mdn_min_sigma = 3.
     # mdn_max_sigma = 4.
     # for full res.
-    mdn_min_sigma = 24.
-    mdn_max_sigma = 32.
+    mdn_min_sigma = 24./unet_rescale
+    mdn_max_sigma = 32./unet_rescale
     mdn_logit_eps_training = 0.01
 
     # ----- Save parameters
