@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/debugMDN.py" afterPath="$PROJECT_DIR$/debugMDN.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenHeadConfig.py" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -146,8 +144,8 @@
           <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="170">
-                  <caret line="135" column="29" lean-forward="false" selection-start-line="135" selection-start-column="29" selection-end-line="135" selection-end-column="29" />
+                <state relative-caret-position="476">
+                  <caret line="153" column="23" lean-forward="false" selection-start-line="153" selection-start-column="23" selection-end-line="153" selection-end-column="23" />
                   <folding />
                 </state>
               </provider>
@@ -649,13 +647,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00003" summary="checking in code for cross validation.">
-      <created>1492030330286</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1492030330286</updated>
-    </task>
     <task id="LOCAL-00004" summary="checking in code for cross validation.">
       <created>1492030374361</created>
       <option name="number" value="00004" />
@@ -992,7 +983,14 @@
       <option name="project" value="LOCAL" />
       <updated>1515825553563</updated>
     </task>
-    <option name="localTasksCounter" value="52" />
+    <task id="LOCAL-00052" summary="modified sigma params for umdn for stephen.">
+      <created>1515828334429</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1515828334429</updated>
+    </task>
+    <option name="localTasksCounter" value="53" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1087,7 +1085,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Mixture Density Networks. Also dropouts added back for MRF training.&#10;" />
     <MESSAGE value="adding jitter to fine training" />
     <MESSAGE value="commit from India before travel" />
     <MESSAGE value="MDN is working. Adding trx file stuff for Alice" />
@@ -1112,7 +1109,8 @@
     <MESSAGE value="done with mean normalization and contrast norm exps. using both is the best" />
     <MESSAGE value="A bug where self.name was used instead of self.net_name for umdn." />
     <MESSAGE value="minor edit" />
-    <option name="LAST_COMMIT_MESSAGE" value="minor edit" />
+    <MESSAGE value="modified sigma params for umdn for stephen." />
+    <option name="LAST_COMMIT_MESSAGE" value="modified sigma params for umdn for stephen." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1514,8 +1512,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="135" column="29" lean-forward="false" selection-start-line="135" selection-start-column="29" selection-end-line="135" selection-end-column="29" />
+        <state relative-caret-position="476">
+          <caret line="153" column="23" lean-forward="false" selection-start-line="153" selection-start-column="23" selection-end-line="153" selection-end-column="23" />
           <folding />
         </state>
       </provider>
