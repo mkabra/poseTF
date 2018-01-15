@@ -397,7 +397,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return tf.reduce_sum(loss)
 
     def compute_dist(self, preds, locs):
-        locs = locs.copy()
+        locs = locs.copy()/self.conf.unet_rescale
         if locs.ndim == 3:
             locs = locs[:,np.newaxis,:,:]
         val_means, val_std, val_wts = preds
@@ -455,6 +455,20 @@ class PoseUMDN(PoseCommon.PoseCommon):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
+    def init_net(self,train_type=0):
+        self.init_train(train_type=train_type)
+        self.pred = self.create_network()
+        saver = self.create_saver()
+        p_m, p_s, p_w = self.pred
+        conf = self.conf
+        osz = self.conf.imsz
+        self.joint = True
+
+        sess = tf.InteractiveSession()
+        start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+        return sess
+      
+	
     def classify_val(self):
         val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
         num_val = 0
@@ -503,12 +517,12 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 if self.locs.ndim == 3:
                     cur_predlocs = PoseTools.get_pred_locs(mdn_pred_out)
                     cur_dist = np.sqrt(np.sum(
-                        (cur_predlocs - self.locs) ** 2, 2))
+                        (cur_predlocs - self.locs/self.conf.unet_rescale) ** 2, 2))
                 else:
                     cur_predlocs = PoseTools.get_pred_locs_multi(
                         mdn_pred_out,self.conf.max_n_animals,
                         self.conf.label_blur_rad * 7)
-                    curl = self.locs.copy()
+                    curl = self.locs.copy()/self.conf.unet_rescale
                     jj = cur_predlocs[:,:,np.newaxis,:,:] - curl[:,np.newaxis,...]
                     cur_dist = np.sqrt(np.sum(jj**2,axis=-1)).min(axis=1)
                 val_dist.append(cur_dist)
