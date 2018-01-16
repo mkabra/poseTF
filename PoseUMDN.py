@@ -61,7 +61,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2
-        layer_off = 2
+        layer_off = self.conf.mdn_layer_off
         n_layers_u = len(self.dep_nets.up_layers) - layer_off
         locs_offset = 2**n_layers_u
 
@@ -469,10 +469,13 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return sess
       
 	
-    def classify_val(self):
-        val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+    def classify_val(self, train_type=0, at_step=-1):
+        if train_type is 0:
+            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        else:
+            val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
         num_val = 0
-        for record in tf.python_io.tf_record_iterator(val_file):
+        for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
         self.init_train(train_type=0)
@@ -484,7 +487,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.joint = True
 
         with tf.Session() as sess:
-            start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+            start_at = self.init_and_restore(sess, True, ['loss', 'dist'], at_step)
 
             val_dist = []
             val_ims = []

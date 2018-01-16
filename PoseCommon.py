@@ -238,7 +238,8 @@ class PoseCommon(object):
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
         saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(self.net_name),
-                                         max_to_keep=self.conf.maxckpt))
+                                         max_to_keep=self.conf.maxckpt,
+                                         save_relative_paths=True))
         self.saver = saver
         if self.dep_nets:
             self.dep_nets.create_joint_saver(name)

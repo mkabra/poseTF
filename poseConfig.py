@@ -128,11 +128,12 @@ class config(object):
     mdn_min_sigma = 3.
     mdn_max_sigma = 4.
     mdn_logit_eps_training = 0.01
+    mdn_layer_off = 0
 
     # ----- Save parameters
 
-    save_step = 500
-    maxckpt = 20
+    save_step = 2000
+    maxckpt = 30
     def set_exp_name(self, exp_name):
         self.expname = exp_name
         self.baseoutname = self.expname + self.baseName
@@ -203,7 +204,7 @@ aliceConfig.num_pools = 1
 aliceConfig.dilation_rate = 2
 aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
 aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
-aliceConfig.valratio = 0.15
+aliceConfig.valratio = 0.25
 
 
 # -- felipe bees --

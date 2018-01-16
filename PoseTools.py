@@ -1122,3 +1122,20 @@ def show_stack(im_s,xx,yy,cmap='gray'):
     im_s = im_s.transpose([0, 2, 1, 3])
     im_s = im_s.reshape([xx * isz1, yy * isz2])
     plt.figure(); plt.imshow(im_s,cmap=cmap)
+
+
+def show_result(ims, ndx, locs, predlocs= None):
+    count = len(ndx)
+    xx = np.ceil(np.sqrt(count)).astype('int')
+    yy = np.ceil(np.sqrt(count)).astype('int')
+    f,ax = plt.subplots(xx,yy)
+    ax = ax.flatten()
+    for idx in range(count):
+        if ims.shape[3] == 1:
+            ax[idx].imshow(ims[ndx[idx],:,:,0],cmap='gray')
+        else:
+            ax[idx].imshow(ims[ndx[idx],...])
+
+        ax[idx].scatter(locs[ndx[idx],:,0],locs[ndx[idx],:,1])
+        if predlocs is not None:
+            ax[idx].scatter(predlocs[ndx[idx], :, 0], predlocs[ndx[idx], :, 1])

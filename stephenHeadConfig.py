@@ -157,6 +157,7 @@ class myconfig(object):
     mdn_max_sigma = 16./unet_rescale
     mdn_logit_eps_training = 0.01
     max_n_animals = 1
+    mdn_layer_off = 2
 
     # ----- Save parameters
 
