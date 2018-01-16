@@ -52,7 +52,7 @@ class PoseUNet(PoseCommon.PoseCommon):
 
     def create_network1(self):
         m_sz = min(self.conf.imsz)/self.conf.unet_rescale
-        max_layers = int(math.floor(math.log(m_sz,2)))-1
+        max_layers = int(math.ceil(math.log(m_sz,2)))-1
         sel_sz = self.conf.sel_sz
         n_layers = int(math.ceil(math.log(sel_sz,2)))+2
         # max_layers = int(math.floor(math.log(m_sz)))
