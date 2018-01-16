@@ -205,7 +205,8 @@ aliceConfig.dilation_rate = 2
 aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
 aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
 aliceConfig.valratio = 0.25
-
+aliceConfig.mdn_min_sigma = 30.
+aliceConfig.mdn_max_sigma = 40.
 
 # -- felipe bees --
 
