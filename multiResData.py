@@ -607,8 +607,19 @@ def createTFRecordFromLblWithTrx(conf, split=True):
         expname = conf.getexpname(dirname)
         T = sio.loadmat(trx_files[ndx])['trx'][0]
         n_trx = len(T)
-        curpts = np.array(L[pts[0, ndx]])-1
-        # -1 for 1-indexing in matlab and 0-indexing in python
+
+        # new styled sparse labeledpos
+        idx = np.array(L[pts[0,ndx]]['idx'])[0,:].astype('int')-1
+        val = np.array(L[pts[0,ndx]]['val'])[0,:]-1
+        sz = np.array(L[pts[0,ndx]]['size'])[:,0].astype('int')
+        curpts = np.zeros(sz).flatten()
+        curpts[:] = np.nan
+        curpts[idx] = val
+        curpts = curpts.reshape(np.flipud(sz))
+
+        # old style labeledpos.
+        # curpts = np.array(L[pts[0, ndx]])-1
+        # # -1 for 1-indexing in matlab and 0-indexing in python
         trx_split = np.random.random(n_trx) < conf.valratio
         cap = movies.Movie(local_dirs[ndx])
 
