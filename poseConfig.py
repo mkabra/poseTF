@@ -178,7 +178,8 @@ class config(object):
 
 aliceConfig = config()
 aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice')
-aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
+#aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
+aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl')
 def alice_exp_name(dirname):
     return os.path.basename(os.path.dirname(dirname))
 

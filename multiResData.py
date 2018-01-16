@@ -38,7 +38,9 @@ def findLocalDirs(conf):
     seldirs = [True]*len(localdirs)
     try:
         rdir = u''.join(chr(c) for c in L['projMacros']['rootdatadir'])
+        ddir = u''.join(chr(c) for c in L['projMacros']['dataroot'])
         localdirs = [s.replace('$rootdatadir', rdir) for s in localdirs]
+        localdirs = [s.replace('$dataroot', ddir) for s in localdirs]
     except:
         None
     L.close()
@@ -584,6 +586,8 @@ def createTFRecordFromLblWithTrx(conf, split=True):
     npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
     pts = np.array(L['labeledpos'])
     trx_files = get_trx_files(L,local_dirs)
+    d = L['projMacros']['dataroot']
+    droot = u''.join(chr(c) for c in d)
 
     if split:
         trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
