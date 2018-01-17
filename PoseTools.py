@@ -1130,12 +1130,15 @@ def show_result(ims, ndx, locs, predlocs= None):
     yy = np.ceil(np.sqrt(count)).astype('int')
     f,ax = plt.subplots(xx,yy)
     ax = ax.flatten()
+    cmap = cm.get_cmap('jet')
+    rgba = cmap(np.linspace(0, 1, locs.shape[1]))
     for idx in range(count):
         if ims.shape[3] == 1:
             ax[idx].imshow(ims[ndx[idx],:,:,0],cmap='gray')
         else:
             ax[idx].imshow(ims[ndx[idx],...])
 
-        ax[idx].scatter(locs[ndx[idx],:,0],locs[ndx[idx],:,1])
+        ax[idx].scatter(locs[ndx[idx],:,0],locs[ndx[idx],:,1],c=rgba,marker='.')
         if predlocs is not None:
-            ax[idx].scatter(predlocs[ndx[idx], :, 0], predlocs[ndx[idx], :, 1])
+            ax[idx].scatter(predlocs[ndx[idx], :, 0], predlocs[ndx[idx], :, 1],
+                            c=rgba, marker='+')

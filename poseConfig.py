@@ -125,7 +125,7 @@ class config(object):
     unet_rescale = 1
 
     # ----- MDN params
-    mdn_min_sigma = 3.
+    mdn_min_sigma = 3. # this should just be maybe twice the cell size??
     mdn_max_sigma = 4.
     mdn_logit_eps_training = 0.01
     mdn_layer_off = 0
@@ -205,8 +205,8 @@ aliceConfig.dilation_rate = 2
 aliceConfig.pool_scale = aliceConfig.pool_stride**aliceConfig.num_pools
 aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.dilation_rate
 aliceConfig.valratio = 0.25
-aliceConfig.mdn_min_sigma = 30.
-aliceConfig.mdn_max_sigma = 40.
+aliceConfig.mdn_min_sigma = 70.
+aliceConfig.mdn_max_sigma = 70.
 
 # -- felipe bees --
 

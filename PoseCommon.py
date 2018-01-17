@@ -118,6 +118,7 @@ class PoseCommon(object):
         self.joint = False
         self.edge_ignore = 0 # amount of edge to ignore while computing prediction locations
         self.train_loss = np.zeros(500) # keep track of past loss for importance sampling
+        self.step = 0 # might be required for mdn.
 
     def open_dbs(self):
         assert self.train_type is not None, 'traintype has not been set'

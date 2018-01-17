@@ -29,6 +29,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.ph['locs'] = tf.placeholder(tf.float32,
                            [None, self.conf.n_classes, 2],
                            name='locs')
+        self.ph['step'] = tf.placeholder(tf.float32)
 
     def create_fd(self):
         x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
@@ -374,6 +375,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
         self.locs[np.isnan(self.locs)] = -500000.
         self.fd[self.ph['locs']] = self.locs/rescale
+        self.fd[self.ph['step']] = self.step
 
     def my_loss(self, X, y):
         mdn_locs, mdn_scales, mdn_logits = X
@@ -386,8 +388,13 @@ class PoseUMDN(PoseCommon.PoseCommon):
         for cls in range(self.conf.n_classes):
             cur_scales = mdn_scales[:, :, cls]
             pp = y[:, cls:cls + 1, :]
-            kk = tf.reduce_sum(tf.square(pp - mdn_locs[:, :, cls, :]), axis=2)
-            cur_comp.append(tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2)))
+            kk = tf.sqrt(tf.reduce_sum(tf.square(pp - mdn_locs[:, :, cls, :]), axis=2))
+            # div is actual correct implementation of gaussian distance.
+            # but we run into numerical issues. Since the scales are withing
+            # the same range, I'm just ignoring them for now.
+            # dd = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
+            dd = tf.exp(-kk / cur_scales / 2)
+            cur_comp.append(dd)
 
         cur_comp = tf.stack(cur_comp, 1)
         cur_loss = tf.reduce_prod(cur_comp, axis=1)
@@ -455,7 +462,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def init_net(self,train_type=0):
+    def init_net(self,train_type=0, restore= True):
         self.init_train(train_type=train_type)
         self.pred = self.create_network()
         saver = self.create_saver()
@@ -465,7 +472,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.joint = True
 
         sess = tf.InteractiveSession()
-        start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
         return sess
       
 	
