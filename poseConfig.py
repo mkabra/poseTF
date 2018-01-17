@@ -99,7 +99,7 @@ class config(object):
     rrange = 30
     trange = 0
     imax = 255.
-    adjustContrast = False
+    adjustContrast = True
     clahegridsize = 20
     normalize_img_mean = True
     normalize_batch_mean = False
@@ -207,6 +207,8 @@ aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.
 aliceConfig.valratio = 0.25
 aliceConfig.mdn_min_sigma = 70.
 aliceConfig.mdn_max_sigma = 70.
+aliceConfig.adjustContrast = True
+aliceConfig.clahegridsize = 30
 
 # -- felipe bees --
 
