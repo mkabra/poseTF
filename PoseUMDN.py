@@ -62,22 +62,24 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2
-        layer_off = self.conf.mdn_layer_off
-        n_layers_u = len(self.dep_nets.up_layers)
+        n_layers_u = len(self.dep_nets.up_layers) + \
+                    self.conf.mdn_extra_layers
         locs_offset = 2**n_layers_u
 
         # MDN downsample.
         for ndx in range(n_layers_u):
-            cur_ul = self.dep_nets.up_layers[n_layers_u + layer_off - ndx - 1]
-            cur_dl = self.dep_nets.down_layers[ndx]
-            cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
-            n_filt = cur_l.get_shape().as_list()[3]/2
+            if ndx < len(self.dep_nets.up_layers):
+                cur_ul = self.dep_nets.up_layers[n_layers_u + layer_off - ndx - 1]
+                cur_dl = self.dep_nets.down_layers[ndx]
+                cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
-            if mdn_prev is None:
-                X = cur_l
-            else:
-                X = tf.concat([X, cur_l], axis=3)
+                n_filt = cur_l.get_shape().as_list()[3]/2
+
+                if mdn_prev is None:
+                    X = cur_l
+                else:
+                    X = tf.concat([X, cur_l], axis=3)
 
             for c_ndx in range(n_conv-1):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)

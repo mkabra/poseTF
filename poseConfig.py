@@ -128,7 +128,7 @@ class config(object):
     mdn_min_sigma = 3. # this should just be maybe twice the cell size??
     mdn_max_sigma = 4.
     mdn_logit_eps_training = 0.01
-    mdn_layer_off = 0
+    mdn_extra_layers = 0
 
     # ----- Save parameters
 
@@ -211,6 +211,7 @@ aliceConfig.adjustContrast = False
 aliceConfig.clahegridsize = 30
 aliceConfig.brange = [0,0]
 aliceConfig.crange = [1.,1.]
+aliceConfig.mdn_extra_layers = 2
 
 # -- felipe bees --
 
