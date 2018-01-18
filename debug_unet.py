@@ -1,7 +1,5 @@
 
-name = '_gradclip'
-device = ''
-iter = 8000
+device = '0'
 
 ##
 import os

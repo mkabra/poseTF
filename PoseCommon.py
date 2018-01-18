@@ -551,6 +551,33 @@ class PoseCommon(object):
         plt.plot(moving_average(self.train_info['val_dist'],n),c='r')
         plt.plot(moving_average(self.train_info['train_dist'],n),c='g')
 
+    def iter_res_image(self, max_iter, shape, train_type=0,
+                       perc=[90,95,97,99],min_iter=0):
+        ptiles = []
+        for iter in range(min_iter,max_iter+1,self.conf.save_step):
+            tf.reset_default_graph()
+            A = self.classify_val(train_type,iter)
+            ptiles.append(np.percentile(A[0],perc,axis=0))
+
+        niter = len(ptiles)
+        if A[1].shape[3] == 1:
+            im = A[1][0,:,:,0]
+        else:
+            im = A[1][0,...]
+        iszx = A[1].shape[2]
+        iszy = A[1].shape[1]
+        im = np.tile(im,shape)
+        locs = A[4][0,...]
+        alocs = []
+        for xx in range(shape[1]):
+            for yy in range(shape[0]):
+                alocs.append(locs + [xx*iszx, yy*iszy])
+
+        alocs = np.array(alocs).reshape([-1,2])
+        nperc = ptiles[0].shape[0]
+        ptiles = np.array(ptiles).transpose([1,0,2]).reshape([nperc,-1])
+        PoseTools.create_result_image(im,alocs,ptiles)
+
 
 class PoseCommonMulti(PoseCommon):
 

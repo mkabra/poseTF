@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseCommon.py" afterPath="$PROJECT_DIR$/PoseCommon.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/debug_unet.py" afterPath="$PROJECT_DIR$/debug_unet.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -52,7 +53,7 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="731">
+                <state relative-caret-position="153">
                   <caret line="54" column="32" lean-forward="false" selection-start-line="54" selection-start-column="32" selection-end-line="54" selection-end-column="32" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
@@ -64,8 +65,8 @@
           <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="252">
-                  <caret line="120" column="50" lean-forward="false" selection-start-line="120" selection-start-column="50" selection-end-line="120" selection-end-column="50" />
+                <state relative-caret-position="503">
+                  <caret line="579" column="0" lean-forward="true" selection-start-line="579" selection-start-column="0" selection-end-line="579" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#5651#7896#0" expanded="false" />
@@ -127,11 +128,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="221">
-                  <caret line="13" column="2" lean-forward="false" selection-start-line="13" selection-start-column="2" selection-end-line="13" selection-end-column="2" />
+                <state relative-caret-position="153">
+                  <caret line="9" column="15" lean-forward="true" selection-start-line="9" selection-start-column="15" selection-end-line="9" selection-end-column="15" />
                   <folding />
                 </state>
               </provider>
@@ -140,8 +141,8 @@
           <file leaf-file-name="debug_unet.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/debug_unet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="17">
-                  <caret line="23" column="42" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="42" />
+                <state relative-caret-position="119">
+                  <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -157,10 +158,10 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="204">
+                <state relative-caret-position="1581">
                   <caret line="192" column="20" lean-forward="true" selection-start-line="192" selection-start-column="20" selection-end-line="192" selection-end-column="20" />
                   <folding />
                 </state>
@@ -280,16 +281,16 @@
         <option value="$PROJECT_DIR$/felipe.py" />
         <option value="$PROJECT_DIR$/trackStephenHead_round2.py" />
         <option value="$PROJECT_DIR$/batch_norm.py" />
-        <option value="$PROJECT_DIR$/debug_unet.py" />
         <option value="$PROJECT_DIR$/debugMDN.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
         <option value="$PROJECT_DIR$/PoseUNet.py" />
-        <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/PoseUMDN.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
+        <option value="$PROJECT_DIR$/debug_unet.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
+        <option value="$PROJECT_DIR$/PoseCommon.py" />
       </list>
     </option>
   </component>
@@ -653,13 +654,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00012" summary="adding jitter to fine training">
-      <created>1496322489598</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1496322489598</updated>
-    </task>
     <task id="LOCAL-00013" summary="adding jitter to fine training">
       <created>1496322698848</created>
       <option name="number" value="00013" />
@@ -996,7 +990,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516185562389</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <task id="LOCAL-00061" summary="Contrast adjustment doesn't help for alice. Disabling it. Also disabling brange and crange.">
+      <created>1516262181769</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1516262181769</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1091,7 +1092,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Minor bug fix" />
     <MESSAGE value="removing edges predictions while computing distance" />
     <MESSAGE value="increased number of filters for unet" />
     <MESSAGE value="introduced hacky shuffling for tfrecords" />
@@ -1116,7 +1116,8 @@
     <MESSAGE value="changing mdn_sigma for alice to match the cell size of each mdn prediction i.e. 180/2/2" />
     <MESSAGE value="For MDN loss, instead of exp(-dist^2/sigma^2) using exp(-dist/sigma). Otherwise only 1 mixture component had any useful predictions." />
     <MESSAGE value="Also enabling contrast adjustment for alice's data" />
-    <option name="LAST_COMMIT_MESSAGE" value="Also enabling contrast adjustment for alice's data" />
+    <MESSAGE value="Contrast adjustment doesn't help for alice. Disabling it. Also disabling brange and crange." />
+    <option name="LAST_COMMIT_MESSAGE" value="Contrast adjustment doesn't help for alice. Disabling it. Also disabling brange and crange." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1150,7 +1151,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="251" />
+      <option name="time" value="253" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1424,16 +1425,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="731">
-          <caret line="54" column="32" lean-forward="false" selection-start-line="54" selection-start-column="32" selection-end-line="54" selection-end-column="32" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4335">
@@ -1451,28 +1442,6 @@
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#9365#18120#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="120" column="50" lean-forward="false" selection-start-line="120" selection-start-column="50" selection-end-line="120" selection-end-column="50" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#5651#7896#0" expanded="false" />
-            <element signature="e#7934#8718#0" expanded="false" />
-            <element signature="e#8770#9536#0" expanded="false" />
-            <element signature="e#9599#11032#0" expanded="false" />
-            <element signature="e#11110#12724#0" expanded="false" />
-            <element signature="e#12766#13125#0" expanded="false" />
-            <element signature="e#13170#13444#0" expanded="false" />
-            <element signature="e#13480#14207#0" expanded="false" />
-            <element signature="e#14240#14437#0" expanded="false" />
-            <element signature="e#14482#14593#0" expanded="false" />
-            <element signature="e#14628#14878#0" expanded="false" />
-            <element signature="e#14913#14951#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1498,22 +1467,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_unet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="23" column="42" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" column="2" lean-forward="false" selection-start-line="13" selection-start-column="2" selection-end-line="13" selection-end-column="2" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="163">
@@ -1524,9 +1477,57 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/poseConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
+        <state relative-caret-position="1581">
           <caret line="192" column="20" lean-forward="true" selection-start-line="192" selection-start-column="20" selection-end-line="192" selection-end-column="20" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_unet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="0" lean-forward="false" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="9" column="15" lean-forward="true" selection-start-line="9" selection-start-column="15" selection-end-line="9" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="54" column="32" lean-forward="false" selection-start-line="54" selection-start-column="32" selection-end-line="54" selection-end-column="32" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="503">
+          <caret line="579" column="0" lean-forward="true" selection-start-line="579" selection-start-column="0" selection-end-line="579" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#5651#7896#0" expanded="false" />
+            <element signature="e#7934#8718#0" expanded="false" />
+            <element signature="e#8770#9536#0" expanded="false" />
+            <element signature="e#9599#11032#0" expanded="false" />
+            <element signature="e#11110#12724#0" expanded="false" />
+            <element signature="e#12766#13125#0" expanded="false" />
+            <element signature="e#13170#13444#0" expanded="false" />
+            <element signature="e#13480#14207#0" expanded="false" />
+            <element signature="e#14240#14437#0" expanded="false" />
+            <element signature="e#14482#14593#0" expanded="false" />
+            <element signature="e#14628#14878#0" expanded="false" />
+            <element signature="e#14913#14951#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
