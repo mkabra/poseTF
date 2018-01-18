@@ -569,8 +569,8 @@ class PoseCommon(object):
         im = np.tile(im,shape)
         locs = A[4][0,...]
         alocs = []
-        for xx in range(shape[1]):
-            for yy in range(shape[0]):
+        for yy in range(shape[1]):
+            for xx in range(shape[0]):
                 alocs.append(locs + [xx*iszx, yy*iszy])
 
         alocs = np.array(alocs).reshape([-1,2])

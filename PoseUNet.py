@@ -58,7 +58,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # max_layers = int(math.floor(math.log(m_sz)))
         # sel_sz = self.conf.sel_sz
         # n_layers = int(math.ceil(math.log(sel_sz)))+2
-        n_layers = min(max_layers,n_layers)
+        n_layers = min(max_layers,n_layers) - 2
 
         n_conv = 3
         conv = PoseCommon.conv_relu3
