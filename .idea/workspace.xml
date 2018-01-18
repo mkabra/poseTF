@@ -96,11 +96,11 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="510">
-                  <caret line="136" column="33" lean-forward="true" selection-start-line="136" selection-start-column="33" selection-end-line="136" selection-end-column="33" />
+                <state relative-caret-position="204">
+                  <caret line="73" column="0" lean-forward="false" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
-                    <element signature="e#9432#18187#0" expanded="false" />
+                    <element signature="e#9462#18217#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -661,13 +661,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00016" summary="adding jitter to fine training">
-      <created>1496323355402</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1496323355402</updated>
-    </task>
     <task id="LOCAL-00017" summary="commit from India before travel">
       <created>1504169920002</created>
       <option name="number" value="00017" />
@@ -1004,7 +997,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516276808708</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="minor edits">
+      <created>1516276993123</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1516276993123</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1099,7 +1099,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="changed settings for stephens." />
     <MESSAGE value="introduced importance sampling styled training" />
     <MESSAGE value="copied tf's batch_norm to fix the batch_norm bug" />
     <MESSAGE value="adding grad clipping and smooth decay of learning rate" />
@@ -1124,7 +1123,8 @@
     <MESSAGE value="adding function to show evolution of results with training" />
     <MESSAGE value="reducing the number of layers in unet for all networks. testing it out on stephens data." />
     <MESSAGE value="adding extra layers in mdn to make up for reduced unet layers" />
-    <option name="LAST_COMMIT_MESSAGE" value="adding extra layers in mdn to make up for reduced unet layers" />
+    <MESSAGE value="minor edits" />
+    <option name="LAST_COMMIT_MESSAGE" value="minor edits" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1537,11 +1537,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="136" column="33" lean-forward="true" selection-start-line="136" selection-start-column="33" selection-end-line="136" selection-end-column="33" />
+        <state relative-caret-position="204">
+          <caret line="73" column="0" lean-forward="false" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
-            <element signature="e#9432#18187#0" expanded="false" />
+            <element signature="e#9462#18217#0" expanded="false" />
           </folding>
         </state>
       </provider>

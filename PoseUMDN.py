@@ -62,15 +62,16 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2
-        n_layers_u = len(self.dep_nets.up_layers) + \
-                    self.conf.mdn_extra_layers
+        extra_layers = self.conf.mdn_extra_layers
+        n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+
         locs_offset = 2**n_layers_u
 
         # MDN downsample.
         for ndx in range(n_layers_u):
 
             if ndx < len(self.dep_nets.up_layers):
-                cur_ul = self.dep_nets.up_layers[n_layers_u - ndx - 1]
+                cur_ul = self.dep_nets.up_layers[n_layers_u - extra_layers - ndx - 1]
                 cur_dl = self.dep_nets.down_layers[ndx]
                 cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
