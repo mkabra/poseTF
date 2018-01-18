@@ -575,8 +575,9 @@ class PoseCommon(object):
 
         alocs = np.array(alocs).reshape([-1,2])
         nperc = ptiles[0].shape[0]
-        ptiles = np.array(ptiles).transpose([1,0,2]).reshape([nperc,-1])
-        PoseTools.create_result_image(im,alocs,ptiles)
+        ptiles_a = np.array(ptiles).transpose([1,0,2]).reshape([nperc,-1])
+        PoseTools.create_result_image(im,alocs,ptiles_a)
+        return ptiles
 
 
 class PoseCommonMulti(PoseCommon):
