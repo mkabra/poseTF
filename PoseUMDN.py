@@ -70,7 +70,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         for ndx in range(n_layers_u):
 
             if ndx < len(self.dep_nets.up_layers):
-                cur_ul = self.dep_nets.up_layers[n_layers_u + layer_off - ndx - 1]
+                cur_ul = self.dep_nets.up_layers[n_layers_u - ndx - 1]
                 cur_dl = self.dep_nets.down_layers[ndx]
                 cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
@@ -444,7 +444,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             [pred_means, pred_std, pred_weights], self.locs)
         return cur_loss, cur_dist
 
-    def train_umdn(self, restore, train_type=0,joint=False,
+    def train_umdn(self, restore, train_type=0,joint=True,
                    net_type='conv'):
 
         self.joint = joint
