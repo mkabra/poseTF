@@ -207,8 +207,10 @@ aliceConfig.psz = aliceConfig.sel_sz / 4 / aliceConfig.pool_scale / aliceConfig.
 aliceConfig.valratio = 0.25
 aliceConfig.mdn_min_sigma = 70.
 aliceConfig.mdn_max_sigma = 70.
-aliceConfig.adjustContrast = True
+aliceConfig.adjustContrast = False
 aliceConfig.clahegridsize = 30
+aliceConfig.brange = [0,0]
+aliceConfig.crange = [1.,1.]
 
 # -- felipe bees --
 
