@@ -65,8 +65,6 @@ class PoseUMDN(PoseCommon.PoseCommon):
         extra_layers = self.conf.mdn_extra_layers
         n_layers_u = len(self.dep_nets.up_layers) + extra_layers
 
-        locs_offset = 2**n_layers_u
-
         # MDN downsample.
         for ndx in range(n_layers_u):
 
@@ -103,6 +101,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
+        reduced_sz = X.get_shape().as_list()[1]
+        orig_sz = self.dep_nets.down_layers[0].get_shape().as_list()[1]
+        locs_offset = orig_sz/reduced_sz
         with tf.variable_scope('locs'):
             with tf.variable_scope('layer_locs'):
                 kernel_shape = [1, 1, n_filt, n_filt]
