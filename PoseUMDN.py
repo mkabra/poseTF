@@ -21,6 +21,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.dep_nets = PoseUNet.PoseUNet(conf, unet_name)
         self.net_type = net_type
         self.net_name = 'pose_umdn'
+        self.i_locs = None
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -64,6 +65,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         k = 2
         extra_layers = self.conf.mdn_extra_layers
         n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+        locs_offset = 2**n_layers_u
 
         # MDN downsample.
         for ndx in range(n_layers_u):
@@ -101,9 +103,6 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
-        reduced_sz = X.get_shape().as_list()[1]
-        orig_sz = self.dep_nets.down_layers[0].get_shape().as_list()[1]
-        locs_offset = orig_sz/reduced_sz
         with tf.variable_scope('locs'):
             with tf.variable_scope('layer_locs'):
                 kernel_shape = [1, 1, n_filt, n_filt]
@@ -132,6 +131,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # with multiplying grid_size/2, o_locs will have variance grid_size/2
             # with adding grid_size/2, o_locs initially will be centered
             # in the center of the grid.
+            self.i_locs = o_locs
             o_locs *= locs_offset/2*3
             o_locs += locs_offset/2*3
 
@@ -385,6 +385,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_locs, mdn_scales, mdn_logits = X
         cur_comp = []
         ll = tf.nn.softmax(mdn_logits, dim=1)
+
+        n_preds = mdn_locs.get_shape().as_list()[1]
         # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
         logit_eps = self.conf.mdn_logit_eps_training
         ll = tf.cond(self.ph['phase_train'], lambda: ll + logit_eps, lambda: tf.identity(ll))
