@@ -138,8 +138,7 @@ class PoseUNet(PoseCommon.PoseCommon):
     def update_fd(self, db_type, sess, distort):
         self.read_images(db_type, distort, sess, distort)
         rescale = self.conf.unet_rescale
-        xs = scale_images(
-            self.xs, rescale, self.conf)
+        xs = scale_images(self.xs, rescale, self.conf)
         self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
         imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
         label_ims = PoseTools.create_label_images(

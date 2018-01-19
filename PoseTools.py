@@ -76,8 +76,8 @@ def normalize_mean(in_img, conf):
     zz = in_img.astype('float')
     if conf.normalize_img_mean:
         # subtract mean for each img.
-        mm = zz.mean(axis=(2,3))
-        xx = zz - mm[:, :, np.newaxis, np.newaxis]
+        mm = zz.mean(axis=(1,2))
+        xx = zz - mm[:, np.newaxis, np.newaxis,:]
         if conf.imgDim == 3:
             if conf.perturb_color:
                 for dim in range(3):

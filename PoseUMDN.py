@@ -67,6 +67,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
         n_layers_u = len(self.dep_nets.up_layers) + extra_layers
         locs_offset = 2**n_layers_u
 
+        self.mdn_layers1 = []
+        self.mdn_layers2 = []
         # MDN downsample.
         for ndx in range(n_layers_u):
 
@@ -86,6 +88,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'])
+            self.mdn_layers1.append(X)
 
             # downsample using strides instead of max-pooling
             sc_name = 'mdn_{}_{}'.format(ndx, n_conv)
@@ -99,7 +102,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     X, weights,strides=[1, 2, 2, 1], padding='SAME')
                 cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
                 X = tf.nn.relu(cur_conv + biases)
-
+            self.mdn_layers2.append(X)
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
