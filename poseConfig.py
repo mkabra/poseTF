@@ -211,7 +211,7 @@ aliceConfig.adjustContrast = False
 aliceConfig.clahegridsize = 30
 aliceConfig.brange = [0,0]
 aliceConfig.crange = [1.,1.]
-aliceConfig.mdn_extra_layers = 2
+aliceConfig.mdn_extra_layers = 1
 
 # -- felipe bees --
 
