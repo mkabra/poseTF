@@ -132,8 +132,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # with adding grid_size/2, o_locs initially will be centered
             # in the center of the grid.
             self.i_locs = o_locs
-            o_locs *= locs_offset/2
-            o_locs += locs_offset/2
+            o_locs *= locs_offset/2*3
+            o_locs += locs_offset/2*3
 
             # adding offset of each grid location.
             x_off, y_off = np.meshgrid(np.arange(loc_shape[2]), np.arange(loc_shape[1]))
