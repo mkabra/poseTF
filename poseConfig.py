@@ -197,7 +197,7 @@ aliceConfig.imgDim = 1
 aliceConfig.n_classes = len(aliceConfig.selpts)
 aliceConfig.splitType = 'frame'
 aliceConfig.set_exp_name('aliceFly')
-aliceConfig.trange = 20
+aliceConfig.trange = 40
 aliceConfig.nfcfilt = 128
 aliceConfig.sel_sz = 144
 aliceConfig.num_pools = 1
