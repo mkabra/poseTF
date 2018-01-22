@@ -60,12 +60,35 @@
                     <element signature="e#1118#1494#0" expanded="false" />
                     <element signature="e#1534#1614#0" expanded="false" />
                     <element signature="e#1665#1838#0" expanded="false" />
-                    <element signature="e#4838#4876#0" expanded="false" />
-                    <element signature="e#4908#4947#0" expanded="false" />
-                    <element signature="e#5006#5453#0" expanded="false" />
-                    <element signature="e#5514#5930#0" expanded="false" />
-                    <element signature="e#5994#7734#0" expanded="false" />
-                    <element signature="e#7819#9956#0" expanded="false" />
+                    <marker date="1516618539363" expanded="true" signature="291:9966" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="1870:4814" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="2586:3386" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="2851:3064" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="3165:3271" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="3549:3712" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="3778:4353" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="3899:3946" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="4148:4321" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="4839:4886" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="4909:4957" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="5007:5463" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="5514:5940" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="5552:5603" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="5995:7744" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="6479:7316" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="6747:7283" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="7348:7439" ph="..." />
+                    <marker date="1516618539363" expanded="false" signature="7820:9966" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="7829:7931" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="8122:8274" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="8886:9888" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="9063:9282" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10026:10920" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10081:10125" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10175:10822" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10498:10779" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10552:10779" ph="..." />
+                    <marker date="1516618539363" expanded="true" signature="10859:10920" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -97,8 +120,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="642">
-                  <caret line="567" column="65" lean-forward="true" selection-start-line="567" selection-start-column="65" selection-end-line="567" selection-end-column="65" />
+                <state relative-caret-position="320">
+                  <caret line="459" column="18" lean-forward="false" selection-start-line="459" selection-start-column="18" selection-end-line="459" selection-end-column="18" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#450#749#0" expanded="false" />
@@ -109,8 +132,8 @@
                     <element signature="e#10140#18895#0" expanded="false" />
                     <element signature="e#18929#19029#0" expanded="false" />
                     <element signature="e#19061#19157#0" expanded="false" />
-                    <element signature="e#22927#23324#0" expanded="false" />
-                    <element signature="e#24027#24391#0" expanded="false" />
+                    <element signature="e#22920#23317#0" expanded="false" />
+                    <element signature="e#24020#24384#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -148,8 +171,8 @@
           <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="204">
-                  <caret line="12" column="23" lean-forward="false" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
+                <state relative-caret-position="255">
+                  <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -671,13 +694,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00023" summary="multipose MDN is now working.">
-      <created>1512563836377</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1512563836377</updated>
-    </task>
     <task id="LOCAL-00024" summary="Minor bug fix">
       <created>1512563915836</created>
       <option name="number" value="00024" />
@@ -1014,7 +1030,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516613979450</updated>
     </task>
-    <option name="localTasksCounter" value="72" />
+    <task id="LOCAL-00072" summary="updated distance comptation for part-groups in MDN">
+      <created>1516618504327</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1516618504327</updated>
+    </task>
+    <option name="localTasksCounter" value="73" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1028,7 +1051,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="49" y="-4" width="1871" height="1084" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="2" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1109,7 +1131,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updating stephens config file for normalize_mean_img" />
     <MESSAGE value="bug fix for normalize_mean_img" />
     <MESSAGE value="removing mean normalize for stephen" />
     <MESSAGE value="redoing mean/contrast normalization exps" />
@@ -1134,7 +1155,8 @@
     <MESSAGE value="increasing trange for alice." />
     <MESSAGE value="removing normalization for alice." />
     <MESSAGE value="introducing groups of parts in MDN loss computation." />
-    <option name="LAST_COMMIT_MESSAGE" value="introducing groups of parts in MDN loss computation." />
+    <MESSAGE value="updated distance comptation for part-groups in MDN" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated distance comptation for part-groups in MDN" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1161,13 +1183,6 @@
           </selected-grouping-rules>
         </breakpoints-dialog>
       </breakpoints-dialog>
-      <default-breakpoints>
-        <breakpoint type="python-exception">
-          <properties notifyOnTerminate="true" exception="BaseException">
-            <option name="notifyOnTerminate" value="true" />
-          </properties>
-        </breakpoint>
-      </default-breakpoints>
       <option name="time" value="265" />
     </breakpoint-manager>
     <watches-manager />
@@ -1475,12 +1490,35 @@
             <element signature="e#1118#1494#0" expanded="false" />
             <element signature="e#1534#1614#0" expanded="false" />
             <element signature="e#1665#1838#0" expanded="false" />
-            <element signature="e#4838#4876#0" expanded="false" />
-            <element signature="e#4908#4947#0" expanded="false" />
-            <element signature="e#5006#5453#0" expanded="false" />
-            <element signature="e#5514#5930#0" expanded="false" />
-            <element signature="e#5994#7734#0" expanded="false" />
-            <element signature="e#7819#9956#0" expanded="false" />
+            <marker date="1516618539363" expanded="true" signature="291:9966" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="1870:4814" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="2586:3386" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="2851:3064" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="3165:3271" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="3549:3712" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="3778:4353" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="3899:3946" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="4148:4321" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="4839:4886" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="4909:4957" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="5007:5463" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="5514:5940" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="5552:5603" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="5995:7744" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="6479:7316" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="6747:7283" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="7348:7439" ph="..." />
+            <marker date="1516618539363" expanded="false" signature="7820:9966" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="7829:7931" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="8122:8274" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="8886:9888" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="9063:9282" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10026:10920" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10081:10125" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10175:10822" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10498:10779" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10552:10779" ph="..." />
+            <marker date="1516618539363" expanded="true" signature="10859:10920" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1517,14 +1555,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="23" lean-forward="false" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1239">
@@ -1546,10 +1576,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="642">
-          <caret line="567" column="65" lean-forward="true" selection-start-line="567" selection-start-column="65" selection-end-line="567" selection-end-column="65" />
+        <state relative-caret-position="320">
+          <caret line="459" column="18" lean-forward="false" selection-start-line="459" selection-start-column="18" selection-end-line="459" selection-end-column="18" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#450#749#0" expanded="false" />
@@ -1560,8 +1598,8 @@
             <element signature="e#10140#18895#0" expanded="false" />
             <element signature="e#18929#19029#0" expanded="false" />
             <element signature="e#19061#19157#0" expanded="false" />
-            <element signature="e#22927#23324#0" expanded="false" />
-            <element signature="e#24027#24391#0" expanded="false" />
+            <element signature="e#22920#23317#0" expanded="false" />
+            <element signature="e#24020#24384#0" expanded="false" />
           </folding>
         </state>
       </provider>

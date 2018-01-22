@@ -449,7 +449,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     sel_ex = val_wts[ndx, :, gdx] > 0
                     mm = val_means[ndx, ...][np.newaxis, sel_ex, :, :]
                     ll = locs[ndx, ...][:, np.newaxis, :, :]
-                    jj =  val_means[:,:,g,:] - ll[:,:,g,:]
+                    jj =  mm[:,:,g,:] - ll[:,:,g,:]
                     # jj has distance between all labels and
                     # all predictions with wts > 0.
                     dd1 = np.sqrt(np.sum(jj ** 2, axis=-1)).min(axis=1)
@@ -459,7 +459,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     # dd1 -- to every label is there a close by prediction.
                     # dd2 -- to every prediction is there a close by labels.
                     # or dd1 is fn and dd2 is fp.
-                    val_dist[ndx,g, :] = dd1
+                    val_dist[ndx,:, g] = dd1
                     pred_dist[ndx,sel_ex, g] = dd2
         val_dist[locs[..., 0] < -5000] = np.nan
         pred_mean = np.nanmean(pred_dist)
