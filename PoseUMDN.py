@@ -8,10 +8,24 @@ import math
 from batch_norm import batch_norm_new as batch_norm
 import convNetBase as CNB
 import numpy as np
+import matplotlib.pyplot as plt
 
 def softmax(x,axis=0):
     """Compute softmax values for each sets of scores in x."""
     return np.exp(x) / np.sum(np.exp(x), axis=axis, keepdims=True)
+
+def show_top_preds(im,pred_locs,pred_weights, n=12):
+
+    ord = np.flipud(np.argsort(pred_weights))
+    f,ax = plt.subplots(3,4)
+    ax = ax.flatten()
+    for ndx in range(n):
+        if im.ndim == 2:
+            ax[ndx].imshow(im, 'gray')
+        else:
+            ax[ndx].imshow(im)
+        ax[ndx].scatter(pred_locs[ord[ndx],:,0],pred_locs[ord[ndx],:,1])
+
 
 class PoseUMDN(PoseCommon.PoseCommon):
 
@@ -66,6 +80,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         extra_layers = self.conf.mdn_extra_layers
         n_layers_u = len(self.dep_nets.up_layers) + extra_layers
         locs_offset = 2**n_layers_u
+        n_groups = len(self.conf.mdn_groups)
 
         self.mdn_layers1 = []
         self.mdn_layers2 = []
@@ -192,14 +207,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
                                   is_training=self.ph['phase_train'])
             mdn_l = tf.nn.relu(conv + biases)
 
-            weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k],
+            weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
                                            initializer=tf.contrib.layers.xavier_initializer())
-            biases_logits = tf.get_variable("biases_logits", k ,
+            biases_logits = tf.get_variable("biases_logits", k * n_groups,
                                           initializer=tf.constant_initializer(0))
             logits = tf.nn.conv2d(mdn_l, weights_logits,
                                   [1, 1, 1, 1], padding='SAME') + biases_logits
-            logits = tf.reshape(logits, [-1, n_x * n_y, k])
-            logits = tf.reshape(logits, [-1, n_x * n_y * k])
+            logits = tf.reshape(logits, [-1, n_x * n_y, k *n_groups])
+            logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
 
         return [locs,scales,logits]
 
@@ -405,10 +420,18 @@ class PoseUMDN(PoseCommon.PoseCommon):
             dd = tf.exp(-kk / cur_scales / 2)
             cur_comp.append(dd)
 
-        cur_comp = tf.stack(cur_comp, 1)
-        cur_loss = tf.reduce_prod(cur_comp, axis=1)
+        for ndx,gr in enumerate(self.conf.mdn_groups):
+            sel_comp = [cur_comp[i] for i in gr]
+            sel_comp = tf.stack(sel_comp, 1)
+            if ndx is 0:
+                cur_loss = ll[:,:, ndx] * \
+                           tf.reduce_prod(sel_comp, axis=1)
+            else:
+                cur_loss = cur_loss * ll[:,:, ndx] * \
+                           tf.reduce_prod(sel_comp, axis=1)
+
         # product because we are looking at joint distribution of all the points.
-        pp = (cur_loss * ll) + 1e-30
+        pp = cur_loss + 1e-30
         loss = -tf.log(tf.reduce_sum(pp, axis=1))
         return tf.reduce_sum(loss)
 
