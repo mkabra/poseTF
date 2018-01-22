@@ -444,20 +444,23 @@ class PoseUMDN(PoseCommon.PoseCommon):
         pred_dist = np.zeros(val_means.shape[:-1])
         pred_dist[:] = np.nan
         for ndx in range(val_means.shape[0]):
-            sel_ex = val_wts[ndx, :] > 0
-            jj = val_means[ndx, ...][np.newaxis, sel_ex, :, :] - \
-                 locs[ndx, ...][:, np.newaxis, :, :]
-            # jj has distance between all labels and
-            # all predictions with wts > 0.
-            dd1 = np.sqrt(np.sum(jj ** 2, axis=-1)).min(axis=1)
-            # instead of min it should ideally be matching.
-            # but for now this is ok.
-            dd2 = np.sqrt(np.sum(jj ** 2, axis=-1)).min(axis=0)
-            # dd1 -- to every label is there a close by prediction.
-            # dd2 -- to every prediction is there a close by labels.
-            # or dd1 is fn and dd2 is fp.
-            val_dist[ndx,:, :] = dd1
-            pred_dist[ndx,sel_ex, :] = dd2
+            for gdx, gr in enumerate(self.conf.mdn_groups):
+                for g in gr:
+                    sel_ex = val_wts[ndx, :, gdx] > 0
+                    mm = val_means[ndx, ...][np.newaxis, sel_ex, :, :]
+                    ll = locs[ndx, ...][:, np.newaxis, :, :]
+                    jj =  val_means[:,:,g,:] - ll[:,:,g,:]
+                    # jj has distance between all labels and
+                    # all predictions with wts > 0.
+                    dd1 = np.sqrt(np.sum(jj ** 2, axis=-1)).min(axis=1)
+                    # instead of min it should ideally be matching.
+                    # but for now this is ok.
+                    dd2 = np.sqrt(np.sum(jj ** 2, axis=-1)).min(axis=0)
+                    # dd1 -- to every label is there a close by prediction.
+                    # dd2 -- to every prediction is there a close by labels.
+                    # or dd1 is fn and dd2 is fp.
+                    val_dist[ndx,g, :] = dd1
+                    pred_dist[ndx,sel_ex, g] = dd2
         val_dist[locs[..., 0] < -5000] = np.nan
         pred_mean = np.nanmean(pred_dist)
         label_mean = np.nanmean(val_dist)
@@ -548,13 +551,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 for sel in range(conf.batch_size):
                     for cls in range(conf.n_classes):
                         for ndx in range(pred_means.shape[1]):
-                            if pred_weights[sel, ndx] < (0.02/self.conf.max_n_animals):
+                            cur_gr = [l.count(cls) for l in self.conf.mdn_groups].index(1)
+                            if pred_weights[sel, ndx, cur_gr] < (0.02/self.conf.max_n_animals):
                                 continue
                             cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
                             # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
                             cur_scale = pred_std[sel, ndx, cls].astype('int')
                             curl = (PoseTools.create_label_images(cur_locs, osz, 1, cur_scale) + 1) / 2
-                            mdn_pred_out[sel, :, :, cls] += pred_weights[sel, ndx] * curl[0, ..., 0]
+                            mdn_pred_out[sel, :, :, cls] += pred_weights[sel, ndx, cur_gr] * curl[0, ..., 0]
 
                 if self.locs.ndim == 3:
                     cur_predlocs = PoseTools.get_pred_locs(mdn_pred_out)

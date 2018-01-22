@@ -7,7 +7,6 @@
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -98,8 +97,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="321">
-                  <caret line="432" column="17" lean-forward="true" selection-start-line="432" selection-start-column="17" selection-end-line="432" selection-end-column="17" />
+                <state relative-caret-position="642">
+                  <caret line="567" column="65" lean-forward="true" selection-start-line="567" selection-start-column="65" selection-end-line="567" selection-end-column="65" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#450#749#0" expanded="false" />
@@ -110,9 +109,8 @@
                     <element signature="e#10140#18895#0" expanded="false" />
                     <element signature="e#18929#19029#0" expanded="false" />
                     <element signature="e#19061#19157#0" expanded="false" />
-                    <element signature="e#21366#22607#0" expanded="false" />
-                    <element signature="e#22666#23063#0" expanded="false" />
-                    <element signature="e#23766#24130#0" expanded="false" />
+                    <element signature="e#22927#23324#0" expanded="false" />
+                    <element signature="e#24027#24391#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -673,13 +671,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00022" summary="multipose MDN is now working.">
-      <created>1512562167526</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1512562167527</updated>
-    </task>
     <task id="LOCAL-00023" summary="multipose MDN is now working.">
       <created>1512563836377</created>
       <option name="number" value="00023" />
@@ -1016,7 +1007,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516367082846</updated>
     </task>
-    <option name="localTasksCounter" value="71" />
+    <task id="LOCAL-00071" summary="introducing groups of parts in MDN loss computation.">
+      <created>1516613979449</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1516613979450</updated>
+    </task>
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1111,7 +1109,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added contrast normalization for unet" />
     <MESSAGE value="updating stephens config file for normalize_mean_img" />
     <MESSAGE value="bug fix for normalize_mean_img" />
     <MESSAGE value="removing mean normalize for stephen" />
@@ -1136,7 +1133,8 @@
     <MESSAGE value="On more thought, earlier offset for mdn locs was correct because of the way striding works in tensorflow." />
     <MESSAGE value="increasing trange for alice." />
     <MESSAGE value="removing normalization for alice." />
-    <option name="LAST_COMMIT_MESSAGE" value="removing normalization for alice." />
+    <MESSAGE value="introducing groups of parts in MDN loss computation." />
+    <option name="LAST_COMMIT_MESSAGE" value="introducing groups of parts in MDN loss computation." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1550,8 +1548,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="432" column="17" lean-forward="true" selection-start-line="432" selection-start-column="17" selection-end-line="432" selection-end-column="17" />
+        <state relative-caret-position="642">
+          <caret line="567" column="65" lean-forward="true" selection-start-line="567" selection-start-column="65" selection-end-line="567" selection-end-column="65" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#450#749#0" expanded="false" />
@@ -1562,9 +1560,8 @@
             <element signature="e#10140#18895#0" expanded="false" />
             <element signature="e#18929#19029#0" expanded="false" />
             <element signature="e#19061#19157#0" expanded="false" />
-            <element signature="e#21366#22607#0" expanded="false" />
-            <element signature="e#22666#23063#0" expanded="false" />
-            <element signature="e#23766#24130#0" expanded="false" />
+            <element signature="e#22927#23324#0" expanded="false" />
+            <element signature="e#24027#24391#0" expanded="false" />
           </folding>
         </state>
       </provider>
