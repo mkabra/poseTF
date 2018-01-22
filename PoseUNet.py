@@ -73,13 +73,13 @@ class PoseUNet(PoseCommon.PoseCommon):
         # downsample
         for ndx in range(n_layers):
             if ndx is 0:
-                n_filt = 32
+                n_filt = 64 #32
             elif ndx is 1:
-                n_filt = 64
-            # elif ndx is 2:
-            #     n_filt = 256
+                n_filt = 128 #64
+            elif ndx is 2:
+                n_filt = 256
             else:
-                n_filt = 128
+                n_filt = 512 #128
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
