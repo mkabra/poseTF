@@ -103,14 +103,22 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         # upsample
         for ndx in reversed(range(n_layers)):
+            # if ndx is 0:
+            #     n_filt = 64
+            # elif ndx is 1:
+            #     n_filt = 64
+            # # elif ndx is 2:
+            # #     n_filt = 256
+            # else:
+            #     n_filt = 128
             if ndx is 0:
-                n_filt = 64
+                n_filt = 64  # 32
             elif ndx is 1:
-                n_filt = 64
-            # elif ndx is 2:
-            #     n_filt = 256
+                n_filt = 128  # 64
+            elif ndx is 2:
+                n_filt = 256
             else:
-                n_filt = 128
+                n_filt = 512  # 128
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
             for cndx in range(n_conv):

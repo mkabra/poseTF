@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUNet.py" afterPath="$PROJECT_DIR$/PoseUNet.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -49,23 +49,23 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
-                  <caret line="80" column="7" lean-forward="false" selection-start-line="80" selection-start-column="7" selection-end-line="80" selection-end-column="7" />
+                <state relative-caret-position="578">
+                  <caret line="112" column="22" lean-forward="false" selection-start-line="112" selection-start-column="22" selection-end-line="112" selection-end-column="22" />
                   <folding>
                     <element signature="e#349#593#0" expanded="false" />
                     <element signature="e#628#1083#0" expanded="false" />
                     <element signature="e#1118#1494#0" expanded="false" />
                     <element signature="e#1534#1614#0" expanded="false" />
                     <element signature="e#1665#1838#0" expanded="false" />
-                    <element signature="e#4848#4886#0" expanded="false" />
-                    <element signature="e#4918#4957#0" expanded="false" />
-                    <element signature="e#5016#5463#0" expanded="false" />
-                    <element signature="e#5524#5940#0" expanded="false" />
-                    <element signature="e#6004#7744#0" expanded="false" />
-                    <element signature="e#7829#9966#0" expanded="false" />
+                    <element signature="e#5095#5133#0" expanded="false" />
+                    <element signature="e#5165#5204#0" expanded="false" />
+                    <element signature="e#5263#5710#0" expanded="false" />
+                    <element signature="e#5771#6187#0" expanded="false" />
+                    <element signature="e#6251#7991#0" expanded="false" />
+                    <element signature="e#8076#10213#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -94,11 +94,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="643">
-                  <caret line="435" column="33" lean-forward="false" selection-start-line="435" selection-start-column="33" selection-end-line="435" selection-end-column="33" />
+                <state relative-caret-position="796">
+                  <caret line="432" column="71" lean-forward="true" selection-start-line="432" selection-start-column="71" selection-end-line="432" selection-end-column="71" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#450#749#0" expanded="false" />
@@ -111,8 +111,6 @@
                     <element signature="e#19061#19157#0" expanded="false" />
                     <element signature="e#22939#23336#0" expanded="false" />
                     <element signature="e#24039#24403#0" expanded="false" />
-                    <marker date="1516691775195" expanded="true" signature="20761:21211" ph="..." />
-                    <marker date="1516691775195" expanded="true" signature="21057:21211" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -147,7 +145,7 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="272">
@@ -157,7 +155,7 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="debug_unet.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="debug_unet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/debug_unet.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="0">
@@ -170,7 +168,7 @@
           <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
+                <state relative-caret-position="44">
                   <caret line="107" column="15" lean-forward="false" selection-start-line="107" selection-start-column="15" selection-end-line="107" selection-end-column="15" />
                   <folding />
                 </state>
@@ -180,7 +178,7 @@
           <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
+                <state relative-caret-position="2271">
                   <caret line="215" column="34" lean-forward="false" selection-start-line="215" selection-start-column="34" selection-end-line="215" selection-end-column="34" />
                   <folding />
                 </state>
@@ -315,11 +313,11 @@
         <option value="$PROJECT_DIR$/debug_unet.py" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
         <option value="$PROJECT_DIR$/PoseUMDN.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
       </list>
     </option>
   </component>
@@ -330,10 +328,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="48" />
-    <option name="y" value="17" />
-    <option name="width" value="1873" />
-    <option name="height" value="1064" />
+    <option name="x" value="49" />
+    <option name="y" value="-4" />
+    <option name="width" value="1871" />
+    <option name="height" value="1084" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -684,13 +682,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00026" summary="removing edges predictions while computing distance">
-      <created>1513076186965</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1513076186965</updated>
-    </task>
     <task id="LOCAL-00027" summary="removing edges predictions while computing distance">
       <created>1513076376036</created>
       <option name="number" value="00027" />
@@ -1027,7 +1018,14 @@
       <option name="project" value="LOCAL" />
       <updated>1516622258348</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="updating how the loss is computed for u-mdn">
+      <created>1516691795079</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1516691795080</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1122,7 +1120,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="redoing mean/contrast normalization exps" />
     <MESSAGE value="bug fix with mean normalization. Earlier mean were normalized before rescaling. This meant the float64 were converted back to ints. Now normalization is done after scaling." />
     <MESSAGE value="done with mean normalization and contrast norm exps. using both is the best" />
     <MESSAGE value="A bug where self.name was used instead of self.net_name for umdn." />
@@ -1147,7 +1144,8 @@
     <MESSAGE value="updated distance comptation for part-groups in MDN" />
     <MESSAGE value="bug fixes for updated distance comptation for part-groups in MDN" />
     <MESSAGE value="forgot point 10 in config for alice." />
-    <option name="LAST_COMMIT_MESSAGE" value="forgot point 10 in config for alice." />
+    <MESSAGE value="updating how the loss is computed for u-mdn" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating how the loss is computed for u-mdn" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1464,34 +1462,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="80" column="7" lean-forward="false" selection-start-line="80" selection-start-column="7" selection-end-line="80" selection-end-column="7" />
-          <folding>
-            <element signature="e#349#593#0" expanded="false" />
-            <element signature="e#628#1083#0" expanded="false" />
-            <element signature="e#1118#1494#0" expanded="false" />
-            <element signature="e#1534#1614#0" expanded="false" />
-            <element signature="e#1665#1838#0" expanded="false" />
-            <element signature="e#4848#4886#0" expanded="false" />
-            <element signature="e#4918#4957#0" expanded="false" />
-            <element signature="e#5016#5463#0" expanded="false" />
-            <element signature="e#5524#5940#0" expanded="false" />
-            <element signature="e#6004#7744#0" expanded="false" />
-            <element signature="e#7829#9966#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/debug_unet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/debugMDN.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1521,22 +1491,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="107" column="15" lean-forward="false" selection-start-line="107" selection-start-column="15" selection-end-line="107" selection-end-column="15" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/poseConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="215" column="34" lean-forward="false" selection-start-line="215" selection-start-column="34" selection-end-line="215" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/variable_scope.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1553,10 +1507,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="44">
+          <caret line="107" column="15" lean-forward="false" selection-start-line="107" selection-start-column="15" selection-end-line="107" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2271">
+          <caret line="215" column="34" lean-forward="false" selection-start-line="215" selection-start-column="34" selection-end-line="215" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_unet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="643">
-          <caret line="435" column="33" lean-forward="false" selection-start-line="435" selection-start-column="33" selection-end-line="435" selection-end-column="33" />
+        <state relative-caret-position="796">
+          <caret line="432" column="71" lean-forward="true" selection-start-line="432" selection-start-column="71" selection-end-line="432" selection-end-column="71" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#450#749#0" expanded="false" />
@@ -1569,8 +1547,26 @@
             <element signature="e#19061#19157#0" expanded="false" />
             <element signature="e#22939#23336#0" expanded="false" />
             <element signature="e#24039#24403#0" expanded="false" />
-            <marker date="1516691775195" expanded="true" signature="20761:21211" ph="..." />
-            <marker date="1516691775195" expanded="true" signature="21057:21211" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="578">
+          <caret line="112" column="22" lean-forward="false" selection-start-line="112" selection-start-column="22" selection-end-line="112" selection-end-column="22" />
+          <folding>
+            <element signature="e#349#593#0" expanded="false" />
+            <element signature="e#628#1083#0" expanded="false" />
+            <element signature="e#1118#1494#0" expanded="false" />
+            <element signature="e#1534#1614#0" expanded="false" />
+            <element signature="e#1665#1838#0" expanded="false" />
+            <element signature="e#5095#5133#0" expanded="false" />
+            <element signature="e#5165#5204#0" expanded="false" />
+            <element signature="e#5263#5710#0" expanded="false" />
+            <element signature="e#5771#6187#0" expanded="false" />
+            <element signature="e#6251#7991#0" expanded="false" />
+            <element signature="e#8076#10213#0" expanded="false" />
           </folding>
         </state>
       </provider>
