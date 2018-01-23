@@ -423,17 +423,17 @@ class PoseUMDN(PoseCommon.PoseCommon):
         for ndx,gr in enumerate(self.conf.mdn_groups):
             sel_comp = [cur_comp[i] for i in gr]
             sel_comp = tf.stack(sel_comp, 1)
+            pp = ll[:,:, ndx] * \
+                       tf.reduce_prod(sel_comp, axis=1) + 1e-30
             if ndx is 0:
-                cur_loss = ll[:,:, ndx] * \
-                           tf.reduce_prod(sel_comp, axis=1)
+                cur_loss = -tf.log(tf.reduce_sum(pp,axis=1))
             else:
-                cur_loss = cur_loss * ll[:,:, ndx] * \
-                           tf.reduce_prod(sel_comp, axis=1)
+                cur_loss = cur_loss - tf.log(tf.reduce_sum(pp,axis=1))
 
         # product because we are looking at joint distribution of all the points.
-        pp = cur_loss + 1e-30
-        loss = -tf.log(tf.reduce_sum(pp, axis=1))
-        return tf.reduce_sum(loss)
+        # pp = cur_loss + 1e-30
+        # loss = -tf.log(tf.reduce_sum(pp, axis=1))
+        return tf.reduce_sum(cur_loss)
 
     def compute_dist(self, preds, locs):
         locs = locs.copy()/self.conf.unet_rescale
