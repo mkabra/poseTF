@@ -62,8 +62,6 @@ def print_train_data(cur_dict):
     p_str = ''
     for k in cur_dict.keys():
         p_str += '{:s}:{:.2f} '.format(k, cur_dict[k])
-    mem_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1000
-    p_str += ' {:s}:{:2f}'.format('Mem',mem_usage)
     print(p_str)
 
 
@@ -456,6 +454,7 @@ class PoseCommon(object):
         cur_loss, cur_pred = sess.run(
             [self.cost, self.pred], self.fd)
         cur_dist = self.compute_dist(cur_pred, self.locs)
+        cur_dist = 0.; cur_loss = 0.
         return cur_loss, cur_dist
 
     def train(self, restore, train_type, create_network,
@@ -477,23 +476,19 @@ class PoseCommon(object):
                 for step in range(start_at, training_iters + 1):
                     self.train_step(step, sess, learning_rate)
                     if step % self.conf.display_step == 0:
-                        mem_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1000
-                        p_str = ' {:s}:{:2f}'.format('Mem',mem_usage)
-                        print(p_str)
-                        gc.collect()
-#                        train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
-#                        val_loss = 0.
-#                        val_dist = 0.
-#                        for _ in range(num_val_rep):
-#                            cur_loss, cur_dist = self.compute_train_data(sess, self.DBType.Val)
-#                            val_loss += cur_loss
-#                            val_dist += cur_dist
-#                        val_loss = val_loss / num_val_rep
-#                        val_dist = val_dist / num_val_rep
-#                        cur_dict = {'step': step,
-#                                    'train_loss': train_loss, 'val_loss': val_loss,
-#                                    'train_dist': train_dist, 'val_dist': val_dist}
-#                        self.update_td(cur_dict)
+                        train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
+                        val_loss = 0.
+                        val_dist = 0.
+                        for _ in range(num_val_rep):
+                           cur_loss, cur_dist = self.compute_train_data(sess, self.DBType.Val)
+                           val_loss += cur_loss
+                           val_dist += cur_dist
+                        val_loss = val_loss / num_val_rep
+                        val_dist = val_dist / num_val_rep
+                        cur_dict = {'step': step,
+                                   'train_loss': train_loss, 'val_loss': val_loss,
+                                   'train_dist': train_dist, 'val_dist': val_dist}
+                        self.update_td(cur_dict)
                     if step % self.conf.save_step == 0:
                         self.save(sess, step)
                         self.save_td()

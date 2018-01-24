@@ -469,12 +469,11 @@ class PoseUMDN(PoseCommon.PoseCommon):
     def compute_train_data(self, sess, db_type):
         self.setup_train(sess) if db_type is self.DBType.Train \
             else self.setup_val(sess)
-        p_m, p_s, p_w = self.pred
         cur_loss, pred_means, pred_std, pred_weights = sess.run(
-            [self.cost, p_m, p_s, tf.nn.softmax(p_w,dim=1)], self.fd)
+            [self.cost,] + self.pred, self.fd)
 
-        cur_dist = self.compute_dist(
-            [pred_means, pred_std, pred_weights], self.locs)
+        pred_weights = softmax(pred_weights, axis=1)
+        cur_dist = self.compute_dist( [pred_means, pred_std, pred_weights], self.locs)
         return cur_loss, cur_dist
 
     def train_umdn(self, restore, train_type=0,joint=True,

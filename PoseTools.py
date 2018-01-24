@@ -353,33 +353,6 @@ def randomly_adjust(img, conf):
     return img
 
 
-# In[ ]:
-
-# def readOnceLMDB(cursor,num,imsz,dataMod,reset=False):
-#     images = np.zeros((0,1,imsz[0],imsz[1]))
-#     locs = []
-#     datum = caffe.proto.caffe_pb2.Datum()
-
-#     if reset:
-#         cursor.first()
-
-#     done = False
-#     for ndx in range(num):
-#         if not cursor.next():
-#             done = True
-#             break
-
-#         value = cursor.value()
-#         key = cursor.key()
-#         datum.ParseFromString(value)
-#         expname,curloc,t = dataMod.decodeID(cursor.key())
-
-#         curlabel = datum.label
-#         data = caffe.io.datum_to_array(datum)
-#         images = np.append(images,data.squeeze()[np.newaxis,:,:],0)
-#         locs.append(curloc)
-#     return images,locs,done
-
 def blur_label(im_sz, loc, scale, blur_rad):
     sz0 = int(math.ceil(old_div(float(im_sz[0]), scale)))
     sz1 = int(math.ceil(old_div(float(im_sz[1]), scale)))
@@ -598,8 +571,6 @@ def get_fine_error(locs, pred, fine_pred, conf):
             fine_loc_err[ndx, cls, 1] = float(predloc[0] + finepredloc[0]) - locs[ndx][cls][1]
     return base_loc_err, fine_loc_err
 
-
-# In[ ]:
 
 def init_mrf_weights(conf):
     lbl = h5py.File(conf.labelfile, 'r')
