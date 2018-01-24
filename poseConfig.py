@@ -127,7 +127,7 @@ class config(object):
     # ----- MDN params
     mdn_min_sigma = 3. # this should just be maybe twice the cell size??
     mdn_max_sigma = 4.
-    mdn_logit_eps_training = 0.001
+    mdn_logit_eps_training = 0.0001
     mdn_extra_layers = 0
 
     # ----- Save parameters

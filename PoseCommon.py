@@ -454,7 +454,6 @@ class PoseCommon(object):
         cur_loss, cur_pred = sess.run(
             [self.cost, self.pred], self.fd)
         cur_dist = self.compute_dist(cur_pred, self.locs)
-        cur_dist = 0.; cur_loss = 0.
         return cur_loss, cur_dist
 
     def train(self, restore, train_type, create_network,
