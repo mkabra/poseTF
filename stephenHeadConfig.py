@@ -158,6 +158,7 @@ class myconfig(object):
     mdn_logit_eps_training = 0.01
     max_n_animals = 1
     mdn_extra_layers = 0
+    mdn_groups = [range(5)]
 
     # ----- Save parameters
 

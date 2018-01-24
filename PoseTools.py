@@ -1096,9 +1096,9 @@ def show_stack(im_s,xx,yy,cmap='gray'):
 
 
 def show_result(ims, ndx, locs, predlocs= None):
-    count = len(ndx)
-    xx = np.ceil(np.sqrt(count)).astype('int')
-    yy = np.ceil(np.sqrt(count)).astype('int')
+    count = float(len(ndx))
+    yy = np.ceil(np.sqrt(count/12)*4).astype('int')
+    xx = np.ceil(count/yy).astype('int')
     f,ax = plt.subplots(xx,yy)
     ax = ax.flatten()
     cmap = cm.get_cmap('jet')
