@@ -510,9 +510,12 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return sess
       
 	
-    def classify_val(self, train_type=0, at_step=-1):
+    def classify_val(self, train_type=0, at_step=-1, onTrain = False):
         if train_type is 0:
-            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+            if not onTrain:
+                val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+            else:
+                val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
         else:
             val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
         num_val = 0
