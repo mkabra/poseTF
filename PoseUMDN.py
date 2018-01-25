@@ -591,10 +591,29 @@ class PoseUMDN(PoseCommon.PoseCommon):
         val_means = val_reshape(val_means)
         val_std = val_reshape(val_std)
         val_wts = val_reshape(val_wts)
+        tf.reset_default_graph()
 
         return val_dist, val_ims, val_preds, val_predlocs, val_locs,\
                [val_means,val_std,val_wts]
 
+    def worst_preds(self,  dist= 10, num_ex = 30, train_type=0, at_step=-1, onTrain=False,):
+
+        val_dist, val_ims, val_preds, val_predlocs, val_locs, val_out = self.classify_val(train_type, at_step, onTrain=False)
+
+        sel = np.where(np.any(val_dist>dist,axis=1))[0]
+        yy = np.ceil(np.sqrt(num_ex/ 12) * 4).astype('int')
+        xx = np.ceil(num_ex / yy).astype('int')
+        f,ax = plt.subplots(xx,yy)
+        ax = ax.flatten()
+        for ndx in range(num_ex):
+            x = np.random.choice(len(sel))
+            ix = sel[x]
+            dd = np.where(val_dist[ix,:]>dist)[0]
+            pt = np.random.choice(dd)
+            ax[ndx].imshow(val_ims[ix,:,:,0],'gray')
+            ax[ndx].scatter(val_out[0][ix,:,pt,0],val_out[0][ix,:,pt,1],s=np.maximum(0.5,(val_out[2][ix,:,pt-10])*5))
+            ax[ndx].scatter(val_locs[ix,pt,0],val_locs[ix,pt,1],marker='+')
+            ax[ndx].set_title('{}:{}'.format(x,pt))
 
 class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
 
