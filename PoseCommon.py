@@ -168,9 +168,8 @@ class PoseCommon(object):
         for _ in range(conf.batch_size):
             [cur_xs, cur_locs, cur_info] = sess.run(cur_data)
             if np.ndim(cur_xs) < 3:
-                xs.append(cur_xs[np.newaxis, :, :])
+                xs.append(cur_xs[:, :, np.newaxis, ])
             else:
-                cur_xs = np.transpose(cur_xs, [2, 0, 1])
                 xs.append(cur_xs)
             locs.append(cur_locs)
             info.append(cur_info)
@@ -204,7 +203,7 @@ class PoseCommon(object):
         #         ii = ii.transpose([2, 0, 1])
         #         xs[ndx, ...] = ii
 
-        self.xs = np.transpose(xs, [0, 2, 3, 1])
+        self.xs = xs
         self.locs = locs
         self.info = info
 

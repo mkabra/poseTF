@@ -126,9 +126,9 @@ def adjust_contrast(in_img, conf):
             clipLimit=2.0,
             tileGridSize=(conf.clahegridsize, conf.clahegridsize))
         simg = np.zeros(in_img.shape)
-        assert in_img.shape[1] == 1, 'cant adjust contrast on color images'
+        assert in_img.shape[3] == 1, 'cant adjust contrast on color images'
         for ndx in range(in_img.shape[0]):
-            simg[ndx, 0,:, :] = clahe.apply(in_img[ndx,0, ...].astype('uint8')).astype('float')
+            simg[ndx, :, :, 0] = clahe.apply(in_img[ndx,:,:,0 ].astype('uint8')).astype('float')
         return simg
     else:
         return in_img
@@ -191,7 +191,7 @@ def randomly_flip_lr(img, locs):
     for ndx in range(num):
         jj = np.random.randint(2)
         if jj > 0.5:
-            img[ndx, ...] = img[ndx, :, :, ::-1]
+            img[ndx, ...] = img[ndx, :, ::-1, :]
             locs[ndx, :, :, 0] = img.shape[3] - locs[ndx, :, :, 0]
 
     locs = locs[:, 0, ...] if reduce_dim else locs
@@ -209,7 +209,7 @@ def randomly_flip_ud(img, locs):
     for ndx in range(num):
         jj = np.random.randint(2)
         if jj > 0.5:
-            img[ndx, ...] = img[ndx, :, ::-1, :]
+            img[ndx, ...] = img[ndx, ::-1, : ,: ]
             locs[ndx, :, :, 1] = img.shape[2] - locs[ndx, :, : , 1]
     locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
@@ -259,12 +259,11 @@ def randomly_translate(img, locs, conf):
 
             # else:
             #                 print 'not sane {}'.format(count)
-            ii = copy.deepcopy(orig_im).transpose([1, 2, 0])
+            ii = copy.deepcopy(orig_im)
             mat = np.float32([[1, 0, dx], [0, 1, dy]])
             ii = cv2.warpAffine(ii, mat, (cols, rows))
             if ii.ndim == 2:
                 ii = ii[..., np.newaxis]
-            ii = ii.transpose([2, 0, 1])
         locs[ndx, ...] = ll
         img[ndx, ...] = ii
 
@@ -318,12 +317,11 @@ def randomly_rotate(img, locs, conf):
 
             # else:
             #                 print 'not sane {}'.format(count)
-            ii = copy.deepcopy(orig_im).transpose([1, 2, 0])
+            ii = copy.deepcopy(orig_im)
             mat = cv2.getRotationMatrix2D((old_div(cols, 2), old_div(rows, 2)), rangle, 1)
             ii = cv2.warpAffine(ii, mat, (cols, rows))
             if ii.ndim == 2:
                 ii = ii[..., np.newaxis]
-            ii = ii.transpose([2, 0, 1])
         locs[ndx, ...] = lr
         img[ndx, ...] = ii
 

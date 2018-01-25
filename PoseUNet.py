@@ -211,7 +211,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         val_preds = val_reshape(val_preds)
         val_predlocs = val_reshape(val_predlocs)
         val_locs = val_reshape(val_locs)
-
+        tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale
 
     def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0):

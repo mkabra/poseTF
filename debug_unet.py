@@ -1,29 +1,38 @@
 
 device = '0'
 
-##
+name = ''
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = device
 
 from stephenHeadConfig import conf
-conf.cachedir = '/home/mayank/temp/cacheHead_Round2'
 
-import PoseUNet
+import PoseUMDN
 import tensorflow as tf
 import PoseTools
 import math
+import cv2
+
 import PoseCommon
-
+mov = '/home/mayank/temp/C002H001S0001_c.avi'
+out = '/home/mayank/temp/C002H001S0001_c_res.avi'
 # conf.batch_size = 4
-self = PoseUNet.PoseUNet(conf,'pose_unet'+name)
-val_dist, val_ims, val_preds, val_predlocs, val_locs = \
-    self.classify_val(1, iter)
+self = PoseUMDN.PoseUMDN(conf,'pose_umdn'+name)
+self.create_pred_movie(mov,out,flipud=True)
 
-sel = np.where(val_dist.sum(axis=1)>80)[0]
-usel = np.where(val_dist.sum(axis=1)<20)[0]
 
+##
+tf.reset_default_graph()
+self.init_train(0)
+self.pred = self.create_network()
+self.create_saver()
 sess = tf.InteractiveSession()
-self.init_and_restore(sess,True,['loss','dist'],iter)
+self.init_and_restore(sess,True,['loss','dist'])
+info= []
+for step in range(150):
+    self.setup_val(sess)
+    info.append(self.info)
+
 
 ##
 

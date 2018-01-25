@@ -214,7 +214,7 @@ aliceConfig.crange = [1.,1.]
 aliceConfig.mdn_extra_layers = 0
 aliceConfig.normalize_img_mean = False
 # aliceConfig.mdn_groups = [range(11),[11],[12],[13],[14],[15],[16]]
-aliceConfig.mdn_groups = [range(17)]
+aliceConfig.mdn_groups = [range(13)+[15,16],[13],[14]]
 # -- felipe bees --
 
 felipeConfig = config()

@@ -649,7 +649,7 @@ def createTFRecordFromLblWithTrx(conf, split=True):
                     curenv = env
 
                 if fnum > cap.get_n_frames():#get(cvc.FRAME_COUNT):
-                    if fnum > cap.get_n_frames: #get(cvc.FRAME_COUNT) + 1:
+                    if fnum > cap.get_n_frames(): #get(cvc.FRAME_COUNT) + 1:
                         raise ValueError('Accessing frames beyond ' +
                                          'the length of the video for' +
                                          ' {} expid {:d} '.format(expname, ndx) +

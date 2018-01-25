@@ -9,6 +9,11 @@ from batch_norm import batch_norm_new as batch_norm
 import convNetBase as CNB
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import tempfile
+from matplotlib import cm
+import movies
 
 def softmax(x,axis=0):
     """Compute softmax values for each sets of scores in x."""
@@ -500,9 +505,6 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.init_train(train_type=train_type)
         self.pred = self.create_network()
         saver = self.create_saver()
-        p_m, p_s, p_w = self.pred
-        conf = self.conf
-        osz = self.conf.imsz
         self.joint = True
 
         sess = tf.InteractiveSession()
@@ -596,6 +598,132 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return val_dist, val_ims, val_preds, val_predlocs, val_locs,\
                [val_means,val_std,val_wts]
 
+    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0,flipud=False):
+        # maxframes if specificied reads that many frames
+        # start at specifies where to start reading.
+        conf = self.conf
+
+        cap = movies.Movie(movie_name)
+        n_frames = int(cap.get_n_frames())
+
+        # figure out how many frames to read
+        if max_frames > 0:
+            if max_frames + start_at > n_frames:
+                n_frames = n_frames - start_at
+            else:
+                n_frames = max_frames
+        else:
+            n_frames = n_frames - start_at
+
+
+        # pre allocate results
+        bsize = conf.batch_size
+        n_batches = int(math.ceil(float(n_frames)/ bsize))
+        pred_locs = np.zeros([n_frames, conf.n_classes, 2])
+        all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+
+        for curl in range(n_batches):
+            ndx_start = curl * bsize
+            ndx_end = min(n_frames, (curl + 1) * bsize)
+            ppe = min(ndx_end - ndx_start, bsize)
+            for ii in range(ppe):
+                fnum = ndx_start + ii + start_at
+                frame_in = cap.get_frame(fnum)
+                if len(frame_in) == 2:
+                    frame_in = frame_in[0]
+                    if frame_in.ndim == 2:
+                        frame_in = frame_in[:,:,np.newaxis]
+                frame_in = PoseTools.crop_images(frame_in, conf)
+                if flipud:
+                    frame_in = np.flipud(frame_in)
+                all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
+
+            xs = PoseTools.adjust_contrast(all_f, conf)
+            xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
+            xs = PoseTools.normalize_mean(xs, self.conf)
+            self.fd[self.ph['x']] = xs
+            self.fd[self.ph['phase_train']] = False
+            val_means, val_std, val_wts = sess.run(self.pred, self.fd)
+
+            base_locs = np.zeros([self.conf.batch_size, self.conf.n_classes,2])
+            for ndx in range(val_means.shape[0]):
+                for gdx, gr in enumerate(self.conf.mdn_groups):
+                    for g in gr:
+                        sel_ex = np.argmax(val_wts[ndx, :, gdx])
+                        base_locs[ndx,g,:] = val_means[ndx, sel_ex, g, :]
+
+            pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe,...]
+            sys.stdout.write('.')
+            if curl % 20 == 19:
+                sys.stdout.write('\n')
+
+        cap.close()
+        return pred_locs
+
+    def create_pred_movie(self, movie_name, out_movie, max_frames=-1,flipud=False,trace=True):
+        conf = self.conf
+        sess = self.init_net(0,True)
+        predLocs = self.classify_movie(movie_name,sess,max_frames=max_frames,flipud=flipud)
+        tdir = tempfile.mkdtemp()
+
+        cap = movies.Movie(movie_name)
+        nframes = int(cap.get_n_frames())
+        if max_frames > 0:
+            nframes = max_frames
+
+        fig = mpl.figure.Figure(figsize=(9, 4))
+        canvas = FigureCanvasAgg(fig)
+        sc = self.conf.unet_rescale
+
+        color = cm.hsv(np.linspace(0, 1 - 1./conf.n_classes, conf.n_classes))
+        trace_len = 30
+        for curl in range(nframes):
+            frame_in = cap.get_frame(curl)
+            if len(frame_in) == 2:
+                frame_in = frame_in[0]
+                if frame_in.ndim == 2:
+                    frame_in = frame_in[:,:, np.newaxis]
+            frame_in = PoseTools.crop_images(frame_in, conf)
+
+            if flipud:
+                frame_in = np.flipud(frame_in)
+            fig.clf()
+            ax1 = fig.add_subplot(1, 1, 1)
+            if frame_in.shape[2] == 1:
+                ax1.imshow(frame_in[:,:,0], cmap=cm.gray)
+            else:
+                ax1.imshow(frame_in)
+            ax1.scatter(predLocs[curl, :, 0]*sc,
+                        predLocs[curl, :, 1]*sc,
+                c=color, linewidths=0,
+                edgecolors='face',marker='+',s=30)
+            if trace:
+                for ndx in range(conf.n_classes):
+                    curc = color[ndx,:].copy()
+                    curc[3] = 0.5
+                    e = np.maximum(0,curl-trace_len)
+                    ax1.plot(predLocs[e:curl,ndx,0]*sc,
+                             predLocs[e:curl, ndx, 1] * sc,
+                             c = curc,lw=0.8)
+            ax1.axis('off')
+            fname = "test_{:06d}.png".format(curl)
+
+            # to printout without X.
+            # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+            # The size * the dpi gives the final image size
+            #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+            canvas.print_figure(os.path.join(tdir, fname), dpi=160)
+
+            # below is the easy way.
+        #         plt.savefig(os.path.join(tdir,fname))
+
+        tfilestr = os.path.join(tdir, 'test_*.png')
+        mencoder_cmd = "mencoder mf://" + tfilestr + " -frames " + "{:d}".format(
+            nframes) + " -mf type=png:fps=15 -o " + out_movie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+        os.system(mencoder_cmd)
+        cap.close()
+        tf.reset_default_graph()
+
     def worst_preds(self,  dist= 10, num_ex = 30, train_type=0, at_step=-1, onTrain=False,):
 
         val_dist, val_ims, val_preds, val_predlocs, val_locs, val_out = self.classify_val(train_type, at_step, onTrain=False)
@@ -603,16 +731,20 @@ class PoseUMDN(PoseCommon.PoseCommon):
         sel = np.where(np.any(val_dist>dist,axis=1))[0]
         yy = np.ceil(np.sqrt(num_ex/ 12) * 4).astype('int')
         xx = np.ceil(num_ex / yy).astype('int')
-        f,ax = plt.subplots(xx,yy)
+        f,ax = plt.subplots(xx,yy,sharex=True,sharey=True)
         ax = ax.flatten()
         for ndx in range(num_ex):
             x = np.random.choice(len(sel))
             ix = sel[x]
             dd = np.where(val_dist[ix,:]>dist)[0]
             pt = np.random.choice(dd)
+            grp = [i.count(pt) for i in self.conf.mdn_groups ].index(1)
             ax[ndx].imshow(val_ims[ix,:,:,0],'gray')
-            ax[ndx].scatter(val_out[0][ix,:,pt,0],val_out[0][ix,:,pt,1],s=np.maximum(0.5,(val_out[2][ix,:,pt-10])*5))
-            ax[ndx].scatter(val_locs[ix,pt,0],val_locs[ix,pt,1],marker='+')
+            ax[ndx].scatter(
+                val_out[0][ix,:,pt,0], val_out[0][ix,:,pt,1],
+                s=np.maximum( 0.5, (val_out[2][ix,:,grp])*5))
+            ax[ndx].scatter(
+                val_locs[ix,pt,0],val_locs[ix,pt,1],marker='+')
             ax[ndx].set_title('{}:{}'.format(x,pt))
 
 class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
