@@ -695,8 +695,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 ax1.imshow(frame_in)
             ax1.scatter(predLocs[curl, :, 0]*sc,
                         predLocs[curl, :, 1]*sc,
-                c=color, linewidths=0,
-                edgecolors='face',marker='+',s=30)
+                c=color*0.9, linewidths=0,
+                edgecolors='face',marker='+',s=45)
             if trace:
                 for ndx in range(conf.n_classes):
                     curc = color[ndx,:].copy()

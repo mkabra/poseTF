@@ -7,9 +7,13 @@ import math
 from tensorflow.contrib.layers import batch_norm
 import convNetBase as CNB
 import numpy as np
-import cv2
-from cvc import cvc
+import movies
 from PoseTools import scale_images
+import matplotlib as mpl
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import tempfile
+from matplotlib import cm
+import movies
 
 class PoseUNet(PoseCommon.PoseCommon):
 
@@ -153,6 +157,15 @@ class PoseUNet(PoseCommon.PoseCommon):
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
+    def init_net(self, train_type=0, restore=True):
+        self.init_train(train_type=train_type)
+        self.pred = self.create_network()
+        saver = self.create_saver()
+        self.joint = True
+
+        sess = tf.InteractiveSession()
+        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
+        return sess
 
     def train_unet(self, restore, train_type=0):
 
@@ -214,13 +227,13 @@ class PoseUNet(PoseCommon.PoseCommon):
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale
 
-    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0):
+    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0, flipud=False):
         # maxframes if specificied reads that many frames
         # start at specifies where to start reading.
         conf = self.conf
 
-        cap = cv2.VideoCapture(movie_name)
-        n_frames = int(cap.get(cvc.FRAME_COUNT))
+        cap = movies.Movie(movie_name)
+        n_frames = int(cap.get_n_frames())
 
         # figure out how many frames to read
         if max_frames > 0:
@@ -231,9 +244,6 @@ class PoseUNet(PoseCommon.PoseCommon):
         else:
             n_frames = n_frames - start_at
 
-        # since out of order frame access in python sucks, do it one by one
-        for _ in range(start_at):
-            cap.read()
 
         # pre allocate results
         bsize = conf.batch_size
@@ -248,17 +258,27 @@ class PoseUNet(PoseCommon.PoseCommon):
             ndx_end = min(n_frames, (curl + 1) * bsize)
             ppe = min(ndx_end - ndx_start, bsize)
             for ii in range(ppe):
-                success, frame_in = cap.read()
-                assert success, "Could not read frame"
+                fnum = ndx_start + ii + start_at
+                frame_in = cap.get_frame(fnum)
+                if len(frame_in) == 2:
+                    frame_in = frame_in[0]
+                    if frame_in.ndim == 2:
+                        frame_in = frame_in[:, :, np.newaxis]
                 frame_in = PoseTools.crop_images(frame_in, conf)
-                all_f[ii, ...] = frame_in[..., 0:1]
+                if flipud:
+                    frame_in = np.flipud(frame_in)
+                all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-            x0 = scale_images(all_f, conf.unet_rescale, conf)
-            self.fd[self.ph['x']] = x0
+            xs = PoseTools.adjust_contrast(all_f, conf)
+            xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
+            xs = PoseTools.normalize_mean(xs, self.conf)
+
+            self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
             pred = sess.run(self.pred, self.fd)
 
             base_locs = PoseTools.get_base_pred_locs(pred, conf)
+            base_locs = base_locs/conf.pool_scale/conf.rescale*conf.unet_rescale
             pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe, :, :]
             pred_max_scores[ndx_start:ndx_end, :] = pred[:ppe, :, :, :].max(axis=(1,2))
             pred_scores[ndx_start:ndx_end, :, :, :] = pred[:ppe, :, :, :]
@@ -266,8 +286,73 @@ class PoseUNet(PoseCommon.PoseCommon):
             if curl % 20 == 19:
                 sys.stdout.write('\n')
 
-        cap.release()
+        cap.close()
         return pred_locs, pred_scores, pred_max_scores
+
+    def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
+        conf = self.conf
+        sess = self.init_net(0,True)
+        predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name,sess,max_frames=max_frames,flipud=flipud)
+        tdir = tempfile.mkdtemp()
+
+        cap = movies.Movie(movie_name)
+        nframes = int(cap.get_n_frames())
+        if max_frames > 0:
+            nframes = max_frames
+
+        fig = mpl.figure.Figure(figsize=(9, 4))
+        canvas = FigureCanvasAgg(fig)
+        sc = self.conf.unet_rescale
+
+        color = cm.hsv(np.linspace(0, 1 - 1./conf.n_classes, conf.n_classes))
+        trace_len = 30
+        for curl in range(nframes):
+            frame_in = cap.get_frame(curl)
+            if len(frame_in) == 2:
+                frame_in = frame_in[0]
+                if frame_in.ndim == 2:
+                    frame_in = frame_in[:,:, np.newaxis]
+            frame_in = PoseTools.crop_images(frame_in, conf)
+
+            if flipud:
+                frame_in = np.flipud(frame_in)
+            fig.clf()
+            ax1 = fig.add_subplot(1, 1, 1)
+            if frame_in.shape[2] == 1:
+                ax1.imshow(frame_in[:,:,0], cmap=cm.gray)
+            else:
+                ax1.imshow(frame_in)
+            ax1.scatter(predLocs[curl, :, 0],
+                        predLocs[curl, :, 1],
+                c=color*0.9, linewidths=0,
+                edgecolors='face',marker='+',s=45)
+            if trace:
+                for ndx in range(conf.n_classes):
+                    curc = color[ndx,:].copy()
+                    curc[3] = 0.5
+                    e = np.maximum(0,curl-trace_len)
+                    ax1.plot(predLocs[e:curl,ndx,0],
+                             predLocs[e:curl, ndx, 1],
+                             c = curc,lw=0.8)
+            ax1.axis('off')
+            fname = "test_{:06d}.png".format(curl)
+
+            # to printout without X.
+            # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+            # The size * the dpi gives the final image size
+            #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+            canvas.print_figure(os.path.join(tdir, fname), dpi=160)
+
+            # below is the easy way.
+        #         plt.savefig(os.path.join(tdir,fname))
+
+        tfilestr = os.path.join(tdir, 'test_*.png')
+        mencoder_cmd = "mencoder mf://" + tfilestr + " -frames " + "{:d}".format(
+            nframes) + " -mf type=png:fps=15 -o " + out_movie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+        os.system(mencoder_cmd)
+        cap.close()
+        tf.reset_default_graph()
+
 
 class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 

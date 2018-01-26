@@ -5,20 +5,24 @@ name = ''
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = device
 
-from stephenHeadConfig import conf
+from stephenHeadConfig import sideconf as conf
 
 import PoseUMDN
 import tensorflow as tf
 import PoseTools
 import math
+import PoseUNet
 import cv2
 
 import PoseCommon
-mov = '/home/mayank/temp/C002H001S0001_c.avi'
-out = '/home/mayank/temp/C002H001S0001_c_res.avi'
-# conf.batch_size = 4
+# mov = '/home/mayank/temp/C002H001S0001_c.avi'
+# out = '/home/mayank/temp/C002H001S0001_c_res.avi'
+# conf.mdn_min_sigma = 3.
+# conf.mdn_max_sigma = 3.
 self = PoseUMDN.PoseUMDN(conf,'pose_umdn'+name)
-self.create_pred_movie(mov,out,flipud=True)
+self.train_umdn(False,0,joint=True)
+# val_dist, val_ims, val_preds, val_predlocs, val_locs,val_out = self.classify_val(0,-1)
+#self.create_pred_movie(mov,out,flipud=True)
 
 
 ##
