@@ -14,6 +14,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import tempfile
 from matplotlib import cm
 import movies
+import multiResData
+from scipy import io as sio
 
 def softmax(x,axis=0):
     """Compute softmax values for each sets of scores in x."""
@@ -660,6 +662,94 @@ class PoseUMDN(PoseCommon.PoseCommon):
         cap.close()
         return pred_locs
 
+    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False):
+        # maxframes if specificied reads that many frames
+        # start at specifies where to start reading.
+
+        conf = self.conf
+        cap = movies.Movie(movie_name)
+        n_frames = int(cap.get_n_frames())
+        T = sio.loadmat(trx)['trx'][0]
+        n_trx = len(T)
+
+        end_frames = np.array([x['endframe'][0,0] for x in T])
+        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1
+        if max_frames < 0:
+            max_frames = end_frames.max()
+        if start_at > max_frames:
+            return None
+        max_n_frames = max_frames - start_at
+        pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
+        pred_locs[:] = np.nan
+
+        bsize = conf.batch_size
+
+        for trx_ndx in range(n_trx):
+            cur_trx = T[trx_ndx]
+            # pre allocate results
+            if first_frames[trx_ndx] > start_at:
+                cur_start = first_frames[trx_ndx]
+            else:
+                cur_start = start_at
+
+            if end_frames[trx_ndx] < max_frames:
+                cur_end = end_frames[trx_ndx]
+            else:
+                cur_end = max_frames
+
+            n_frames = cur_end - cur_start
+            n_batches = int(math.ceil(float(n_frames)/ bsize))
+            all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+
+            for curl in range(n_batches):
+                ndx_start = curl * bsize + cur_start - start_at
+                ndx_end = min(n_frames, (curl + 1) * bsize) + cur_start - start_at
+                ppe = min(ndx_end - ndx_start, bsize)
+                for ii in range(ppe):
+                    fnum = ndx_start + ii + cur_start
+                    frame_in = cap.get_frame(fnum)
+                    if len(frame_in) == 2:
+                        frame_in = frame_in[0]
+                        if frame_in.ndim == 2:
+                            frame_in = frame_in[:,:,np.newaxis]
+                    if flipud:
+                        frame_in = np.flipud(frame_in)
+
+                    trx_fnum = fnum - first_frames[trx_ndx]
+                    x = int(round(cur_trx['x'][0,trx_fnum]))-1
+                    y = int(round(cur_trx['y'][0,trx_fnum]))-1
+                    # -1 for 1-indexing in matlab and 0-indexing in python
+                    theta = cur_trx['theta'][0,trx_fnum]
+                    assert conf.imsz[0] == conf.imsz[1]
+
+                    frame_in, _ = multiResData.get_patch_trx(frame_in,x,y,theta,conf.imsz[0], np.zeros([2,2]))
+                    frame_in = frame_in[:, :, 0:conf.imgDim]
+                    all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
+
+                xs = PoseTools.adjust_contrast(all_f, conf)
+                xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
+                xs = PoseTools.normalize_mean(xs, self.conf)
+                self.fd[self.ph['x']] = xs
+                self.fd[self.ph['phase_train']] = False
+                val_means, val_std, val_wts = sess.run(self.pred, self.fd)
+
+                base_locs = np.zeros([self.conf.batch_size, self.conf.n_classes,2])
+                for ndx in range(val_means.shape[0]):
+                    for gdx, gr in enumerate(self.conf.mdn_groups):
+                        for g in gr:
+                            sel_ex = np.argmax(val_wts[ndx, :, gdx])
+                            base_locs[ndx,g,:] = val_means[ndx, sel_ex, g, :]
+
+                pred_locs[ndx_start:ndx_end, trx_ndx, :, :] = base_locs[:ppe,...]
+                sys.stdout.write('.')
+                if curl % 20 == 19:
+                    sys.stdout.write('\n')
+
+            sys.stdout.write('\n')
+        cap.close()
+        tf.reset_default_graph()
+        return pred_locs
+
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1,flipud=False,trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
@@ -705,6 +795,114 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     ax1.plot(predLocs[e:curl,ndx,0]*sc,
                              predLocs[e:curl, ndx, 1] * sc,
                              c = curc,lw=0.8)
+            ax1.axis('off')
+            fname = "test_{:06d}.png".format(curl)
+
+            # to printout without X.
+            # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+            # The size * the dpi gives the final image size
+            #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+            canvas.print_figure(os.path.join(tdir, fname), dpi=160)
+
+            # below is the easy way.
+        #         plt.savefig(os.path.join(tdir,fname))
+
+        tfilestr = os.path.join(tdir, 'test_*.png')
+        mencoder_cmd = "mencoder mf://" + tfilestr + " -frames " + "{:d}".format(
+            nframes) + " -mf type=png:fps=15 -o " + out_movie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+        os.system(mencoder_cmd)
+        cap.close()
+        tf.reset_default_graph()
+
+    def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False,trace=True):
+        conf = self.conf
+        sess = self.init_net(0,True)
+        predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
+        tdir = tempfile.mkdtemp()
+
+        cap = movies.Movie(movie_name)
+        T = sio.loadmat(trx)['trx'][0]
+        n_trx = len(T)
+
+        end_frames = np.array([x['endframe'][0,0] for x in T])
+        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1
+        if max_frames < 0:
+            max_frames = end_frames.max()
+
+        nframes = max_frames - start_at
+        fig = mpl.figure.Figure(figsize=(9, 4))
+        canvas = FigureCanvasAgg(fig)
+        sc = self.conf.unet_rescale
+
+        color = cm.hsv(np.linspace(0, 1 - 1./conf.n_classes, conf.n_classes))
+        trace_len = 3
+        cur_trx = T[fly_num]
+        c_x = None
+        c_y = None
+        for curl in range(nframes):
+            fnum = curl + start_at
+            frame_in = cap.get_frame(curl+start_at)
+            if len(frame_in) == 2:
+                frame_in = frame_in[0]
+                if frame_in.ndim == 2:
+                    frame_in = frame_in[:,:, np.newaxis]
+
+            trx_fnum = fnum - first_frames[fly_num]
+            x = int(round(cur_trx['x'][0, trx_fnum])) - 1
+            y = int(round(cur_trx['y'][0, trx_fnum])) - 1
+            theta = -cur_trx['theta'][0, trx_fnum]
+            R = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+            # -1 for 1-indexing in matlab and 0-indexing in python
+            if c_x is None:
+                c_x = x; c_y = y;
+
+            if (np.abs(c_x - x) > conf.imsz[0]*3./8.) or (np.abs(c_y - y) > conf.imsz[0]*3./8.):
+                c_x = x; c_y = y
+
+
+            assert conf.imsz[0] == conf.imsz[1]
+
+            frame_in, _ = multiResData.get_patch_trx(frame_in, c_x, c_y, -math.pi/2, conf.imsz[0], np.zeros([2, 2]))
+            frame_in = frame_in[:, :, 0:conf.imgDim]
+
+            if flipud:
+                frame_in = np.flipud(frame_in)
+            fig.clf()
+            ax1 = fig.add_subplot(1, 1, 1)
+            if frame_in.shape[2] == 1:
+                ax1.imshow(frame_in[:,:,0], cmap=cm.gray)
+            else:
+                ax1.imshow(frame_in)
+            xlim = ax1.get_xlim()
+            ylim = ax1.get_ylim()
+
+            hsz = conf.imsz[0]/2
+            for fndx in range(n_trx):
+                ct = T[fndx]
+                if (fnum < first_frames[fndx]) or (fnum>end_frames[fndx]):
+                    continue
+                trx_fnum = fnum - first_frames[fndx]
+                x = int(round(ct['x'][0, trx_fnum])) - 1
+                y = int(round(ct['y'][0, trx_fnum])) - 1
+                theta = -ct['theta'][0, trx_fnum] - math.pi/2
+                R = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+
+                curlocs = np.dot(predLocs[curl,fndx,:,:]-[hsz,hsz],R)
+                ax1.scatter(curlocs[ :, 0]*sc - c_x + x +hsz,
+                            curlocs[ :, 1]*sc - c_y + y + hsz,
+                    c=color*0.9, linewidths=0,
+                    edgecolors='face',marker='+',s=45)
+                if trace:
+                    for ndx in range(conf.n_classes):
+                        curc = color[ndx,:].copy()
+                        curc[3] = 0.5
+                        e = np.maximum(0,curl-trace_len)
+                        zz = np.dot(predLocs[e:curl,fndx,ndx,:]-[hsz,hsz],R)
+                        ax1.plot(zz[:,0]*sc - c_x + x + hsz,
+                                 zz[:,1]*sc - c_y + y + hsz,
+                                 c = curc,lw=0.8)
+            ax1.set_xlim(xlim)
+            ax1.set_ylim(ylim)
             ax1.axis('off')
             fname = "test_{:06d}.png".format(curl)
 

@@ -14,6 +14,11 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import tempfile
 from matplotlib import cm
 import movies
+# for tf_unet
+from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
+                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
+                            cross_entropy)
+from collections import OrderedDict
 
 class PoseUNet(PoseCommon.PoseCommon):
 
@@ -23,6 +28,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.up_layers = [] # layers created while up sampling
         self.edge_ignore = 10
         self.net_name = 'pose_unet'
+        self.keep_prob = 0.7
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -34,6 +40,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.ph['y'] = tf.placeholder(tf.float32,
                            [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
                            name='y')
+        self.ph['keep_prob'] = tf.placeholder(tf.float32)
 
     def create_fd(self):
         x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
@@ -64,7 +71,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers) - 2
 
-        n_conv = 3
+        n_conv = 2 #3
         conv = PoseCommon.conv_relu3
         # conv = PoseCommon.conv_relu3_noscaling
         layers = []
@@ -78,17 +85,21 @@ class PoseUNet(PoseCommon.PoseCommon):
         for ndx in range(n_layers):
             if ndx is 0:
                 n_filt = 64 #32
+                keep_prob = None
             elif ndx is 1:
                 n_filt = 128 #64
+                keep_prob = None
             elif ndx is 2:
                 n_filt = 256
+                keep_prob = self.ph['keep_prob']
             else:
                 n_filt = 512 #128
+                keep_prob = self.ph['keep_prob']
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'])
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
                 debug_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
@@ -103,7 +114,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         for cndx in range(n_conv):
             sc_name = 'layer_{}_{}'.format(n_layers,cndx)
             with tf.variable_scope(sc_name):
-                X = conv(X, n_filt, self.ph['phase_train'])
+                X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
 
         # upsample
         for ndx in reversed(range(n_layers)):
@@ -117,18 +128,22 @@ class PoseUNet(PoseCommon.PoseCommon):
             #     n_filt = 128
             if ndx is 0:
                 n_filt = 64  # 32
+                keep_prob = None
             elif ndx is 1:
                 n_filt = 128  # 64
+                keep_prob = None
             elif ndx is 2:
                 n_filt = 256
+                keep_prob = self.ph['keep_prob']
             else:
                 n_filt = 512  # 128
+                keep_prob = self.ph['keep_prob']
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'])
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
             up_layers.append(X)
         self.up_layers = up_layers
 
@@ -141,11 +156,133 @@ class PoseUNet(PoseCommon.PoseCommon):
         X = conv + biases
         return X
 
+    def create_network_tf_unet(self):
+        # implementation of unet from https://github.com/jakeret/tf_unet/blob/master/tf_unet/unet.py
+        nx = tf.shape(x)[1]
+        ny = tf.shape(x)[2]
+        x_image = tf.reshape(x, tf.stack([-1, nx, ny, channels]))
+        in_node = x_image
+        batch_size = tf.shape(x_image)[0]
+
+        weights = []
+        biases = []
+        convs = []
+        pools = OrderedDict()
+        deconv = OrderedDict()
+        dw_h_convs = OrderedDict()
+        up_h_convs = OrderedDict()
+
+        layers = 5
+        features_root = 16
+        filter_size = 3
+        pool_size = 2
+        channels = self.conf.imgDim
+        keep_prob = 1.
+
+
+        in_size = 1000
+        size = in_size
+        # down layers
+        for layer in range(0, layers):
+            features = 2 ** layer * features_root
+            stddev = np.sqrt(2 / (filter_size ** 2 * features))
+            if layer == 0:
+                w1 = weight_variable([filter_size, filter_size, channels, features], stddev)
+            else:
+                w1 = weight_variable([filter_size, filter_size, features // 2, features], stddev)
+
+            w2 = weight_variable([filter_size, filter_size, features, features], stddev)
+            b1 = bias_variable([features])
+            b2 = bias_variable([features])
+
+            conv1 = conv2d(in_node, w1, keep_prob)
+            tmp_h_conv = tf.nn.relu(conv1 + b1)
+            conv2 = conv2d(tmp_h_conv, w2, keep_prob)
+            dw_h_convs[layer] = tf.nn.relu(conv2 + b2)
+
+            weights.append((w1, w2))
+            biases.append((b1, b2))
+            convs.append((conv1, conv2))
+
+            size -= 4
+            if layer < layers - 1:
+                pools[layer] = max_pool(dw_h_convs[layer], pool_size)
+                in_node = pools[layer]
+                size /= 2
+
+        in_node = dw_h_convs[layers - 1]
+
+        # up layers
+        for layer in range(layers - 2, -1, -1):
+            features = 2 ** (layer + 1) * features_root
+            stddev = np.sqrt(2 / (filter_size ** 2 * features))
+
+            wd = weight_variable_devonc([pool_size, pool_size, features // 2, features], stddev)
+            bd = bias_variable([features // 2])
+            h_deconv = tf.nn.relu(deconv2d(in_node, wd, pool_size) + bd)
+            h_deconv_concat = crop_and_concat(dw_h_convs[layer], h_deconv)
+            deconv[layer] = h_deconv_concat
+
+            w1 = weight_variable([filter_size, filter_size, features, features // 2], stddev)
+            w2 = weight_variable([filter_size, filter_size, features // 2, features // 2], stddev)
+            b1 = bias_variable([features // 2])
+            b2 = bias_variable([features // 2])
+
+            conv1 = conv2d(h_deconv_concat, w1, keep_prob)
+            h_conv = tf.nn.relu(conv1 + b1)
+            conv2 = conv2d(h_conv, w2, keep_prob)
+            in_node = tf.nn.relu(conv2 + b2)
+            up_h_convs[layer] = in_node
+
+            weights.append((w1, w2))
+            biases.append((b1, b2))
+            convs.append((conv1, conv2))
+
+            size *= 2
+            size -= 4
+
+        # Output Map
+        weight = weight_variable([1, 1, features_root, n_class], stddev)
+        bias = bias_variable([n_class])
+        conv = conv2d(in_node, weight, tf.constant(1.0))
+        output_map = tf.nn.relu(conv + bias)
+        up_h_convs["out"] = output_map
+
+        if summaries:
+            for i, (c1, c2) in enumerate(convs):
+                tf.summary.image('summary_conv_%02d_01' % i, get_image_summary(c1))
+                tf.summary.image('summary_conv_%02d_02' % i, get_image_summary(c2))
+
+            for k in pools.keys():
+                tf.summary.image('summary_pool_%02d' % k, get_image_summary(pools[k]))
+
+            for k in deconv.keys():
+                tf.summary.image('summary_deconv_concat_%02d' % k, get_image_summary(deconv[k]))
+
+            for k in dw_h_convs.keys():
+                tf.summary.histogram("dw_convolution_%02d" % k + '/activations', dw_h_convs[k])
+
+            for k in up_h_convs.keys():
+                tf.summary.histogram("up_convolution_%s" % k + '/activations', up_h_convs[k])
+
+        variables = []
+        for w1, w2 in weights:
+            variables.append(w1)
+            variables.append(w2)
+
+        for b1, b2 in biases:
+            variables.append(b1)
+            variables.append(b2)
+
+        return output_map, variables, int(in_size - size)
+
     def fd_train(self):
         self.fd[self.ph['phase_train']] = True
+        self.fd[self.ph['keep_prob']] = self.keep_prob
 
     def fd_val(self):
         self.fd[self.ph['phase_train']] = False
+        self.fd[self.ph['keep_prob']] = 1.
 
     def update_fd(self, db_type, sess, distort):
         self.read_images(db_type, distort, sess, distort)
@@ -322,6 +459,9 @@ class PoseUNet(PoseCommon.PoseCommon):
                 ax1.imshow(frame_in[:,:,0], cmap=cm.gray)
             else:
                 ax1.imshow(frame_in)
+            xlim = ax1.get_xlim()
+            ylim = ax1.get_ylim()
+
             ax1.scatter(predLocs[curl, :, 0],
                         predLocs[curl, :, 1],
                 c=color*0.9, linewidths=0,
@@ -335,6 +475,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                              predLocs[e:curl, ndx, 1],
                              c = curc,lw=0.8)
             ax1.axis('off')
+            ax1.set_xlim(xlim)
+            ax1.set_ylim(ylim)
             fname = "test_{:06d}.png".format(curl)
 
             # to printout without X.

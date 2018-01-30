@@ -226,7 +226,7 @@ def randomly_translate(img, locs, conf):
         reduce_dim = False
 
     num = img.shape[0]
-    rows, cols = img.shape[2:]
+    rows, cols = img.shape[1:3]
     for ndx in range(num):
         orig_locs = copy.deepcopy(locs[ndx, ...])
         orig_im = copy.deepcopy(img[ndx, ...])
@@ -282,7 +282,7 @@ def randomly_rotate(img, locs, conf):
         reduce_dim = False
 
     num = img.shape[0]
-    rows, cols = img.shape[2:]
+    rows, cols = img.shape[1:3]
     for ndx in range(num):
         orig_locs = copy.deepcopy(locs[ndx, ...])
         orig_im = copy.deepcopy(img[ndx, ...])

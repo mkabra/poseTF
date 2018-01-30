@@ -34,7 +34,7 @@ def conv_relu(x_in, kernel_shape, train_phase):
     return tf.nn.relu(conv + biases)
 
 
-def conv_relu3(x_in, n_filt, train_phase):
+def conv_relu3(x_in, n_filt, train_phase, keep_prob=None):
     in_dim = x_in.get_shape().as_list()[3]
     kernel_shape = [3, 3, in_dim, n_filt]
     weights = tf.get_variable("weights", kernel_shape,
@@ -43,6 +43,8 @@ def conv_relu3(x_in, n_filt, train_phase):
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
     conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    # if keep_prob is not None:
+    #     conv = tf.nn.dropout(conv, keep_prob)
     return tf.nn.relu(conv + biases)
 
 def conv_relu3_noscaling(x_in, n_filt, train_phase):
