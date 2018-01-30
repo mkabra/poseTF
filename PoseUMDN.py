@@ -43,6 +43,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.net_type = net_type
         self.net_name = 'pose_umdn'
         self.i_locs = None
+		self.dep_nets.keep_prob = 1.
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)

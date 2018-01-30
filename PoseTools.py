@@ -1097,7 +1097,7 @@ def show_result(ims, ndx, locs, predlocs= None):
     count = float(len(ndx))
     yy = np.ceil(np.sqrt(count/12)*4).astype('int')
     xx = np.ceil(count/yy).astype('int')
-    f,ax = plt.subplots(xx,yy)
+    f,ax = plt.subplots(xx,yy,figsize=(16,12))
     ax = ax.flatten()
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0, 1, locs.shape[1]))
