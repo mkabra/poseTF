@@ -455,7 +455,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             for gdx, gr in enumerate(self.conf.mdn_groups):
                 for g in gr:
                     if locs.shape[1] == 1:
-                        sel_ex = np.argmax(val_wts[ndx,:,gdx])
+                        sel_ex = (np.argmax(val_wts[ndx,:,gdx]),)
                     else:
                         sel_ex = val_wts[ndx, :, gdx] > 0
                     mm = val_means[ndx, ...][np.newaxis, sel_ex, :, :]
