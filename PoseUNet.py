@@ -15,10 +15,10 @@ import tempfile
 from matplotlib import cm
 import movies
 # for tf_unet
-# from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
-#                             conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
-#                             cross_entropy)
-# from collections import OrderedDict
+from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
+                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
+                            cross_entropy)
+from collections import OrderedDict
 
 class PoseUNet(PoseCommon.PoseCommon):
 
@@ -158,9 +158,11 @@ class PoseUNet(PoseCommon.PoseCommon):
 
     # def create_network_tf_unet(self):
     #     # implementation of unet from https://github.com/jakeret/tf_unet/blob/master/tf_unet/unet.py
+    #     x = self.ph['x']
     #     nx = tf.shape(x)[1]
     #     ny = tf.shape(x)[2]
-    #     x_image = tf.reshape(x, tf.stack([-1, nx, ny, channels]))
+    #     # x_image = tf.reshape(x, tf.stack([-1, nx, ny, channels]))
+    #     x_image = x
     #     in_node = x_image
     #     batch_size = tf.shape(x_image)[0]
     #
@@ -178,7 +180,7 @@ class PoseUNet(PoseCommon.PoseCommon):
     #     pool_size = 2
     #     channels = self.conf.imgDim
     #     keep_prob = 1.
-    #
+    #     n_class = self.conf.n_classes
     #
     #     in_size = 1000
     #     size = in_size
@@ -248,23 +250,6 @@ class PoseUNet(PoseCommon.PoseCommon):
     #     output_map = tf.nn.relu(conv + bias)
     #     up_h_convs["out"] = output_map
     #
-    #     if summaries:
-    #         for i, (c1, c2) in enumerate(convs):
-    #             tf.summary.image('summary_conv_%02d_01' % i, get_image_summary(c1))
-    #             tf.summary.image('summary_conv_%02d_02' % i, get_image_summary(c2))
-    #
-    #         for k in pools.keys():
-    #             tf.summary.image('summary_pool_%02d' % k, get_image_summary(pools[k]))
-    #
-    #         for k in deconv.keys():
-    #             tf.summary.image('summary_deconv_concat_%02d' % k, get_image_summary(deconv[k]))
-    #
-    #         for k in dw_h_convs.keys():
-    #             tf.summary.histogram("dw_convolution_%02d" % k + '/activations', dw_h_convs[k])
-    #
-    #         for k in up_h_convs.keys():
-    #             tf.summary.histogram("up_convolution_%s" % k + '/activations', up_h_convs[k])
-    #
     #     variables = []
     #     for w1, w2 in weights:
     #         variables.append(w1)
@@ -274,7 +259,7 @@ class PoseUNet(PoseCommon.PoseCommon):
     #         variables.append(b1)
     #         variables.append(b2)
     #
-    #     return output_map, variables, int(in_size - size)
+    #     return output_map #, variables, int(in_size - size)
 
     def fd_train(self):
         self.fd[self.ph['phase_train']] = True
