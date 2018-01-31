@@ -43,7 +43,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.net_type = net_type
         self.net_name = 'pose_umdn'
         self.i_locs = None
-		self.dep_nets.keep_prob = 1.
+        self.dep_nets.keep_prob = 1.
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -564,7 +564,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                             cur_gr = [l.count(cls) for l in self.conf.mdn_groups].index(1)
                             if pred_weights[sel, ndx, cur_gr] < (0.02/self.conf.max_n_animals):
                                 continue
-                            cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, cls, :].astype('int')
+                            cur_locs = np.round(pred_means[sel:sel + 1, ndx:ndx + 1, cls, :]).astype('int')
                             # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
                             cur_scale = pred_std[sel, ndx, cls].astype('int')
                             curl = (PoseTools.create_label_images(cur_locs, osz, 1, cur_scale) + 1) / 2
@@ -945,8 +945,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             ax[ndx].scatter(
                 val_out[0][ix,:,pt,0], val_out[0][ix,:,pt,1],
                 s=np.maximum( 0.5, (val_out[2][ix,:,grp])*5))
-            ax[ndx].scatter(
-                val_locs[ix,pt,0],val_locs[ix,pt,1],marker='+')
+            ax[ndx].scatter( val_locs[ix,pt,0],val_locs[ix,pt,1],marker='+')
             ax[ndx].set_title('{}:{}'.format(x,pt))
 
 class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
