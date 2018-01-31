@@ -834,7 +834,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             max_frames = end_frames.max()
 
         nframes = max_frames - start_at
-        fig = mpl.figure.Figure(figsize=(9, 4))
+        fig = mpl.figure.Figure(figsize=(8, 8))
         canvas = FigureCanvasAgg(fig)
         sc = self.conf.unet_rescale
 
@@ -860,13 +860,13 @@ class PoseUMDN(PoseCommon.PoseCommon):
             if c_x is None:
                 c_x = x; c_y = y;
 
-            if (np.abs(c_x - x) > conf.imsz[0]*3./8.) or (np.abs(c_y - y) > conf.imsz[0]*3./8.):
+            if (np.abs(c_x - x) > conf.imsz[0]*3./8.*2.) or (np.abs(c_y - y) > conf.imsz[0]*3./8.*2.):
                 c_x = x; c_y = y
 
 
             assert conf.imsz[0] == conf.imsz[1]
 
-            frame_in, _ = multiResData.get_patch_trx(frame_in, c_x, c_y, -math.pi/2, conf.imsz[0], np.zeros([2, 2]))
+            frame_in, _ = multiResData.get_patch_trx(frame_in, c_x, c_y, -math.pi/2, conf.imsz[0]*2, np.zeros([2, 2]))
             frame_in = frame_in[:, :, 0:conf.imgDim]
 
             if flipud:
@@ -880,7 +880,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
             xlim = ax1.get_xlim()
             ylim = ax1.get_ylim()
 
-            hsz = conf.imsz[0]/2
+            hsz_p = conf.imsz[0]/2 # half size for pred
+            hsz_s = conf.imsz[0] # half size for showing
             for fndx in range(n_trx):
                 ct = T[fndx]
                 if (fnum < first_frames[fndx]) or (fnum>end_frames[fndx]):
@@ -891,20 +892,20 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 theta = -ct['theta'][0, trx_fnum] - math.pi/2
                 R = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
 
-                curlocs = np.dot(predLocs[curl,fndx,:,:]-[hsz,hsz],R)
-                ax1.scatter(curlocs[ :, 0]*sc - c_x + x +hsz,
-                            curlocs[ :, 1]*sc - c_y + y + hsz,
+                curlocs = np.dot(predLocs[curl,fndx,:,:]-[hsz_p,hsz_p],R)
+                ax1.scatter(curlocs[ :, 0]*sc - c_x + x +hsz_s,
+                            curlocs[ :, 1]*sc - c_y + y + hsz_s,
                     c=color*0.9, linewidths=0,
-                    edgecolors='face',marker='+',s=45)
+                    edgecolors='face',marker='+',s=15)
                 if trace:
                     for ndx in range(conf.n_classes):
                         curc = color[ndx,:].copy()
                         curc[3] = 0.5
                         e = np.maximum(0,curl-trace_len)
-                        zz = np.dot(predLocs[e:curl,fndx,ndx,:]-[hsz,hsz],R)
-                        ax1.plot(zz[:,0]*sc - c_x + x + hsz,
-                                 zz[:,1]*sc - c_y + y + hsz,
-                                 c = curc,lw=0.8)
+                        zz = np.dot(predLocs[e:(curl+1),fndx,ndx,:]-[hsz_p,hsz_p],R)
+                        ax1.plot(zz[:,0]*sc - c_x + x + hsz_s,
+                                 zz[:,1]*sc - c_y + y + hsz_s,
+                                 c = curc,lw=0.8,alpha=0.6)
             ax1.set_xlim(xlim)
             ax1.set_ylim(ylim)
             ax1.axis('off')
@@ -914,7 +915,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
             # The size * the dpi gives the final image size
             #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-            canvas.print_figure(os.path.join(tdir, fname), dpi=160)
+            canvas.print_figure(os.path.join(tdir, fname), dpi=300)
 
             # below is the easy way.
         #         plt.savefig(os.path.join(tdir,fname))

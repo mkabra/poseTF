@@ -23,7 +23,7 @@ self = PoseUNet.PoseUNet(conf,'pose_unet_droput_0p7')
 # self = PoseUMDN.PoseUMDN(conf)
 self.train_unet(False,0)
 # self.train_umdn(False,0,joint=True)
-# val_dist, val_ims, val_preds, val_predlocs, val_locs= self.classify_val(0,-1)
+val_dist, val_ims, val_preds, val_predlocs, val_locs= self.classify_val(0,-1)
 # self.create_pred_movie(mov,out,flipud=True)
 
 
