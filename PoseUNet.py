@@ -15,9 +15,9 @@ import tempfile
 from matplotlib import cm
 import movies
 # for tf_unet
-from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
-                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
-                            cross_entropy)
+#from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
+#                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
+#                            cross_entropy)
 from collections import OrderedDict
 
 class PoseUNet(PoseCommon.PoseCommon):
