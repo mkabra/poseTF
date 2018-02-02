@@ -1069,10 +1069,16 @@ def variable_summaries(var):
         tf.summary.scalar('stddev', stddev)
 
 
-def analyze_gradients(exclude):
+def analyze_gradients(loss, exclude, sess):
     var = tf.global_variables()
+    tvar = []
     for vv in var:
-        ("")
+        ix = max(map(vv.name.find,exclude))
+        if ix < 0:
+            tvar.append(vv)
+    var = tvar
+    gg = tf.gradients(loss,var)
+
 
 
 def count_records(filename):

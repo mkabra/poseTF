@@ -105,7 +105,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 if mdn_prev is None:
                     X = cur_l
                 else:
-                    X = tf.concat([X, cur_l], axis=3)
+                    X = tf.concat([mdn_prev, cur_l], axis=3)
 
             for c_ndx in range(n_conv-1):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
@@ -125,6 +125,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     X, weights,strides=[1, 2, 2, 1], padding='SAME')
                 cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
                 X = tf.nn.relu(cur_conv + biases)
+            mdn_prev = X
             self.mdn_layers2.append(X)
 
         # few more convolution for the outputs
@@ -677,7 +678,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         n_trx = len(T)
 
         end_frames = np.array([x['endframe'][0,0] for x in T])
-        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1
+        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1 # for converting from 1 indexing to 0 indexing
         if max_frames < 0:
             max_frames = end_frames.max()
         if start_at > max_frames:
@@ -884,7 +885,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             hsz_s = conf.imsz[0] # half size for showing
             for fndx in range(n_trx):
                 ct = T[fndx]
-                if (fnum < first_frames[fndx]) or (fnum>end_frames[fndx]):
+                if (fnum < first_frames[fndx]) or (fnum>=end_frames[fndx]):
                     continue
                 trx_fnum = fnum - first_frames[fndx]
                 x = int(round(ct['x'][0, trx_fnum])) - 1
