@@ -127,7 +127,7 @@ class config(object):
     # ----- MDN params
     mdn_min_sigma = 3. # this should just be maybe twice the cell size??
     mdn_max_sigma = 4.
-    mdn_logit_eps_training = 0.00001
+    mdn_logit_eps_training = 0.001
     mdn_extra_layers = 0
 
     # ----- Save parameters
@@ -197,7 +197,7 @@ aliceConfig.imgDim = 1
 aliceConfig.n_classes = len(aliceConfig.selpts)
 aliceConfig.splitType = 'frame'
 aliceConfig.set_exp_name('aliceFly')
-aliceConfig.trange = 20
+aliceConfig.trange = 10
 aliceConfig.nfcfilt = 128
 aliceConfig.sel_sz = 144
 aliceConfig.num_pools = 1
