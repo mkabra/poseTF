@@ -197,7 +197,7 @@ aliceConfig.imgDim = 1
 aliceConfig.n_classes = len(aliceConfig.selpts)
 aliceConfig.splitType = 'frame'
 aliceConfig.set_exp_name('aliceFly')
-aliceConfig.trange = 10
+aliceConfig.trange = 5
 aliceConfig.nfcfilt = 128
 aliceConfig.sel_sz = 144
 aliceConfig.num_pools = 1
@@ -211,7 +211,7 @@ aliceConfig.adjustContrast = False
 aliceConfig.clahegridsize = 10
 aliceConfig.brange = [0,0]
 aliceConfig.crange = [1.,1.]
-aliceConfig.mdn_extra_layers = 0
+aliceConfig.mdn_extra_layers = 1
 aliceConfig.normalize_img_mean = False
 # aliceConfig.mdn_groups = [range(11),[11],[12],[13],[14],[15],[16]]
 aliceConfig.mdn_groups = [range(13)+[15,16],[13],[14]]

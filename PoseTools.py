@@ -1068,6 +1068,33 @@ def variable_summaries(var):
             stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
         tf.summary.scalar('stddev', stddev)
 
+def db_info(self, dbType='val',train_type=0):
+    self.init_train(train_type=train_type)
+    self.pred = self.create_network()
+    self.create_saver()
+    val_info = []
+    if train_type is 1:
+        fname = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+    else:
+        if dbType is 'val':
+            fname = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        else:
+            fname = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
+    num_val = count_records(fname)
+
+    with tf.Session() as sess:
+        start_at = self.init_and_restore(sess, True, ['loss', 'dist'])
+
+        for step in range(num_val / self.conf.batch_size):
+            if dbType is 'val':
+                self.setup_val(sess)
+            else:
+                self.setup_train(sess)
+            val_info.append(self.info)
+
+    tf.reset_default_graph()
+    return np.array(val_info).reshape([-1,2])
+
 
 def analyze_gradients(loss, exclude, sess):
     var = tf.global_variables()
