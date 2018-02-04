@@ -7,7 +7,6 @@
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUNet.py" afterPath="$PROJECT_DIR$/PoseUNet.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -70,21 +69,21 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="160">
-                  <caret line="216" column="36" lean-forward="true" selection-start-line="216" selection-start-column="36" selection-end-line="216" selection-end-column="36" />
+                <state relative-caret-position="168">
+                  <caret line="295" column="0" lean-forward="false" selection-start-line="295" selection-start-column="0" selection-end-line="295" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1370#1691#0" expanded="false" />
                     <element signature="e#1726#2184#0" expanded="false" />
-                    <element signature="e#19294#19394#0" expanded="false" />
-                    <element signature="e#19426#19522#0" expanded="false" />
-                    <element signature="e#19581#19956#0" expanded="false" />
-                    <element signature="e#19995#21699#0" expanded="false" />
-                    <element signature="e#21750#23384#0" expanded="false" />
-                    <element signature="e#23443#23824#0" expanded="false" />
-                    <element signature="e#35588#38143#0" expanded="false" />
-                    <element signature="e#42986#43949#0" expanded="false" />
-                    <marker date="1517726135996" expanded="false" signature="1086:1298" ph="..." />
+                    <element signature="e#19293#19393#0" expanded="false" />
+                    <element signature="e#19425#19521#0" expanded="false" />
+                    <element signature="e#19580#19955#0" expanded="false" />
+                    <element signature="e#19994#21698#0" expanded="false" />
+                    <element signature="e#21749#23383#0" expanded="false" />
+                    <element signature="e#23442#23823#0" expanded="false" />
+                    <element signature="e#35587#38142#0" expanded="false" />
+                    <element signature="e#42985#43948#0" expanded="false" />
+                    <marker date="1517727367454" expanded="false" signature="1086:1298" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -370,8 +369,8 @@
           <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="778">
-                  <caret line="617" column="23" lean-forward="true" selection-start-line="617" selection-start-column="23" selection-end-line="617" selection-end-column="23" />
+                <state relative-caret-position="214">
+                  <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -895,13 +894,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00042" summary="bug fix for normalize_mean_img">
-      <created>1515406509636</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1515406509636</updated>
-    </task>
     <task id="LOCAL-00043" summary="bug fix for normalize_mean_img">
       <created>1515497388699</created>
       <option name="number" value="00043" />
@@ -1238,7 +1230,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517637806994</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="Trying out mdn with fixed number of outputs">
+      <created>1517726286638</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1517726286638</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1252,7 +1251,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="2" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1333,7 +1331,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="minor edits" />
     <MESSAGE value="changing how the offset is computed to scales locations to match the cell size in poseumdn." />
     <MESSAGE value="On more thought, earlier offset for mdn locs was correct because of the way striding works in tensorflow." />
     <MESSAGE value="increasing trange for alice." />
@@ -1358,7 +1355,8 @@
     <MESSAGE value="removing contrast adjustment for alice's flies" />
     <MESSAGE value="Fixed a huge bug with MDN where the lower layers were not being used at all." />
     <MESSAGE value="Trying the fixed mdn with more mdn layers" />
-    <option name="LAST_COMMIT_MESSAGE" value="Trying the fixed mdn with more mdn layers" />
+    <MESSAGE value="Trying out mdn with fixed number of outputs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Trying out mdn with fixed number of outputs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1374,6 +1372,11 @@
           <line>303</line>
           <option name="timeStamp" value="176" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/PoseUMDN.py</url>
+          <line>295</line>
+          <option name="timeStamp" value="291" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-defaults>
         <breakpoint type="python-line" />
@@ -1385,7 +1388,7 @@
           </selected-grouping-rules>
         </breakpoints-dialog>
       </breakpoints-dialog>
-      <option name="time" value="290" />
+      <option name="time" value="292" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1971,29 +1974,29 @@
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="778">
-          <caret line="617" column="23" lean-forward="true" selection-start-line="617" selection-start-column="23" selection-end-line="617" selection-end-column="23" />
+        <state relative-caret-position="214">
+          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="160">
-          <caret line="216" column="36" lean-forward="true" selection-start-line="216" selection-start-column="36" selection-end-line="216" selection-end-column="36" />
+        <state relative-caret-position="168">
+          <caret line="295" column="0" lean-forward="false" selection-start-line="295" selection-start-column="0" selection-end-line="295" selection-end-column="0" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1370#1691#0" expanded="false" />
             <element signature="e#1726#2184#0" expanded="false" />
-            <element signature="e#19294#19394#0" expanded="false" />
-            <element signature="e#19426#19522#0" expanded="false" />
-            <element signature="e#19581#19956#0" expanded="false" />
-            <element signature="e#19995#21699#0" expanded="false" />
-            <element signature="e#21750#23384#0" expanded="false" />
-            <element signature="e#23443#23824#0" expanded="false" />
-            <element signature="e#35588#38143#0" expanded="false" />
-            <element signature="e#42986#43949#0" expanded="false" />
-            <marker date="1517726135996" expanded="false" signature="1086:1298" ph="..." />
+            <element signature="e#19293#19393#0" expanded="false" />
+            <element signature="e#19425#19521#0" expanded="false" />
+            <element signature="e#19580#19955#0" expanded="false" />
+            <element signature="e#19994#21698#0" expanded="false" />
+            <element signature="e#21749#23383#0" expanded="false" />
+            <element signature="e#23442#23823#0" expanded="false" />
+            <element signature="e#35587#38142#0" expanded="false" />
+            <element signature="e#42985#43948#0" expanded="false" />
+            <marker date="1517727367454" expanded="false" signature="1086:1298" ph="..." />
           </folding>
         </state>
       </provider>

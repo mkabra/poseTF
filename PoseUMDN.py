@@ -235,10 +235,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
         layers = []
         mdn_prev = None
         n_out = self.conf.n_classes
-        k = 10 # this is the number of final gaussians.
+        k = 2 # this is the number of final gaussians.
         n_layers_u = len(self.dep_nets.up_layers)
         min_im_sz = min(self.conf.imsz)
-        extra_layers = math.floor(np.log2(min_im_sz)) - n_layers_u - 2
+        extra_layers = math.floor(np.log2(min_im_sz)) - n_layers_u - 1
         extra_layers = int(extra_layers)
         n_layers = n_layers_u + extra_layers
         locs_offset = 2**(n_layers)
@@ -294,7 +294,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 X = tf.nn.relu(cur_conv + biases)
 
         X_sz = min(X.get_shape().as_list()[1:3])
-        assert (X_sz >= 4) and (X_sz<8), 'The net has been reduced too much or not too much'
+        assert (X_sz >= 2) and (X_sz<4), 'The net has been reduced too much or not too much'
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
