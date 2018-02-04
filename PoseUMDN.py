@@ -240,7 +240,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
         min_im_sz = min(self.conf.imsz)
         extra_layers = math.floor(np.log2(min_im_sz)) - n_layers_u - 2
         extra_layers = int(extra_layers)
-        locs_offset = 2**(len(self.dep_nets.up_layers) + extra_layers)
+        n_layers = n_layers_u + extra_layers
+        locs_offset = 2**(n_layers)
+        n_groups = len(self.conf.mdn_groups)
 
         # MDN downsample.
         for ndx in range(n_layers_u):
@@ -253,7 +255,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             if mdn_prev is None:
                 X = cur_l
             else:
-                X = tf.concat([X, cur_l], axis=3)
+                X = tf.concat([mdn_prev, cur_l], axis=3)
 
             for c_ndx in range(n_conv-1):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
@@ -271,6 +273,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
                 cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
                 X = tf.nn.relu(cur_conv + biases)
+            mdn_prev = X
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
@@ -380,14 +383,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
                                   is_training=self.ph['phase_train'])
             mdn_l = tf.nn.relu(conv + biases)
 
-            weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k],
+            weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
                                            initializer=tf.contrib.layers.xavier_initializer())
-            biases_logits = tf.get_variable("biases_logits", k ,
-                                          initializer=tf.constant_initializer(0))
+            biases_logits = tf.get_variable("biases_logits",
+                    k * n_groups ,initializer=tf.constant_initializer(0))
             logits = tf.nn.conv2d(mdn_l, weights_logits,
                                   [1, 1, 1, 1], padding='SAME') + biases_logits
-            logits = tf.reshape(logits, [-1, n_x * n_y, k])
-            logits = tf.reshape(logits, [-1, n_x * n_y * k])
+            logits = tf.reshape(logits, [-1, n_x * n_y, k * n_groups])
+            logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
 
         return [locs,scales,logits]
 
@@ -667,7 +670,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         cap.close()
         return pred_locs
 
-    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False):
+    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False, return_ims=False):
         # maxframes if specificied reads that many frames
         # start at specifies where to start reading.
 
@@ -686,6 +689,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
         max_n_frames = max_frames - start_at
         pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
         pred_locs[:] = np.nan
+
+        if return_ims:
+            ims = np.zeros([max_n_frames, n_trx, conf.imsz[0]/conf.unet_rescale, conf.imsz[1]/conf.unet_rescale,conf.imgDim])
 
         bsize = conf.batch_size
 
@@ -738,6 +744,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 self.fd[self.ph['phase_train']] = False
                 val_means, val_std, val_wts = sess.run(self.pred, self.fd)
 
+                if return_ims:
+                    ims[ndx_start:ndx_end, trx_ndx,:,:,:] = xs[:ppe,...]
                 base_locs = np.zeros([self.conf.batch_size, self.conf.n_classes,2])
                 for ndx in range(val_means.shape[0]):
                     for gdx, gr in enumerate(self.conf.mdn_groups):
@@ -753,7 +761,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
             sys.stdout.write('\n')
         cap.close()
         tf.reset_default_graph()
-        return pred_locs
+        if return_ims:
+            return pred_locs, ims
+        else:
+            return pred_locs
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1,flipud=False,trace=True):
         conf = self.conf

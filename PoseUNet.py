@@ -14,6 +14,8 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import tempfile
 from matplotlib import cm
 import movies
+import multiResData
+from scipy import io as sio
 # for tf_unet
 #from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
 #                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
@@ -400,7 +402,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             pred = sess.run(self.pred, self.fd)
 
             base_locs = PoseTools.get_base_pred_locs(pred, conf)
-            base_locs = base_locs/conf.pool_scale/conf.rescale*conf.unet_rescale
+            base_locs = base_locs*conf.unet_rescale
             pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe, :, :]
             pred_max_scores[ndx_start:ndx_end, :] = pred[:ppe, :, :, :].max(axis=(1,2))
             pred_scores[ndx_start:ndx_end, :, :, :] = pred[:ppe, :, :, :]
@@ -410,6 +412,99 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         cap.close()
         return pred_locs, pred_scores, pred_max_scores
+
+    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False, return_ims=False):
+        # maxframes if specificied reads that many frames
+        # start at specifies where to start reading.
+
+        conf = self.conf
+        cap = movies.Movie(movie_name)
+        n_frames = int(cap.get_n_frames())
+        T = sio.loadmat(trx)['trx'][0]
+        n_trx = len(T)
+
+        end_frames = np.array([x['endframe'][0,0] for x in T])
+        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1 # for converting from 1 indexing to 0 indexing
+        if max_frames < 0:
+            max_frames = end_frames.max()
+        if start_at > max_frames:
+            return None
+        max_n_frames = max_frames - start_at
+        pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
+        pred_locs[:] = np.nan
+
+        if return_ims:
+            ims = np.zeros([max_n_frames, n_trx, conf.imsz[0]/conf.unet_rescale, conf.imsz[1]/conf.unet_rescale,conf.imgDim])
+
+        bsize = conf.batch_size
+
+        for trx_ndx in range(n_trx):
+            cur_trx = T[trx_ndx]
+            # pre allocate results
+            if first_frames[trx_ndx] > start_at:
+                cur_start = first_frames[trx_ndx]
+            else:
+                cur_start = start_at
+
+            if end_frames[trx_ndx] < max_frames:
+                cur_end = end_frames[trx_ndx]
+            else:
+                cur_end = max_frames
+
+            n_frames = cur_end - cur_start
+            n_batches = int(math.ceil(float(n_frames)/ bsize))
+            all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+
+            for curl in range(n_batches):
+                ndx_start = curl * bsize + cur_start - start_at
+                ndx_end = min(n_frames, (curl + 1) * bsize) + cur_start - start_at
+                ppe = min(ndx_end - ndx_start, bsize)
+                for ii in range(ppe):
+                    fnum = ndx_start + ii + cur_start
+                    frame_in = cap.get_frame(fnum)
+                    if len(frame_in) == 2:
+                        frame_in = frame_in[0]
+                        if frame_in.ndim == 2:
+                            frame_in = frame_in[:,:,np.newaxis]
+                    if flipud:
+                        frame_in = np.flipud(frame_in)
+
+                    trx_fnum = fnum - first_frames[trx_ndx]
+                    x = int(round(cur_trx['x'][0,trx_fnum]))-1
+                    y = int(round(cur_trx['y'][0,trx_fnum]))-1
+                    # -1 for 1-indexing in matlab and 0-indexing in python
+                    theta = cur_trx['theta'][0,trx_fnum]
+                    assert conf.imsz[0] == conf.imsz[1]
+
+                    frame_in, _ = multiResData.get_patch_trx(frame_in,x,y,theta,conf.imsz[0], np.zeros([2,2]))
+                    frame_in = frame_in[:, :, 0:conf.imgDim]
+                    all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
+
+                xs = PoseTools.adjust_contrast(all_f, conf)
+                xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
+                xs = PoseTools.normalize_mean(xs, self.conf)
+                self.fd[self.ph['x']] = xs
+                self.fd[self.ph['phase_train']] = False
+                pred = sess.run(self.pred, self.fd)
+
+                base_locs = PoseTools.get_base_pred_locs(pred, conf)
+                base_locs = base_locs * conf.unet_rescale
+
+                if return_ims:
+                    ims[ndx_start:ndx_end, trx_ndx,:,:,:] = xs[:ppe,...]
+
+                pred_locs[ndx_start:ndx_end, trx_ndx, :, :] = base_locs[:ppe,...]
+                sys.stdout.write('.')
+                if curl % 20 == 19:
+                    sys.stdout.write('\n')
+
+            sys.stdout.write('\n')
+        cap.close()
+        tf.reset_default_graph()
+        if return_ims:
+            return pred_locs, ims
+        else:
+            return pred_locs
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
         conf = self.conf
