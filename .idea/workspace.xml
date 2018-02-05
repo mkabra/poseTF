@@ -69,8 +69,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="457">
-                  <caret line="838" column="55" lean-forward="false" selection-start-line="838" selection-start-column="55" selection-end-line="838" selection-end-column="55" />
+                <state relative-caret-position="474">
+                  <caret line="677" column="56" lean-forward="false" selection-start-line="677" selection-start-column="56" selection-end-line="677" selection-end-column="56" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1370#1691#0" expanded="false" />
@@ -81,9 +81,9 @@
                     <element signature="e#19994#21698#0" expanded="false" />
                     <element signature="e#21749#23383#0" expanded="false" />
                     <element signature="e#23442#23823#0" expanded="false" />
-                    <element signature="e#35587#38142#0" expanded="false" />
-                    <element signature="e#43003#43966#0" expanded="false" />
-                    <marker date="1517804249890" expanded="false" signature="1086:1298" ph="..." />
+                    <element signature="e#35606#38161#0" expanded="false" />
+                    <element signature="e#43022#43985#0" expanded="false" />
+                    <marker date="1517805104450" expanded="false" signature="1086:1298" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -379,8 +379,8 @@
           <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="350">
-                  <caret line="21" column="44" lean-forward="true" selection-start-line="21" selection-start-column="44" selection-end-line="21" selection-end-column="44" />
+                <state relative-caret-position="357">
+                  <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -910,13 +910,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00044" summary="removing mean normalize for stephen">
-      <created>1515578916007</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1515578916007</updated>
-    </task>
     <task id="LOCAL-00045" summary="redoing mean/contrast normalization exps">
       <created>1515665550388</created>
       <option name="number" value="00045" />
@@ -1253,7 +1246,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517727425310</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="Minor bug fix">
+      <created>1517804291677</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1517804291678</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1348,7 +1348,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="On more thought, earlier offset for mdn locs was correct because of the way striding works in tensorflow." />
     <MESSAGE value="increasing trange for alice." />
     <MESSAGE value="removing normalization for alice." />
     <MESSAGE value="introducing groups of parts in MDN loss computation." />
@@ -1373,7 +1372,8 @@
     <MESSAGE value="Trying the fixed mdn with more mdn layers" />
     <MESSAGE value="Trying out mdn with fixed number of outputs" />
     <MESSAGE value="Added an extra layers for fixed_umdn network to reduce the number of outputs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added an extra layers for fixed_umdn network to reduce the number of outputs" />
+    <MESSAGE value="Minor bug fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1983,14 +1983,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="21" column="44" lean-forward="true" selection-start-line="21" selection-start-column="44" selection-end-line="21" selection-end-column="44" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/movies.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -2001,8 +1993,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="457">
-          <caret line="838" column="55" lean-forward="false" selection-start-line="838" selection-start-column="55" selection-end-line="838" selection-end-column="55" />
+        <state relative-caret-position="474">
+          <caret line="677" column="56" lean-forward="false" selection-start-line="677" selection-start-column="56" selection-end-line="677" selection-end-column="56" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1370#1691#0" expanded="false" />
@@ -2013,10 +2005,18 @@
             <element signature="e#19994#21698#0" expanded="false" />
             <element signature="e#21749#23383#0" expanded="false" />
             <element signature="e#23442#23823#0" expanded="false" />
-            <element signature="e#35587#38142#0" expanded="false" />
-            <element signature="e#43003#43966#0" expanded="false" />
-            <marker date="1517804249890" expanded="false" signature="1086:1298" ph="..." />
+            <element signature="e#35606#38161#0" expanded="false" />
+            <element signature="e#43022#43985#0" expanded="false" />
+            <marker date="1517805104450" expanded="false" signature="1086:1298" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

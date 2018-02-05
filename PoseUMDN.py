@@ -675,7 +675,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         # start at specifies where to start reading.
 
         conf = self.conf
-        cap = movies.Movie(movie_name)
+        cap = movies.Movie(movie_name, interactive=False)
         n_frames = int(cap.get_n_frames())
         T = sio.loadmat(trx)['trx'][0]
         n_trx = len(T)
