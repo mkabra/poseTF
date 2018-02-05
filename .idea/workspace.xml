@@ -40,7 +40,7 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="370">
+                <state relative-caret-position="5610">
                   <caret line="495" column="65" lean-forward="false" selection-start-line="495" selection-start-column="65" selection-end-line="495" selection-end-column="65" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
@@ -69,8 +69,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="168">
-                  <caret line="295" column="0" lean-forward="false" selection-start-line="295" selection-start-column="0" selection-end-line="295" selection-end-column="0" />
+                <state relative-caret-position="457">
+                  <caret line="838" column="55" lean-forward="false" selection-start-line="838" selection-start-column="55" selection-end-line="838" selection-end-column="55" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1370#1691#0" expanded="false" />
@@ -82,9 +82,19 @@
                     <element signature="e#21749#23383#0" expanded="false" />
                     <element signature="e#23442#23823#0" expanded="false" />
                     <element signature="e#35587#38142#0" expanded="false" />
-                    <element signature="e#42985#43948#0" expanded="false" />
-                    <marker date="1517727367454" expanded="false" signature="1086:1298" ph="..." />
+                    <element signature="e#43003#43966#0" expanded="false" />
+                    <marker date="1517804249890" expanded="false" signature="1086:1298" ph="..." />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="movies.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/movies.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="238">
+                  <caret line="48" column="8" lean-forward="false" selection-start-line="48" selection-start-column="8" selection-end-line="48" selection-end-column="8" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -369,8 +379,8 @@
           <file leaf-file-name="scratch_7.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="214">
-                  <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+                <state relative-caret-position="350">
+                  <caret line="21" column="44" lean-forward="true" selection-start-line="21" selection-start-column="44" selection-end-line="21" selection-end-column="44" />
                   <folding />
                 </state>
               </provider>
@@ -401,7 +411,13 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="1377">
                   <caret line="92" column="0" lean-forward="true" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
-                  <folding />
+                  <folding>
+                    <marker date="1517727434055" expanded="true" signature="7169:7188" ph="..." />
+                    <marker date="1517727434055" expanded="true" signature="7217:7230" ph="..." />
+                    <marker date="1517727434055" expanded="true" signature="7869:7914" ph="..." />
+                    <marker date="1517727434055" expanded="true" signature="8160:8179" ph="..." />
+                    <marker date="1517727434055" expanded="true" signature="8208:8221" ph="..." />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -894,13 +910,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00043" summary="bug fix for normalize_mean_img">
-      <created>1515497388699</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1515497388699</updated>
-    </task>
     <task id="LOCAL-00044" summary="removing mean normalize for stephen">
       <created>1515578916007</created>
       <option name="number" value="00044" />
@@ -1237,7 +1246,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517726286638</updated>
     </task>
-    <option name="localTasksCounter" value="92" />
+    <task id="LOCAL-00092" summary="Added an extra layers for fixed_umdn network to reduce the number of outputs">
+      <created>1517727425310</created>
+      <option name="number" value="00092" />
+      <option name="presentableId" value="LOCAL-00092" />
+      <option name="project" value="LOCAL" />
+      <updated>1517727425310</updated>
+    </task>
+    <option name="localTasksCounter" value="93" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1251,12 +1267,13 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="2" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32746956" sideWeight="0.5027668" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253389" sideWeight="0.4972332" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3980317" sideWeight="0.72347265" order="3" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
+      <window_info id="Python Console" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.40240568" sideWeight="0.72347265" order="3" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32638165" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1331,7 +1348,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="changing how the offset is computed to scales locations to match the cell size in poseumdn." />
     <MESSAGE value="On more thought, earlier offset for mdn locs was correct because of the way striding works in tensorflow." />
     <MESSAGE value="increasing trange for alice." />
     <MESSAGE value="removing normalization for alice." />
@@ -1356,7 +1372,8 @@
     <MESSAGE value="Fixed a huge bug with MDN where the lower layers were not being used at all." />
     <MESSAGE value="Trying the fixed mdn with more mdn layers" />
     <MESSAGE value="Trying out mdn with fixed number of outputs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Trying out mdn with fixed number of outputs" />
+    <MESSAGE value="Added an extra layers for fixed_umdn network to reduce the number of outputs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added an extra layers for fixed_umdn network to reduce the number of outputs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1371,11 +1388,6 @@
           <url>file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/edward/util/random_variables.py</url>
           <line>303</line>
           <option name="timeStamp" value="176" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/PoseUMDN.py</url>
-          <line>295</line>
-          <option name="timeStamp" value="291" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-defaults>
@@ -1606,13 +1618,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/movies.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="821">
-          <caret line="964" column="0" lean-forward="false" selection-start-line="964" selection-start-column="0" selection-end-line="964" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/client/session.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="877">
@@ -1740,13 +1745,35 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/myutils.py">
+    <entry file="file://$PROJECT_DIR$/convNetBase.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1105">
-          <caret line="88" column="42" lean-forward="false" selection-start-line="88" selection-start-column="42" selection-end-line="88" selection-end-column="42" />
+        <state relative-caret-position="510">
+          <caret line="53" column="4" lean-forward="false" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5610">
+          <caret line="495" column="65" lean-forward="false" selection-start-line="495" selection-start-column="65" selection-end-line="495" selection-end-column="65" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#0#17#0" expanded="true" />
+            <element signature="e#1104#1617#0" expanded="false" />
+            <element signature="e#1652#2028#0" expanded="false" />
+            <element signature="e#2068#2148#0" expanded="false" />
+            <element signature="e#5998#6033#0" expanded="false" />
+            <element signature="e#11602#13374#0" expanded="false" />
+            <element signature="e#19891#22593#0" expanded="false" />
+            <element signature="e#22812#23450#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/matplotlib/axes/_axes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="311">
+          <caret line="5123" column="0" lean-forward="false" selection-start-line="5123" selection-start-column="0" selection-end-line="5123" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -1898,28 +1925,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
+    <entry file="file://$PROJECT_DIR$/myutils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11543">
-          <caret line="711" column="28" lean-forward="false" selection-start-line="711" selection-start-column="28" selection-end-line="711" selection-end-column="28" />
+        <state relative-caret-position="1105">
+          <caret line="88" column="42" lean-forward="false" selection-start-line="88" selection-start-column="42" selection-end-line="88" selection-end-column="42" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+    <entry file="file://$PROJECT_DIR$/debugMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1377">
-          <caret line="92" column="0" lean-forward="true" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3570">
-          <caret line="221" column="0" lean-forward="false" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
+        <state relative-caret-position="12818">
+          <caret line="754" column="0" lean-forward="false" selection-start-line="754" selection-start-column="0" selection-end-line="754" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1932,58 +1951,58 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debugMDN.py">
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="12818">
-          <caret line="754" column="0" lean-forward="false" selection-start-line="754" selection-start-column="0" selection-end-line="754" selection-end-column="0" />
+        <state relative-caret-position="3570">
+          <caret line="221" column="0" lean-forward="false" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/convNetBase.py">
+    <entry file="file://$PROJECT_DIR$/poseConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="53" column="4" lean-forward="false" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="370">
-          <caret line="495" column="65" lean-forward="false" selection-start-line="495" selection-start-column="65" selection-end-line="495" selection-end-column="65" />
+        <state relative-caret-position="1377">
+          <caret line="92" column="0" lean-forward="true" selection-start-line="92" selection-start-column="0" selection-end-line="92" selection-end-column="0" />
           <folding>
-            <element signature="e#0#17#0" expanded="true" />
-            <element signature="e#1104#1617#0" expanded="false" />
-            <element signature="e#1652#2028#0" expanded="false" />
-            <element signature="e#2068#2148#0" expanded="false" />
-            <element signature="e#5998#6033#0" expanded="false" />
-            <element signature="e#11602#13374#0" expanded="false" />
-            <element signature="e#19891#22593#0" expanded="false" />
-            <element signature="e#22812#23450#0" expanded="false" />
+            <marker date="1517727434055" expanded="true" signature="7169:7188" ph="..." />
+            <marker date="1517727434055" expanded="true" signature="7217:7230" ph="..." />
+            <marker date="1517727434055" expanded="true" signature="7869:7914" ph="..." />
+            <marker date="1517727434055" expanded="true" signature="8160:8179" ph="..." />
+            <marker date="1517727434055" expanded="true" signature="8208:8221" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/matplotlib/axes/_axes.py">
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="5123" column="0" lean-forward="false" selection-start-line="5123" selection-start-column="0" selection-end-line="5123" selection-end-column="0" />
+        <state relative-caret-position="11543">
+          <caret line="711" column="28" lean-forward="false" selection-start-line="711" selection-start-column="28" selection-end-line="711" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="214">
-          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+        <state relative-caret-position="350">
+          <caret line="21" column="44" lean-forward="true" selection-start-line="21" selection-start-column="44" selection-end-line="21" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/movies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="48" column="8" lean-forward="false" selection-start-line="48" selection-start-column="8" selection-end-line="48" selection-end-column="8" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="295" column="0" lean-forward="false" selection-start-line="295" selection-start-column="0" selection-end-line="295" selection-end-column="0" />
+        <state relative-caret-position="457">
+          <caret line="838" column="55" lean-forward="false" selection-start-line="838" selection-start-column="55" selection-end-line="838" selection-end-column="55" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1370#1691#0" expanded="false" />
@@ -1995,8 +2014,8 @@
             <element signature="e#21749#23383#0" expanded="false" />
             <element signature="e#23442#23823#0" expanded="false" />
             <element signature="e#35587#38142#0" expanded="false" />
-            <element signature="e#42985#43948#0" expanded="false" />
-            <marker date="1517727367454" expanded="false" signature="1086:1298" ph="..." />
+            <element signature="e#43003#43966#0" expanded="false" />
+            <marker date="1517804249890" expanded="false" signature="1086:1298" ph="..." />
           </folding>
         </state>
       </provider>

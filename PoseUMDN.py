@@ -836,7 +836,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
         tdir = tempfile.mkdtemp()
 
-        cap = movies.Movie(movie_name)
+        cap = movies.Movie(movie_name,interactive=False)
         T = sio.loadmat(trx)['trx'][0]
         n_trx = len(T)
 
