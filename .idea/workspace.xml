@@ -69,8 +69,8 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="474">
-                  <caret line="677" column="56" lean-forward="false" selection-start-line="677" selection-start-column="56" selection-end-line="677" selection-end-column="56" />
+                <state relative-caret-position="542">
+                  <caret line="912" column="39" lean-forward="false" selection-start-line="912" selection-start-column="39" selection-end-line="912" selection-end-column="39" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1370#1691#0" expanded="false" />
@@ -83,7 +83,7 @@
                     <element signature="e#23442#23823#0" expanded="false" />
                     <element signature="e#35606#38161#0" expanded="false" />
                     <element signature="e#43022#43985#0" expanded="false" />
-                    <marker date="1517805104450" expanded="false" signature="1086:1298" ph="..." />
+                    <marker date="1517808666972" expanded="false" signature="1086:1298" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -910,13 +910,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00045" summary="redoing mean/contrast normalization exps">
-      <created>1515665550388</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1515665550388</updated>
-    </task>
     <task id="LOCAL-00046" summary="redoing mean/contrast normalization exps">
       <created>1515665701855</created>
       <option name="number" value="00046" />
@@ -1253,7 +1246,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517804291678</updated>
     </task>
-    <option name="localTasksCounter" value="94" />
+    <task id="LOCAL-00094" summary="Minor bug fix">
+      <created>1517805111953</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1517805111953</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1991,10 +1991,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="474">
-          <caret line="677" column="56" lean-forward="false" selection-start-line="677" selection-start-column="56" selection-end-line="677" selection-end-column="56" />
+        <state relative-caret-position="542">
+          <caret line="912" column="39" lean-forward="false" selection-start-line="912" selection-start-column="39" selection-end-line="912" selection-end-column="39" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1370#1691#0" expanded="false" />
@@ -2007,16 +2015,8 @@
             <element signature="e#23442#23823#0" expanded="false" />
             <element signature="e#35606#38161#0" expanded="false" />
             <element signature="e#43022#43985#0" expanded="false" />
-            <marker date="1517805104450" expanded="false" signature="1086:1298" ph="..." />
+            <marker date="1517808666972" expanded="false" signature="1086:1298" ph="..." />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>

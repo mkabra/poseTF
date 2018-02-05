@@ -908,7 +908,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 ax1.scatter(curlocs[ :, 0]*sc - c_x + x +hsz_s,
                             curlocs[ :, 1]*sc - c_y + y + hsz_s,
                     c=color*0.9, linewidths=0,
-                    edgecolors='face',marker='+',s=15)
+                    edgecolors='face',marker='+',s=30)
                 if trace:
                     for ndx in range(conf.n_classes):
                         curc = color[ndx,:].copy()
