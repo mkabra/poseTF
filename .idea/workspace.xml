@@ -4,7 +4,7 @@
     <bookmark url="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" line="395" mnemonic="0" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="changing fixed network to fully-connected network in MDN">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
     </list>
@@ -69,24 +69,23 @@
           <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="289">
-                  <caret line="431" column="0" lean-forward="false" selection-start-line="431" selection-start-column="0" selection-end-line="431" selection-end-column="0" />
+                <state relative-caret-position="461">
+                  <caret line="313" column="43" lean-forward="true" selection-start-line="313" selection-start-column="43" selection-end-line="313" selection-end-column="43" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1370#1691#0" expanded="false" />
                     <element signature="e#1726#2184#0" expanded="false" />
-                    <element signature="e#14381#14424#0" expanded="false" />
-                    <element signature="e#17765#17808#0" expanded="false" />
-                    <element signature="e#20098#20141#0" expanded="false" />
-                    <element signature="e#21463#21563#0" expanded="false" />
-                    <element signature="e#21595#21691#0" expanded="false" />
-                    <element signature="e#21750#22125#0" expanded="false" />
-                    <element signature="e#22164#23868#0" expanded="false" />
-                    <element signature="e#23919#25553#0" expanded="false" />
-                    <element signature="e#25612#25993#0" expanded="false" />
-                    <element signature="e#37776#40331#0" expanded="false" />
-                    <element signature="e#45192#46155#0" expanded="false" />
-                    <marker date="1517910179157" expanded="false" signature="1086:1298" ph="..." />
+                    <element signature="e#17842#17885#0" expanded="false" />
+                    <element signature="e#20175#20218#0" expanded="false" />
+                    <element signature="e#21540#21640#0" expanded="false" />
+                    <element signature="e#21672#21768#0" expanded="false" />
+                    <element signature="e#21827#22202#0" expanded="false" />
+                    <element signature="e#22241#23945#0" expanded="false" />
+                    <element signature="e#23996#25630#0" expanded="false" />
+                    <element signature="e#25689#26070#0" expanded="false" />
+                    <element signature="e#37853#40408#0" expanded="false" />
+                    <element signature="e#45269#46232#0" expanded="false" />
+                    <marker date="1517910637240" expanded="false" signature="1086:1298" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -918,13 +917,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00047" summary="bug fix with mean normalization. Earlier mean were normalized before rescaling. This meant the float64 were converted back to ints. Now normalization is done after scaling.">
-      <created>1515670719631</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1515670719632</updated>
-    </task>
     <task id="LOCAL-00048" summary="done with mean normalization and contrast norm exps. using both is the best">
       <created>1515756124593</created>
       <option name="number" value="00048" />
@@ -1261,7 +1253,14 @@
       <option name="project" value="LOCAL" />
       <updated>1517808723100</updated>
     </task>
-    <option name="localTasksCounter" value="96" />
+    <task id="LOCAL-00096" summary="changing fixed network to fully-connected network in MDN">
+      <created>1517910245638</created>
+      <option name="number" value="00096" />
+      <option name="presentableId" value="LOCAL-00096" />
+      <option name="project" value="LOCAL" />
+      <updated>1517910245639</updated>
+    </task>
+    <option name="localTasksCounter" value="97" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1280,7 +1279,7 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32746956" sideWeight="0.5027668" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253389" sideWeight="0.4972332" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.40677965" sideWeight="0.72347265" order="3" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
+      <window_info id="Python Console" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.40677965" sideWeight="0.72347265" order="3" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32638165" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -1355,7 +1354,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="increasing trange for alice." />
     <MESSAGE value="removing normalization for alice." />
     <MESSAGE value="introducing groups of parts in MDN loss computation." />
     <MESSAGE value="updated distance comptation for part-groups in MDN" />
@@ -1380,7 +1378,8 @@
     <MESSAGE value="Trying out mdn with fixed number of outputs" />
     <MESSAGE value="Added an extra layers for fixed_umdn network to reduce the number of outputs" />
     <MESSAGE value="Minor bug fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fix" />
+    <MESSAGE value="changing fixed network to fully-connected network in MDN" />
+    <option name="LAST_COMMIT_MESSAGE" value="changing fixed network to fully-connected network in MDN" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1398,7 +1397,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/PoseUMDN.py</url>
-          <line>431</line>
+          <line>433</line>
           <option name="timeStamp" value="294" />
         </line-breakpoint>
       </breakpoints>
@@ -2005,24 +2004,23 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="431" column="0" lean-forward="false" selection-start-line="431" selection-start-column="0" selection-end-line="431" selection-end-column="0" />
+        <state relative-caret-position="461">
+          <caret line="313" column="43" lean-forward="true" selection-start-line="313" selection-start-column="43" selection-end-line="313" selection-end-column="43" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1370#1691#0" expanded="false" />
             <element signature="e#1726#2184#0" expanded="false" />
-            <element signature="e#14381#14424#0" expanded="false" />
-            <element signature="e#17765#17808#0" expanded="false" />
-            <element signature="e#20098#20141#0" expanded="false" />
-            <element signature="e#21463#21563#0" expanded="false" />
-            <element signature="e#21595#21691#0" expanded="false" />
-            <element signature="e#21750#22125#0" expanded="false" />
-            <element signature="e#22164#23868#0" expanded="false" />
-            <element signature="e#23919#25553#0" expanded="false" />
-            <element signature="e#25612#25993#0" expanded="false" />
-            <element signature="e#37776#40331#0" expanded="false" />
-            <element signature="e#45192#46155#0" expanded="false" />
-            <marker date="1517910179157" expanded="false" signature="1086:1298" ph="..." />
+            <element signature="e#17842#17885#0" expanded="false" />
+            <element signature="e#20175#20218#0" expanded="false" />
+            <element signature="e#21540#21640#0" expanded="false" />
+            <element signature="e#21672#21768#0" expanded="false" />
+            <element signature="e#21827#22202#0" expanded="false" />
+            <element signature="e#22241#23945#0" expanded="false" />
+            <element signature="e#23996#25630#0" expanded="false" />
+            <element signature="e#25689#26070#0" expanded="false" />
+            <element signature="e#37853#40408#0" expanded="false" />
+            <element signature="e#45269#46232#0" expanded="false" />
+            <marker date="1517910637240" expanded="false" signature="1086:1298" ph="..." />
           </folding>
         </state>
       </provider>

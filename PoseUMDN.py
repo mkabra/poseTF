@@ -311,6 +311,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
             locs = tf.contrib.layers.fully_connected(
                 mdn_l, k_fc*n_out*2, activation_fn=None)
+            offset= np.mean(self.conf.imsz)
+            locs = locs * offset
             locs = tf.reshape(locs,[-1,k_fc,n_out,2])
 
                 #     kernel_shape = [1, 1, n_filt, n_filt]
