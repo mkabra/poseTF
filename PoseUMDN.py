@@ -236,6 +236,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2 # this is the number of final gaussians.
+        k_fc = 10
         n_layers_u = len(self.dep_nets.up_layers)
         min_im_sz = min(self.conf.imsz)
         extra_layers = math.floor(np.log2(min_im_sz)) - n_layers_u - 1
@@ -296,69 +297,71 @@ class PoseUMDN(PoseCommon.PoseCommon):
         X_sz = min(X.get_shape().as_list()[1:3])
         assert (X_sz >= 2) and (X_sz<4), 'The net has been reduced too much or not too much'
 
-        # few more convolution for the outputs
-        n_filt = X.get_shape().as_list()[3]
+        # fully connected layers
+        with tf.variable_scope('fc'):
+            X = tf.contrib.layers.flatten(X)
+            X = tf.contrib.layers.fully_connected(
+                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+
         with tf.variable_scope('locs'):
             with tf.variable_scope('layer_locs'):
-                kernel_shape = [1, 1, n_filt, n_filt]
-                weights = tf.get_variable("weights", kernel_shape,
-                                          initializer=tf.contrib.layers.xavier_initializer())
-                biases = tf.get_variable("biases", kernel_shape[-1],
-                                         initializer=tf.constant_initializer(0))
-                conv_l = tf.nn.conv2d(X, weights,
-                                    strides=[1, 1, 1, 1], padding='SAME')
-                conv_l = batch_norm(conv_l, decay=0.99,
-                                  is_training=self.ph['phase_train'])
-            mdn_l = tf.nn.relu(conv_l + biases)
+                mdn_l = tf.contrib.layers.fully_connected(
+                    X, n_filt * 2, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
 
-            weights_locs = tf.get_variable("weights_locs", [1, 1, n_filt, 2 * k * n_out],
-                                           initializer=tf.contrib.layers.xavier_initializer())
-            biases_locs = tf.get_variable("biases_locs", 2 * k * n_out,
-                                          initializer=tf.constant_initializer(0))
-            o_locs = tf.nn.conv2d(mdn_l, weights_locs,
-                                  [1, 1, 1, 1], padding='SAME') + biases_locs
+            locs = tf.contrib.layers.fully_connected(
+                mdn_l, k_fc*n_out*2, activation_fn=None)
+            locs = tf.reshape(locs,[-1,k_fc,n_out,2])
 
-            loc_shape = o_locs.get_shape().as_list()
-            n_x = loc_shape[2]
-            n_y = loc_shape[1]
-            o_locs = tf.reshape(o_locs,[-1, n_y, n_x, k, n_out, 2])
-            # when initialized o_locs will be centered around 0 with var 1.
-            # with multiplying grid_size/2, o_locs will have variance grid_size/2
-            # with adding grid_size/2, o_locs initially will be centered
-            # in the center of the grid.
-            o_locs *= locs_offset/2
-            o_locs += locs_offset/2
-
-            # adding offset of each grid location.
-            x_off, y_off = np.meshgrid(np.arange(loc_shape[2]), np.arange(loc_shape[1]))
-            x_off = x_off * locs_offset
-            y_off = y_off * locs_offset
-            x_off = x_off[np.newaxis,:,:,np.newaxis,np.newaxis]
-            y_off = y_off[np.newaxis,:,:,np.newaxis,np.newaxis]
-            x_locs = o_locs[:,:,:,:,:,0] + x_off
-            y_locs = o_locs[:,:,:,:,:,1] + y_off
-            o_locs = tf.stack([x_locs, y_locs], axis=5)
-            locs = tf.reshape(o_locs,[-1, n_x*n_y*k,n_out,2])
-
+                #     kernel_shape = [1, 1, n_filt, n_filt]
+            #     weights = tf.get_variable("weights", kernel_shape,
+            #                               initializer=tf.contrib.layers.xavier_initializer())
+            #     biases = tf.get_variable("biases", kernel_shape[-1],
+            #                              initializer=tf.constant_initializer(0))
+            #     conv_l = tf.nn.conv2d(X, weights,
+            #                         strides=[1, 1, 1, 1], padding='SAME')
+            #     conv_l = batch_norm(conv_l, decay=0.99,
+            #                       is_training=self.ph['phase_train'])
+            # mdn_l = tf.nn.relu(conv_l + biases)
+            #
+            # weights_locs = tf.get_variable("weights_locs", [1, 1, n_filt, 2 * k * n_out],
+            #                                initializer=tf.contrib.layers.xavier_initializer())
+            # biases_locs = tf.get_variable("biases_locs", 2 * k * n_out,
+            #                               initializer=tf.constant_initializer(0))
+            # o_locs = tf.nn.conv2d(mdn_l, weights_locs,
+            #                       [1, 1, 1, 1], padding='SAME') + biases_locs
+            #
+            # loc_shape = o_locs.get_shape().as_list()
+            # n_x = loc_shape[2]
+            # n_y = loc_shape[1]
+            # o_locs = tf.reshape(o_locs,[-1, n_y, n_x, k, n_out, 2])
+            # # when initialized o_locs will be centered around 0 with var 1.
+            # # with multiplying grid_size/2, o_locs will have variance grid_size/2
+            # # with adding grid_size/2, o_locs initially will be centered
+            # # in the center of the grid.
+            # o_locs *= locs_offset/2
+            # o_locs += locs_offset/2
+            #
+            # # adding offset of each grid location.
+            # x_off, y_off = np.meshgrid(np.arange(loc_shape[2]), np.arange(loc_shape[1]))
+            # x_off = x_off * locs_offset
+            # y_off = y_off * locs_offset
+            # x_off = x_off[np.newaxis,:,:,np.newaxis,np.newaxis]
+            # y_off = y_off[np.newaxis,:,:,np.newaxis,np.newaxis]
+            # x_locs = o_locs[:,:,:,:,:,0] + x_off
+            # y_locs = o_locs[:,:,:,:,:,1] + y_off
+            # o_locs = tf.stack([x_locs, y_locs], axis=5)
+            # locs = tf.reshape(o_locs,[-1, n_x*n_y*k,n_out,2])
+            #
         with tf.variable_scope('scales'):
             with tf.variable_scope('layer_scales'):
-                kernel_shape = [1, 1, n_filt, n_filt]
-                weights = tf.get_variable("weights", kernel_shape,
-                                          initializer=tf.contrib.layers.xavier_initializer())
-                biases = tf.get_variable("biases", kernel_shape[-1],
-                                         initializer=tf.constant_initializer(0))
-                conv = tf.nn.conv2d(X, weights,
-                                    strides=[1, 1, 1, 1], padding='SAME')
-                conv = batch_norm(conv, decay=0.99,
-                                  is_training=self.ph['phase_train'])
-            mdn_l = tf.nn.relu(conv + biases)
+                mdn_s = tf.contrib.layers.fully_connected(
+                    X, n_filt * 2, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
 
-            weights_scales = tf.get_variable("weights_scales", [1, 1, n_filt, k * n_out],
-                                           initializer=tf.contrib.layers.xavier_initializer())
-            biases_scales = tf.get_variable("biases_scales", k * self.conf.n_classes,
-                                          initializer=tf.constant_initializer(0))
-            o_scales = tf.exp(tf.nn.conv2d(mdn_l, weights_scales,
-                                  [1, 1, 1, 1], padding='SAME') + biases_scales)
+            o_scales = tf.contrib.layers.fully_connected(
+                mdn_s, k_fc * n_out, activation_fn = None)
+            o_scales = tf.exp(o_scales)
             # when initialized o_scales will be centered around exp(0) and
             # mostly between [exp(-1), exp(1)] = [0.3 2.7]
             # so adding appropriate offsets to make it lie between the wanted range
@@ -367,30 +370,64 @@ class PoseUMDN(PoseCommon.PoseCommon):
             o_scales = (o_scales-1) * (max_sig-min_sig)/2
             o_scales = o_scales + (max_sig-min_sig)/2 + min_sig
             scales = tf.minimum(max_sig, tf.maximum(min_sig, o_scales))
-            scales = tf.reshape(scales, [-1, n_x*n_y,k,n_out])
-            scales = tf.reshape(scales,[-1, n_x*n_y*k,n_out])
+            scales = tf.reshape(scales, [-1, k_fc, n_out])
+
+            #     kernel_shape = [1, 1, n_filt, n_filt]
+            #     weights = tf.get_variable("weights", kernel_shape,
+            #                               initializer=tf.contrib.layers.xavier_initializer())
+            #     biases = tf.get_variable("biases", kernel_shape[-1],
+            #                              initializer=tf.constant_initializer(0))
+            #     conv = tf.nn.conv2d(X, weights,
+            #                         strides=[1, 1, 1, 1], padding='SAME')
+            #     conv = batch_norm(conv, decay=0.99,
+            #                       is_training=self.ph['phase_train'])
+            # mdn_l = tf.nn.relu(conv + biases)
+            #
+            # weights_scales = tf.get_variable("weights_scales", [1, 1, n_filt, k * n_out],
+            #                                initializer=tf.contrib.layers.xavier_initializer())
+            # biases_scales = tf.get_variable("biases_scales", k * self.conf.n_classes,
+            #                               initializer=tf.constant_initializer(0))
+            # o_scales = tf.exp(tf.nn.conv2d(mdn_l, weights_scales,
+            #                       [1, 1, 1, 1], padding='SAME') + biases_scales)
+            # # when initialized o_scales will be centered around exp(0) and
+            # # mostly between [exp(-1), exp(1)] = [0.3 2.7]
+            # # so adding appropriate offsets to make it lie between the wanted range
+            # min_sig = self.conf.mdn_min_sigma
+            # max_sig = self.conf.mdn_max_sigma
+            # o_scales = (o_scales-1) * (max_sig-min_sig)/2
+            # o_scales = o_scales + (max_sig-min_sig)/2 + min_sig
+            # scales = tf.minimum(max_sig, tf.maximum(min_sig, o_scales))
+            # scales = tf.reshape(scales, [-1, n_x*n_y,k,n_out])
+            # scales = tf.reshape(scales,[-1, n_x*n_y*k,n_out])
 
         with tf.variable_scope('logits'):
             with tf.variable_scope('layer_logits'):
-                kernel_shape = [1, 1, n_filt, n_filt]
-                weights = tf.get_variable("weights", kernel_shape,
-                                          initializer=tf.contrib.layers.xavier_initializer())
-                biases = tf.get_variable("biases", kernel_shape[-1],
-                                         initializer=tf.constant_initializer(0))
-                conv = tf.nn.conv2d(X, weights,
-                                    strides=[1, 1, 1, 1], padding='SAME')
-                conv = batch_norm(conv, decay=0.99,
-                                  is_training=self.ph['phase_train'])
-            mdn_l = tf.nn.relu(conv + biases)
+                mdn_w = tf.contrib.layers.fully_connected(
+                    X, n_filt * 2, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
 
-            weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
-                                           initializer=tf.contrib.layers.xavier_initializer())
-            biases_logits = tf.get_variable("biases_logits",
-                    k * n_groups ,initializer=tf.constant_initializer(0))
-            logits = tf.nn.conv2d(mdn_l, weights_logits,
-                                  [1, 1, 1, 1], padding='SAME') + biases_logits
-            logits = tf.reshape(logits, [-1, n_x * n_y, k * n_groups])
-            logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
+            logits = tf.contrib.layers.fully_connected(
+                mdn_w, k_fc*n_groups, activation_fn=None)
+            logits = tf.reshape(logits,[-1,k_fc,n_groups])
+            #     kernel_shape = [1, 1, n_filt, n_filt]
+            #     weights = tf.get_variable("weights", kernel_shape,
+            #                               initializer=tf.contrib.layers.xavier_initializer())
+            #     biases = tf.get_variable("biases", kernel_shape[-1],
+            #                              initializer=tf.constant_initializer(0))
+            #     conv = tf.nn.conv2d(X, weights,
+            #                         strides=[1, 1, 1, 1], padding='SAME')
+            #     conv = batch_norm(conv, decay=0.99,
+            #                       is_training=self.ph['phase_train'])
+            # mdn_l = tf.nn.relu(conv + biases)
+            #
+            # weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
+            #                                initializer=tf.contrib.layers.xavier_initializer())
+            # biases_logits = tf.get_variable("biases_logits",
+            #         k * n_groups ,initializer=tf.constant_initializer(0))
+            # logits = tf.nn.conv2d(mdn_l, weights_logits,
+            #                       [1, 1, 1, 1], padding='SAME') + biases_logits
+            # logits = tf.reshape(logits, [-1, n_x * n_y, k * n_groups])
+            # logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
 
         return [locs,scales,logits]
 
