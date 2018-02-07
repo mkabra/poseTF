@@ -1144,3 +1144,9 @@ def show_result(ims, ndx, locs, predlocs= None):
         if predlocs is not None:
             ax[idx].scatter(predlocs[ndx[idx], :, 0], predlocs[ndx[idx], :, 1],
                             c=rgba, marker='+')
+
+def output_graph(logdir):
+    sess = tf.get_default_session()
+    train_writer = tf.summary.FileWriter(
+        logdir,sess.graph)
+    train_writer.add_summary(None)

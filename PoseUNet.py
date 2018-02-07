@@ -87,16 +87,12 @@ class PoseUNet(PoseCommon.PoseCommon):
         for ndx in range(n_layers):
             if ndx is 0:
                 n_filt = 64 #32
-                keep_prob = None
             elif ndx is 1:
                 n_filt = 128 #64
-                keep_prob = None
             elif ndx is 2:
                 n_filt = 256
-                keep_prob = self.ph['keep_prob']
             else:
                 n_filt = 512 #128
-                keep_prob = self.ph['keep_prob']
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
@@ -130,16 +126,12 @@ class PoseUNet(PoseCommon.PoseCommon):
             #     n_filt = 128
             if ndx is 0:
                 n_filt = 64  # 32
-                keep_prob = None
             elif ndx is 1:
                 n_filt = 128  # 64
-                keep_prob = None
             elif ndx is 2:
                 n_filt = 256
-                keep_prob = self.ph['keep_prob']
             else:
                 n_filt = 512  # 128
-                keep_prob = self.ph['keep_prob']
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
             for cndx in range(n_conv):
@@ -598,3 +590,134 @@ class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 
     def create_cursors(self, sess):
         PoseCommon.PoseCommonMulti.create_cursors(self,sess)
+
+
+class PoseUNetTime(PoseUNet):
+    def __init__(self,conf,name='pose_unet_time'):
+        PoseUNet.__init__(self,conf.name)
+        self.net_name = 'pose_unet_time'
+
+    def create_ph(self):
+        PoseCommon.PoseCommon.create_ph(self)
+        imsz = self.conf.imsz
+        rescale = self.conf.unet_rescale
+        b_sz = self.conf.batch_size
+        t_sz = self.conf.time_window_size*2 +1
+        self.ph['x'] = tf.placeholder(tf.float32,
+                           [b_sz*t_sz,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
+                           name='x')
+        self.ph['y'] = tf.placeholder(tf.float32,
+                           [b_sz,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
+                           name='y')
+        self.ph['keep_prob'] = tf.placeholder(tf.float32)
+
+    def create_fd(self):
+        b_sz = self.conf.batch_size
+        t_sz = self.conf.time_window_size*2 +1
+        x_shape = [b_sz*t_sz,] + self.ph['x'].get_shape().as_list()[1:]
+        y_shape = [b_sz,] + self.ph['y'].get_shape().as_list()[1:]
+        self.fd = {self.ph['x']:np.zeros(x_shape),
+                   self.ph['y']:np.zeros(y_shape),
+                   self.ph['phase_train']:False,
+                   self.ph['learning_rate']:0.
+                   }
+
+    def create_network1(self):
+        m_sz = min(self.conf.imsz)/self.conf.unet_rescale
+        max_layers = int(math.ceil(math.log(m_sz,2)))-1
+        sel_sz = self.conf.sel_sz
+        n_layers = int(math.ceil(math.log(sel_sz,2)))+2
+        # max_layers = int(math.floor(math.log(m_sz)))
+        # sel_sz = self.conf.sel_sz
+        # n_layers = int(math.ceil(math.log(sel_sz)))+2
+        n_layers = min(max_layers,n_layers) - 2
+
+        n_conv = 2
+        conv = PoseCommon.conv_relu3
+        layers = []
+        up_layers = []
+        layers_sz = []
+        X = self.ph['x']
+        n_out = self.conf.n_classes
+        debug_layers = []
+
+        # downsample
+        for ndx in range(n_layers):
+            if ndx is 0:
+                n_filt = 64
+            elif ndx is 1:
+                n_filt = 128
+            elif ndx is 2:
+                n_filt = 256
+            else:
+                n_filt = 512
+
+            for cndx in range(n_conv):
+                sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                debug_layers.append(X)
+            layers.append(X)
+            layers_sz.append(X.get_shape().as_list()[1:3])
+            X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
+                               padding='SAME')
+
+        self.down_layers = layers
+        self.debug_layers = debug_layers
+        for cndx in range(n_conv):
+            sc_name = 'layer_{}_{}'.format(n_layers,cndx)
+            with tf.variable_scope(sc_name):
+                X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+
+        # upsample
+        for ndx in reversed(range(n_layers)):
+            if ndx is 0:
+                n_filt = 64
+            elif ndx is 1:
+                n_filt = 128
+            elif ndx is 2:
+                n_filt = 256
+            else:
+                n_filt = 512
+            X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
+
+            if ndx>1:
+            # rotate X along axis-0 and concat to provide context context along previous time steps.
+                X_prev = []
+                X_next = []
+                for t in range(self.conf.time_window_size):
+                    if not X_prev:
+                        X_prev_cur = tf.concat([X[1:,...],X[0,...]],axis=0)
+                        X_prev.append(X_prev_cur)
+                        X_next_cur = tf.concat([X[-1,...],X[:-1,...]],axis=0)
+                        X_next.append(X_next_cur)
+                    else:
+                        Z = X_prev[-1]
+                        X_prev_cur = tf.concat([Z[1:,...],Z[0,...]],axis=0)
+                        X_prev.append(X_prev_cur)
+                        Z = X_next[-1]
+                        X_next_cur = tf.concat([Z[-1,...],Z[:-1,...]],axis=0)
+                        X_next.append(X_next_cur)
+
+                X = tf.concat( X_next + [X, ]+ X_prev, axis = 3)
+
+            X = tf.concat([X,layers[ndx]], axis=3)
+            for cndx in range(n_conv):
+                sc_name = 'layerup_{}_{}'.format(ndx, cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+            up_layers.append(X)
+        self.up_layers = up_layers
+
+        # final conv
+        weights = tf.get_variable("out_weights", [3,3,n_filt,n_out],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("out_biases", n_out,
+                                 initializer=tf.constant_initializer(0.))
+        conv = tf.nn.conv2d(X, weights, strides=[1, 1, 1, 1], padding='SAME')
+        X = conv + biases
+
+        t_sz = self.conf.time_window_size
+        s_sz = 2*t_sz+1
+        X = X[t_sz::s_sz,...]
+        return X

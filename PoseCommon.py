@@ -650,3 +650,4 @@ class PoseCommonMulti(PoseCommon):
         val_locs = val_reshape(val_locs)
 
         return val_dist, val_ims, val_preds, val_locs
+
