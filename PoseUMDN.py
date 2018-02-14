@@ -302,6 +302,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
             X = tf.contrib.layers.flatten(X)
             X = tf.contrib.layers.fully_connected(
                 X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+            X = tf.contrib.layers.fully_connected(
+                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+            X = tf.contrib.layers.fully_connected(
+                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
 
         with tf.variable_scope('locs'):
             with tf.variable_scope('layer_locs'):

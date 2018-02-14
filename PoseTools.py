@@ -31,7 +31,7 @@ from scipy import io
 # import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm
-
+import json
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -1150,3 +1150,65 @@ def output_graph(logdir):
     train_writer = tf.summary.FileWriter(
         logdir,sess.graph)
     train_writer.add_summary(None)
+
+def get_timestamps(conf, info):
+    L = h5py.File(conf.labelfile)
+    pts = L['labeledposTS']
+    ts_array  = []
+    for ndx in range(pts.shape[1]):
+        idx = np.array(L[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
+        val = np.array(L[pts[0, ndx]]['val'])[0, :] - 1
+        sz = np.array(L[pts[0, ndx]]['size'])[:, 0].astype('int')
+        Y = np.zeros(sz).flatten()
+        Y[idx] = val
+        Y = Y.reshape(np.flipud(sz))
+        ts_array.append(Y)
+
+    ts = np.zeros(info.shape[0:1])
+    for ndx in range(info.shape[0]):
+        cur_exp = info[ndx, 0].astype('int')
+        cur_t = info[ndx,1].astype('int')
+        cur_ts = ts_array[cur_exp][:,cur_t,:].max()
+        ts[ndx] = cur_ts
+
+    return ts
+
+
+def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None):
+
+    # alice example category
+    skeleton = [ [1,2],[1,3],[2,5],[3,4],[1,6],[6,7],[6,8],[6,10],[8,9],[10,11],[5,12],[9,13],[6,14],[6,15],[11,16],[4,17]]
+    names = ['head','lneck','rneck','rshld','lshld','thrx','tail','lelb','lmid','relb','rmid','lfront','lmid','lrear','rrear','rmid','rfront']
+    categories = [{'id': 1, 'skeleton': skeleton, 'keypoints': names, 'super_category': 'fly', 'name': 'fly'}]
+
+    queue = tf.train.string_input_producer([db_file])
+    data = multiResData.read_and_decode(queue, conf)
+    n_records = count_records(db_file)
+
+    bbox = [0,0,0,conf.imsz[0],conf.imsz[1],conf.imsz[0],conf.imsz[1],0]
+    area = conf.imsz[0]*conf.imsz[1]
+    with tf.Session() as sess:
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+        ann = {'images':[], 'info':[], 'annotations':[],'categories':categories}
+        for ndx in range(n_records):
+            cur_im, cur_locs, cur_info = sess.run(data)
+            im_name = '{:012d}.png'.format(ndx)
+            misc.imsave(os.path.join(img_dir, im_name),cur_im)
+
+            ann['images'].append({'id':ndx, 'width':conf.imsz[1], 'height':conf.imsz[0], 'file_name':im_name})
+            ann['annotations'].append({'iscrowd':0,'segmentation':[bbox],'area':area,'image_id':ndx, 'id':ndx,'num_keypoints':conf.n_classes,'bbox':bbox,'keypoints':cur_locs.flatten().tolist(),'category_id':1})
+
+
+
+        coord.request_stop()
+        coord.join(threads)
+    with open(out_file,'w') as f:
+        json.dump(ann, f)
+    # code to show skeleton.
+    # plt.figure();
+    # plt.imshow(cur_im, 'gray')
+    # for b in skeleton:
+    #     a = np.array(b) - 1
+    #     plt.plot(cur_locs[a, 0], cur_locs[a, 1])
