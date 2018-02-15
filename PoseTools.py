@@ -180,7 +180,7 @@ def crop_images(frame_in, conf):
 #     return images,locs
 
 
-def randomly_flip_lr(img, locs):
+def randomly_flip_lr(img, locs, group_sz = 1):
     if locs.ndim == 3:
         reduce_dim = True
         locs = locs[:,np.newaxis,...]
@@ -188,17 +188,20 @@ def randomly_flip_lr(img, locs):
         reduce_dim = False
 
     num = img.shape[0]
-    for ndx in range(num):
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
         jj = np.random.randint(2)
         if jj > 0.5:
-            img[ndx, ...] = img[ndx, :, ::-1, :]
-            locs[ndx, :, :, 0] = img.shape[3] - locs[ndx, :, :, 0]
+            img[st:en, ...] = img[st:en, :, ::-1, :]
+            locs[st:en, :, :, 0] = img.shape[3] - locs[st:en, :, :, 0]
 
     locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
 
 
-def randomly_flip_ud(img, locs):
+def randomly_flip_ud(img, locs,group_sz = 1):
     if locs.ndim == 3:
         reduce_dim = True
         locs = locs[:,np.newaxis,...]
@@ -206,16 +209,19 @@ def randomly_flip_ud(img, locs):
         reduce_dim = False
 
     num = img.shape[0]
-    for ndx in range(num):
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
         jj = np.random.randint(2)
         if jj > 0.5:
-            img[ndx, ...] = img[ndx, ::-1, : ,: ]
-            locs[ndx, :, :, 1] = img.shape[2] - locs[ndx, :, : , 1]
+            img[st:en, ...] = img[st:en, ::-1, : ,: ]
+            locs[st:en, :, :, 1] = img.shape[2] - locs[st:en, :, : , 1]
     locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
 
 
-def randomly_translate(img, locs, conf):
+def randomly_translate(img, locs, conf, group_sz = 1):
     if conf.trange < 1:
         return img, locs
 
@@ -227,15 +233,18 @@ def randomly_translate(img, locs, conf):
 
     num = img.shape[0]
     rows, cols = img.shape[1:3]
-    for ndx in range(num):
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
         orig_locs = copy.deepcopy(locs[ndx, ...])
-        orig_im = copy.deepcopy(img[ndx, ...])
+        orig_im = copy.deepcopy(img[st:en, ...])
         sane = False
         do_move = True
 
         count = 0
         ll = orig_locs.copy()
-        ii = orig_im.copy()
+        out_ii = orig_im.copy()
         while not sane:
             valid = np.invert(np.isnan(orig_locs[:, :, 0]))
             dx = np.random.randint(-conf.trange, conf.trange)
@@ -259,19 +268,21 @@ def randomly_translate(img, locs, conf):
 
             # else:
             #                 print 'not sane {}'.format(count)
-            ii = copy.deepcopy(orig_im)
             mat = np.float32([[1, 0, dx], [0, 1, dy]])
-            ii = cv2.warpAffine(ii, mat, (cols, rows))
-            if ii.ndim == 2:
-                ii = ii[..., np.newaxis]
+            for g in group_sz:
+                ii = copy.deepcopy(orig_im[g,...])
+                ii = cv2.warpAffine(ii, mat, (cols, rows))
+                if ii.ndim == 2:
+                    ii = ii[..., np.newaxis]
+                out_ii[g,...] = ii
         locs[ndx, ...] = ll
-        img[ndx, ...] = ii
+        img[st:en, ...] = out_ii
 
     locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
 
 
-def randomly_rotate(img, locs, conf):
+def randomly_rotate(img, locs, conf, group_sz = 1):
     if conf.rrange < 1:
         return img, locs
 
@@ -283,15 +294,18 @@ def randomly_rotate(img, locs, conf):
 
     num = img.shape[0]
     rows, cols = img.shape[1:3]
-    for ndx in range(num):
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
         orig_locs = copy.deepcopy(locs[ndx, ...])
-        orig_im = copy.deepcopy(img[ndx, ...])
+        orig_im = copy.deepcopy(img[st:en, ...])
         sane = False
         do_rotate = True
 
         count = 0
         lr = orig_locs.copy()
-        ii = orig_im.copy()
+        out_ii = orig_im.copy()
         while not sane:
             valid = np.invert(np.isnan(orig_locs[:, :, 0]))
             rangle = (np.random.rand() * 2 - 1) * conf.rrange
@@ -317,11 +331,13 @@ def randomly_rotate(img, locs, conf):
 
             # else:
             #                 print 'not sane {}'.format(count)
-            ii = copy.deepcopy(orig_im)
             mat = cv2.getRotationMatrix2D((old_div(cols, 2), old_div(rows, 2)), rangle, 1)
-            ii = cv2.warpAffine(ii, mat, (cols, rows))
-            if ii.ndim == 2:
-                ii = ii[..., np.newaxis]
+            for g in group_sz:
+                ii = copy.deepcopy(orig_im[g,...])
+                ii = cv2.warpAffine(ii, mat, (cols, rows))
+                if ii.ndim == 2:
+                    ii = ii[..., np.newaxis]
+                orig_im[g,...] = ii
         locs[ndx, ...] = lr
         img[ndx, ...] = ii
 
@@ -331,7 +347,7 @@ def randomly_rotate(img, locs, conf):
 
 # In[1]:
 
-def randomly_adjust(img, conf):
+def randomly_adjust(img, conf, group_sz = 1):
     # For images between 0 to 255
     # and single channel
     num = img.shape[0]
@@ -340,14 +356,18 @@ def randomly_adjust(img, conf):
     crange = conf.crange
     cdiff = crange[1] - crange[0]
     imax = conf.imax
-    for ndx in range(num):
-        mm = img[ndx, ...].mean()
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
         bfactor = np.random.rand() * bdiff + brange[0]
-        jj = img[ndx, ...] + bfactor * imax
         cfactor = np.random.rand() * cdiff + crange[0]
-        jj = np.minimum(imax, (jj - mm) * cfactor + mm)
-        jj = jj.clip(0, imax)
-        img[ndx, ...] = jj
+        mm = img[st:en, ...].mean()
+        for g in group_sz:
+            jj = img[st+g, ...] + bfactor * imax
+            jj = np.minimum(imax, (jj - mm) * cfactor + mm)
+            jj = jj.clip(0, imax)
+            img[st+g, ...] = jj
     return img
 
 

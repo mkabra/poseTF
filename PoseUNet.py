@@ -631,6 +631,7 @@ class PoseUNetTime(PoseUNet):
         # sel_sz = self.conf.sel_sz
         # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers) - 2
+        mix_at = 2
 
         n_conv = 2
         conv = PoseCommon.conv_relu3
@@ -681,7 +682,7 @@ class PoseUNetTime(PoseUNet):
                 n_filt = 512
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
 
-            if ndx>1:
+            if ndx is mix_at:
             # rotate X along axis-0 and concat to provide context context along previous time steps.
                 X_prev = []
                 X_next = []
@@ -721,3 +722,13 @@ class PoseUNetTime(PoseUNet):
         s_sz = 2*t_sz+1
         X = X[t_sz::s_sz,...]
         return X
+
+    def update_fd(self, db_type, sess, distort):
+        self.read_images(db_type, distort, sess, distort)
+        rescale = self.conf.unet_rescale
+        xs = scale_images(self.xs, rescale, self.conf)
+        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
+        imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
+        label_ims = PoseTools.create_label_images(
+            self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
+        self.fd[self.ph['y']] = label_ims

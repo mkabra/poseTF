@@ -130,6 +130,10 @@ class config(object):
     mdn_logit_eps_training = 0.001
     mdn_extra_layers = 0
 
+    # ----- Time parameters
+    time_window_size = 1
+    do_time = False
+
     # ----- Save parameters
 
     save_step = 2000
@@ -178,7 +182,11 @@ class config(object):
 # -- alice fly --
 
 aliceConfig = config()
-aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice')
+aliceConfig.do_time = True
+if aliceConfig.do_time:
+    aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice_time')
+else:
+    aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache', 'alice')
 #aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
 aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl')
 def alice_exp_name(dirname):

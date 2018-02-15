@@ -251,7 +251,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             cur_dl = self.dep_nets.down_layers[ndx]
             cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
-            n_filt = cur_l.get_shape().as_list()[3]/2
+            n_filt = cur_dl.get_shape().as_list()[3]
 
             if mdn_prev is None:
                 X = cur_l
@@ -534,11 +534,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
         cur_dist = self.compute_dist( [pred_means, pred_std, pred_weights], self.locs)
         return cur_loss, cur_dist
 
-    def train_umdn(self, restore, train_type=0,joint=True,
-                   net_type='conv'):
+    def train_umdn(self, restore, train_type=0,joint=True):
 
         self.joint = joint
-        self.net_type = net_type
+        # self.net_type = net_type
         if joint:
             training_iters = 40000/self.conf.batch_size*8
         else:
@@ -1098,142 +1097,3 @@ class PoseUMDNTime(PoseUMDN):
     def __init__(self,conf,name = 'pose_umdn_time'):
         PoseUMDN.__init__(self,conf,name)
 
-    def create_network(self, X):
-        # Downsample to a size between 4x4 and 2x2
-
-        X = self.dep_nets.create_network()
-
-        n_conv = 3
-        conv = PoseCommon.conv_relu3
-        layers = []
-        mdn_prev = None
-        n_out = self.conf.n_classes
-        k = 2 # this is the number of final gaussians.
-        k_fc = 10
-        n_layers_u = len(self.dep_nets.up_layers)
-        min_im_sz = min(self.conf.imsz)
-        extra_layers = math.floor(np.log2(min_im_sz)) - n_layers_u - 1
-        extra_layers = int(extra_layers)
-        n_layers = n_layers_u + extra_layers
-        locs_offset = 2**(n_layers)
-        n_groups = len(self.conf.mdn_groups)
-
-        # MDN downsample.
-        for ndx in range(n_layers_u):
-            cur_ul = self.dep_nets.up_layers[n_layers_u - ndx - 1]
-            cur_dl = self.dep_nets.down_layers[ndx]
-            cur_l = tf.concat([cur_ul,cur_dl],axis=3)
-
-            n_filt = cur_l.get_shape().as_list()[3]/2
-
-            if mdn_prev is None:
-                X = cur_l
-            else:
-                X = tf.concat([mdn_prev, cur_l], axis=3)
-
-            for c_ndx in range(n_conv-1):
-                sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
-                with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'])
-
-            # downsample using strides instead of max-pooling
-            sc_name = 'mdn_{}_{}'.format(ndx, n_conv)
-            with tf.variable_scope(sc_name):
-                kernel_shape = [3, 3, n_filt, n_filt]
-                weights = tf.get_variable("weights_{}".format(ndx), kernel_shape,
-                                          initializer=tf.contrib.layers.xavier_initializer())
-                biases = tf.get_variable("biases", kernel_shape[-1],
-                                         initializer=tf.constant_initializer(0.))
-                cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
-                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
-                X = tf.nn.relu(cur_conv + biases)
-            mdn_prev = X
-
-        # few more convolution for the outputs
-        n_filt = X.get_shape().as_list()[3]
-        for ndx in range(extra_layers):
-            for c_ndx in range(n_conv-1):
-                sc_name = 'mdn_extra_{}_{}'.format(ndx,c_ndx)
-                with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'])
-
-            with tf.variable_scope('mdn_extra_{}'.format(ndx)):
-                kernel_shape = [3, 3, n_filt, n_filt]
-                weights = tf.get_variable("weights_{}".format(ndx), kernel_shape,
-                                          initializer=tf.contrib.layers.xavier_initializer())
-                biases = tf.get_variable("biases", kernel_shape[-1],
-                                         initializer=tf.constant_initializer(0.))
-                cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
-                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
-                X = tf.nn.relu(cur_conv + biases)
-
-        X_sz = min(X.get_shape().as_list()[1:3])
-        assert (X_sz >= 2) and (X_sz<4), 'The net has been reduced too much or not too much'
-
-        # fully connected layers
-        with tf.variable_scope('fc'):
-            X = tf.contrib.layers.flatten(X)
-            X = tf.contrib.layers.fully_connected(
-                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-
-        with tf.variable_scope('locs'):
-            with tf.variable_scope('layer_locs'):
-                mdn_l = tf.contrib.layers.fully_connected(
-                    X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-
-            locs = tf.contrib.layers.fully_connected(
-                mdn_l, k_fc*n_out*2, activation_fn=None)
-            offset= np.mean(self.conf.imsz)
-            locs = locs * offset
-            locs = tf.reshape(locs,[-1,k_fc,n_out,2])
-
-        with tf.variable_scope('scales'):
-            with tf.variable_scope('layer_scales'):
-                mdn_s = tf.contrib.layers.fully_connected(
-                    X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-
-            o_scales = tf.contrib.layers.fully_connected(
-                mdn_s, k_fc * n_out, activation_fn = None)
-            o_scales = tf.exp(o_scales)
-            # when initialized o_scales will be centered around exp(0) and
-            # mostly between [exp(-1), exp(1)] = [0.3 2.7]
-            # so adding appropriate offsets to make it lie between the wanted range
-            min_sig = self.conf.mdn_min_sigma
-            max_sig = self.conf.mdn_max_sigma
-            o_scales = (o_scales-1) * (max_sig-min_sig)/2
-            o_scales = o_scales + (max_sig-min_sig)/2 + min_sig
-            scales = tf.minimum(max_sig, tf.maximum(min_sig, o_scales))
-            scales = tf.reshape(scales, [-1, k_fc, n_out])
-
-        with tf.variable_scope('logits'):
-            with tf.variable_scope('layer_logits'):
-                mdn_w = tf.contrib.layers.fully_connected(
-                    X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-
-            logits = tf.contrib.layers.fully_connected(
-                mdn_w, k_fc*n_groups, activation_fn=None)
-            logits = tf.reshape(logits,[-1,k_fc,n_groups])
-            #     kernel_shape = [1, 1, n_filt, n_filt]
-            #     weights = tf.get_variable("weights", kernel_shape,
-            #                               initializer=tf.contrib.layers.xavier_initializer())
-            #     biases = tf.get_variable("biases", kernel_shape[-1],
-            #                              initializer=tf.constant_initializer(0))
-            #     conv = tf.nn.conv2d(X, weights,
-            #                         strides=[1, 1, 1, 1], padding='SAME')
-            #     conv = batch_norm(conv, decay=0.99,
-            #                       is_training=self.ph['phase_train'])
-            # mdn_l = tf.nn.relu(conv + biases)
-            #
-            # weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
-            #                                initializer=tf.contrib.layers.xavier_initializer())
-            # biases_logits = tf.get_variable("biases_logits",
-            #         k * n_groups ,initializer=tf.constant_initializer(0))
-            # logits = tf.nn.conv2d(mdn_l, weights_logits,
-            #                       [1, 1, 1, 1], padding='SAME') + biases_logits
-            # logits = tf.reshape(logits, [-1, n_x * n_y, k * n_groups])
-            # logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
-
-        return [locs,scales,logits]

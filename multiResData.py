@@ -576,19 +576,7 @@ def createTFRecordFromLbl(conf,split=True):
         valenv.close()
     print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
 
-
-def createTFRecordFromLblWithTrx(conf, split=True):
-
-    createValdata(conf)
-    is_val, local_dirs, sel_dirs = loadValdata(conf)
-
-    L = h5py.File(conf.labelfile, 'r')
-    npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
-    pts = np.array(L['labeledpos'])
-    trx_files = get_trx_files(L,local_dirs)
-    d = L['projMacros']['dataroot']
-    droot = u''.join(chr(c) for c in d)
-
+def create_envs(conf, split):
     if split:
         trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
         valfilename = os.path.join(conf.cachedir, conf.valfilename)
@@ -600,30 +588,98 @@ def createTFRecordFromLblWithTrx(conf, split=True):
         env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
         valenv = None
 
+    return env, valenv
+
+def trx_pts(L, pts, ndx):
+    # new styled sparse labeledpos
+    pts = np.array(L['labeledpos'])
+    idx = np.array(L[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
+    val = np.array(L[pts[0, ndx]]['val'])[0, :] - 1
+    sz = np.array(L[pts[0, ndx]]['size'])[:, 0].astype('int')
+    curpts = np.zeros(sz).flatten()
+    curpts[:] = np.nan
+    curpts[idx] = val
+    return curpts.reshape(np.flipud(sz))
+
+
+def get_curenv(env, valenv, split, conf, trx_split, is_val):
+    if split:
+        if hasattr(conf, 'splitType'):
+            if conf.splitType is 'frame':
+                curenv = valenv if np.random.random() < conf.valratio \
+                    else env
+            elif conf.splitType is 'trx':
+                curenv = valenv if trx_split[trx_ndx] else env
+            else:
+                curenv = valenv if is_val.count(ndx) else env
+        else:
+            curenv = valenv if is_val.count(ndx) and split else env
+    else:
+        curenv = env
+
+    return curenv
+
+def check_fnum(fnum, cap, expname, ndx):
+    if fnum > cap.get_n_frames():  # get(cvc.FRAME_COUNT):
+        if fnum > cap.get_n_frames()+1:  # get(cvc.FRAME_COUNT) + 1:
+            raise ValueError('Accessing frames beyond ' +
+                             'the length of the video for' +
+                             ' {} expid {:d} '.format(expname, ndx) +
+                             ' at t {:d}'.format(fnum)
+                             )
+        return False
+    else:
+        return True
+
+def read_trx(cur_trx, fnum):
+    trx_fnum = fnum - cur_trx['firstframe'][0, 0]
+    x = int(round(cur_trx['x'][0, trx_fnum])) - 1
+    y = int(round(cur_trx['y'][0, trx_fnum])) - 1
+    # -1 for 1-indexing in matlab and 0-indexing in python
+    theta = cur_trx['theta'][0, trx_fnum]
+    return x, y, theta
+
+def read_frame(cap, fnum, cur_trx, offset=0, stationary=True):
+    # stationary means that fly will always be in the center of the frame
+    if not check_fnum(fnum, cap):
+        return None, None, None, None
+    o_fnum = fnum + offset
+    if o_fnum > cur_trx['endframe'][0,0] - 1:
+        o_fnum = cur_trx['endframe'][0,0] - 1
+    if o_fnum < cur_trx['firstframe'][0,0] -1:
+        o_fnum = cur_trx['firstframe'][0,0] - 1
+
+    framein = cap.get_frame(o_fnum)[0]
+    if framein.ndim == 2:
+        framein = framein[:, :, np.newaxis]
+
+    if stationary:
+        x, y, theta = read_trx(cur_trx, o_fnum)
+    else:
+        x, y, theta = read_trx(cur_trx, fnum)
+    return framein, x, y, theta
+
+
+def createTFRecordFromLblWithTrx(conf, split=True):
+
+    createValdata(conf)
+    is_val, local_dirs, _ = loadValdata(conf)
+
+    L = h5py.File(conf.labelfile, 'r')
+    npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
+    trx_files = get_trx_files(L,local_dirs)
+
+    env, valenv = create_envs(conf, split)
     view = conf.view
-    count = 0
-    valcount = 0
+    count = 0; valcount = 0
 
     for ndx, dirname in enumerate(local_dirs):
-        if not sel_dirs[ndx]:
-            continue
 
         expname = conf.getexpname(dirname)
         T = sio.loadmat(trx_files[ndx])['trx'][0]
         n_trx = len(T)
 
-        # new styled sparse labeledpos
-        idx = np.array(L[pts[0,ndx]]['idx'])[0,:].astype('int')-1
-        val = np.array(L[pts[0,ndx]]['val'])[0,:]-1
-        sz = np.array(L[pts[0,ndx]]['size'])[:,0].astype('int')
-        curpts = np.zeros(sz).flatten()
-        curpts[:] = np.nan
-        curpts[idx] = val
-        curpts = curpts.reshape(np.flipud(sz))
-
-        # old style labeledpos.
-        # curpts = np.array(L[pts[0, ndx]])-1
-        # # -1 for 1-indexing in matlab and 0-indexing in python
+        curpts = trx_pts(L,ndx)
         trx_split = np.random.random(n_trx) < conf.valratio
         cap = movies.Movie(local_dirs[ndx])
 
@@ -634,49 +690,23 @@ def createTFRecordFromLblWithTrx(conf, split=True):
 
             for fnum in frames:
 
-                if split:
-                    if hasattr(conf,'splitType'):
-                        if conf.splitType is 'frame':
-                            curenv = valenv if np.random.random() < conf.valratio \
-                                else env
-                        elif conf.splitType is 'trx':
-                            curenv = valenv if trx_split[trx_ndx] else env
-                        else:
-                            curenv = valenv if is_val.count(ndx) else env
-                    else:
-                        curenv = valenv if is_val.count(ndx) and split else env
-                else:
-                    curenv = env
+                curenv = get_curenv(env,valenv, split, conf, trx_split, is_val)
 
-                if fnum > cap.get_n_frames():#get(cvc.FRAME_COUNT):
-                    if fnum > cap.get_n_frames(): #get(cvc.FRAME_COUNT) + 1:
-                        raise ValueError('Accessing frames beyond ' +
-                                         'the length of the video for' +
-                                         ' {} expid {:d} '.format(expname, ndx) +
-                                         ' at t {:d}'.format(fnum)
-                                         )
+                if not check_fnum(fnum, cap, expname, ndx):
                     continue
 
-                # framein = myutils.readframe(cap, fnum)
                 framein = cap.get_frame(fnum)[0]
                 if framein.ndim==2:
                     framein = framein[:,:,np.newaxis]
-                trx_fnum = fnum - cur_trx['firstframe'][0,0]
-                x = int(round(cur_trx['x'][0,trx_fnum]))-1
-                y = int(round(cur_trx['y'][0,trx_fnum]))-1
-                # -1 for 1-indexing in matlab and 0-indexing in python
-                theta = cur_trx['theta'][0,trx_fnum]
+                x, y, theta = read_trx(cur_trx, fnum)
 
                 assert conf.imsz[0] == conf.imsz[1]
-                framein, curloc = get_patch_trx(framein,x,y,theta,conf.imsz[0],
-                                                curpts[trx_ndx,fnum,:,conf.selpts])
+
+                selpts = int(view * npts_per_view) + conf.selpts
+                framein, curloc = get_patch_trx(framein,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, selpts])
                 framein = framein[:, :, 0:1]
 
-                pts_st = int(view * npts_per_view)
-                selpts = pts_st + conf.selpts
-
-                rows = framein.shape[0]
-                cols = framein.shape[1]
+                rows, cols = framein.shape[0:2]
                 if np.ndim(framein) > 2:
                     depth = framein.shape[2]
                 else:
@@ -700,9 +730,95 @@ def createTFRecordFromLblWithTrx(conf, split=True):
 
         cap.close()  # close the movie handles
         print('Done %d of %d movies, count:%d val:%d' % (ndx, len(local_dirs), count, valcount))
-    env.close()  # close the database
-    if split:
-        valenv.close()
+    env.close(); valenv.close() if split else None
+    print('%d,%d number of pos examples added to the db and valdb' % (count, valcount))
+    L.close()
+
+
+def createTFRecordTimeFromLblWithTrx(conf, split=True):
+
+    createValdata(conf)
+    is_val, local_dirs, _ = loadValdata(conf)
+
+    L = h5py.File(conf.labelfile, 'r')
+    npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
+    trx_files = get_trx_files(L,local_dirs)
+
+    env, valenv = create_envs(conf, split)
+    view = conf.view
+    count = 0; valcount = 0
+
+    tw = conf.time_window_size
+    for ndx, dirname in enumerate(local_dirs):
+
+        T = sio.loadmat(trx_files[ndx])['trx'][0]
+        n_trx = len(T)
+
+        curpts = trx_pts(L,ndx)
+        trx_split = np.random.random(n_trx) < conf.valratio
+        cap = movies.Movie(local_dirs[ndx])
+
+        for trx_ndx in range(n_trx):
+            frames = np.where(np.invert(np.all(np.isnan(curpts[trx_ndx,:, :, :]), axis=(1, 2))))[0]
+            cur_trx = T[trx_ndx]
+
+            for fnum in frames:
+
+                cur_env = get_curenv(env,valenv, split, conf, trx_split, is_val)
+
+                sel_pts = int(view * npts_per_view) + conf.selpts
+                # current frame
+                frame_in, x, y, theta = read_frame(cap, fnum, cur_trx, 0)
+                frame_in, cur_loc = get_patch_trx(frame_in,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+
+                if conf.imgDim == 1:
+                    frame_in = frame_in[:, :, 0:1]
+                frame_in = frame_in[np.newaxis,...]
+
+                # read prev and next frames
+                next_array = []; prev_array = []
+                for cur_t in range(tw-1):
+                    next_fr, x, y, theta = read_frame(cap, fnum, cur_trx, cur_t+1)
+                    next_fr, _ = get_patch_trx(next_fr,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+                    if conf.imgDim == 1:
+                        next_fr = next_fr[:, :, 0:1]
+                    next_fr = next_fr[np.newaxis,...]
+                    next_array.append(next_fr)
+
+                    prev_fr, x, y, theta = read_frame(cap, fnum, cur_trx, -cur_t-1)
+                    prev_fr, _ = get_patch_trx(prev_fr,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+                    if conf.imgDim == 1:
+                        prev_fr = prev_fr[:, :, 0:1]
+                    prev_fr = prev_fr[np.newaxis,...]
+                    prev_array.append(prev_fr)
+
+                prev_array = [i for i in reversed(prev_array)]
+                all_f = np.concatenate(prev_array + [frame_in,] + next_array)
+
+                assert conf.imsz[0] == conf.imsz[1]
+
+                rows, cols = all_f.shape[1:3]
+                depth = all_f.shape[3]
+
+                image_raw = all_f.tostring()
+                example = tf.train.Example(features=tf.train.Features(feature={
+                    'height': _int64_feature(rows),
+                    'width': _int64_feature(cols),
+                    'depth': _int64_feature(depth),
+                    'locs': _float_feature(cur_loc.flatten()),
+                    'expndx': _float_feature(ndx),
+                    'ts': _float_feature(fnum),
+                    'image_raw': _bytes_feature(image_raw)}))
+                cur_env.write(example.SerializeToString())
+
+                if cur_env is valenv:
+                    valcount += 1
+                else:
+                    count += 1
+
+        cap.close()  # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx, len(local_dirs), count, valcount))
+    env.close(); valenv.close() if split else None
     print('%d,%d number of pos examples added to the db and valdb' % (count, valcount))
     L.close()
 
@@ -748,10 +864,7 @@ def read_and_decode(filename_queue,conf):
     height = tf.cast(features['height'],tf.int64)
     width = tf.cast(features['width'],tf.int64)
     depth = tf.cast(features['depth'],tf.int64)
-    if conf.imgDim > 1:
-        image = tf.reshape(image,conf.imsz + (conf.imgDim,) )
-    else:
-        image = tf.reshape(image, conf.imsz)
+    image = tf.reshape(image,conf.imsz + (conf.imgDim,) )
 
     locs = tf.cast(features['locs'], tf.float64)
     expndx = tf.cast(features['expndx'],tf.float64)
@@ -779,6 +892,7 @@ def read_and_decode_multi(filename_queue,conf):
     width = tf.cast(features['width'],tf.int64)
     depth = tf.cast(features['depth'],tf.int64)
     n_animals = tf.cast(features['n_animals'],tf.int64)
+
     if conf.imgDim > 1:
         image = tf.reshape(image,conf.imsz + (conf.imgDim,) )
     else:
@@ -789,4 +903,35 @@ def read_and_decode_multi(filename_queue,conf):
     ts = tf.cast(features['ts'],tf.float64) #tf.constant([0]); #
 
     return image, locs, [expndx,ts,n_animals]
+
+
+def read_and_decode_time(filename_queue, conf):
+    reader = tf.TFRecordReader()
+    _, serialized_example = reader.read(filename_queue)
+    n_max = conf.max_n_animals
+    features = tf.parse_single_example(
+        serialized_example,
+        features={'height': tf.FixedLenFeature([], dtype=tf.int64),
+                  'width': tf.FixedLenFeature([], dtype=tf.int64),
+                  'depth': tf.FixedLenFeature([], dtype=tf.int64),
+                  'locs': tf.FixedLenFeature(shape=[n_max, conf.n_classes, 2], dtype=tf.float32),
+                  'n_animals': tf.FixedLenFeature(1, dtype=tf.int64),
+                  'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+                  'ts': tf.FixedLenFeature([], dtype=tf.float32),
+                  'image_raw': tf.FixedLenFeature([], dtype=tf.string)
+                  })
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
+    height = tf.cast(features['height'], tf.int64)
+    width = tf.cast(features['width'], tf.int64)
+    depth = tf.cast(features['depth'], tf.int64)
+    n_animals = tf.cast(features['n_animals'], tf.int64)
+
+    tw = 2*conf.time_window_size + 1
+    image = tf.reshape(image, (tw,) + conf.imsz + (conf.imgDim,))
+
+    locs = tf.cast(features['locs'], tf.float64)
+    expndx = tf.cast(features['expndx'], tf.float64)
+    ts = tf.cast(features['ts'], tf.float64)  # tf.constant([0]); #
+
+    return image, locs, [expndx, ts, n_animals]
 
