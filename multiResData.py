@@ -590,7 +590,7 @@ def create_envs(conf, split):
 
     return env, valenv
 
-def trx_pts(L, pts, ndx):
+def trx_pts(L, ndx):
     # new styled sparse labeledpos
     pts = np.array(L['labeledpos'])
     idx = np.array(L[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
@@ -641,7 +641,7 @@ def read_trx(cur_trx, fnum):
 
 def read_frame(cap, fnum, cur_trx, offset=0, stationary=True):
     # stationary means that fly will always be in the center of the frame
-    if not check_fnum(fnum, cap):
+    if not check_fnum(fnum, cap,0,0):
         return None, None, None, None
     o_fnum = fnum + offset
     if o_fnum > cur_trx['endframe'][0,0] - 1:
@@ -777,7 +777,7 @@ def createTFRecordTimeFromLblWithTrx(conf, split=True):
 
                 # read prev and next frames
                 next_array = []; prev_array = []
-                for cur_t in range(tw-1):
+                for cur_t in range(tw):
                     next_fr, x, y, theta = read_frame(cap, fnum, cur_trx, cur_t+1)
                     next_fr, _ = get_patch_trx(next_fr,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
                     if conf.imgDim == 1:
