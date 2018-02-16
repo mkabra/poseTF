@@ -299,16 +299,26 @@ class PoseUMDN(PoseCommon.PoseCommon):
         assert (X_sz >= 2) and (X_sz<4), 'The net has been reduced too much or not too much'
 
         # fully connected layers
-        with tf.variable_scope('fc'):
-            X = tf.contrib.layers.flatten(X)
-            X = tf.contrib.layers.fully_connected(
-                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-            X = tf.contrib.layers.fully_connected(
-                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-            X = tf.contrib.layers.fully_connected(
-                X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
-
+        # with tf.variable_scope('fc'):
+        #     X = tf.contrib.layers.flatten(X)
+        #     X = tf.contrib.layers.fully_connected(
+        #         X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+        #     X = tf.contrib.layers.fully_connected(
+        #         X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+        #     X = tf.contrib.layers.fully_connected(
+        #         X, n_filt*4, normalizer_fn=batch_norm,normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+        #
+        X_conv = X
         with tf.variable_scope('locs'):
+            with tf.variable_scope('fc'):
+                X = tf.contrib.layers.flatten(X_conv)
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+
             with tf.variable_scope('layer_locs'):
                 mdn_l = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
@@ -362,6 +372,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # locs = tf.reshape(o_locs,[-1, n_x*n_y*k,n_out,2])
             #
         with tf.variable_scope('scales'):
+            with tf.variable_scope('fc'):
+                X = tf.contrib.layers.flatten(X_conv)
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+
             with tf.variable_scope('layer_scales'):
                 mdn_s = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
@@ -409,6 +428,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # scales = tf.reshape(scales,[-1, n_x*n_y*k,n_out])
 
         with tf.variable_scope('logits'):
+            with tf.variable_scope('fc'):
+                X = tf.contrib.layers.flatten(X_conv)
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                X = tf.contrib.layers.fully_connected(
+                    X, n_filt * 4, normalizer_fn=batch_norm,
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+
             with tf.variable_scope('layer_logits'):
                 mdn_w = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
@@ -606,6 +634,16 @@ class PoseUMDN(PoseCommon.PoseCommon):
         conf = self.conf
         osz = self.conf.imsz
         self.joint = True
+
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+            locs_offset = float(2**n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz)/2
+        else:
+            raise Exception('Unknown net type')
+        p_m *= locs_offset
 
         with tf.Session() as sess:
             start_at = self.init_and_restore(sess, True, ['loss', 'dist'], at_step)
