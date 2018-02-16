@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -863,13 +860,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00053" summary="modified sigma params for umdn for stephen.">
-      <created>1515828402463</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1515828402463</updated>
-    </task>
     <task id="LOCAL-00054" summary="modified sigma params for umdn for stephen.">
       <created>1515828498991</created>
       <option name="number" value="00054" />
@@ -1206,7 +1196,14 @@
       <option name="project" value="LOCAL" />
       <updated>1518765588058</updated>
     </task>
-    <option name="localTasksCounter" value="102" />
+    <task id="LOCAL-00102" summary="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range.">
+      <created>1518773538100</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1518773538100</updated>
+    </task>
+    <option name="localTasksCounter" value="103" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1300,7 +1297,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updating how the loss is computed for u-mdn" />
     <MESSAGE value="updating the nfilts for upsampling in U-Net that were left out earlier" />
     <MESSAGE value="Fixed a memory leak in UMDN. apparently stray tensorflow operations can lead to increase in memory usage." />
     <MESSAGE value="Introducing groups for stephen" />
@@ -1325,7 +1321,8 @@
     <MESSAGE value="Using 3 FC layers in UMDN Fixed network instead of 1. And adding stuff to generate coco compatible annotation files from tfrecords file" />
     <MESSAGE value="Adding timed UNet and its helper functions" />
     <MESSAGE value="Bug fixed for timed UNet" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bug fixed for timed UNet" />
+    <MESSAGE value="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range." />
+    <option name="LAST_COMMIT_MESSAGE" value="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
