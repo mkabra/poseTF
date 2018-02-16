@@ -87,7 +87,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
         k = 2
         extra_layers = self.conf.mdn_extra_layers
         n_layers_u = len(self.dep_nets.up_layers) + extra_layers
-        locs_offset = 2**n_layers_u
+        locs_offset = 1.
+        # locs_offset = 2**n_layers_u
         n_groups = len(self.conf.mdn_groups)
 
         self.mdn_layers1 = []
@@ -159,8 +160,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # with adding grid_size/2, o_locs initially will be centered
             # in the center of the grid.
             self.i_locs = o_locs
-            o_locs *= locs_offset/2*3
-            o_locs += locs_offset/2*3
+            o_locs *= float(locs_offset)/2*5
+            o_locs += float(locs_offset)/2
 
             # adding offset of each grid location.
             x_off, y_off = np.meshgrid(np.arange(loc_shape[2]), np.arange(loc_shape[1]))
@@ -315,8 +316,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
             locs = tf.contrib.layers.fully_connected(
                 mdn_l, k_fc*n_out*2, activation_fn=None)
-            offset= np.mean(self.conf.imsz)
-            locs = locs * offset
+            # offset= np.mean(self.conf.imsz)
+            # locs = locs * offset
+            locs = locs + 0.5
             locs = tf.reshape(locs,[-1,k_fc,n_out,2])
 
                 #     kernel_shape = [1, 1, n_filt, n_filt]
@@ -455,6 +457,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.fd[self.ph['step']] = self.step
 
     def my_loss(self, X, y):
+
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+            locs_offset = float(2**n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz)/2
+        else:
+            raise Exception('Unknown net type')
         mdn_locs, mdn_scales, mdn_logits = X
         cur_comp = []
         ll = tf.nn.softmax(mdn_logits, dim=1)
@@ -466,7 +477,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         ll = ll / tf.reduce_sum(ll, axis=1, keep_dims=True)
         for cls in range(self.conf.n_classes):
             cur_scales = mdn_scales[:, :, cls]
-            pp = y[:, cls:cls + 1, :]
+            pp = y[:, cls:cls + 1, :]/locs_offset
             kk = tf.sqrt(tf.reduce_sum(tf.square(pp - mdn_locs[:, :, cls, :]), axis=2))
             # div is actual correct implementation of gaussian distance.
             # but we run into numerical issues. Since the scales are withing

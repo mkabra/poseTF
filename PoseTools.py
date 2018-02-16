@@ -1125,7 +1125,7 @@ def analyze_gradients(loss, exclude, sess):
             tvar.append(vv)
     var = tvar
     gg = tf.gradients(loss,var)
-
+    return gg, var
 
 
 def count_records(filename):
