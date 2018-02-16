@@ -269,7 +269,7 @@ def randomly_translate(img, locs, conf, group_sz = 1):
             # else:
             #                 print 'not sane {}'.format(count)
             mat = np.float32([[1, 0, dx], [0, 1, dy]])
-            for g in group_sz:
+            for g in range(group_sz):
                 ii = copy.deepcopy(orig_im[g,...])
                 ii = cv2.warpAffine(ii, mat, (cols, rows))
                 if ii.ndim == 2:
@@ -332,14 +332,14 @@ def randomly_rotate(img, locs, conf, group_sz = 1):
             # else:
             #                 print 'not sane {}'.format(count)
             mat = cv2.getRotationMatrix2D((old_div(cols, 2), old_div(rows, 2)), rangle, 1)
-            for g in group_sz:
+            for g in range(group_sz):
                 ii = copy.deepcopy(orig_im[g,...])
                 ii = cv2.warpAffine(ii, mat, (cols, rows))
                 if ii.ndim == 2:
                     ii = ii[..., np.newaxis]
-                orig_im[g,...] = ii
+                out_ii[g,...] = ii
         locs[ndx, ...] = lr
-        img[ndx, ...] = ii
+        img[st:en, ...] = out_ii
 
     locs = locs[:, 0, ...] if reduce_dim else locs
     return img, locs
@@ -363,7 +363,7 @@ def randomly_adjust(img, conf, group_sz = 1):
         bfactor = np.random.rand() * bdiff + brange[0]
         cfactor = np.random.rand() * cdiff + crange[0]
         mm = img[st:en, ...].mean()
-        for g in group_sz:
+        for g in range(group_sz):
             jj = img[st+g, ...] + bfactor * imax
             jj = np.minimum(imax, (jj - mm) * cfactor + mm)
             jj = jj.clip(0, imax)
