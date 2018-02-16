@@ -466,6 +466,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             locs_offset = np.mean(self.conf.imsz)/2
         else:
             raise Exception('Unknown net type')
+
         mdn_locs, mdn_scales, mdn_logits = X
         cur_comp = []
         ll = tf.nn.softmax(mdn_logits, dim=1)
@@ -502,10 +503,21 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return tf.reduce_sum(cur_loss)
 
     def compute_dist(self, preds, locs):
+
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+            locs_offset = float(2**n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz)/2
+        else:
+            raise Exception('Unknown net type')
+
         locs = locs.copy()/self.conf.unet_rescale
         if locs.ndim == 3:
             locs = locs[:,np.newaxis,:,:]
         val_means, val_std, val_wts = preds
+        val_means = val_means * locs_offset
         val_dist = np.zeros(locs.shape[:-1])
         pred_dist = np.zeros(val_means.shape[:-1])
         pred_dist[:] = np.nan
