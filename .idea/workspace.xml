@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUMDN.py" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -872,13 +871,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00055" summary="modified createTFrecordswithtrx in multiresdata for the new sparse format of labelepos in the lbl file.">
-      <created>1516084945951</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1516084945952</updated>
-    </task>
     <task id="LOCAL-00056" summary="changing the number of layers to be used for alice's flies">
       <created>1516097190732</created>
       <option name="number" value="00056" />
@@ -1215,7 +1207,14 @@
       <option name="project" value="LOCAL" />
       <updated>1518773564124</updated>
     </task>
-    <option name="localTasksCounter" value="104" />
+    <task id="LOCAL-00104" summary="Bug fix for moving offset from net to loss.">
+      <created>1518774180901</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1518774180901</updated>
+    </task>
+    <option name="localTasksCounter" value="105" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1310,7 +1309,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updating the nfilts for upsampling in U-Net that were left out earlier" />
     <MESSAGE value="Fixed a memory leak in UMDN. apparently stray tensorflow operations can lead to increase in memory usage." />
     <MESSAGE value="Introducing groups for stephen" />
     <MESSAGE value="single group for alice" />
@@ -1335,7 +1333,8 @@
     <MESSAGE value="Adding timed UNet and its helper functions" />
     <MESSAGE value="Bug fixed for timed UNet" />
     <MESSAGE value="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range." />
-    <option name="LAST_COMMIT_MESSAGE" value="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range." />
+    <MESSAGE value="Bug fix for moving offset from net to loss." />
+    <option name="LAST_COMMIT_MESSAGE" value="Bug fix for moving offset from net to loss." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
