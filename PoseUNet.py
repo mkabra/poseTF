@@ -592,10 +592,13 @@ class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
         PoseCommon.PoseCommonMulti.create_cursors(self,sess)
 
 
-class PoseUNetTime(PoseUNet):
+class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
     def __init__(self,conf,name='pose_unet_time'):
-        PoseUNet.__init__(self,conf.name)
+        PoseUNet.__init__(self, conf, name)
         self.net_name = 'pose_unet_time'
+
+    def read_images(self, db_type, distort, sess, shuffle=None):
+        PoseCommon.PoseCommonTime.read_images(self,db_type,distort,sess,shuffle)
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -688,16 +691,16 @@ class PoseUNetTime(PoseUNet):
                 X_next = []
                 for t in range(self.conf.time_window_size):
                     if not X_prev:
-                        X_prev_cur = tf.concat([X[1:,...],X[0,...]],axis=0)
+                        X_prev_cur = tf.concat([X[1:,...],X[0:1,...]],axis=0)
                         X_prev.append(X_prev_cur)
-                        X_next_cur = tf.concat([X[-1,...],X[:-1,...]],axis=0)
+                        X_next_cur = tf.concat([X[-1:,...],X[:-1,...]],axis=0)
                         X_next.append(X_next_cur)
                     else:
                         Z = X_prev[-1]
-                        X_prev_cur = tf.concat([Z[1:,...],Z[0,...]],axis=0)
+                        X_prev_cur = tf.concat([Z[1:,...],Z[0:1,...]],axis=0)
                         X_prev.append(X_prev_cur)
                         Z = X_next[-1]
-                        X_next_cur = tf.concat([Z[-1,...],Z[:-1,...]],axis=0)
+                        X_next_cur = tf.concat([Z[-1:,...],Z[:-1,...]],axis=0)
                         X_next.append(X_next_cur)
 
                 X = tf.concat( X_next + [X, ]+ X_prev, axis = 3)

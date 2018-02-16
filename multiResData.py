@@ -908,14 +908,13 @@ def read_and_decode_multi(filename_queue,conf):
 def read_and_decode_time(filename_queue, conf):
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
-    n_max = conf.max_n_animals
+    # n_max = conf.max_n_animals
     features = tf.parse_single_example(
         serialized_example,
         features={'height': tf.FixedLenFeature([], dtype=tf.int64),
                   'width': tf.FixedLenFeature([], dtype=tf.int64),
                   'depth': tf.FixedLenFeature([], dtype=tf.int64),
-                  'locs': tf.FixedLenFeature(shape=[n_max, conf.n_classes, 2], dtype=tf.float32),
-                  'n_animals': tf.FixedLenFeature(1, dtype=tf.int64),
+                  'locs': tf.FixedLenFeature(shape=[conf.n_classes, 2], dtype=tf.float32),
                   'expndx': tf.FixedLenFeature([], dtype=tf.float32),
                   'ts': tf.FixedLenFeature([], dtype=tf.float32),
                   'image_raw': tf.FixedLenFeature([], dtype=tf.string)
@@ -924,7 +923,7 @@ def read_and_decode_time(filename_queue, conf):
     height = tf.cast(features['height'], tf.int64)
     width = tf.cast(features['width'], tf.int64)
     depth = tf.cast(features['depth'], tf.int64)
-    n_animals = tf.cast(features['n_animals'], tf.int64)
+    # n_animals = tf.cast(features['n_animals'], tf.int64)
 
     tw = 2*conf.time_window_size + 1
     image = tf.reshape(image, (tw,) + conf.imsz + (conf.imgDim,))
@@ -933,5 +932,5 @@ def read_and_decode_time(filename_queue, conf):
     expndx = tf.cast(features['expndx'], tf.float64)
     ts = tf.cast(features['ts'], tf.float64)  # tf.constant([0]); #
 
-    return image, locs, [expndx, ts, n_animals]
+    return image, locs, [expndx, ts]
 
