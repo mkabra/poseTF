@@ -657,7 +657,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
             val_std = []
             val_wts = []
             for step in range(num_val/self.conf.batch_size):
-                self.setup_val(sess)
+                if onTrain:
+                    self.setup_train(sess,distort=False,treat_as_val=True)
+                else:
+                    self.setup_val(sess)
                 pred_means, pred_std, pred_weights = sess.run(
                     [p_m, p_s, p_w], self.fd)
                 val_means.append(pred_means)

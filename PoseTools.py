@@ -1150,7 +1150,7 @@ def show_result(ims, ndx, locs, predlocs= None):
     count = float(len(ndx))
     yy = np.ceil(np.sqrt(count/12)*4).astype('int')
     xx = np.ceil(count/yy).astype('int')
-    f,ax = plt.subplots(xx,yy,figsize=(16,12))
+    f,ax = plt.subplots(xx,yy,figsize=(16,12),sharex=True,sharey=True)
     ax = ax.flatten()
     cmap = cm.get_cmap('jet')
     rgba = cmap(np.linspace(0, 1, locs.shape[1]))
@@ -1194,7 +1194,7 @@ def get_timestamps(conf, info):
     return ts
 
 
-def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None):
+def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None, scale = 1):
 
     # alice example category
     skeleton = [ [1,2],[1,3],[2,5],[3,4],[1,6],[6,7],[6,8],[6,10],[8,9],[10,11],[5,12],[9,13],[6,14],[6,15],[11,16],[4,17]]
@@ -1205,8 +1205,8 @@ def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None):
     data = multiResData.read_and_decode(queue, conf)
     n_records = count_records(db_file)
 
-    bbox = [0,0,0,conf.imsz[0],conf.imsz[1],conf.imsz[0],conf.imsz[1],0]
-    area = conf.imsz[0]*conf.imsz[1]
+    bbox = [0,0,0,conf.imsz[0],conf.imsz[1],conf.imsz[0],conf.imsz[1],0]*scale
+    area = conf.imsz[0]*conf.imsz[1]*scale*scale
     with tf.Session() as sess:
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess, coord=coord)
@@ -1214,10 +1214,15 @@ def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None):
         ann = {'images':[], 'info':[], 'annotations':[],'categories':categories}
         for ndx in range(n_records):
             cur_im, cur_locs, cur_info = sess.run(data)
+            if cur_im.shape[2] == 1:
+                cur_im = cur_im[:,:,0]
+            if scale is not 1:
+                cur_im = misc.imresize(cur_im, float(scale))
+                cur_locs = scale*cur_locs
             im_name = '{:012d}.png'.format(ndx)
             misc.imsave(os.path.join(img_dir, im_name),cur_im)
 
-            ann['images'].append({'id':ndx, 'width':conf.imsz[1], 'height':conf.imsz[0], 'file_name':im_name})
+            ann['images'].append({'id':ndx, 'width':conf.imsz[1]*scale, 'height':conf.imsz[0]*scale, 'file_name':im_name})
             ann['annotations'].append({'iscrowd':0,'segmentation':[bbox],'area':area,'image_id':ndx, 'id':ndx,'num_keypoints':conf.n_classes,'bbox':bbox,'keypoints':cur_locs.flatten().tolist(),'category_id':1})
 
 

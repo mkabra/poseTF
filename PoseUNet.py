@@ -53,7 +53,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                    self.ph['learning_rate']:0.
                    }
 
-    def create_network(self):
+    def create_network(self, ):
         with tf.variable_scope(self.net_name):
             return self.create_network1()
 
@@ -109,10 +109,13 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.down_layers = layers
         self.debug_layers = debug_layers
         # few more convolution for the final layers
+        top_layers = []
         for cndx in range(n_conv):
             sc_name = 'layer_{}_{}'.format(n_layers,cndx)
             with tf.variable_scope(sc_name):
                 X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                top_layers.append(X)
+        self.top_layers = top_layers
 
         # upsample
         for ndx in reversed(range(n_layers)):
@@ -298,9 +301,13 @@ class PoseUNet(PoseCommon.PoseCommon):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def classify_val(self, train_type=0, at_step=-1):
+    def classify_val(self, train_type=0, at_step=-1, onTrain=False):
+
         if train_type is 0:
-            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+            if not onTrain:
+                val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+            else:
+                val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
         else:
             val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
         num_val = 0
@@ -318,8 +325,12 @@ class PoseUNet(PoseCommon.PoseCommon):
             val_preds = []
             val_predlocs = []
             val_locs = []
+            val_info = []
             for step in range(num_val/self.conf.batch_size):
-                self.setup_val(sess)
+                if onTrain:
+                    self.setup_train(sess, distort=False,treat_as_val=True)
+                else:
+                    self.setup_val(sess)
                 cur_pred = sess.run(self.pred, self.fd)
                 cur_predlocs = PoseTools.get_pred_locs(
                     cur_pred, self.edge_ignore)
@@ -330,6 +341,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 val_locs.append(self.locs)
                 val_preds.append(cur_pred)
                 val_predlocs.append(cur_predlocs)
+                val_info.append(self.info)
             self.close_cursors()
 
         def val_reshape(in_a):
@@ -340,8 +352,9 @@ class PoseUNet(PoseCommon.PoseCommon):
         val_preds = val_reshape(val_preds)
         val_predlocs = val_reshape(val_predlocs)
         val_locs = val_reshape(val_locs)
+        val_info = np.array(val_info).reshape([-1, 2])
         tf.reset_default_graph()
-        return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale
+        return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
 
     def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0, flipud=False):
         # maxframes if specificied reads that many frames
@@ -735,3 +748,215 @@ class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
         label_ims = PoseTools.create_label_images(
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
+
+class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
+
+    def __init__(self, conf, name='pose_unet_time', unet_name='pose_unet',joint=True):
+        PoseCommon.PoseCommon.__init__(self, conf, name)
+        self.net_name = 'pose_umdn_lstm'
+        self.dep_nets.keep_prob = 1.
+        self.net_unet_name = 'pose_unet'
+        self.unet_name = unet_name
+        self.dep_nets = PoseUNet(conf, unet_name)
+        self.joint = joint
+
+    def read_images(self, db_type, distort, sess, shuffle=None):
+        PoseCommon.PoseCommonTime.read_images(self,db_type,distort,sess,shuffle)
+
+    def create_ph(self):
+        PoseCommon.PoseCommon.create_ph(self)
+        imsz = self.conf.imsz
+        rescale = self.conf.unet_rescale
+        b_sz = self.conf.batch_size
+        t_sz = self.conf.time_window_size*2 +1
+        self.ph['x'] = tf.placeholder(tf.float32,
+                           [b_sz*t_sz,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
+                           name='x')
+        self.ph['y'] = tf.placeholder(tf.float32,
+                           [b_sz,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
+                           name='y')
+        self.ph['keep_prob'] = tf.placeholder(tf.float32)
+        self.ph['rnn_keep_prob'] = tf.placeholder(tf.float32)
+
+    def create_fd(self):
+        b_sz = self.conf.batch_size
+        t_sz = self.conf.rnn_before + self.conf.rnn_after + 1
+        x_shape = [b_sz*t_sz,] + self.ph['x'].get_shape().as_list()[1:]
+        y_shape = [b_sz,] + self.ph['y'].get_shape().as_list()[1:]
+        self.fd = {self.ph['x']:np.zeros(x_shape),
+                   self.ph['y']:np.zeros(y_shape),
+                   self.ph['phase_train']:False,
+                   self.ph['learning_rate']:0.
+                   }
+
+    def create_network(self):
+        with tf.variable_scope(self.net_unet_name):
+            m_sz = min(self.conf.imsz)/self.conf.unet_rescale
+            max_layers = int(math.ceil(math.log(m_sz,2)))-1
+            sel_sz = self.conf.sel_sz
+            n_layers = int(math.ceil(math.log(sel_sz,2)))+2
+            # max_layers = int(math.floor(math.log(m_sz)))
+            # sel_sz = self.conf.sel_sz
+            # n_layers = int(math.ceil(math.log(sel_sz)))+2
+            n_layers = min(max_layers,n_layers) - 2
+            mix_at = 2
+
+            n_conv = 2
+            conv = PoseCommon.conv_relu3
+            layers = []
+            up_layers = []
+            layers_sz = []
+            X = self.ph['x']
+            n_out = self.conf.n_classes
+            debug_layers = []
+
+            # downsample
+            for ndx in range(n_layers):
+                if ndx is 0:
+                    n_filt = 64
+                elif ndx is 1:
+                    n_filt = 128
+                elif ndx is 2:
+                    n_filt = 256
+                else:
+                    n_filt = 512
+
+                for cndx in range(n_conv):
+                    sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
+                    with tf.variable_scope(sc_name):
+                        X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                    debug_layers.append(X)
+                layers.append(X)
+                layers_sz.append(X.get_shape().as_list()[1:3])
+                X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
+                                   padding='SAME')
+
+            self.down_layers = layers
+            self.debug_layers = debug_layers
+
+        X = self.create_top_layer(X, conv, 512)
+
+            # upsample
+        with tf.variable_scope(self.net_unet_name):
+            for ndx in reversed(range(n_layers)):
+                if ndx is 0:
+                    n_filt = 64
+                elif ndx is 1:
+                    n_filt = 128
+                elif ndx is 2:
+                    n_filt = 256
+                else:
+                    n_filt = 512
+                X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
+
+                if ndx is mix_at:
+                # rotate X along axis-0 and concat to provide context context along previous time steps.
+                    X_prev = []
+                    X_next = []
+                    for t in range(self.conf.time_window_size):
+                        if not X_prev:
+                            X_prev_cur = tf.concat([X[1:,...],X[0:1,...]],axis=0)
+                            X_prev.append(X_prev_cur)
+                            X_next_cur = tf.concat([X[-1:,...],X[:-1,...]],axis=0)
+                            X_next.append(X_next_cur)
+                        else:
+                            Z = X_prev[-1]
+                            X_prev_cur = tf.concat([Z[1:,...],Z[0:1,...]],axis=0)
+                            X_prev.append(X_prev_cur)
+                            Z = X_next[-1]
+                            X_next_cur = tf.concat([Z[-1:,...],Z[:-1,...]],axis=0)
+                            X_next.append(X_next_cur)
+
+                    X = tf.concat( X_next + [X, ]+ X_prev, axis = 3)
+
+                X = tf.concat([X,layers[ndx]], axis=3)
+                for cndx in range(n_conv):
+                    sc_name = 'layerup_{}_{}'.format(ndx, cndx)
+                    with tf.variable_scope(sc_name):
+                        X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                up_layers.append(X)
+            self.up_layers = up_layers
+
+            # final conv
+            weights = tf.get_variable("out_weights", [3,3,n_filt,n_out],
+                                      initializer=tf.contrib.layers.xavier_initializer())
+            biases = tf.get_variable("out_biases", n_out,
+                                     initializer=tf.constant_initializer(0.))
+            conv = tf.nn.conv2d(X, weights, strides=[1, 1, 1, 1], padding='SAME')
+            X = conv + biases
+
+            t_sz = self.conf.time_window_size
+            s_sz = 2*t_sz+1
+        X = X[t_sz::s_sz,...]
+        return X
+
+    def create_top_layer(self, X, conv, n_filt):
+        bsz = self.conf.batch_size
+        tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
+
+        top_layers = []
+        if not self.joint:
+            with tf.variable_scope(self.net_unet_name):
+                for cndx in range(2):
+                    sc_name = 'top_layer_{}'.format(cndx)
+                    with tf.variable_scope(sc_name):
+                        X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                        top_layers.append(X)
+                self.top_layers = top_layers
+
+            in_layer = self.top_layers[0]
+            in_shape = in_layer.get_shape().as_list()
+            in_units = np.prod(in_shape[1:])
+            in_layer = tf.reshape(in_layer,[bsz, tw, in_units])
+
+            out_layer = self.top_layers[1]
+            out_shape = out_layer.get_shape().as_list()
+            n_units = np.prod(out_shape[1:])
+            out_layer = tf.reshape(out_layer,[bsz, tw, n_units])
+
+            n_rnn_layers = 3
+            with tf.variable_scope(self.net_name):
+                cells = []
+                for _ in range(n_rnn_layers):
+                    cell = tf.contrib.rnn.GRUCell(n_units)
+                    cell = tf.contrib.rnn.DropoutWrapper(cell, self.ph['rnn_keep_prob'])
+                    cells.append(cell)
+                cell = tf.contrib.rnn.MultiRNNCell(cells)
+
+                rnn_out, _ = tf.nn.dynamic_rnn(cell, in_layer, dtype=tf.float32)
+                rnn_out = tf.transpose(rnn_out, [1, 0, 2])
+                out = tf.gather(rnn_out, int(rnn_out.get_shape()[0]) - 1)
+            self.rnn_out = out
+            self.rnn_in = in_layer
+            self.rnn_label = out_layer
+
+        else:
+            None
+
+        return X
+
+    def fd_train(self):
+        self.fd[self.ph['phase_train']] = True
+        self.fd[self.ph['keep_prob']] = self.keep_prob
+        self.fd[self.ph['rnn_keep_prob']] = self.keep_prob
+
+    def fd_val(self):
+        self.fd[self.ph['phase_train']] = False
+        self.fd[self.ph['keep_prob']] = 1.
+        self.fd[self.ph['rnn_keep_prob']] = 1.
+
+
+    def update_fd(self, db_type, sess, distort):
+        self.read_images(db_type, distort, sess, distort)
+        rescale = self.conf.unet_rescale
+        xs = scale_images(self.xs, rescale, self.conf)
+        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
+        imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
+        label_ims = PoseTools.create_label_images(
+            self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
+        self.fd[self.ph['y']] = label_ims
+
+
+    def loss(self):
+        if not self.joint:
+            return tf.nn.l2_loss(self.rnn_out-self.rnn_label)

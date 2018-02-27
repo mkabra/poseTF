@@ -10,7 +10,7 @@ import os
 import re
 import localSetup
 import numpy as np
-
+import copy
 
 class config(object):
     # ----- Names
@@ -134,6 +134,10 @@ class config(object):
     time_window_size = 1
     do_time = False
 
+    # ------ RNN Parameters
+    rnn_before = 9
+    rnn_after = 0
+
     # ----- Save parameters
 
     save_step = 2000
@@ -182,11 +186,7 @@ class config(object):
 # -- alice fly --
 
 aliceConfig = config()
-aliceConfig.do_time = True
-if aliceConfig.do_time:
-    aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache','alice_time')
-else:
-    aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache', 'alice')
+aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache', 'alice')
 #aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
 aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl')
 def alice_exp_name(dirname):
@@ -221,9 +221,16 @@ aliceConfig.brange = [0,0]
 aliceConfig.crange = [1.,1.]
 aliceConfig.mdn_extra_layers = 1
 aliceConfig.normalize_img_mean = False
-# aliceConfig.mdn_groups = [range(11),[11],[12],[13],[14],[15],[16]]
-#aliceConfig.mdn_groups = [range(13)+[15,16],[13],[14]]
 aliceConfig.mdn_groups = [range(17)]
+
+aliceConfig_time = copy.deepcopy(aliceConfig)
+aliceConfig_time.do_time = True
+aliceConfig_time.cachedir = os.path.join(localSetup.bdir, 'cache','alice_time')
+
+aliceConfig_rnn = copy.deepcopy(aliceConfig)
+aliceConfig_rnn.cachedir = os.path.join(localSetup.bdir, 'cache','alice_rnn')
+
+
 # -- felipe bees --
 
 felipeConfig = config()

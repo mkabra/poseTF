@@ -602,7 +602,7 @@ def trx_pts(L, ndx):
     return curpts.reshape(np.flipud(sz))
 
 
-def get_curenv(env, valenv, split, conf, trx_split, is_val):
+def get_curenv(env, valenv, split, conf, trx_split, is_val, trx_ndx, ndx):
     if split:
         if hasattr(conf, 'splitType'):
             if conf.splitType is 'frame':
@@ -690,7 +690,7 @@ def createTFRecordFromLblWithTrx(conf, split=True):
 
             for fnum in frames:
 
-                curenv = get_curenv(env,valenv, split, conf, trx_split, is_val)
+                curenv = get_curenv(env,valenv, split, conf, trx_split, is_val, trx_ndx, ndx)
 
                 if not check_fnum(fnum, cap, expname, ndx):
                     continue
@@ -764,7 +764,7 @@ def createTFRecordTimeFromLblWithTrx(conf, split=True):
 
             for fnum in frames:
 
-                cur_env = get_curenv(env,valenv, split, conf, trx_split, is_val)
+                cur_env = get_curenv(env,valenv, split, conf, trx_split, is_val, trx_ndx, ndx)
 
                 sel_pts = int(view * npts_per_view) + conf.selpts
                 # current frame
@@ -794,6 +794,98 @@ def createTFRecordTimeFromLblWithTrx(conf, split=True):
 
                 prev_array = [i for i in reversed(prev_array)]
                 all_f = np.concatenate(prev_array + [frame_in,] + next_array)
+
+                assert conf.imsz[0] == conf.imsz[1]
+
+                rows, cols = all_f.shape[1:3]
+                depth = all_f.shape[3]
+
+                image_raw = all_f.tostring()
+                example = tf.train.Example(features=tf.train.Features(feature={
+                    'height': _int64_feature(rows),
+                    'width': _int64_feature(cols),
+                    'depth': _int64_feature(depth),
+                    'locs': _float_feature(cur_loc.flatten()),
+                    'expndx': _float_feature(ndx),
+                    'ts': _float_feature(fnum),
+                    'image_raw': _bytes_feature(image_raw)}))
+                cur_env.write(example.SerializeToString())
+
+                if cur_env is valenv:
+                    valcount += 1
+                else:
+                    count += 1
+
+        cap.close()  # close the movie handles
+        print('Done %d of %d movies, count:%d val:%d' % (ndx, len(local_dirs), count, valcount))
+    env.close(); valenv.close() if split else None
+    print('%d,%d number of pos examples added to the db and valdb' % (count, valcount))
+    L.close()
+
+def createTFRecordRNNFromLblWithTrx(conf, split=True):
+    # Uses rnn_before and rnn_after.
+    createValdata(conf)
+    is_val, local_dirs, _ = loadValdata(conf)
+
+    L = h5py.File(conf.labelfile, 'r')
+    npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
+    trx_files = get_trx_files(L,local_dirs)
+
+    env, valenv = create_envs(conf, split)
+    view = conf.view
+    count = 0; valcount = 0
+
+    tw = conf.time_window_size
+    for ndx, dirname in enumerate(local_dirs):
+
+        T = sio.loadmat(trx_files[ndx])['trx'][0]
+        n_trx = len(T)
+
+        curpts = trx_pts(L,ndx)
+        trx_split = np.random.random(n_trx) < conf.valratio
+        cap = movies.Movie(local_dirs[ndx])
+
+        for trx_ndx in range(n_trx):
+            frames = np.where(np.invert(np.all(np.isnan(curpts[trx_ndx,:, :, :]), axis=(1, 2))))[0]
+            cur_trx = T[trx_ndx]
+
+            for fnum in frames:
+
+                cur_env = get_curenv(env,valenv, split, conf, trx_split, is_val, trx_ndx, ndx)
+
+                sel_pts = int(view * npts_per_view) + conf.selpts
+                # current frame
+                frame_in, x, y, theta = read_frame(cap, fnum, cur_trx, 0)
+                frame_in, cur_loc = get_patch_trx(frame_in,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+
+                if conf.imgDim == 1:
+                    frame_in = frame_in[:, :, 0:1]
+                frame_in = frame_in[np.newaxis,...]
+
+                # read prev and next frames
+                next_array = []; prev_array = []
+                for cur_t in range(conf.rnn_after):
+                    next_fr, x, y, theta = read_frame(cap, fnum, cur_trx, cur_t+1)
+                    next_fr, _ = get_patch_trx(next_fr,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+                    if conf.imgDim == 1:
+                        next_fr = next_fr[:, :, 0:1]
+                    next_fr = next_fr[np.newaxis,...]
+                    next_array.append(next_fr)
+
+                for cur_t in range(conf.rnn_before):
+                    prev_fr, x, y, theta = read_frame(cap, fnum, cur_trx, -cur_t-1)
+                    prev_fr, _ = get_patch_trx(prev_fr,x,y,theta,conf.imsz[0], curpts[trx_ndx,fnum, :, sel_pts])
+                    if conf.imgDim == 1:
+                        prev_fr = prev_fr[:, :, 0:1]
+                    prev_fr = prev_fr[np.newaxis,...]
+                    prev_array.append(prev_fr)
+
+                prev_array = [i for i in reversed(prev_array)]
+
+                if not next_array:
+                    all_f = np.concatenate(prev_array + [frame_in,])
+                else:
+                    all_f = np.concatenate(prev_array + [frame_in,] + next_array)
 
                 assert conf.imsz[0] == conf.imsz[1]
 

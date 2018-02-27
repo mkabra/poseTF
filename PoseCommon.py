@@ -417,9 +417,12 @@ class PoseCommon(object):
         sess.run(self.opt, self.fd)
 
 
-    def setup_train(self, sess):
-        self.fd_train()
-        self.update_fd(self.DBType.Train, sess=sess, distort=True)
+    def setup_train(self, sess, distort=True, treat_as_val = False):
+        if treat_as_val:
+            self.fd_val()
+        else:
+            self.fd_train()
+        self.update_fd(self.DBType.Train, sess=sess, distort=distort)
 
     def setup_val(self, sess):
         self.fd_val()
