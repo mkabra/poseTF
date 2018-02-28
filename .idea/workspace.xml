@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseCommon.py" afterPath="$PROJECT_DIR$/PoseCommon.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUNet.py" afterPath="$PROJECT_DIR$/PoseUNet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResData.py" afterPath="$PROJECT_DIR$/multiResData.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -42,8 +40,8 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="493">
-                  <caret line="813" column="24" lean-forward="true" selection-start-line="813" selection-start-column="24" selection-end-line="813" selection-end-column="24" />
+                <state relative-caret-position="622">
+                  <caret line="838" column="49" lean-forward="false" selection-start-line="838" selection-start-column="49" selection-end-line="838" selection-end-column="49" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1104#1617#0" expanded="false" />
@@ -516,8 +514,8 @@
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
       </list>
     </option>
   </component>
@@ -884,13 +882,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00059" summary="For MDN loss, instead of exp(-dist^2/sigma^2) using exp(-dist/sigma). Otherwise only 1 mixture component had any useful predictions.">
-      <created>1516179907579</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1516179907580</updated>
-    </task>
     <task id="LOCAL-00060" summary="Also enabling contrast adjustment for alice's data">
       <created>1516185562389</created>
       <option name="number" value="00060" />
@@ -1227,7 +1218,14 @@
       <option name="project" value="LOCAL" />
       <updated>1519719680004</updated>
     </task>
-    <option name="localTasksCounter" value="108" />
+    <task id="LOCAL-00108" summary="Fixing the number of filt in unet to 128">
+      <created>1519796154916</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1519796154917</updated>
+    </task>
+    <option name="localTasksCounter" value="109" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1322,7 +1320,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="single group for alice" />
     <MESSAGE value="three groups for alice" />
     <MESSAGE value="temp checkin" />
     <MESSAGE value="Fixing a bug with distortion. &#10;Introducing dropouts for UNets" />
@@ -1347,7 +1344,8 @@
     <MESSAGE value="Bug fix for moving offset from net to loss." />
     <MESSAGE value="Separate fc for locs, scales and logits" />
     <MESSAGE value="Adding RNN for UNet" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding RNN for UNet" />
+    <MESSAGE value="Fixing the number of filt in unet to 128" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixing the number of filt in unet to 128" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1949,10 +1947,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="23" lean-forward="false" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="813" column="24" lean-forward="true" selection-start-line="813" selection-start-column="24" selection-end-line="813" selection-end-column="24" />
+        <state relative-caret-position="622">
+          <caret line="838" column="49" lean-forward="false" selection-start-line="838" selection-start-column="49" selection-end-line="838" selection-end-column="49" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#1104#1617#0" expanded="false" />
@@ -1970,14 +1976,6 @@
             <element signature="e#25289#29138#0" expanded="false" />
             <element signature="e#29197#29644#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="23" lean-forward="false" selection-start-line="12" selection-start-column="23" selection-end-line="12" selection-end-column="23" />
-          <folding />
         </state>
       </provider>
     </entry>

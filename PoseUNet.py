@@ -811,16 +811,17 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
             n_out = self.conf.n_classes
             debug_layers = []
 
+            n_filt = 128
             # downsample
             for ndx in range(n_layers):
-                if ndx is 0:
-                    n_filt = 64
-                elif ndx is 1:
-                    n_filt = 128
-                elif ndx is 2:
-                    n_filt = 256
-                else:
-                    n_filt = 512
+                # if ndx is 0:
+                #     n_filt = 64
+                # elif ndx is 1:
+                #     n_filt = 128
+                # elif ndx is 2:
+                #     n_filt = 256
+                # else:
+                #     n_filt = 512
 
                 for cndx in range(n_conv):
                     sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
@@ -835,19 +836,19 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
             self.down_layers = layers
             self.debug_layers = debug_layers
 
-        X = self.create_top_layer(X, conv, 512, n_layers)
+        X = self.create_top_layer(X, conv, n_filt, n_layers)
 
             # upsample
         with tf.variable_scope(self.net_unet_name):
             for ndx in reversed(range(n_layers)):
-                if ndx is 0:
-                    n_filt = 64
-                elif ndx is 1:
-                    n_filt = 128
-                elif ndx is 2:
-                    n_filt = 256
-                else:
-                    n_filt = 512
+                # if ndx is 0:
+                #     n_filt = 64
+                # elif ndx is 1:
+                #     n_filt = 128
+                # elif ndx is 2:
+                #     n_filt = 256
+                # else:
+                #     n_filt = 512
                 X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
 
                 X = tf.concat([X, self.slice_time(layers[ndx])], axis=3)
