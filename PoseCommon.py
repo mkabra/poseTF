@@ -724,3 +724,72 @@ class PoseCommonTime(PoseCommon):
         self.locs = locs
         self.info = info
 
+
+class PoseCommonRNN(PoseCommonTime):
+
+    def create_cursors(self, sess):
+        train_ims, train_locs, train_info = \
+            multiResData.read_and_decode_rnn(self.train_queue, self.conf)
+        val_ims, val_locs, val_info = \
+            multiResData.read_and_decode_rnn(self.val_queue, self.conf)
+        self.train_data = [train_ims, train_locs, train_info]
+        self.val_data = [val_ims, val_locs, val_info]
+        self.coord = tf.train.Coordinator()
+        self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
+
+    def read_images(self, db_type, distort, sess, shuffle=None):
+        conf = self.conf
+        cur_data = self.val_data if (db_type == self.DBType.Val)\
+            else self.train_data
+        xs = []
+        locs = []
+        info = []
+
+        if shuffle is None:
+            shuffle = distort
+
+        for _ in range(conf.batch_size):
+            if shuffle:
+                for _ in range(np.random.randint(100)):
+                    sess.run(cur_data)
+            [cur_xs, cur_locs, cur_info] = sess.run(cur_data)
+            xs.append(cur_xs)
+            locs.append(cur_locs)
+            info.append(cur_info)
+        xs = np.array(xs)
+        tw = (conf.rnn_before + conf.rnn_after + 1)
+        b_sz = conf.batch_size * tw
+        xs = xs.reshape( (b_sz, ) + xs.shape[2:])
+        locs = np.array(locs)
+        locs = multiResData.sanitizelocs(locs)
+
+        xs = PoseTools.adjust_contrast(xs, conf)
+
+        # ideally normalize_mean should be here, but misc.imresize in scale_images
+        # messes up dtypes. It converts float64 back to uint8.
+        # so for now it'll be in update_fd.
+        # xs = PoseTools.normalize_mean(xs, conf)
+        if distort:
+            if conf.horzFlip:
+                xs, locs = PoseTools.randomly_flip_lr(xs, locs, tw)
+            if conf.vertFlip:
+                xs, locs = PoseTools.randomly_flip_ud(xs, locs, tw)
+            xs, locs = PoseTools.randomly_rotate(xs, locs, conf, tw)
+            xs, locs = PoseTools.randomly_translate(xs, locs, conf, tw)
+            xs = PoseTools.randomly_adjust(xs, conf, tw)
+        # else:
+        #     rows, cols = xs.shape[2:]
+        #     for ndx in range(xs.shape[0]):
+        #         orig_im = copy.deepcopy(xs[ndx, ...])
+        #         ii = copy.deepcopy(orig_im).transpose([1, 2, 0])
+        #         mat = np.float32([[1, 0, 0], [0, 1, 0]])
+        #         ii = cv2.warpAffine(ii, mat, (cols, rows))
+        #         if ii.ndim == 2:
+        #             ii = ii[..., np.newaxis]
+        #         ii = ii.transpose([2, 0, 1])
+        #         xs[ndx, ...] = ii
+
+        self.xs = xs
+        self.locs = locs
+        self.info = info
+

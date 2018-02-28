@@ -1026,3 +1026,32 @@ def read_and_decode_time(filename_queue, conf):
 
     return image, locs, [expndx, ts]
 
+def read_and_decode_rnn(filename_queue, conf):
+    reader = tf.TFRecordReader()
+    _, serialized_example = reader.read(filename_queue)
+    # n_max = conf.max_n_animals
+    features = tf.parse_single_example(
+        serialized_example,
+        features={'height': tf.FixedLenFeature([], dtype=tf.int64),
+                  'width': tf.FixedLenFeature([], dtype=tf.int64),
+                  'depth': tf.FixedLenFeature([], dtype=tf.int64),
+                  'locs': tf.FixedLenFeature(shape=[conf.n_classes, 2], dtype=tf.float32),
+                  'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+                  'ts': tf.FixedLenFeature([], dtype=tf.float32),
+                  'image_raw': tf.FixedLenFeature([], dtype=tf.string)
+                  })
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
+    height = tf.cast(features['height'], tf.int64)
+    width = tf.cast(features['width'], tf.int64)
+    depth = tf.cast(features['depth'], tf.int64)
+    # n_animals = tf.cast(features['n_animals'], tf.int64)
+
+    tw = conf.rnn_before + conf.rnn_after + 1
+    image = tf.reshape(image, (tw,) + conf.imsz + (conf.imgDim,))
+
+    locs = tf.cast(features['locs'], tf.float64)
+    expndx = tf.cast(features['expndx'], tf.float64)
+    ts = tf.cast(features['ts'], tf.float64)  # tf.constant([0]); #
+
+    return image, locs, [expndx, ts]
+

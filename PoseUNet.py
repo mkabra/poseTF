@@ -84,15 +84,16 @@ class PoseUNet(PoseCommon.PoseCommon):
         debug_layers = []
 
         # downsample
+        n_filt = 128
         for ndx in range(n_layers):
-            if ndx is 0:
-                n_filt = 64 #32
-            elif ndx is 1:
-                n_filt = 128 #64
-            elif ndx is 2:
-                n_filt = 256
-            else:
-                n_filt = 512 #128
+            # if ndx is 0:
+            #     n_filt = 64 #32
+            # elif ndx is 1:
+            #     n_filt = 128 #64
+            # elif ndx is 2:
+            #     n_filt = 256
+            # else:
+            #     n_filt = 512 #128
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
@@ -127,14 +128,14 @@ class PoseUNet(PoseCommon.PoseCommon):
             # #     n_filt = 256
             # else:
             #     n_filt = 128
-            if ndx is 0:
-                n_filt = 64  # 32
-            elif ndx is 1:
-                n_filt = 128  # 64
-            elif ndx is 2:
-                n_filt = 256
-            else:
-                n_filt = 512  # 128
+            # if ndx is 0:
+            #     n_filt = 64  # 32
+            # elif ndx is 1:
+            #     n_filt = 128  # 64
+            # elif ndx is 2:
+            #     n_filt = 256
+            # else:
+            #     n_filt = 512  # 128
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
             for cndx in range(n_conv):
@@ -749,26 +750,26 @@ class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
-class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
+class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
 
-    def __init__(self, conf, name='pose_unet_time', unet_name='pose_unet',joint=True):
+    def __init__(self, conf, name='pose_unet_rnn', unet_name='pose_unet',joint=True):
         PoseCommon.PoseCommon.__init__(self, conf, name)
-        self.net_name = 'pose_umdn_lstm'
+        self.dep_nets = PoseUNet(conf, unet_name)
+        self.net_name = 'pose_unet_rnn'
         self.dep_nets.keep_prob = 1.
         self.net_unet_name = 'pose_unet'
         self.unet_name = unet_name
-        self.dep_nets = PoseUNet(conf, unet_name)
         self.joint = joint
 
     def read_images(self, db_type, distort, sess, shuffle=None):
-        PoseCommon.PoseCommonTime.read_images(self,db_type,distort,sess,shuffle)
+        PoseCommon.PoseCommonRNN.read_images(self,db_type,distort,sess,shuffle)
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
         imsz = self.conf.imsz
         rescale = self.conf.unet_rescale
         b_sz = self.conf.batch_size
-        t_sz = self.conf.time_window_size*2 +1
+        t_sz = self.conf.rnn_before + self.conf.rnn_after + 1
         self.ph['x'] = tf.placeholder(tf.float32,
                            [b_sz*t_sz,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
                            name='x')
@@ -834,7 +835,7 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
             self.down_layers = layers
             self.debug_layers = debug_layers
 
-        X = self.create_top_layer(X, conv, 512)
+        X = self.create_top_layer(X, conv, 512, n_layers)
 
             # upsample
         with tf.variable_scope(self.net_unet_name):
@@ -849,27 +850,7 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
                     n_filt = 512
                 X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
 
-                if ndx is mix_at:
-                # rotate X along axis-0 and concat to provide context context along previous time steps.
-                    X_prev = []
-                    X_next = []
-                    for t in range(self.conf.time_window_size):
-                        if not X_prev:
-                            X_prev_cur = tf.concat([X[1:,...],X[0:1,...]],axis=0)
-                            X_prev.append(X_prev_cur)
-                            X_next_cur = tf.concat([X[-1:,...],X[:-1,...]],axis=0)
-                            X_next.append(X_next_cur)
-                        else:
-                            Z = X_prev[-1]
-                            X_prev_cur = tf.concat([Z[1:,...],Z[0:1,...]],axis=0)
-                            X_prev.append(X_prev_cur)
-                            Z = X_next[-1]
-                            X_next_cur = tf.concat([Z[-1:,...],Z[:-1,...]],axis=0)
-                            X_next.append(X_next_cur)
-
-                    X = tf.concat( X_next + [X, ]+ X_prev, axis = 3)
-
-                X = tf.concat([X,layers[ndx]], axis=3)
+                X = tf.concat([X, self.slice_time(layers[ndx])], axis=3)
                 for cndx in range(n_conv):
                     sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                     with tf.variable_scope(sc_name):
@@ -885,12 +866,16 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
             conv = tf.nn.conv2d(X, weights, strides=[1, 1, 1, 1], padding='SAME')
             X = conv + biases
 
-            t_sz = self.conf.time_window_size
-            s_sz = 2*t_sz+1
-        X = X[t_sz::s_sz,...]
         return X
 
-    def create_top_layer(self, X, conv, n_filt):
+    def slice_time(self, X):
+        bsz = self.conf.batch_size
+        tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
+        X_shape = X.get_shape().as_list()
+        X = tf.reshape(X, [bsz, tw] + X_shape[1:])
+        return X[:, self.conf.rnn_before, :, :, :]
+
+    def create_top_layer(self, X, conv, n_filt, n_layers):
         bsz = self.conf.batch_size
         tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
 
@@ -898,24 +883,27 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
         if not self.joint:
             with tf.variable_scope(self.net_unet_name):
                 for cndx in range(2):
-                    sc_name = 'top_layer_{}'.format(cndx)
+                    sc_name = 'layer_{}_{}'.format(n_layers, cndx)
                     with tf.variable_scope(sc_name):
                         X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
                         top_layers.append(X)
                 self.top_layers = top_layers
 
+            X = self.slice_time(X)
+
             in_layer = self.top_layers[0]
             in_shape = in_layer.get_shape().as_list()
             in_units = np.prod(in_shape[1:])
-            in_layer = tf.reshape(in_layer,[bsz, tw, in_units])
+            in_layer = tf.reshape(in_layer, [bsz, tw, in_units])
 
             out_layer = self.top_layers[1]
             out_shape = out_layer.get_shape().as_list()
             n_units = np.prod(out_shape[1:])
-            out_layer = tf.reshape(out_layer,[bsz, tw, n_units])
 
             n_rnn_layers = 3
+
             with tf.variable_scope(self.net_name):
+
                 cells = []
                 for _ in range(n_rnn_layers):
                     cell = tf.contrib.rnn.GRUCell(n_units)
@@ -928,7 +916,7 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
                 out = tf.gather(rnn_out, int(rnn_out.get_shape()[0]) - 1)
             self.rnn_out = out
             self.rnn_in = in_layer
-            self.rnn_label = out_layer
+            self.rnn_label = tf.reshape(X,[self.conf.batch_size,-1])
 
         else:
             None
@@ -957,6 +945,20 @@ class PoseUNetLSTM(PoseUNet, PoseCommon.PoseCommonTime):
         self.fd[self.ph['y']] = label_ims
 
 
-    def loss(self):
+    def loss(self, pred_in, pred_out):
         if not self.joint:
             return tf.nn.l2_loss(self.rnn_out-self.rnn_label)
+        else:
+            return tf.nn.l2_loss(pred_in-pred_out)
+
+    def train_unet_rnn(self, restore, train_type=0):
+
+        PoseCommon.PoseCommon.train(self,
+            restore=restore,
+            train_type=train_type,
+            create_network=self.create_network,
+            training_iters=12000/self.conf.batch_size*8,
+            loss=self.loss,
+            pred_in_key='y',
+            learning_rate=0.0001,
+            td_fields=('loss','dist'))
