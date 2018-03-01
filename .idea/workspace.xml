@@ -6,11 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseCommon.py" afterPath="$PROJECT_DIR$/PoseCommon.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUNet.py" afterPath="$PROJECT_DIR$/PoseUNet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResData.py" afterPath="$PROJECT_DIR$/multiResData.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -41,11 +37,11 @@
     <splitter split-orientation="horizontal" split-proportion="0.51687115">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="401">
-                  <caret line="999" column="32" lean-forward="false" selection-start-line="999" selection-start-column="32" selection-end-line="999" selection-end-column="32" />
+                <state relative-caret-position="795">
+                  <caret line="1017" column="0" lean-forward="true" selection-start-line="1017" selection-start-column="0" selection-end-line="1017" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#1104#1617#0" expanded="false" />
@@ -145,7 +141,7 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/multiResData.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="-755">
@@ -522,9 +518,9 @@
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
       </list>
     </option>
   </component>
@@ -891,13 +887,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00061" summary="Contrast adjustment doesn't help for alice. Disabling it. Also disabling brange and crange.">
-      <created>1516262181769</created>
-      <option name="number" value="00061" />
-      <option name="presentableId" value="LOCAL-00061" />
-      <option name="project" value="LOCAL" />
-      <updated>1516262181769</updated>
-    </task>
     <task id="LOCAL-00062" summary="adding function to show evolution of results with training">
       <created>1516272150972</created>
       <option name="number" value="00062" />
@@ -1234,7 +1223,14 @@
       <option name="project" value="LOCAL" />
       <updated>1519796921252</updated>
     </task>
-    <option name="localTasksCounter" value="110" />
+    <task id="LOCAL-00110" summary="Changes to PoseUNetRNN UNet network">
+      <created>1519891427736</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1519891427736</updated>
+    </task>
+    <option name="localTasksCounter" value="111" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1941,30 +1937,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="401">
-          <caret line="999" column="32" lean-forward="false" selection-start-line="999" selection-start-column="32" selection-end-line="999" selection-end-column="32" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-            <element signature="e#1104#1617#0" expanded="false" />
-            <element signature="e#1652#2028#0" expanded="false" />
-            <element signature="e#4509#4523#0" expanded="false" />
-            <element signature="e#5823#5858#0" expanded="false" />
-            <element signature="e#11443#13629#0" expanded="false" />
-            <element signature="e#13728#16162#0" expanded="false" />
-            <element signature="e#16287#20039#0" expanded="false" />
-            <element signature="e#20146#22848#0" expanded="false" />
-            <element signature="e#22915#23803#0" expanded="false" />
-            <element signature="e#23867#29644#0" expanded="false" />
-            <element signature="e#24180#24781#0" expanded="false" />
-            <element signature="e#24816#25248#0" expanded="false" />
-            <element signature="e#25289#29138#0" expanded="false" />
-            <element signature="e#29197#29644#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-755">
@@ -1985,6 +1957,30 @@
           <caret line="229" column="27" lean-forward="true" selection-start-line="229" selection-start-column="27" selection-end-line="229" selection-end-column="27" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="795">
+          <caret line="1017" column="0" lean-forward="true" selection-start-line="1017" selection-start-column="0" selection-end-line="1017" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+            <element signature="e#1104#1617#0" expanded="false" />
+            <element signature="e#1652#2028#0" expanded="false" />
+            <element signature="e#4509#4523#0" expanded="false" />
+            <element signature="e#5823#5858#0" expanded="false" />
+            <element signature="e#11443#13629#0" expanded="false" />
+            <element signature="e#13728#16162#0" expanded="false" />
+            <element signature="e#16287#20039#0" expanded="false" />
+            <element signature="e#20146#22848#0" expanded="false" />
+            <element signature="e#22915#23803#0" expanded="false" />
+            <element signature="e#23867#29644#0" expanded="false" />
+            <element signature="e#24180#24781#0" expanded="false" />
+            <element signature="e#24816#25248#0" expanded="false" />
+            <element signature="e#25289#29138#0" expanded="false" />
+            <element signature="e#29197#29644#0" expanded="false" />
           </folding>
         </state>
       </provider>

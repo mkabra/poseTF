@@ -1015,16 +1015,3 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def open_dbs(self):
-        assert self.train_type is not None, 'traintype has not been set'
-        if self.train_type == 0:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename_rnn) + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename_rnn) + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([train_filename])
-            self.val_queue = tf.train.string_input_producer([val_filename])
-        else:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename_rnn) + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename_rnn) + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([train_filename])
-            self.val_queue = tf.train.string_input_producer([val_filename])
-
