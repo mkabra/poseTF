@@ -576,19 +576,34 @@ def createTFRecordFromLbl(conf,split=True):
         valenv.close()
     print('%d,%d number of pos examples added to the db and valdb' %(count,valcount))
 
-def create_envs(conf, split):
-    if split:
-        trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
-        valfilename = os.path.join(conf.cachedir, conf.valfilename)
+def create_envs(conf, split,type=None):
 
-        env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
-        valenv = tf.python_io.TFRecordWriter(valfilename + '.tfrecords')
+    if type is 'rnn':
+        if split:
+            trainfilename = os.path.join(conf.cachedir, conf.trainfilename_rnn)
+            valfilename = os.path.join(conf.cachedir, conf.valfilename_rnn)
+
+            env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+            valenv = tf.python_io.TFRecordWriter(valfilename + '.tfrecords')
+        else:
+            trainfilename = os.path.join(conf.cachedir, conf.fulltrainfilename_rnn)
+            env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+            valenv = None
+
+        return env, valenv
     else:
-        trainfilename = os.path.join(conf.cachedir, conf.fulltrainfilename)
-        env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
-        valenv = None
+        if split:
+            trainfilename = os.path.join(conf.cachedir, conf.trainfilename)
+            valfilename = os.path.join(conf.cachedir, conf.valfilename)
 
-    return env, valenv
+            env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+            valenv = tf.python_io.TFRecordWriter(valfilename + '.tfrecords')
+        else:
+            trainfilename = os.path.join(conf.cachedir, conf.fulltrainfilename)
+            env = tf.python_io.TFRecordWriter(trainfilename + '.tfrecords')
+            valenv = None
+
+        return env, valenv
 
 def trx_pts(L, ndx):
     # new styled sparse labeledpos
@@ -831,11 +846,11 @@ def createTFRecordRNNFromLblWithTrx(conf, split=True):
     npts_per_view = np.array(L['cfg']['NumLabelPoints'])[0, 0]
     trx_files = get_trx_files(L,local_dirs)
 
-    env, valenv = create_envs(conf, split)
+    env_rnn, valenv_rnn = create_envs(conf, split)
+    env, valenv = create_envs(conf, split,type=None)
     view = conf.view
     count = 0; valcount = 0
 
-    tw = conf.time_window_size
     for ndx, dirname in enumerate(local_dirs):
 
         T = sio.loadmat(trx_files[ndx])['trx'][0]
@@ -851,7 +866,11 @@ def createTFRecordRNNFromLblWithTrx(conf, split=True):
 
             for fnum in frames:
 
-                cur_env = get_curenv(env,valenv, split, conf, trx_split, is_val, trx_ndx, ndx)
+                cur_env_rnn = get_curenv(env_rnn,valenv_rnn, split, conf, trx_split, is_val, trx_ndx, ndx)
+                if cur_env_rnn is env_rnn:
+                    cur_env = env
+                else:
+                    cur_env = valenv
 
                 sel_pts = int(view * npts_per_view) + conf.selpts
                 # current frame
@@ -901,16 +920,16 @@ def createTFRecordRNNFromLblWithTrx(conf, split=True):
                     'expndx': _float_feature(ndx),
                     'ts': _float_feature(fnum),
                     'image_raw': _bytes_feature(image_raw)}))
-                cur_env.write(example.SerializeToString())
+                cur_env_rnn.write(example.SerializeToString())
 
-                if cur_env is valenv:
+                if cur_env_rnn is valenv_rnn:
                     valcount += 1
                 else:
                     count += 1
 
         cap.close()  # close the movie handles
         print('Done %d of %d movies, count:%d val:%d' % (ndx, len(local_dirs), count, valcount))
-    env.close(); valenv.close() if split else None
+    env_rnn.close(); valenv_rnn.close() if split else None
     print('%d,%d number of pos examples added to the db and valdb' % (count, valcount))
     L.close()
 

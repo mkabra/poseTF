@@ -760,6 +760,8 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         self.net_unet_name = 'pose_unet'
         self.unet_name = unet_name
         self.joint = joint
+        self.keep_prob = 0.7
+        self.edge_ignore = 1
 
     def read_images(self, db_type, distort, sess, shuffle=None):
         PoseCommon.PoseCommonRNN.read_images(self,db_type,distort,sess,shuffle)
@@ -836,7 +838,10 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
             self.down_layers = layers
             self.debug_layers = debug_layers
 
-        X = self.create_top_layer(X, conv, n_filt, n_layers)
+        if not self.joint:
+            X = self.create_top_layer_notjoint(X, conv, n_filt, n_layers)
+        else:
+            X = self.create_top_layer_joint(X, conv, n_filt, n_layers)
 
             # upsample
         with tf.variable_scope(self.net_unet_name):
@@ -876,51 +881,91 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         X = tf.reshape(X, [bsz, tw] + X_shape[1:])
         return X[:, self.conf.rnn_before, :, :, :]
 
-    def create_top_layer(self, X, conv, n_filt, n_layers):
+
+    def create_top_layer_joint(self, X, conv, n_filt, n_layers):
         bsz = self.conf.batch_size
         tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
 
         top_layers = []
-        if not self.joint:
-            with tf.variable_scope(self.net_unet_name):
-                for cndx in range(2):
-                    sc_name = 'layer_{}_{}'.format(n_layers, cndx)
-                    with tf.variable_scope(sc_name):
-                        X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
-                        top_layers.append(X)
-                self.top_layers = top_layers
+        with tf.variable_scope(self.net_unet_name):
+            for cndx in range(2):
+                sc_name = 'layer_{}_{}'.format(n_layers, cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                    top_layers.append(X)
+            self.top_layers = top_layers
 
-            X = self.slice_time(X)
 
-            in_layer = self.top_layers[0]
-            in_shape = in_layer.get_shape().as_list()
-            in_units = np.prod(in_shape[1:])
-            in_layer = tf.reshape(in_layer, [bsz, tw, in_units])
+        in_layer = self.top_layers[0]
+        in_shape = in_layer.get_shape().as_list()
+        in_units = np.prod(in_shape[1:])
+        in_layer = tf.reshape(in_layer, [bsz, tw, in_units])
 
-            out_layer = self.top_layers[1]
-            out_shape = out_layer.get_shape().as_list()
-            n_units = np.prod(out_shape[1:])
+        out_layer = self.top_layers[1]
+        out_shape = out_layer.get_shape().as_list()
+        n_units = np.prod(out_shape[1:])
 
-            n_rnn_layers = 3
+        n_rnn_layers = 3
 
-            with tf.variable_scope(self.net_name):
+        with tf.variable_scope(self.net_name):
 
-                cells = []
-                for _ in range(n_rnn_layers):
-                    cell = tf.contrib.rnn.GRUCell(n_units)
-                    cell = tf.contrib.rnn.DropoutWrapper(cell, self.ph['rnn_keep_prob'])
-                    cells.append(cell)
-                cell = tf.contrib.rnn.MultiRNNCell(cells)
+            cells = []
+            for _ in range(n_rnn_layers):
+                cell = tf.contrib.rnn.GRUCell(n_units)
+                cell = tf.contrib.rnn.DropoutWrapper(cell, self.ph['rnn_keep_prob'])
+                cells.append(cell)
+            cell = tf.contrib.rnn.MultiRNNCell(cells)
 
-                rnn_out, _ = tf.nn.dynamic_rnn(cell, in_layer, dtype=tf.float32)
-                rnn_out = tf.transpose(rnn_out, [1, 0, 2])
-                out = tf.gather(rnn_out, int(rnn_out.get_shape()[0]) - 1)
-            self.rnn_out = out
-            self.rnn_in = in_layer
-            self.rnn_label = tf.reshape(X,[self.conf.batch_size,-1])
+            rnn_out, _ = tf.nn.dynamic_rnn(cell, in_layer, dtype=tf.float32)
+            rnn_out = tf.transpose(rnn_out, [1, 0, 2])
+            out = tf.gather(rnn_out, int(rnn_out.get_shape()[0]) - 1)
+        self.rnn_out = out
+        self.rnn_in = in_layer
+        self.rnn_label = None
 
-        else:
-            None
+        return tf.reshape(out,[bsz,] + out_shape[1:])
+
+    def create_top_layer_notjoint(self, X, conv, n_filt, n_layers):
+        bsz = self.conf.batch_size
+        tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
+
+        top_layers = []
+        with tf.variable_scope(self.net_unet_name):
+            for cndx in range(2):
+                sc_name = 'layer_{}_{}'.format(n_layers, cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                    top_layers.append(X)
+            self.top_layers = top_layers
+
+        X = self.slice_time(X)
+
+        in_layer = tf.stop_gradient(self.top_layers[0])
+        in_shape = in_layer.get_shape().as_list()
+        in_units = np.prod(in_shape[1:])
+        in_layer = tf.reshape(in_layer, [bsz, tw, in_units])
+
+        out_layer = self.top_layers[1]
+        out_shape = out_layer.get_shape().as_list()
+        n_units = np.prod(out_shape[1:])
+
+        n_rnn_layers = 3
+
+        with tf.variable_scope(self.net_name):
+
+            cells = []
+            for _ in range(n_rnn_layers):
+                cell = tf.contrib.rnn.GRUCell(n_units)
+                cell = tf.contrib.rnn.DropoutWrapper(cell, self.ph['rnn_keep_prob'])
+                cells.append(cell)
+            cell = tf.contrib.rnn.MultiRNNCell(cells)
+
+            rnn_out, _ = tf.nn.dynamic_rnn(cell, in_layer, dtype=tf.float32)
+            rnn_out = tf.transpose(rnn_out, [1, 0, 2])
+            out = tf.gather(rnn_out, int(rnn_out.get_shape()[0]) - 1)
+        self.rnn_out = out
+        self.rnn_in = in_layer
+        self.rnn_label = tf.stop_gradient(tf.reshape(X,[self.conf.batch_size,-1]))
 
         return X
 
@@ -954,12 +999,32 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
 
     def train_unet_rnn(self, restore, train_type=0):
 
+        if self.joint:
+            training_iters = 20000/self.conf.batch_size*8
+        else:
+            training_iters = 4000/self.conf.batch_size*8
+
+
         PoseCommon.PoseCommon.train(self,
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=12000/self.conf.batch_size*8,
+            training_iters=training_iters,
             loss=self.loss,
             pred_in_key='y',
             learning_rate=0.0001,
             td_fields=('loss','dist'))
+
+    def open_dbs(self):
+        assert self.train_type is not None, 'traintype has not been set'
+        if self.train_type == 0:
+            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename_rnn) + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename_rnn) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([train_filename])
+            self.val_queue = tf.train.string_input_producer([val_filename])
+        else:
+            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename_rnn) + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename_rnn) + '.tfrecords'
+            self.train_queue = tf.train.string_input_producer([train_filename])
+            self.val_queue = tf.train.string_input_producer([val_filename])
+

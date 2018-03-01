@@ -345,8 +345,6 @@ def randomly_rotate(img, locs, conf, group_sz = 1):
     return img, locs
 
 
-# In[1]:
-
 def randomly_adjust(img, conf, group_sz = 1):
     # For images between 0 to 255
     # and single channel
@@ -509,6 +507,8 @@ def get_base_pred_locs(pred, conf):
 
 
 def get_pred_locs(pred, edge_ignore=1):
+    if edge_ignore < 1:
+        edge_ignore = 1
     n_classes = pred.shape[3]
     pred_locs = np.zeros([pred.shape[0], n_classes, 2])
     for ndx in range(pred.shape[0]):
@@ -523,6 +523,7 @@ def get_pred_locs(pred, edge_ignore=1):
             pred_locs[ndx, cls, 0] = curloc[1]
             pred_locs[ndx, cls, 1] = curloc[0]
     return pred_locs
+
 
 def get_pred_locs_multi(pred, n_max, sz):
     pred = pred.copy()
@@ -541,6 +542,7 @@ def get_pred_locs_multi(pred, n_max, sz):
                 maxx = min(curloc[1]+sz,pred.shape[2])
                 pred[ndx, miny:maxy, minx:maxx, cls] = pred.min()
     return pred_locs
+
 
 def get_fine_pred_locs(pred, fine_pred, conf):
     pred_locs = np.zeros([pred.shape[0], conf.n_classes, 2])
@@ -1237,3 +1239,21 @@ def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None, scale = 
     # for b in skeleton:
     #     a = np.array(b) - 1
     #     plt.plot(cur_locs[a, 0], cur_locs[a, 1])
+
+
+def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
+    n_classes = ims.shape[0]
+    ims = ims.astype('float')
+    out_im = np.zeros(ims.shape[1:3] + (3,))
+    if not reverse:
+        out_im[:, :, 0] = np.argmax(ims, 0).astype('float32') / n_classes * 180
+    else:
+        out_im[:, :, 0] = np.argmin(ims, 0).astype('float32') / n_classes * 180
+
+    zz = sat_func(ims,axis=0)
+    out_im[:, :, 1] = zz/zz.max()
+    out_im[:, :, 2] = val_func(ims,axis=0)
+    out_im = np.clip(out_im, 0, 255)
+    out_im = out_im.astype('uint8')
+    return cv2.cvtColor(out_im, cv2.COLOR_HSV2RGB)
+

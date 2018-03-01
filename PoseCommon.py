@@ -219,7 +219,7 @@ class PoseCommon(object):
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
-        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(net_name),
+        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(net_name+ '/'),
                                          max_to_keep=self.conf.maxckpt,
                                          save_relative_paths=True))
         self.saver = saver
@@ -238,7 +238,7 @@ class PoseCommon(object):
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')
-        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(self.net_name),
+        saver['saver'] = (tf.train.Saver(var_list=PoseTools.get_vars(self.net_name + '/'),
                                          max_to_keep=self.conf.maxckpt,
                                          save_relative_paths=True))
         self.saver = saver
