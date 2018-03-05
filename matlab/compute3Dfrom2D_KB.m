@@ -25,10 +25,10 @@ rdf = load(frontviewmatfile);
 rds = load(sideviewmatfile);
 FRONTOUTPUTTYPE = 1; % output of MRF
 SIDEOUTPUTTYPE = 1; % output of raw detector
-rdf.scores = rdf.scores(:,:,:,:,FRONTOUTPUTTYPE);
-rds.scores = rds.scores(:,:,:,:,SIDEOUTPUTTYPE);
-rdf.locs = permute(rdf.locs(:,:,FRONTOUTPUTTYPE,:),[1,2,4,3]);
-rds.locs = permute(rds.locs(:,:,SIDEOUTPUTTYPE,:),[1,2,4,3]);
+% rdf.scores = rdf.scores(:,:,:,:,FRONTOUTPUTTYPE);
+% rds.scores = rds.scores(:,:,:,:,SIDEOUTPUTTYPE);
+% rdf.locs = permute(rdf.locs(:,:,FRONTOUTPUTTYPE,:),[1,2,4,3]);
+% rds.locs = permute(rds.locs(:,:,SIDEOUTPUTTYPE,:),[1,2,4,3]);
 
 v0 = rdf.scores(1);
 
