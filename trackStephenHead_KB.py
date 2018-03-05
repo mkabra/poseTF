@@ -16,7 +16,7 @@ import argparse
 from subprocess import call
 import stat
 
-net_name = 'pose_unet_full_20170302'
+net_name = 'pose_unet_full_20180302'
 
 def main(argv):
 
@@ -143,7 +143,7 @@ def main(argv):
         # conf.batch_size = 1
 
         if args.detect:        
-            self = PoseUNet.PoseUNet(conf)
+            self = PoseUNet.PoseUNet(conf, net_name)
             sess = self.init_net(0,True)
 
         for ndx in range(len(valmovies)):
@@ -157,7 +157,7 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = self.classify_movie(conf, valmovies[ndx], sess)
+                predList = self.classify_movie(valmovies[ndx], sess)
 
                 # if args.makemovie:
                 #     PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
@@ -165,15 +165,18 @@ def main(argv):
                 cap = cv2.VideoCapture(valmovies[ndx])
                 height = int(cap.get(cvc.FRAME_HEIGHT))
                 width = int(cap.get(cvc.FRAME_WIDTH))
+                rescale = conf.unet_rescale
                 orig_crop_loc = conf.cropLoc[(height,width)]
-                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
-                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
-                pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
+                crop_loc = [int(x/rescale) for x in orig_crop_loc]
+                end_pad = [int((height-conf.imsz[0])/rescale)-crop_loc[0],int((width-conf.imsz[1])/rescale)-crop_loc[1]]
+#                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+#                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
+                pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0)]
                 predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
                 predLocs = predList[0]
-                predLocs[:,:,:,0] += orig_crop_loc[1]
-                predLocs[:,:,:,1] += orig_crop_loc[0]
+                predLocs[:,:,0] += orig_crop_loc[1]
+                predLocs[:,:,1] += orig_crop_loc[0]
 
                 io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
                 print('Detecting:%s'%oname)
