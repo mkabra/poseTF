@@ -16,6 +16,8 @@ import argparse
 from subprocess import call
 import stat
 
+net_name = 'pose_unet_full_20170302'
+
 def main(argv):
 
 #    defaulttrackerpath = "/groups/branson/home/bransonk/tracking/code/poseTF/matlab/compute3Dfrom2D/for_redistribution_files_only/run_compute3Dfrom2D.sh"
@@ -116,6 +118,7 @@ def main(argv):
         import PoseTools
         import multiResData
         import cv2
+        import PoseUNet
 
         for ff in smovies+fmovies:
             if not os.path.isfile(ff):
@@ -128,26 +131,20 @@ def main(argv):
         if args.detect:
             tf.reset_default_graph() 
         if view ==1:
-        
             from stephenHeadConfig import sideconf as conf
-            conf.useMRF = True
-            outtype = 2
             extrastr = '_side'
             valmovies = smovies
         else:
             # For FRONT
             from stephenHeadConfig import conf as conf
-            conf.useMRF = True
-            outtype = 2
             extrastr = '_front'
             valmovies = fmovies    
 
         # conf.batch_size = 1
 
         if args.detect:        
-            self = PoseTools.create_network(conf, outtype)
-            sess = tf.Session()
-            PoseTools.init_network(self, sess, outtype)
+            self = PoseUNet.PoseUNet(conf)
+            sess = self.init_net(0,True)
 
         for ndx in range(len(valmovies)):
             mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
@@ -160,10 +157,10 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
+                predList = self.classify_movie(conf, valmovies[ndx], sess)
 
-                if args.makemovie:
-                    PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
+                # if args.makemovie:
+                #     PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
                 cap = cv2.VideoCapture(valmovies[ndx])
                 height = int(cap.get(cvc.FRAME_HEIGHT))

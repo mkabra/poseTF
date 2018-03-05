@@ -50,7 +50,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd = {self.ph['x']:np.zeros(x_shape),
                    self.ph['y']:np.zeros(y_shape),
                    self.ph['phase_train']:False,
-                   self.ph['learning_rate']:0.
+                   self.ph['learning_rate']:0.,
+                   self.ph['keep_prob']:1.
                    }
 
     def create_network(self, ):
@@ -399,15 +400,17 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = np.flipud(frame_in)
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
+            all_f = all_f.astype('uint8')
             xs = PoseTools.adjust_contrast(all_f, conf)
             xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
             xs = PoseTools.normalize_mean(xs, self.conf)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
+            self.fd[self.ph['keep_prob']] = 1.
             pred = sess.run(self.pred, self.fd)
 
-            base_locs = PoseTools.get_base_pred_locs(pred, conf)
+            base_locs = PoseTools.get_pred_locs(pred)
             base_locs = base_locs*conf.unet_rescale
             pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe, :, :]
             pred_max_scores[ndx_start:ndx_end, :] = pred[:ppe, :, :, :].max(axis=(1,2))
@@ -420,7 +423,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         return pred_locs, pred_scores, pred_max_scores
 
     def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False, return_ims=False):
-        # maxframes if specificied reads that many frames
+        # maxframes if specificied reads up to that  frame
         # start at specifies where to start reading.
 
         conf = self.conf
@@ -433,6 +436,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1 # for converting from 1 indexing to 0 indexing
         if max_frames < 0:
             max_frames = end_frames.max()
+        if max_frames > end_frames.max():
+            max_frames = end_frames.max()
         if start_at > max_frames:
             return None
         max_n_frames = max_frames - start_at
@@ -440,9 +445,11 @@ class PoseUNet(PoseCommon.PoseCommon):
         pred_locs[:] = np.nan
 
         if return_ims:
-            ims = np.zeros([max_n_frames, n_trx, conf.imsz[0]/conf.unet_rescale, conf.imsz[1]/conf.unet_rescale,conf.imgDim])
+            ims = np.zeros([max_n_frames, n_trx, conf.imsz[0], conf.imsz[1],conf.imgDim])
+            pred_ims = np.zeros([max_n_frames, n_trx, conf.imsz[0]/conf.unet_rescale, conf.imsz[1]/conf.unet_rescale,conf.n_classes])
 
         bsize = conf.batch_size
+        hsz_p = conf.imsz[0] / 2  # half size for pred
 
         for trx_ndx in range(n_trx):
             cur_trx = T[trx_ndx]
@@ -462,11 +469,12 @@ class PoseUNet(PoseCommon.PoseCommon):
             all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
 
             for curl in range(n_batches):
-                ndx_start = curl * bsize + cur_start - start_at
-                ndx_end = min(n_frames, (curl + 1) * bsize) + cur_start - start_at
+                ndx_start = curl * bsize + cur_start
+                ndx_end = min(n_frames, (curl + 1) * bsize) + cur_start
                 ppe = min(ndx_end - ndx_start, bsize)
+                trx_arr = []
                 for ii in range(ppe):
-                    fnum = ndx_start + ii + cur_start
+                    fnum = ndx_start + ii
                     frame_in = cap.get_frame(fnum)
                     if len(frame_in) == 2:
                         frame_in = frame_in[0]
@@ -481,25 +489,39 @@ class PoseUNet(PoseCommon.PoseCommon):
                     # -1 for 1-indexing in matlab and 0-indexing in python
                     theta = cur_trx['theta'][0,trx_fnum]
                     assert conf.imsz[0] == conf.imsz[1]
+                    tt = -theta - math.pi/2
+                    R = [[np.cos(tt), -np.sin(tt)], [np.sin(tt), np.cos(tt)]]
+                    trx_arr.append([x,y,theta,R])
 
                     frame_in, _ = multiResData.get_patch_trx(frame_in,x,y,theta,conf.imsz[0], np.zeros([2,2]))
                     frame_in = frame_in[:, :, 0:conf.imgDim]
                     all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
+                all_f = all_f.astype('uint8')
                 xs = PoseTools.adjust_contrast(all_f, conf)
                 xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
                 xs = PoseTools.normalize_mean(xs, self.conf)
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False
+                self.fd[self.ph['keep_prob']] = 1.
                 pred = sess.run(self.pred, self.fd)
 
-                base_locs = PoseTools.get_base_pred_locs(pred, conf)
+                base_locs = PoseTools.get_pred_locs(pred)
                 base_locs = base_locs * conf.unet_rescale
 
-                if return_ims:
-                    ims[ndx_start:ndx_end, trx_ndx,:,:,:] = xs[:ppe,...]
+                base_locs_orig = np.zeros(base_locs.shape)
+                for ii in range(ppe):
+                    curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], trx_arr[ii][3]) + [trx_arr[ii][0],trx_arr[ii][1]]
+                    base_locs_orig[ii,...] = curlocs
 
-                pred_locs[ndx_start:ndx_end, trx_ndx, :, :] = base_locs[:ppe,...]
+                out_start = ndx_start - start_at
+                out_end = ndx_end - start_at
+                if return_ims:
+                    ims[out_start:out_end, trx_ndx,:,:,:] = all_f[:ppe,...]
+                    pred_ims[out_start:out_end,trx_ndx, ...] = pred[:ppe,...]
+
+
+                pred_locs[out_start:out_end, trx_ndx, :, :] = base_locs_orig[:ppe,...]
                 sys.stdout.write('.')
                 if curl % 20 == 19:
                     sys.stdout.write('\n')
@@ -508,7 +530,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         tf.reset_default_graph()
         if return_ims:
-            return pred_locs, ims
+            return pred_locs, ims, pred_ims
         else:
             return pred_locs
 
@@ -581,6 +603,116 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         tf.reset_default_graph()
 
+    def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False, trace=True):
+        conf = self.conf
+        sess = self.init_net(0,True)
+        predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
+        tdir = tempfile.mkdtemp()
+
+        cap = movies.Movie(movie_name,interactive=False)
+        T = sio.loadmat(trx)['trx'][0]
+        n_trx = len(T)
+
+        end_frames = np.array([x['endframe'][0,0] for x in T])
+        first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1
+        if max_frames < 0:
+            max_frames = end_frames.max()
+
+        nframes = max_frames - start_at
+        fig = mpl.figure.Figure(figsize=(8, 8))
+        canvas = FigureCanvasAgg(fig)
+        sc = self.conf.unet_rescale
+
+        color = cm.hsv(np.linspace(0, 1 - 1./conf.n_classes, conf.n_classes))
+        trace_len = 3
+        cur_trx = T[fly_num]
+        c_x = None
+        c_y = None
+        for curl in range(nframes):
+            fnum = curl + start_at
+            frame_in = cap.get_frame(curl+start_at)
+            if len(frame_in) == 2:
+                frame_in = frame_in[0]
+                if frame_in.ndim == 2:
+                    frame_in = frame_in[:,:, np.newaxis]
+
+            trx_fnum = fnum - first_frames[fly_num]
+            x = int(round(cur_trx['x'][0, trx_fnum])) - 1
+            y = int(round(cur_trx['y'][0, trx_fnum])) - 1
+            theta = -cur_trx['theta'][0, trx_fnum]
+            R = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+            # -1 for 1-indexing in matlab and 0-indexing in python
+            if c_x is None:
+                c_x = x; c_y = y;
+
+            if (np.abs(c_x - x) > conf.imsz[0]*3./8.*2.) or (np.abs(c_y - y) > conf.imsz[0]*3./8.*2.):
+                c_x = x; c_y = y
+
+
+            assert conf.imsz[0] == conf.imsz[1]
+
+            frame_in, _ = multiResData.get_patch_trx(frame_in, c_x, c_y, -math.pi/2, conf.imsz[0]*2, np.zeros([2, 2]))
+            frame_in = frame_in[:, :, 0:conf.imgDim]
+
+            if flipud:
+                frame_in = np.flipud(frame_in)
+            fig.clf()
+            ax1 = fig.add_subplot(1, 1, 1)
+            if frame_in.shape[2] == 1:
+                ax1.imshow(frame_in[:,:,0], cmap=cm.gray)
+            else:
+                ax1.imshow(frame_in)
+            xlim = ax1.get_xlim()
+            ylim = ax1.get_ylim()
+
+            hsz_p = conf.imsz[0]/2 # half size for pred
+            hsz_s = conf.imsz[0] # half size for showing
+            for fndx in range(n_trx):
+                ct = T[fndx]
+                if (fnum < first_frames[fndx]) or (fnum>=end_frames[fndx]):
+                    continue
+                trx_fnum = fnum - first_frames[fndx]
+                x = int(round(ct['x'][0, trx_fnum])) - 1
+                y = int(round(ct['y'][0, trx_fnum])) - 1
+                theta = -ct['theta'][0, trx_fnum] - math.pi/2
+                R = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+
+                # curlocs = np.dot(predLocs[curl,fndx,:,:]-[hsz_p,hsz_p],R)
+                curlocs = predLocs[curl,fndx,:,:] #-[hsz_p,hsz_p]
+                ax1.scatter(curlocs[ :, 0]*sc - c_x + hsz_s,
+                            curlocs[ :, 1]*sc - c_y  + hsz_s,
+                    c=color*0.9, linewidths=0,
+                    edgecolors='face',marker='+',s=30)
+                if trace:
+                    for ndx in range(conf.n_classes):
+                        curc = color[ndx,:].copy()
+                        curc[3] = 0.5
+                        e = np.maximum(0,curl-trace_len)
+                        # zz = np.dot(predLocs[e:(curl+1),fndx,ndx,:]-[hsz_p,hsz_p],R)
+                        zz = predLocs[e:(curl+1),fndx,ndx,:]
+                        ax1.plot(zz[:,0]*sc - c_x + hsz_s,
+                                 zz[:,1]*sc - c_y + hsz_s,
+                                 c = curc,lw=0.8,alpha=0.6)
+            ax1.set_xlim(xlim)
+            ax1.set_ylim(ylim)
+            ax1.axis('off')
+            fname = "test_{:06d}.png".format(curl)
+
+            # to printout without X.
+            # From: http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+            # The size * the dpi gives the final image size
+            #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+            canvas.print_figure(os.path.join(tdir, fname), dpi=300)
+
+            # below is the easy way.
+        #         plt.savefig(os.path.join(tdir,fname))
+
+        tfilestr = os.path.join(tdir, 'test_*.png')
+        mencoder_cmd = "mencoder mf://" + tfilestr + " -frames " + "{:d}".format(
+            nframes) + " -mf type=png:fps=15 -o " + out_movie + " -ovc lavc -lavcopts vcodec=mpeg4:vbitrate=2000000"
+        os.system(mencoder_cmd)
+        cap.close()
+        tf.reset_default_graph()
 
 class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 

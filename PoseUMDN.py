@@ -754,6 +754,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     frame_in = np.flipud(frame_in)
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
+            all_f = all_f.astype('uint8')
             xs = PoseTools.adjust_contrast(all_f, conf)
             xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
             xs = PoseTools.normalize_mean(xs, self.conf)
@@ -843,6 +844,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     frame_in = frame_in[:, :, 0:conf.imgDim]
                     all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
+                all_f = all_f.astype('uint8')
                 xs = PoseTools.adjust_contrast(all_f, conf)
                 xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
                 xs = PoseTools.normalize_mean(xs, self.conf)

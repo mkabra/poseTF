@@ -229,6 +229,7 @@ aliceConfig_time.cachedir = os.path.join(localSetup.bdir, 'cache','alice_time')
 
 aliceConfig_rnn = copy.deepcopy(aliceConfig)
 aliceConfig_rnn.cachedir = os.path.join(localSetup.bdir, 'cache','alice_rnn')
+aliceConfig_rnn.batch_size = 2
 # aliceConfig_rnn.trainfilename_rnn = 'train_rnn_TF'
 # aliceConfig_rnn.fulltrainfilename_rnn = 'fullTrain_rnn_TF'
 # aliceConfig_rnn.valfilename_rnn = 'val_rnn_TF'
