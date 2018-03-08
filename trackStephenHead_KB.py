@@ -15,6 +15,8 @@ import sys
 import argparse
 from subprocess import call
 import stat
+import h5py
+import hdf5storage
 
 net_name = 'pose_unet_full_20180302'
 
@@ -178,7 +180,14 @@ def main(argv):
                 predLocs[:,:,0] += orig_crop_loc[1]
                 predLocs[:,:,1] += orig_crop_loc[0]
 
-                io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
+#                io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
+                hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True)
+#                with h5py.File(pname+'.mat','w') as f:
+#                    f.create_dataset('locs',data=predLocs)
+#                    f.create_dataset('scores',data=predScores)
+#                    f.create_dataset('expname',data=valmovies[ndx])
+
+
                 print('Detecting:%s'%oname)
 
             # track
@@ -210,6 +219,7 @@ def main(argv):
 
                 scriptfile = os.path.join(args.outdir , jobid + '_track.sh')
                 logfile = os.path.join(args.outdir , jobid + '_track.log')
+                errfile = os.path.join(args.outdir , jobid + '_track.err')
 
 
                 #print "matscript = " + matscript
@@ -226,7 +236,8 @@ def main(argv):
                 scriptf.close()
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
-                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
+#                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
+                cmd = "ssh login1 'source /etc/profile; bsub -n %d -J %s -o '%s' -e '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
                 print(cmd)
                 call(cmd,shell=True)
                 
