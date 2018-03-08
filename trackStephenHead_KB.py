@@ -159,7 +159,7 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = self.classify_movie(valmovies[ndx], sess)
+                predList = self.classify_movie(valmovies[ndx], sess, flipud=True)
 
                 # if args.makemovie:
                 #     PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)

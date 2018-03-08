@@ -131,10 +131,11 @@ from scipy import  io as sio
 import math
 
 self = PoseUNet.PoseUNet(conf, name='pose_unet_128_bs8')
-_,dirs,_ = multiResData.loadValdata(conf)
-for ndx in range(len(dirs)):
-    dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
+# _,dirs,_ = multiResData.loadValdata(conf)
+# for ndx in range(len(dirs)):
+#     dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
 
+dirs = ['/home/mayank/work/FlySpaceTime/cx_GMR_SS00077_CsChr_RigD_20150930T134055/movie.ufmf','/home/mayank/work/FlySpaceTime/cx_GMR_SS00168_CsChr_RigD_20150909T111218/movie.ufmf']
 
 tf.reset_default_graph()
 sess = self.init_net(0, True)
@@ -172,25 +173,46 @@ import pickle
 from scipy import  io as sio
 import math
 
+from datetime import datetime, timedelta
+
+def datetime2matlabdn(dt):
+    ord = dt.toordinal()
+    mdn = dt + timedelta(days = 366)
+    frac = (dt-datetime(dt.year,dt.month,dt.day,0,0,0)).seconds / (24.0 * 60.0 * 60.0)
+    return mdn.toordinal() + frac
+
 _,dirs,_ = multiResData.loadValdata(conf)
 for ndx in range(len(dirs)):
     dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
 
 
 chunk_size = 5000
-for cur_dir in dirs:
+for cur_dir in reversed(dirs):
 
     trx_file = cur_dir.replace('movie.ufmf','registered_trx.mat')
     T = sio.loadmat(trx_file)['trx'][0]
     n_trx = len(T)
 
     end_frames = np.array([x['endframe'][0, 0] for x in T])
+    n_frames = end_frames.max()
     n_chunks = int(math.ceil(float(end_frames.max())/chunk_size))
+    nTrx = T.shape[0]
+    trk = np.zeros([conf.n_classes, 2, n_frames, nTrx])
+    trkTs = np.ones([conf.n_classes,  n_frames, nTrx]) * datetime2matlabdn(datetime.now())
+    trkTag = np.zeros([conf.n_classes,  n_frames, nTrx]).astype(np.object)
+    trkFrm = np.arange(n_frames)+1
+    trkiTgt = np.arange(n_trx)+1
+    trkiPt = np.arange(conf.n_classes)+1
 
-
+    print('+++++ Exp:{} +++++'.format(cur_dir ))
     for cur_c in range(n_chunks):
-        print('+++++ Chunk:{} +++++'.format(cur_c))
         out_file = cur_dir.replace('movie.ufmf','unet_res_{}.pl'.format(cur_c))
         with open(out_file,'rb') as f:
-            cur_pl = pickle.dump(f)
+            cur_pl = pickle.load(f)
+        st = cur_c*chunk_size
+        en = st+cur_pl.shape[0]
 
+        trk[:,:,st:en,:] = cur_pl.transpose([2,3,0,1])
+
+    out_file = cur_dir.replace('movie.ufmf','unet_results.trk')
+    sio.savemat(out_file, {'pTrk':trk,'pTrkTS':trkTs, 'pTrkTag':trkTag,'pTrkFrm':trkFrm, 'pTrkiTgt':trkiTgt, 'pTrkiPt':trkiPt },appendmat=False)

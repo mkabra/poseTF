@@ -9,12 +9,21 @@ fprintf('Storing output 3d trajectories to file: %s\n',savefile);
 fprintf('Storing front reprojection trajectories to file: %s\n',frontviewtrkfile);
 fprintf('Storing side reprojection trajectories to file: %s\n',sideviewtrkfile);
 
+
+scale_front = 2;
+scale_side = 2;
+thresh_perc = 99.95;
+r_nonmax = 4;
+
+% scale_front = 4;
+% scale_side = 4;
+% thresh_perc = 99.5;
+% r_nonmax = 2;
+
 offx_front = -1;
 offy_front = -1;
 offx_side = -1;
 offy_side = -1;
-scale_front = 4;
-scale_side = 4;
 
 
 %% load in tracking results
@@ -46,7 +55,7 @@ miny_front = 2;
 maxy_front = size(rdf.scores,2);
 minx_front = 2;
 maxx_front = size(rdf.scores,3);
-minscore = 0;
+minscore = -1; %0;
 maxscore = 1;
 
 rdf.scores(:,miny_front:maxy_front,minx_front:maxx_front,:) = ...
@@ -123,8 +132,6 @@ SHOWGMM = false;
 
 thresh_nonmax_front = 0;
 thresh_nonmax_side = 0;
-thresh_perc = 99.5;
-r_nonmax = 2;
 
 [dx,dy] = meshgrid(-r_nonmax:r_nonmax,-r_nonmax:r_nonmax);
 fil = double(dx.^2 + dy.^2 <= r_nonmax^2);
