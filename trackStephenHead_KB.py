@@ -146,7 +146,7 @@ def main(argv):
 
         if args.detect:        
             self = PoseUNet.PoseUNet(conf, net_name)
-            sess = self.init_net(0,True)
+            sess = self.init_net_meta(0,True)
 
         for ndx in range(len(valmovies)):
             mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))

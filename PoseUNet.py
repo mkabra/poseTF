@@ -42,7 +42,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.ph['y'] = tf.placeholder(tf.float32,
                            [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
                            name='y')
-        self.ph['keep_prob'] = tf.placeholder(tf.float32)
+        self.ph['keep_prob'] = tf.placeholder(tf.float32,name='keep_prob')
 
     def create_fd(self):
         x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
@@ -152,7 +152,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         biases = tf.get_variable("out_biases", n_out,
                                  initializer=tf.constant_initializer(0.))
         conv = tf.nn.conv2d(X, weights, strides=[1, 1, 1, 1], padding='SAME')
-        X = conv + biases
+        X = tf.add(conv, biases, name = 'unet_pred')
+        # X = conv+biases
         return X
 
     # def create_network_tf_unet(self):
@@ -286,6 +287,39 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         sess = tf.InteractiveSession()
         start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
+        return sess
+
+    def init_net_meta(self, train_type=0, restore=True):
+        sess = tf.Session()
+        self.train_type = train_type
+        self.open_dbs()
+        self.create_cursors(sess)
+
+        ckpt_file = os.path.join(
+            self.conf.cachedir,
+            self.conf.expname + '_' + self.name + '_ckpt')
+        latest_ckpt = tf.train.get_checkpoint_state(
+            self.conf.cachedir, ckpt_file)
+        saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
+        saver.restore(sess, latest_ckpt.model_checkpoint_path)
+        graph = tf.get_default_graph()
+        try:
+            kp = graph.get_tensor_by_name('keep_prob:0')
+        except KeyError:
+            kp = graph.get_tensor_by_name('Placeholder:0')
+
+        self.ph['keep_prob'] = kp
+        self.ph['x'] = graph.get_tensor_by_name('x:0')
+        self.ph['y'] = graph.get_tensor_by_name('y:0')
+        self.ph['learning_rate'] = graph.get_tensor_by_name('learning_r:0')
+        self.ph['phase_train'] = graph.get_tensor_by_name('phase_train:0')
+
+        try:
+            pred = graph.get_tensor_by_name('pose_unet/unet_pred:0')
+        except KeyError:
+            pred = graph.get_tensor_by_name('pose_unet/add:0')
+        self.pred = pred
+        self.create_fd()
         return sess
 
     def train_unet(self, restore, train_type=0):

@@ -181,9 +181,12 @@ def datetime2matlabdn(dt):
     frac = (dt-datetime(dt.year,dt.month,dt.day,0,0,0)).seconds / (24.0 * 60.0 * 60.0)
     return mdn.toordinal() + frac
 
-_,dirs,_ = multiResData.loadValdata(conf)
-for ndx in range(len(dirs)):
-    dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
+# _,dirs,_ = multiResData.loadValdata(conf)
+# for ndx in range(len(dirs)):
+#     dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
+
+
+dirs = ['/home/mayank/work/FlySpaceTime/cx_GMR_SS00077_CsChr_RigD_20150930T134055/movie.ufmf','/home/mayank/work/FlySpaceTime/cx_GMR_SS00168_CsChr_RigD_20150909T111218/movie.ufmf']
 
 
 chunk_size = 5000
