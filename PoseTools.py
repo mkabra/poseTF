@@ -32,6 +32,7 @@ from scipy import io
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import json
+import skimage
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -66,9 +67,9 @@ def scale_images(img, scale, conf):
     simg = np.zeros((sz[0], old_div(sz[1], scale), old_div(sz[2], scale), sz[3]))
     for ndx in range(sz[0]):
         if sz[3] == 1:
-            simg[ndx, :, :, 0] = misc.imresize(img[ndx, :, :, 0], old_div(1., scale))
+            simg[ndx, :, :, 0] = skimage.transform.resize(img[ndx, :, :, 0], simg.shape[1:3])
         else:
-            simg[ndx, :, :, :] = misc.imresize(img[ndx, :, :, :], old_div(1., scale))
+            simg[ndx, :, :, :] = skimage.transform.resize(img[ndx, :, :, :], simg.shape[1:3])
     return simg
 
 
@@ -1219,7 +1220,7 @@ def tfrecord_to_coco(db_file, conf, img_dir, out_file, categories=None, scale = 
             if cur_im.shape[2] == 1:
                 cur_im = cur_im[:,:,0]
             if scale is not 1:
-                cur_im = misc.imresize(cur_im, float(scale))
+                cur_im = skimage.transform.resize(cur_im, cur_im.shape[:2]*scale)
                 cur_locs = scale*cur_locs
             im_name = '{:012d}.png'.format(ndx)
             misc.imsave(os.path.join(img_dir, im_name),cur_im)
