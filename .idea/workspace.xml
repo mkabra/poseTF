@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseUNet.py" afterPath="$PROJECT_DIR$/PoseUNet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ScriptAliceConfidence.py" afterPath="$PROJECT_DIR$/ScriptAliceConfidence.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead_KB.py" afterPath="$PROJECT_DIR$/trackStephenHead_KB.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -42,8 +39,8 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="184">
-                  <caret line="274" column="30" lean-forward="true" selection-start-line="274" selection-start-column="30" selection-end-line="274" selection-end-column="30" />
+                <state relative-caret-position="17">
+                  <caret line="274" column="30" lean-forward="false" selection-start-line="274" selection-start-column="30" selection-end-line="274" selection-end-column="30" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                     <element signature="e#4570#4584#0" expanded="false" />
@@ -121,7 +118,7 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
+                <state relative-caret-position="17">
                   <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -243,7 +240,7 @@
           <file leaf-file-name="debugMDN.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/debugMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="877">
+                <state relative-caret-position="11628">
                   <caret line="684" column="79" lean-forward="false" selection-start-line="684" selection-start-column="79" selection-end-line="684" selection-end-column="79" />
                   <folding />
                 </state>
@@ -263,8 +260,8 @@
           <file leaf-file-name="trackStephenHead_KB.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/trackStephenHead_KB.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="306">
-                  <caret line="152" column="68" lean-forward="true" selection-start-line="152" selection-start-column="68" selection-end-line="152" selection-end-column="68" />
+                <state relative-caret-position="527">
+                  <caret line="163" column="11" lean-forward="false" selection-start-line="163" selection-start-column="11" selection-end-line="163" selection-end-column="11" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -275,7 +272,7 @@
           <file leaf-file-name="ScriptAliceConfidence.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/ScriptAliceConfidence.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-381">
+                <state relative-caret-position="3179">
                   <caret line="187" column="0" lean-forward="false" selection-start-line="187" selection-start-column="0" selection-end-line="187" selection-end-column="0" />
                   <folding />
                 </state>
@@ -307,7 +304,7 @@
           <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="877">
+                <state relative-caret-position="3723">
                   <caret line="231" column="30" lean-forward="false" selection-start-line="231" selection-start-column="30" selection-end-line="231" selection-end-column="30" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -319,7 +316,7 @@
           <file leaf-file-name="ptb_word_lm.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="877">
+                <state relative-caret-position="3230">
                   <caret line="202" column="0" lean-forward="false" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
                   <folding />
                 </state>
@@ -329,7 +326,7 @@
           <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="198">
+                <state relative-caret-position="3536">
                   <caret line="380" column="8" lean-forward="false" selection-start-line="380" selection-start-column="8" selection-end-line="380" selection-end-column="8" />
                   <folding>
                     <element signature="e#584#998#0" expanded="false" />
@@ -538,7 +535,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="48" />
+    <option name="x" value="-1872" />
     <option name="y" value="-11" />
     <option name="width" value="1873" />
     <option name="height" value="1092" />
@@ -894,13 +891,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00066" summary="minor edits">
-      <created>1516277095072</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1516277095072</updated>
-    </task>
     <task id="LOCAL-00067" summary="changing how the offset is computed to scales locations to match the cell size in poseumdn.">
       <created>1516341763573</created>
       <option name="number" value="00067" />
@@ -1237,7 +1227,14 @@
       <option name="project" value="LOCAL" />
       <updated>1520510427443</updated>
     </task>
-    <option name="localTasksCounter" value="115" />
+    <task id="LOCAL-00115" summary="Movies can now be classified by loading the graph from meta file.">
+      <created>1520592756752</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1520592756753</updated>
+    </task>
+    <option name="localTasksCounter" value="116" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -1250,13 +1247,13 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
+    <frame x="-1872" y="-11" width="1873" height="1092" extended-state="6" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="2" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274244" sideWeight="0.50519407" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253389" sideWeight="0.4948059" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33242208" sideWeight="0.50364965" order="4" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
+      <window_info id="Python Console" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33570257" sideWeight="0.50364965" order="4" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32638165" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -1331,7 +1328,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Modifying compute_dist for UMDN when there is only one animal." />
     <MESSAGE value="minor bug fix" />
     <MESSAGE value="fixing off by 0.5 error in distance computation for UMDN" />
     <MESSAGE value="Slight contrast adjustment for alice's Flies to see if it helps." />
@@ -1356,7 +1352,8 @@
     <MESSAGE value="Updating tracking script for stephen" />
     <MESSAGE value="Fix in matlab scripts for new output format for unets." />
     <MESSAGE value="Fix in matlab scripts for stephen's tracking for larger sizes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix in matlab scripts for stephen's tracking for larger sizes" />
+    <MESSAGE value="Movies can now be classified by loading the graph from meta file." />
+    <option name="LAST_COMMIT_MESSAGE" value="Movies can now be classified by loading the graph from meta file." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1694,7 +1691,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ScriptAliceConfidence.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-381">
+        <state relative-caret-position="3179">
           <caret line="187" column="0" lean-forward="false" selection-start-line="187" selection-start-column="0" selection-end-line="187" selection-end-column="0" />
           <folding />
         </state>
@@ -1704,14 +1701,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="311">
           <caret line="19" column="0" lean-forward="false" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="274" column="30" lean-forward="true" selection-start-line="274" selection-start-column="30" selection-end-line="274" selection-end-column="30" />
+        <state relative-caret-position="17">
+          <caret line="274" column="30" lean-forward="false" selection-start-line="274" selection-start-column="30" selection-end-line="274" selection-end-column="30" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
             <element signature="e#4570#4584#0" expanded="false" />
@@ -1737,7 +1733,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/poseConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="877">
+        <state relative-caret-position="3723">
           <caret line="231" column="30" lean-forward="false" selection-start-line="231" selection-start-column="30" selection-end-line="231" selection-end-column="30" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -1747,7 +1743,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="877">
+        <state relative-caret-position="3230">
           <caret line="202" column="0" lean-forward="false" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
           <folding />
         </state>
@@ -1755,7 +1751,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
+        <state relative-caret-position="3536">
           <caret line="380" column="8" lean-forward="false" selection-start-line="380" selection-start-column="8" selection-end-line="380" selection-end-column="8" />
           <folding>
             <element signature="e#584#998#0" expanded="false" />
@@ -1830,7 +1826,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
+        <state relative-caret-position="17">
           <caret line="34" column="0" lean-forward="false" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -1950,7 +1946,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/debugMDN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="877">
+        <state relative-caret-position="11628">
           <caret line="684" column="79" lean-forward="false" selection-start-line="684" selection-start-column="79" selection-end-line="684" selection-end-column="79" />
           <folding />
         </state>
@@ -1966,8 +1962,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/trackStephenHead_KB.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="152" column="68" lean-forward="true" selection-start-line="152" selection-start-column="68" selection-end-line="152" selection-end-column="68" />
+        <state relative-caret-position="527">
+          <caret line="163" column="11" lean-forward="false" selection-start-line="163" selection-start-column="11" selection-end-line="163" selection-end-column="11" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
