@@ -16,7 +16,7 @@ import argparse
 from subprocess import call
 import stat
 import h5py
-#import hdf5storage
+import hdf5storage
 
 net_name = 'pose_unet_full_20180302'
 
@@ -180,8 +180,8 @@ def main(argv):
                 predLocs[:,:,0] += orig_crop_loc[1]
                 predLocs[:,:,1] += orig_crop_loc[0]
 
-                io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
-                #hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True)
+#io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
+                hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True)
 #                with h5py.File(pname+'.mat','w') as f:
 #                    f.create_dataset('locs',data=predLocs)
 #                    f.create_dataset('scores',data=predScores)
@@ -211,7 +211,7 @@ def main(argv):
                     print("%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side))
                     continue
 
-                flynum = conf.getflynum(smovies[ndx])
+                flynum = int(conf.getflynum(smovies[ndx]))
                 #print "Parsed fly number as %d"%flynum
                 kinematfile = os.path.abspath(dltdict[flynum])
 
