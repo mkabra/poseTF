@@ -16,7 +16,7 @@ import argparse
 from subprocess import call
 import stat
 import h5py
-# import hdf5storage
+import hdf5storage
 
 net_name = 'pose_unet_full_20180302'
 
@@ -145,8 +145,16 @@ def main(argv):
         # conf.batch_size = 1
 
         if args.detect:        
-            self = PoseUNet.PoseUNet(conf, net_name)
-            sess = self.init_net_meta(0,True)
+            for try_num in range(4):
+                try:    
+                    self = PoseUNet.PoseUNet(conf, net_name)
+                    sess = self.init_net_meta(0,True)
+                    break
+                except tensorflow.python.framework.errors_impl.InvalidArgumentError:
+                    tf.reset_default_graph()
+                    print('Loading the net failed, retrying')
+                    if try_num is 3:
+                        raise ValueError('Couldnt load the network after 4 tries')
 
         for ndx in range(len(valmovies)):
             mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
@@ -181,11 +189,11 @@ def main(argv):
                 predLocs[:,:,1] += orig_crop_loc[0]
 
 #io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
-#                hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True)
-                with h5py.File(pname+'.mat','w') as f:
-                    f.create_dataset('locs',data=predLocs)
-                    f.create_dataset('scores',data=predScores)
-                    f.create_dataset('expname',data=valmovies[ndx])
+                hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True,gzip_compression_level=0)
+#                with h5py.File(pname+'.mat','w') as f:
+#                    f.create_dataset('locs',data=predLocs)
+#                    f.create_dataset('scores',data=predScores)
+#                    f.create_dataset('expname',data=valmovies[ndx])
 
 
                 print('Detecting:%s'%oname)
