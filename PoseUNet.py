@@ -292,8 +292,11 @@ class PoseUNet(PoseCommon.PoseCommon):
     def init_net_meta(self, train_type=0, restore=True):
         sess = tf.Session()
         self.train_type = train_type
-        self.open_dbs()
-        self.create_cursors(sess)
+        try:
+            self.open_dbs()
+            self.create_cursors(sess)
+        except tf.python.framework.errors_impl.NotFoundError:
+            pass
 
         ckpt_file = os.path.join(
             self.conf.cachedir,

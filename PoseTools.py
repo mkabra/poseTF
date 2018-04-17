@@ -1172,7 +1172,7 @@ def output_graph(logdir):
     sess = tf.get_default_session()
     train_writer = tf.summary.FileWriter(
         logdir,sess.graph)
-    train_writer.add_summary(None)
+    train_writer.add_summary(tf.Summary())
 
 def get_timestamps(conf, info):
     L = h5py.File(conf.labelfile)

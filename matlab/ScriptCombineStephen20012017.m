@@ -1,9 +1,11 @@
-Q = load('/groups/branson/bransonlab/mayank/PoseTF/headTracking/FlyHeadStephenCuratedData.mat');
 
-local = false;
+
+local = true;
 if ~local
   ldir = '/localhome/kabram/Dropbox (HHMI)/PoseEstimation/Stephen/18012017_trainingData/justHead/';
+  Q = load('/groups/branson/bransonlab/mayank/PoseTF/headTracking/FlyHeadStephenCuratedData.mat');
 else
+  Q = load('/home/mayank/work/poseTF/headTracking/FlyHeadStephenCuratedData.mat');
   ldir = '/home/mayank/Dropbox/PoseEstimation/Stephen/18012017_trainingData/justHead/';
 end
 dd = dir([ldir '*.lbl']);
@@ -168,3 +170,27 @@ ss = bsxfun(@minus,pp,ss1);
 
 gg = sqrt( sum( (ss).^2,2));
 figure; hist(gg(:,:,p2),30)
+
+%%
+
+fly_num = [];
+for i = 1:size(J.movieFilesAll,1)
+  vv = regexpi(J.movieFilesAll{i,1},'fly_*(\d+)','tokens');
+  fly_num(i) = str2double(vv{end});
+end
+
+jj = unique(fly_num);
+n_labels = zeros(1,numel(jj));
+for ndx = 1:numel(expidx)
+  curndx = find(jj== fly_num(expidx(ndx)));
+  n_labels(curndx) = n_labels(curndx)+1;
+end
+
+for ndx = 1:numel(jj)
+  if n_labels(ndx)==0, continue; end
+  fprintf('Fly: %d, labels:%d \n',jj(ndx), n_labels(ndx));
+end
+
+%%
+
+aa = unique(J.movieFilesAll(:,1));

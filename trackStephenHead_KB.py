@@ -16,6 +16,7 @@ import argparse
 from subprocess import call
 import stat
 import h5py
+import tensorflow as tf
 # import hdf5storage
 
 net_name = 'pose_unet_full_20180302'
@@ -136,15 +137,28 @@ def main(argv):
             from stephenHeadConfig import sideconf as conf
             extrastr = '_side'
             valmovies = smovies
+            confname = 'sideconf'
         else:
             # For FRONT
             from stephenHeadConfig import conf as conf
             extrastr = '_front'
-            valmovies = fmovies    
+            valmovies = fmovies
+            confname = 'sideconf'
+
+        # for ndx in range(len(valmovies)):
+        #     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
+        #     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
+        #     pname = os.path.join(args.outdir , oname + extrastr)
+        #     print(oname)
+        #
+        #     if args.detect and os.path.isfile(valmovies[ndx]) and \
+        #                    (args.redo or not os.path.isfile(pname + '.mat')):
+        #
+        #         detect_cmd = 'python classifyMovie.py stephenHeadConfig {} {} {}'.format(confname, net_name, valmovies[ndx], pname+'.mat')
 
         # conf.batch_size = 1
 
-        if args.detect:        
+        if args.detect:
             self = PoseUNet.PoseUNet(conf, net_name)
             sess = self.init_net_meta(0,True)
 
@@ -171,7 +185,7 @@ def main(argv):
                 orig_crop_loc = conf.cropLoc[(height,width)]
                 crop_loc = [int(x/rescale) for x in orig_crop_loc]
                 end_pad = [int((height-conf.imsz[0])/rescale)-crop_loc[0],int((width-conf.imsz[1])/rescale)-crop_loc[1]]
-#                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
+#                crop_loc = [old_div(x,4) for x in orig_crop_loc]
 #                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
                 pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0)]
                 predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
