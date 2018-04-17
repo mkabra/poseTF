@@ -57,7 +57,7 @@ def main(argv):
                         help="Absolute path to MCR",
                         default=defaultmcrpath)
     parser.add_argument("-ncores",dest="ncores",
-                        help="Number of cores to assign to each MATLAB tracker job",
+                        help="Number of cores to assign to each MATLAB tracker job", type=int,
                         default=1)
 
     group = parser.add_mutually_exclusive_group()
@@ -150,7 +150,7 @@ def main(argv):
                     self = PoseUNet.PoseUNet(conf, net_name)
                     sess = self.init_net_meta(0,True)
                     break
-                except tensorflow.python.framework.errors_impl.InvalidArgumentError:
+                except tf.python.framework.errors_impl.InvalidArgumentError:
                     tf.reset_default_graph()
                     print('Loading the net failed, retrying')
                     if try_num is 3:
@@ -194,7 +194,7 @@ def main(argv):
 #                    f.create_dataset('locs',data=predLocs)
 #                    f.create_dataset('scores',data=predScores)
 #                    f.create_dataset('expname',data=valmovies[ndx])
-
+                del predScores, predLocs
 
                 print('Detecting:%s'%oname)
 
@@ -245,7 +245,7 @@ def main(argv):
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
 #                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
-                cmd = "ssh login1 'source /etc/profile; bsub -n %d -J %s -o '%s' -e '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
+                cmd = "ssh login1 'source /etc/profile; bsub -n %d -J %s -oo '%s' -eo '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
                 print(cmd)
                 call(cmd,shell=True)
                 
