@@ -60,7 +60,7 @@ for ndx in range(len(sel)):
     exp,t  = val_info[sel[ndx],:].astype('int')
     start_at = max(0,t-100)
     trx_file = dirs[exp].replace('movie.ufmf','registered_trx.mat')
-    cur_pl, cur_i, cur_p = self.classify_movie_trx(dirs[exp], trx_file, sess, max_frames=t+1,start_at=start_at,return_ims=True)
+    cur_pl, cur_i, cur_p = self.classify_movie_trx(dirs[exp], trx_file, sess, end_frame=t + 1, start_frame=start_at, return_ims=True)
     preds.append(cur_p)
     ims.append(cur_i)
     pred_locs.append(cur_pl)
@@ -151,7 +151,7 @@ for cur_dir in dirs:
 
     for cur_c in range(n_chunks):
         print('+++++ Chunk:{} +++++'.format(cur_c))
-        cur_pl= self.classify_movie_trx(cur_dir, trx_file, sess, start_at = cur_c*chunk_size, max_frames= (cur_c+1)*chunk_size, return_ims=False)
+        cur_pl= self.classify_movie_trx(cur_dir, trx_file, sess, start_frame=cur_c * chunk_size, end_frame=(cur_c + 1) * chunk_size, return_ims=False)
         out_file = cur_dir.replace('movie.ufmf','unet_res_{}.pl'.format(cur_c))
         with open(out_file,'wb') as f:
             pickle.dump(cur_pl,f)

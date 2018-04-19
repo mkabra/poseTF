@@ -26,6 +26,7 @@ import tensorflow as tf
 import cv2
 from cvc import cvc
 import datetime
+import movies
 
 def loadmat(filename):
     '''
@@ -148,33 +149,53 @@ def classify(lbl_file, n_views, mov_file, trx_file, start_frame, end_frame, out_
         tf.reset_default_graph()
         self = PoseUNet.PoseUNet(conf)
         sess = self.init_net_meta(0,True)
+
+        cap = movies.Movie(mov_file[view],interactive=False)
+        n_frames = int(cap.get_n_frames())
+        height = int(cap.get_height())
+        width = int(cap.get_width())
+        cur_end_frame = end_frame
+        if end_frame < 0:
+            cur_end_frame = n_frames
+        cap.close()
+
         if trx_file is not None:
             predList = self.classify_movie_trx(mov_file[view],trx_file[view], sess,end_frame, start_frame)
+            temp_predScores = predList[1]
+            predScores = -1 * np.ones((n_frames,) + temp_predScores.shape[1:])
+            # predScores[start_frame:cur_end_frame, ...] = temp_predScores
+            # dummy predscores for now.
+
+            temp_pred_locs = predList
+            pred_locs = np.nan * np.ones((n_frames,) + temp_pred_locs.shape[1:])
+            pred_locs[start_frame:cur_end_frame, ...] = temp_pred_locs
+            pred_locs = pred_locs.transpose([2,3,0,1])
+            tgt = np.arange(pred_locs.shape[-1])+1
         else:
             predList = self.classify_movie(mov_file[view],sess,end_frame, start_frame)
 
-        cap = cv2.VideoCapture(mov_file[view])
-        height = int(cap.get(cvc.FRAME_HEIGHT))
-        width = int(cap.get(cvc.FRAME_WIDTH))
-        rescale = conf.unet_rescale
-        orig_crop_loc = conf.cropLoc[(height,width)]
-        crop_loc = [int(x/rescale) for x in orig_crop_loc]
-        end_pad = [int((height-conf.imsz[0])/rescale)-crop_loc[0],int((width-conf.imsz[1])/rescale)-crop_loc[1]]
-#                crop_loc = [old_div(x,4) for x in orig_crop_loc]
-#                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
-        pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0)]
-        predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
+            rescale = conf.unet_rescale
+            orig_crop_loc = conf.cropLoc[(height,width)]
+            crop_loc = [int(x/rescale) for x in orig_crop_loc]
+            end_pad = [int((height-conf.imsz[0])/rescale)-crop_loc[0],int((width-conf.imsz[1])/rescale)-crop_loc[1]]
 
-        predLocs = predList[0]
-        predLocs[:,:,0] += orig_crop_loc[1]
-        predLocs[:,:,1] += orig_crop_loc[0]
+            pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0)]
+            temp_predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
+            predScores = np.zeros((n_frames,)+temp_predScores.shape[1:])
+            predScores[start_frame:cur_end_frame,...] = temp_predScores
 
+            temp_pred_locs = predList[0]
+            temp_pred_locs[:,:,0] += orig_crop_loc[1]
+            temp_pred_locs[:,:,1] += orig_crop_loc[0]
+            pred_locs = np.nan*np.ones((n_frames,)+temp_pred_locs.shape[1:])
+            pred_locs[start_frame:cur_end_frame,...] = temp_pred_locs
+            pred_locs = pred_locs.transpose([1,2,0])
+            tgt = np.arange(1)+1
 
-        with h5py.File(out_file + '_view_{}'.format(view)+ '.mat', 'w') as f:
-            f.create_dataset('pTrk', data=predLocs)
-            f.create_dataset('pTrkTS',data=datetime2matlabdn * np.ones(predLocs.shape[:-1]))
-            f.create_dataset('scores', data=predScores)
-            f.create_dataset('expname', data=mov_file[view])
+        ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
+        ts = np.ones(ts_shape)*datetime2matlabdn()
+        tag = np.zeros(ts.shape).astype('bool')
+        hdf5storage.savemat(out_file + '_view_{}'.format(view)+ '.trk', {'pTrk': pred_locs, 'pTrkTS':ts,'expname':mov_file[view],'pTrkiTgt':tgt,'pTrkTag':tag}, appendmat=False, truncate_existing=True)
 
 
 def main(argv):

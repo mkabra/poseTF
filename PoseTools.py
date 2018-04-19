@@ -62,6 +62,11 @@ from skimage import transform
 
 # In[ ]:
 
+def get_cmap(n_classes):
+    cmap = cm.get_cmap('jet')
+    return cmap(np.linspace(0, 1, n_classes))
+
+
 def scale_images(img, scale, conf):
     sz = img.shape
     simg = np.zeros((sz[0], old_div(sz[1], scale), old_div(sz[2], scale), sz[3]))

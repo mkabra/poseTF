@@ -1094,3 +1094,5 @@ def read_and_decode_without_session(filename,conf):
     reconstructed_img = img_1d.reshape((height, width, depth))
     locs = np.array(example.features.feature['locs'].float_list.value)
     locs = locs.reshape([conf.n_classes, 2])
+
+    return  reconstructed_img, locs

@@ -395,7 +395,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
 
-    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0, flipud=False):
+    def classify_movie(self, movie_name, sess, end_frame=-1, start_frame=0, flipud=False):
         # maxframes if specificied reads that many frames
         # start at specifies where to start reading.
         conf = self.conf
@@ -404,14 +404,13 @@ class PoseUNet(PoseCommon.PoseCommon):
         n_frames = int(cap.get_n_frames())
 
         # figure out how many frames to read
-        if max_frames > 0:
-            if max_frames + start_at > n_frames:
-                n_frames = n_frames - start_at
+        if end_frame > 0:
+            if end_frame > n_frames:
+                print('End frame requested exceeds number of frames in the video. Tracking only till last valid frame')
             else:
-                n_frames = max_frames
+                n_frames = end_frame - start_frame
         else:
-            n_frames = n_frames - start_at
-
+            n_frames = n_frames - start_frame
 
         # pre allocate results
         bsize = conf.batch_size
@@ -426,7 +425,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             ndx_end = min(n_frames, (curl + 1) * bsize)
             ppe = min(ndx_end - ndx_start, bsize)
             for ii in range(ppe):
-                fnum = ndx_start + ii + start_at
+                fnum = ndx_start + ii + start_frame
                 frame_in = cap.get_frame(fnum)
                 if len(frame_in) == 2:
                     frame_in = frame_in[0]
@@ -459,7 +458,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         return pred_locs, pred_scores, pred_max_scores
 
-    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False, return_ims=False):
+    def classify_movie_trx(self, movie_name, trx, sess, end_frame=-1, start_frame=0, flipud=False, return_ims=False):
         # maxframes if specificied reads up to that  frame
         # start at specifies where to start reading.
 
@@ -471,13 +470,13 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         end_frames = np.array([x['endframe'][0,0] for x in T])
         first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1 # for converting from 1 indexing to 0 indexing
-        if max_frames < 0:
-            max_frames = end_frames.max()
-        if max_frames > end_frames.max():
-            max_frames = end_frames.max()
-        if start_at > max_frames:
+        if end_frame < 0:
+            end_frame = end_frames.max()
+        if end_frame > end_frames.max():
+            end_frame = end_frames.max()
+        if start_frame > end_frame:
             return None
-        max_n_frames = max_frames - start_at
+        max_n_frames = end_frame - start_frame
         pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
         pred_locs[:] = np.nan
 
@@ -491,15 +490,15 @@ class PoseUNet(PoseCommon.PoseCommon):
         for trx_ndx in range(n_trx):
             cur_trx = T[trx_ndx]
             # pre allocate results
-            if first_frames[trx_ndx] > start_at:
+            if first_frames[trx_ndx] > start_frame:
                 cur_start = first_frames[trx_ndx]
             else:
-                cur_start = start_at
+                cur_start = start_frame
 
-            if end_frames[trx_ndx] < max_frames:
+            if end_frames[trx_ndx] < end_frame:
                 cur_end = end_frames[trx_ndx]
             else:
-                cur_end = max_frames
+                cur_end = end_frame
 
             n_frames = cur_end - cur_start
             n_batches = int(math.ceil(float(n_frames)/ bsize))
@@ -551,12 +550,11 @@ class PoseUNet(PoseCommon.PoseCommon):
                     curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], trx_arr[ii][3]) + [trx_arr[ii][0],trx_arr[ii][1]]
                     base_locs_orig[ii,...] = curlocs
 
-                out_start = ndx_start - start_at
-                out_end = ndx_end - start_at
+                out_start = ndx_start - start_frame
+                out_end = ndx_end - start_frame
                 if return_ims:
                     ims[out_start:out_end, trx_ndx,:,:,:] = all_f[:ppe,...]
                     pred_ims[out_start:out_end,trx_ndx, ...] = pred[:ppe,...]
-
 
                 pred_locs[out_start:out_end, trx_ndx, :, :] = base_locs_orig[:ppe,...]
                 sys.stdout.write('.')
@@ -567,14 +565,14 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         tf.reset_default_graph()
         if return_ims:
-            return pred_locs, ims, pred_ims
+            return pred_locs, pred_ims, ims
         else:
             return pred_locs
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
-        predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name,sess,max_frames=max_frames,flipud=flipud)
+        predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name, sess, end_frame=max_frames, flipud=flipud)
         tdir = tempfile.mkdtemp()
 
         cap = movies.Movie(movie_name)
@@ -643,7 +641,7 @@ class PoseUNet(PoseCommon.PoseCommon):
     def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False, trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
-        predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
+        predLocs = self.classify_movie_trx(movie_name, trx, sess, end_frame=max_frames, flipud=flipud, start_frame=start_at)
         tdir = tempfile.mkdtemp()
 
         cap = movies.Movie(movie_name,interactive=False)
