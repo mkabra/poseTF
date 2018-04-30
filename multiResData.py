@@ -949,32 +949,38 @@ def read_and_decode_rnn(filename_queue, conf):
     return image, locs, [expndx, ts]
 
 
-def read_and_decode_without_session(filename, conf, count=0):
-    # code that shows how to read the tf record file raw.
-    # num = 0
-    # for record in tf.python_io.tf_record_iterator(tf_file):
-    #     num += 1
+def read_and_decode_without_session(filename, conf, indices=(0,)):
+    # reads the tf record db. Returns entries at location indices
+    # If indices is empty, then it reads the whole database.
 
     xx = tf.python_io.tf_record_iterator(filename)
-    record = xx.next()
-    for _ in range(count):
-        record = xx.next()
+    all_ims = []
+    all_locs = []
+    all_info = []
+    for ndx, record in enumerate(xx):
+        if (len(indices) > 0) and (indices.count(ndx) is 0):
+            continue
 
-    example = tf.train.Example()
-    example.ParseFromString(record)
-    height = int(example.features.feature['height'].int64_list.value[0])
-    width = int(example.features.feature['width'].int64_list.value[0])
-    depth = int(example.features.feature['depth'].int64_list.value[0])
-    expid = int(example.features.feature['expndx'].float_list.value[0]),
-    t = int(example.features.feature['ts'].float_list.value[0]),
-    img_string = example.features.feature['image_raw'].bytes_list.value[0]
-    img_1d = np.fromstring(img_string, dtype=np.uint8)
-    reconstructed_img = img_1d.reshape((height, width, depth))
-    locs = np.array(example.features.feature['locs'].float_list.value)
-    locs = locs.reshape([conf.n_classes, 2])
-    if 'trx_ndx' in example.features.feature.keys():
-        trx_ndx = int(example.features.feature['trx_ndx'].int64_list.value[0])
-    else:
-        trx_ndx = 0
+        example = tf.train.Example()
+        example.ParseFromString(record)
+        height = int(example.features.feature['height'].int64_list.value[0])
+        width = int(example.features.feature['width'].int64_list.value[0])
+        depth = int(example.features.feature['depth'].int64_list.value[0])
+        expid = int(example.features.feature['expndx'].float_list.value[0]),
+        t = int(example.features.feature['ts'].float_list.value[0]),
+        img_string = example.features.feature['image_raw'].bytes_list.value[0]
+        img_1d = np.fromstring(img_string, dtype=np.uint8)
+        reconstructed_img = img_1d.reshape((height, width, depth))
+        locs = np.array(example.features.feature['locs'].float_list.value)
+        locs = locs.reshape([conf.n_classes, 2])
+        if 'trx_ndx' in example.features.feature.keys():
+            trx_ndx = int(example.features.feature['trx_ndx'].int64_list.value[0])
+        else:
+            trx_ndx = 0
 
-    return reconstructed_img, locs, [expid, t, trx_ndx]
+        all_ims.append(reconstructed_img)
+        all_locs.append(locs)
+        all_info.append([expid, t, trx_ndx])
+
+    xx.close()
+    return all_ims, all_locs, all_info
