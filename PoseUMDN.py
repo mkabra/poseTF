@@ -47,7 +47,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
-        self.dep_nets.create_ph()
+        # self.dep_nets.create_ph()
         self.ph['x'] = self.dep_nets.ph['x']
         self.ph['locs'] = tf.placeholder(tf.float32,
                            [None, self.conf.n_classes, 2],

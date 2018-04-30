@@ -10,7 +10,7 @@ from romainLegConfig import bottomconf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 import romainLegConfig
 reload(romainLegConfig)
@@ -18,7 +18,7 @@ from romainLegConfig import side1conf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 
 import romainLegConfig
@@ -27,7 +27,7 @@ from romainLegConfig import side2conf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 
 ##

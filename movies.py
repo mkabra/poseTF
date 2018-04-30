@@ -47,7 +47,7 @@ def known_extensions():
 class Movie:
     """Generic interface for all supported movie types."""
     def __init__( self, initpath,
-                  interactive=True,
+                  interactive=False,
                   parentframe=None,
                   open_now=True,
                   open_multiple=False,

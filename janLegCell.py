@@ -85,7 +85,7 @@ pobj.baseTrain(restore=False)
 from janLegConfig import conf
 import multiResData
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 print(valmovies[0])
 print(conf.getexpname(valmovies[0]))
 
@@ -119,7 +119,7 @@ PoseTools.init_network(self, sess, outtype)
 from scipy import io
 import cv2
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 for ndx in [0,3,-3,-1]:
     
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))

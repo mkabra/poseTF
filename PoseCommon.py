@@ -22,6 +22,7 @@ import copy
 import cv2
 import gc
 import resource
+import json
 
 
 def conv_relu(x_in, kernel_shape, train_phase):
@@ -123,25 +124,28 @@ class PoseCommon(object):
         self.edge_ignore = 0 # amount of edge to ignore while computing prediction locations
         self.train_loss = np.zeros(500) # keep track of past loss for importance sampling
         self.step = 0 # might be required for mdn.
+        self.extra_data = None
+        self.db_name = ''
+        self.read_and_decode = multiResData.read_and_decode
 
     def open_dbs(self):
         assert self.train_type is not None, 'traintype has not been set'
         if self.train_type == 0:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
+            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + self.db_name + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + self.db_name + '.tfrecords'
             self.train_queue = tf.train.string_input_producer([train_filename])
             self.val_queue = tf.train.string_input_producer([val_filename])
         else:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
+            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
             self.train_queue = tf.train.string_input_producer([train_filename])
             self.val_queue = tf.train.string_input_producer([val_filename])
 
     def create_cursors(self, sess):
-        train_ims, train_locs, train_info = multiResData.read_and_decode(self.train_queue, self.conf)
-        val_ims, val_locs, val_info = multiResData.read_and_decode(self.val_queue, self.conf)
-        self.train_data = [train_ims, train_locs, train_info]
-        self.val_data = [val_ims, val_locs, val_info]
+        tdata = self.read_and_decode(self.train_queue, self.conf)
+        vdata = self.read_and_decode(self.val_queue, self.conf)
+        self.train_data = tdata
+        self.val_data = vdata
         self.coord = tf.train.Coordinator()
         self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
 
@@ -149,13 +153,14 @@ class PoseCommon(object):
         self.coord.request_stop()
         self.coord.join(self.threads)
 
-    def read_images(self, db_type, distort, sess, shuffle=None):
+    def read_images(self, db_type, distort, sess, shuffle=None, scale = 1):
         conf = self.conf
         cur_data = self.val_data if (db_type == self.DBType.Val)\
             else self.train_data
         xs = []
         locs = []
         info = []
+        extra_data = []
 
         if shuffle is None:
             shuffle = distort
@@ -168,43 +173,21 @@ class PoseCommon(object):
             if shuffle:
                 for _ in range(np.random.randint(30)):
                     sess.run(cur_data)
-            [cur_xs, cur_locs, cur_info] = sess.run(cur_data)
-            xs.append(cur_xs)
-            locs.append(cur_locs)
-            info.append(cur_info)
+            A = sess.run(cur_data)
+            xs.append(A[0])
+            locs.append(A[1])
+            info.append(A[2])
+            if len(A)>3:
+                extra_data.append(A[3:])
         xs = np.array(xs)
         locs = np.array(locs)
-        locs = multiResData.sanitizelocs(locs)
+        locs = multiResData.sanitize_locs(locs)
 
-        xs = PoseTools.adjust_contrast(xs, conf)
-
-        # ideally normalize_mean should be here, but misc.imresize in scale_images
-        # messes up dtypes. It converts float64 back to uint8.
-        # so for now it'll be in update_fd.
-        # xs = PoseTools.normalize_mean(xs, conf)
-        if distort:
-            if conf.horzFlip:
-                xs, locs = PoseTools.randomly_flip_lr(xs, locs)
-            if conf.vertFlip:
-                xs, locs = PoseTools.randomly_flip_ud(xs, locs)
-            xs, locs = PoseTools.randomly_rotate(xs, locs, conf)
-            xs, locs = PoseTools.randomly_translate(xs, locs, conf)
-            xs = PoseTools.randomly_adjust(xs, conf)
-        # else:
-        #     rows, cols = xs.shape[2:]
-        #     for ndx in range(xs.shape[0]):
-        #         orig_im = copy.deepcopy(xs[ndx, ...])
-        #         ii = copy.deepcopy(orig_im).transpose([1, 2, 0])
-        #         mat = np.float32([[1, 0, 0], [0, 1, 0]])
-        #         ii = cv2.warpAffine(ii, mat, (cols, rows))
-        #         if ii.ndim == 2:
-        #             ii = ii[..., np.newaxis]
-        #         ii = ii.transpose([2, 0, 1])
-        #         xs[ndx, ...] = ii
-
+        xs, locs = PoseTools.preprocess_ims(xs, locs, conf, distort, scale)
         self.xs = xs
         self.locs = locs
         self.info = info
+        self.extra_data = extra_data
 
     def create_saver(self):
         saver = {}
@@ -351,6 +334,11 @@ class PoseCommon(object):
         train_data_file = saver['train_data_file']
         with open(train_data_file, 'wb') as td_file:
             pickle.dump([self.train_info, self.conf], td_file, protocol=2)
+        json_data = {}
+        for x in self.train_info.keys():
+            json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()
+        with open(train_data_file+'.json','w') as json_file:
+            json.dump(json_data, json_file)
 
     def update_td(self, cur_dict):
         for k in cur_dict.keys():
@@ -364,6 +352,8 @@ class PoseCommon(object):
         self.ph['learning_rate'] = learning_rate_ph
         self.ph['phase_train'] = tf.placeholder(
             tf.bool, name='phase_train')
+        if self.dep_nets:
+            self.dep_nets.create_ph()
 
     def create_fd(self):
         # to be subclassed
@@ -389,7 +379,15 @@ class PoseCommon(object):
         self.update_fd(self.DBType.Train, sess=sess, distort=True)
         start_at = self.restore(sess, restore, at_step)
         initialize_remaining_vars(sess)
-        self.init_td(td_fields) if start_at is 0 else self.restore_td()
+
+        try:
+            self.init_td(td_fields) if start_at is 0 else self.restore_td()
+        except AttributeError: # If the conf file has been modified
+            print('----------------')
+            print("Couldn't load train data because the conf has changed!")
+            print('----------------')
+            self.init_td(td_fields)
+
         return start_at
 
     def train_step(self, step, sess, learning_rate):
@@ -692,7 +690,7 @@ class PoseCommonTime(PoseCommon):
         b_sz = conf.batch_size * tw
         xs = xs.reshape( (b_sz, ) + xs.shape[2:])
         locs = np.array(locs)
-        locs = multiResData.sanitizelocs(locs)
+        locs = multiResData.sanitize_locs(locs)
 
         xs = PoseTools.adjust_contrast(xs, conf)
 
@@ -761,7 +759,7 @@ class PoseCommonRNN(PoseCommonTime):
         b_sz = conf.batch_size * tw
         xs = xs.reshape( (b_sz, ) + xs.shape[2:])
         locs = np.array(locs)
-        locs = multiResData.sanitizelocs(locs)
+        locs = multiResData.sanitize_locs(locs)
 
         xs = PoseTools.adjust_contrast(xs, conf)
 

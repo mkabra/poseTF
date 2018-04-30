@@ -868,7 +868,7 @@ PoseTools.init_network(self, sess, outtype)
 from scipy import io
 import cv2
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 for ndx in range(len(valmovies)):
     valmovies[ndx] = '/groups/branson/bransonlab/mayank/' + valmovies[ndx][17:]
 for ndx in [0,3,-3,-1]:
@@ -978,7 +978,7 @@ fig.savefig('/groups/branson/home/kabram/temp/headValResults.png')
 import multiResData
 from stephenHeadConfig import conf as conf
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 f = open('/home/mayank/Dropbox/temp/valfilelist.txt','w')
 for ndx in range(40,50):
     f.write('{:}\n'.format(valmovies[ndx]))

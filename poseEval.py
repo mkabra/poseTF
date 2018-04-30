@@ -304,7 +304,7 @@ def readImages(conf,dbType,distort,sess,data):
         locs.append(curlocs)
     xs = np.array(xs)    
     locs = np.array(locs)
-    locs = multiResData.sanitizelocs(locs)
+    locs = multiResData.sanitize_locs(locs)
     if distort:
         if conf.horzFlip:
             xs,locs = PoseTools.randomly_flip_lr(xs, locs)

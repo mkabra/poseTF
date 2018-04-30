@@ -46,7 +46,7 @@ from stephenHeadConfig import sideconf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createFullTFRecord(conf)
+multiResData.create_full_tf_record(conf)
 
 
 # In[ ]:
@@ -282,7 +282,7 @@ sess = tf.InteractiveSession()
 PoseTools.init_network(self, sess, outtype)
 
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 valmovies = valmovies[45:55]
 valmovies = ['/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi']
 # for ndx in range(len(valmovies)):

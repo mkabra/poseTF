@@ -13,7 +13,7 @@ from scipy import  io as sio
 import math
 
 self = PoseUNet.PoseUNet(conf, name='pose_unet_128_bs8')
-_,dirs,_ = multiResData.loadValdata(conf)
+_,dirs,_ = multiResData.load_val_data(conf)
 for ndx in range(len(dirs)):
     dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
 
@@ -43,7 +43,7 @@ val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_v
 L = h5py.File(conf.labelfile, 'r')
 curpts = multiResData.trx_pts(L,0)
 
-_,dirs,_ = multiResData.loadValdata(conf)
+_,dirs,_ = multiResData.load_val_data(conf)
 for ndx in range(len(dirs)):
     dirs[ndx] = dirs[ndx].replace('$dataroot','/home/mayank/work/FlySpaceTime')
 

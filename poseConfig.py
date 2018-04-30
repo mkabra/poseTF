@@ -149,13 +149,17 @@ class config(object):
     def getexplist(self, L):
         return L['movieFilesAll'][self.view,:]
 
+    # ------------ ATTention parameters
+    att_hist = 128
+    att_layers = [1] # use layer this far from the middle (top?) layers.
 
 # -- alice fly --
 
 aliceConfig = config()
 aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache', 'alice')
 #aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
-aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl')
+# aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl') # round1
+aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_expandedbehavior_20180425_local.lbl')
 def alice_exp_name(dirname):
     return os.path.basename(os.path.dirname(dirname))
 

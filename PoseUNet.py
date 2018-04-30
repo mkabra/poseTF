@@ -31,6 +31,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.edge_ignore = 10
         self.net_name = 'pose_unet'
         self.keep_prob = 0.7
+        self.n_conv = 2
+        self.all_layers = None
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -74,7 +76,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers) - 2
 
-        n_conv = 2 #3
+        n_conv = self.n_conv #3
         conv = PoseCommon.conv_relu3
         # conv = PoseCommon.conv_relu3_noscaling
         layers = []
@@ -82,7 +84,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         layers_sz = []
         X = self.ph['x']
         n_out = self.conf.n_classes
-        debug_layers = []
+        all_layers = []
 
         # downsample
         n_filt = 128
@@ -100,7 +102,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
-                debug_layers.append(X)
+                all_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
             # X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
@@ -109,7 +111,6 @@ class PoseUNet(PoseCommon.PoseCommon):
                                padding='SAME')
 
         self.down_layers = layers
-        self.debug_layers = debug_layers
         # few more convolution for the final layers
         top_layers = []
         for cndx in range(n_conv):
@@ -118,6 +119,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
                 top_layers.append(X)
         self.top_layers = top_layers
+        all_layers.extend(top_layers)
 
         # upsample
         for ndx in reversed(range(n_layers)):
@@ -143,7 +145,9 @@ class PoseUNet(PoseCommon.PoseCommon):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                all_layers.append(X)
             up_layers.append(X)
+        self.all_layers = all_layers
         self.up_layers = up_layers
 
         # final conv
@@ -270,10 +274,11 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['keep_prob']] = 1.
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess, distort)
+
+        self.read_images(db_type, distort, sess, distort, self.conf.unet_rescale)
+        self.fd[self.ph['x']] = self.xs
+
         rescale = self.conf.unet_rescale
-        xs = scale_images(self.xs, rescale, self.conf)
-        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
         imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
         label_ims = PoseTools.create_label_images(
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
@@ -391,7 +396,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         val_preds = val_reshape(val_preds)
         val_predlocs = val_reshape(val_predlocs)
         val_locs = val_reshape(val_locs)
-        val_info = np.array(val_info).reshape([-1, 2])
+        n_records = len(val_info[0])
+        val_info = np.array(val_info).reshape([-1, n_records ])
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
 
@@ -436,10 +442,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = np.flipud(frame_in)
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-            all_f = all_f.astype('uint8')
-            xs = PoseTools.adjust_contrast(all_f, conf)
-            xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
-            xs = PoseTools.normalize_mean(xs, self.conf)
+            # converting to uint8 is really really important!!!!!
+            xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize,self.conf.n_classes, 2), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
@@ -533,10 +537,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = frame_in[:, :, 0:conf.imgDim]
                     all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-                all_f = all_f.astype('uint8')
-                xs = PoseTools.adjust_contrast(all_f, conf)
-                xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
-                xs = PoseTools.normalize_mean(xs, self.conf)
+                xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize, self.conf.n_classes, 2), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
+
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False
                 self.fd[self.ph['keep_prob']] = 1.
