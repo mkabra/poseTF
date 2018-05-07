@@ -49,7 +49,7 @@ plt.scatter(cur_l[:,sel_pts,0].flatten()*scale,cur_l[:,sel_pts,1].flatten()*scal
 
 from poseConfig import felipeConfig as conf
 import tensorflow as tf
-from multiResData import _int64_feature, _bytes_feature, _float_feature
+from multiResData import int64_feature, bytes_feature, float_feature
 import os
 from scipy import misc
 
@@ -106,13 +106,13 @@ for ndx, dir_name in enumerate(ims):
 
         image_raw = framein.tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
-            'height': _int64_feature(rows),
-            'width': _int64_feature(cols),
-            'depth': _int64_feature(depth),
-            'locs': _float_feature(curloc.flatten()),
-            'expndx': _float_feature(ndx),
-            'ts': _float_feature(fnum),
-            'image_raw': _bytes_feature(image_raw)}))
+            'height': int64_feature(rows),
+            'width': int64_feature(cols),
+            'depth': int64_feature(depth),
+            'locs': float_feature(curloc.flatten()),
+            'expndx': float_feature(ndx),
+            'ts': float_feature(fnum),
+            'image_raw': bytes_feature(image_raw)}))
         curenv.write(example.SerializeToString())
 
         if ndx in isval and split:
@@ -254,7 +254,7 @@ max_n = all_lbls.shape[1]
 
 from poseConfig import felipe_config_multi as conf
 import tensorflow as tf
-from multiResData import _int64_feature, _bytes_feature, _float_feature
+from multiResData import int64_feature, bytes_feature, float_feature
 import os
 from scipy import misc
 
@@ -329,14 +329,14 @@ for ndx, dir_name in enumerate(ims):
 
         image_raw = framein.tostring()
         example = tf.train.Example(features=tf.train.Features(feature={
-            'height': _int64_feature(rows),
-            'width': _int64_feature(cols),
-            'depth': _int64_feature(depth),
-            'locs': _float_feature(curloc.flatten()),
-            'n_animals': _int64_feature(cur_n),
-            'expndx': _float_feature(ndx),
-            'ts': _float_feature(fnum),
-            'image_raw': _bytes_feature(image_raw)}))
+            'height': int64_feature(rows),
+            'width': int64_feature(cols),
+            'depth': int64_feature(depth),
+            'locs': float_feature(curloc.flatten()),
+            'n_animals': int64_feature(cur_n),
+            'expndx': float_feature(ndx),
+            'ts': float_feature(fnum),
+            'image_raw': bytes_feature(image_raw)}))
         curenv.write(example.SerializeToString())
 
         if ndx in isval and split:

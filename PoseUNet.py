@@ -31,6 +31,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.edge_ignore = 10
         self.net_name = 'pose_unet'
         self.keep_prob = 0.7
+        self.n_conv = 2
+        self.all_layers = None
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -74,7 +76,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers) - 2
 
-        n_conv = 2 #3
+        n_conv = self.n_conv #3
         conv = PoseCommon.conv_relu3
         # conv = PoseCommon.conv_relu3_noscaling
         layers = []
@@ -82,7 +84,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         layers_sz = []
         X = self.ph['x']
         n_out = self.conf.n_classes
-        debug_layers = []
+        all_layers = []
 
         # downsample
         n_filt = 128
@@ -100,7 +102,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
-                debug_layers.append(X)
+                all_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
             # X = tf.nn.max_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
@@ -109,7 +111,6 @@ class PoseUNet(PoseCommon.PoseCommon):
                                padding='SAME')
 
         self.down_layers = layers
-        self.debug_layers = debug_layers
         # few more convolution for the final layers
         top_layers = []
         for cndx in range(n_conv):
@@ -118,6 +119,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
                 top_layers.append(X)
         self.top_layers = top_layers
+        all_layers.extend(top_layers)
 
         # upsample
         for ndx in reversed(range(n_layers)):
@@ -143,7 +145,9 @@ class PoseUNet(PoseCommon.PoseCommon):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                all_layers.append(X)
             up_layers.append(X)
+        self.all_layers = all_layers
         self.up_layers = up_layers
 
         # final conv
@@ -270,10 +274,11 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['keep_prob']] = 1.
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess, distort)
+
+        self.read_images(db_type, distort, sess, distort, self.conf.unet_rescale)
+        self.fd[self.ph['x']] = self.xs
+
         rescale = self.conf.unet_rescale
-        xs = scale_images(self.xs, rescale, self.conf)
-        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
         imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
         label_ims = PoseTools.create_label_images(
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
@@ -292,8 +297,11 @@ class PoseUNet(PoseCommon.PoseCommon):
     def init_net_meta(self, train_type=0, restore=True):
         sess = tf.Session()
         self.train_type = train_type
-        self.open_dbs()
-        self.create_cursors(sess)
+        try:
+            self.open_dbs()
+            self.create_cursors(sess)
+        except tf.python.framework.errors_impl.NotFoundError:
+            pass
 
         ckpt_file = os.path.join(
             self.conf.cachedir,
@@ -388,11 +396,12 @@ class PoseUNet(PoseCommon.PoseCommon):
         val_preds = val_reshape(val_preds)
         val_predlocs = val_reshape(val_predlocs)
         val_locs = val_reshape(val_locs)
-        val_info = np.array(val_info).reshape([-1, 2])
+        n_records = len(val_info[0])
+        val_info = np.array(val_info).reshape([-1, n_records ])
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
 
-    def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0, flipud=False):
+    def classify_movie(self, movie_name, sess, end_frame=-1, start_frame=0, flipud=False):
         # maxframes if specificied reads that many frames
         # start at specifies where to start reading.
         conf = self.conf
@@ -401,14 +410,13 @@ class PoseUNet(PoseCommon.PoseCommon):
         n_frames = int(cap.get_n_frames())
 
         # figure out how many frames to read
-        if max_frames > 0:
-            if max_frames + start_at > n_frames:
-                n_frames = n_frames - start_at
+        if end_frame > 0:
+            if end_frame > n_frames:
+                print('End frame requested exceeds number of frames in the video. Tracking only till last valid frame')
             else:
-                n_frames = max_frames
+                n_frames = end_frame - start_frame
         else:
-            n_frames = n_frames - start_at
-
+            n_frames = n_frames - start_frame
 
         # pre allocate results
         bsize = conf.batch_size
@@ -423,7 +431,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             ndx_end = min(n_frames, (curl + 1) * bsize)
             ppe = min(ndx_end - ndx_start, bsize)
             for ii in range(ppe):
-                fnum = ndx_start + ii + start_at
+                fnum = ndx_start + ii + start_frame
                 frame_in = cap.get_frame(fnum)
                 if len(frame_in) == 2:
                     frame_in = frame_in[0]
@@ -434,10 +442,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = np.flipud(frame_in)
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-            all_f = all_f.astype('uint8')
-            xs = PoseTools.adjust_contrast(all_f, conf)
-            xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
-            xs = PoseTools.normalize_mean(xs, self.conf)
+            # converting to uint8 is really really important!!!!!
+            xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize,self.conf.n_classes, 2), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
@@ -456,7 +462,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         return pred_locs, pred_scores, pred_max_scores
 
-    def classify_movie_trx(self, movie_name, trx, sess, max_frames=-1, start_at=0,flipud=False, return_ims=False):
+    def classify_movie_trx(self, movie_name, trx, sess, end_frame=-1, start_frame=0, flipud=False, return_ims=False):
         # maxframes if specificied reads up to that  frame
         # start at specifies where to start reading.
 
@@ -468,13 +474,13 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         end_frames = np.array([x['endframe'][0,0] for x in T])
         first_frames = np.array([x['firstframe'][0,0] for x in T]) - 1 # for converting from 1 indexing to 0 indexing
-        if max_frames < 0:
-            max_frames = end_frames.max()
-        if max_frames > end_frames.max():
-            max_frames = end_frames.max()
-        if start_at > max_frames:
+        if end_frame < 0:
+            end_frame = end_frames.max()
+        if end_frame > end_frames.max():
+            end_frame = end_frames.max()
+        if start_frame > end_frame:
             return None
-        max_n_frames = max_frames - start_at
+        max_n_frames = end_frame - start_frame
         pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
         pred_locs[:] = np.nan
 
@@ -488,15 +494,15 @@ class PoseUNet(PoseCommon.PoseCommon):
         for trx_ndx in range(n_trx):
             cur_trx = T[trx_ndx]
             # pre allocate results
-            if first_frames[trx_ndx] > start_at:
+            if first_frames[trx_ndx] > start_frame:
                 cur_start = first_frames[trx_ndx]
             else:
-                cur_start = start_at
+                cur_start = start_frame
 
-            if end_frames[trx_ndx] < max_frames:
+            if end_frames[trx_ndx] < end_frame:
                 cur_end = end_frames[trx_ndx]
             else:
-                cur_end = max_frames
+                cur_end = end_frame
 
             n_frames = cur_end - cur_start
             n_batches = int(math.ceil(float(n_frames)/ bsize))
@@ -531,10 +537,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = frame_in[:, :, 0:conf.imgDim]
                     all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-                all_f = all_f.astype('uint8')
-                xs = PoseTools.adjust_contrast(all_f, conf)
-                xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
-                xs = PoseTools.normalize_mean(xs, self.conf)
+                xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize, self.conf.n_classes, 2), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
+
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False
                 self.fd[self.ph['keep_prob']] = 1.
@@ -548,12 +552,11 @@ class PoseUNet(PoseCommon.PoseCommon):
                     curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], trx_arr[ii][3]) + [trx_arr[ii][0],trx_arr[ii][1]]
                     base_locs_orig[ii,...] = curlocs
 
-                out_start = ndx_start - start_at
-                out_end = ndx_end - start_at
+                out_start = ndx_start - start_frame
+                out_end = ndx_end - start_frame
                 if return_ims:
                     ims[out_start:out_end, trx_ndx,:,:,:] = all_f[:ppe,...]
                     pred_ims[out_start:out_end,trx_ndx, ...] = pred[:ppe,...]
-
 
                 pred_locs[out_start:out_end, trx_ndx, :, :] = base_locs_orig[:ppe,...]
                 sys.stdout.write('.')
@@ -564,14 +567,14 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         tf.reset_default_graph()
         if return_ims:
-            return pred_locs, ims, pred_ims
+            return pred_locs, pred_ims, ims
         else:
             return pred_locs
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
-        predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name,sess,max_frames=max_frames,flipud=flipud)
+        predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name, sess, end_frame=max_frames, flipud=flipud)
         tdir = tempfile.mkdtemp()
 
         cap = movies.Movie(movie_name)
@@ -640,7 +643,7 @@ class PoseUNet(PoseCommon.PoseCommon):
     def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False, trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
-        predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
+        predLocs = self.classify_movie_trx(movie_name, trx, sess, end_frame=max_frames, flipud=flipud, start_frame=start_at)
         tdir = tempfile.mkdtemp()
 
         cap = movies.Movie(movie_name,interactive=False)

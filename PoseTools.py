@@ -62,6 +62,11 @@ from skimage import transform
 
 # In[ ]:
 
+def get_cmap(n_classes):
+    cmap = cm.get_cmap('jet')
+    return cmap(np.linspace(0, 1, n_classes))
+
+
 def scale_images(img, scale, conf):
     sz = img.shape
     simg = np.zeros((sz[0], old_div(sz[1], scale), old_div(sz[2], scale), sz[3]))
@@ -1172,7 +1177,7 @@ def output_graph(logdir):
     sess = tf.get_default_session()
     train_writer = tf.summary.FileWriter(
         logdir,sess.graph)
-    train_writer.add_summary(None)
+    train_writer.add_summary(tf.Summary())
 
 def get_timestamps(conf, info):
     L = h5py.File(conf.labelfile)
@@ -1258,3 +1263,20 @@ def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
     out_im = out_im.astype('uint8')
     return cv2.cvtColor(out_im, cv2.COLOR_HSV2RGB)
 
+
+def preprocess_ims(ims, in_locs, conf, distort, scale):
+    locs = in_locs.copy()
+    cur_im = ims.astype('uint8')
+    xs = adjust_contrast(cur_im, conf)
+    if distort:
+        if conf.horzFlip:
+            xs, locs = randomly_flip_lr(xs, locs)
+        if conf.vertFlip:
+            xs, locs = randomly_flip_ud(xs, locs)
+        xs, locs = randomly_rotate(xs, locs, conf)
+        xs, locs = randomly_translate(xs, locs, conf)
+        xs = randomly_adjust(xs, conf)
+        xs = adjust_contrast(xs, conf)
+    xs = scale_images(xs, scale, conf)
+    xs = normalize_mean(xs, conf)
+    return xs, locs

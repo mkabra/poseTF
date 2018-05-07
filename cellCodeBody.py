@@ -123,7 +123,7 @@ for view in range(2):
     PoseTools.init_network(self, sess, outtype)
 
     scale = conf.rescale*conf.pool_scale
-    _,valmovies = multiResData.getMovieLists(conf)
+    _,valmovies = multiResData.get_movie_lists(conf)
     for ndx in range(len(valmovies)):
         mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))00
         oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
