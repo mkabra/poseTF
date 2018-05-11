@@ -12,7 +12,7 @@ import cv2
 import numpy as num
 # import wx
 
-# from params import params
+from params import params
 # from ellipsesk import annotate_bmp
 
 # version of sbfmf for writing
@@ -47,7 +47,7 @@ def known_extensions():
 class Movie:
     """Generic interface for all supported movie types."""
     def __init__( self, initpath,
-                  interactive=True,
+                  interactive=False,
                   parentframe=None,
                   open_now=True,
                   open_multiple=False,
@@ -181,9 +181,9 @@ If initpath is a directory and not in interactive mode, it's an error."""
             try:
                 # KB: if use_uncompressed_avi set to False, then
                 # only try CompressedAvi class
-                # if not params.use_uncompressed_avi:
-                #     if DEBUG: print "Not using uncompressed AVI class"
-                #     raise
+                if not params.use_uncompressed_avi:
+                    if DEBUG: print "Not using uncompressed AVI class"
+                    raise
                 self.h_mov = Avi( self.fullpath )
                 self.type = 'avi'
             except:

@@ -15,6 +15,10 @@ import sys
 import argparse
 from subprocess import call
 import stat
+import h5py
+import hdf5storage
+
+net_name = 'pose_unet_full_20180302'
 
 def main(argv):
 
@@ -53,7 +57,7 @@ def main(argv):
                         help="Absolute path to MCR",
                         default=defaultmcrpath)
     parser.add_argument("-ncores",dest="ncores",
-                        help="Number of cores to assign to each MATLAB tracker job",
+                        help="Number of cores to assign to each MATLAB tracker job", type=int,
                         default=1)
 
     group = parser.add_mutually_exclusive_group()
@@ -116,6 +120,7 @@ def main(argv):
         import PoseTools
         import multiResData
         import cv2
+        import PoseUNet
 
         for ff in smovies+fmovies:
             if not os.path.isfile(ff):
@@ -128,26 +133,41 @@ def main(argv):
         if args.detect:
             tf.reset_default_graph() 
         if view ==1:
-        
             from stephenHeadConfig import sideconf as conf
-            conf.useMRF = True
-            outtype = 2
             extrastr = '_side'
             valmovies = smovies
+            confname = 'sideconf'
         else:
             # For FRONT
             from stephenHeadConfig import conf as conf
-            conf.useMRF = True
-            outtype = 2
             extrastr = '_front'
-            valmovies = fmovies    
+            valmovies = fmovies
+            confname = 'conf'
+
+        # for ndx in range(len(valmovies)):
+        #     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
+        #     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
+        #     pname = os.path.join(args.outdir , oname + extrastr)
+        #     print(oname)
+        #
+        #     if args.detect and os.path.isfile(valmovies[ndx]) and \
+        #                    (args.redo or not os.path.isfile(pname + '.mat')):
+        #
+        #         detect_cmd = 'python classifyMovie.py stephenHeadConfig {} {} {}'.format(confname, net_name, valmovies[ndx], pname+'.mat')
 
         # conf.batch_size = 1
 
         if args.detect:        
-            self = PoseTools.createNetwork(conf,outtype)
-            sess = tf.Session()
-            PoseTools.initNetwork(self,sess,outtype)
+            for try_num in range(4):
+                try:
+                    self = PoseUNet.PoseUNet(conf, net_name)
+                    sess = self.init_net_meta(0,True)
+                    break
+                except tf.python.framework.errors_impl.InvalidArgumentError:
+                    tf.reset_default_graph()
+                    print('Loading the net failed, retrying')
+                    if try_num is 3:
+                        raise ValueError('Couldnt load the network after 4 tries')
 
         for ndx in range(len(valmovies)):
             mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
@@ -160,25 +180,35 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
+                predList = self.classify_movie(valmovies[ndx], sess, flipud=True)
 
-                if args.makemovie:
-                    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+                # if args.makemovie:
+                #     PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
                 cap = cv2.VideoCapture(valmovies[ndx])
                 height = int(cap.get(cvc.FRAME_HEIGHT))
                 width = int(cap.get(cvc.FRAME_WIDTH))
+                rescale = conf.unet_rescale
                 orig_crop_loc = conf.cropLoc[(height,width)]
-                crop_loc = [old_div(x,4) for x in orig_crop_loc] 
-                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
-                pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0),(0,0)]
+                crop_loc = [int(x/rescale) for x in orig_crop_loc]
+                end_pad = [int((height-conf.imsz[0])/rescale)-crop_loc[0],int((width-conf.imsz[1])/rescale)-crop_loc[1]]
+#                crop_loc = [old_div(x,4) for x in orig_crop_loc]
+#                end_pad = [old_div(height,4)-crop_loc[0]-old_div(conf.imsz[0],4),old_div(width,4)-crop_loc[1]-old_div(conf.imsz[1],4)]
+                pp = [(0,0),(crop_loc[0],end_pad[0]),(crop_loc[1],end_pad[1]),(0,0)]
                 predScores = np.pad(predList[1],pp,mode='constant',constant_values=-1.)
 
                 predLocs = predList[0]
-                predLocs[:,:,:,0] += orig_crop_loc[1]
-                predLocs[:,:,:,1] += orig_crop_loc[0]
+                predLocs[:,:,0] += orig_crop_loc[1]
+                predLocs[:,:,1] += orig_crop_loc[0]
 
-                io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores[...,0],'expname':valmovies[ndx]})
+#io.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]})
+                hdf5storage.savemat(pname + '.mat',{'locs':predLocs,'scores':predScores,'expname':valmovies[ndx]},appendmat=False,truncate_existing=True,gzip_compression_level=0)
+#                with h5py.File(pname+'.mat','w') as f:
+#                    f.create_dataset('locs',data=predLocs)
+#                    f.create_dataset('scores',data=predScores)
+#                    f.create_dataset('expname',data=valmovies[ndx])
+                del predScores, predLocs
+
                 print('Detecting:%s'%oname)
 
             # track
@@ -202,7 +232,7 @@ def main(argv):
                     print("%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side))
                     continue
 
-                flynum = conf.getflynum(smovies[ndx])
+                flynum = int(conf.getflynum(smovies[ndx]))
                 #print "Parsed fly number as %d"%flynum
                 kinematfile = os.path.abspath(dltdict[flynum])
 
@@ -210,6 +240,7 @@ def main(argv):
 
                 scriptfile = os.path.join(args.outdir , jobid + '_track.sh')
                 logfile = os.path.join(args.outdir , jobid + '_track.log')
+                errfile = os.path.join(args.outdir , jobid + '_track.err')
 
 
                 #print "matscript = " + matscript
@@ -226,7 +257,8 @@ def main(argv):
                 scriptf.close()
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
-                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
+#                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
+                cmd = "ssh login1 'source /etc/profile; bsub -n %d -J %s -oo '%s' -eo '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
                 print(cmd)
                 call(cmd,shell=True)
                 

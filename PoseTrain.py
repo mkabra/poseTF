@@ -131,15 +131,15 @@ class PoseTrain(object):
             info.append(curinfo)
         xs = np.array(xs)
         locs = np.array(locs)
-        locs = multiResData.sanitizelocs(locs)
+        locs = multiResData.sanitize_locs(locs)
         if distort:
             if conf.horzFlip:
-                xs, locs = PoseTools.randomlyFlipLR(xs, locs)
+                xs, locs = PoseTools.randomly_flip_lr(xs, locs)
             if conf.vertFlip:
-                xs, locs = PoseTools.randomlyFlipUD(xs, locs)
-            xs, locs = PoseTools.randomlyRotate(xs, locs, conf)
-            xs, locs = PoseTools.randomlyTranslate(xs, locs, conf)
-            xs = PoseTools.randomlyAdjust(xs, conf)
+                xs, locs = PoseTools.randomly_flip_ud(xs, locs)
+            xs, locs = PoseTools.randomly_rotate(xs, locs, conf)
+            xs, locs = PoseTools.randomly_translate(xs, locs, conf)
+            xs = PoseTools.randomly_adjust(xs, conf)
 
         self.xs = xs
         self.locs = locs
@@ -148,7 +148,7 @@ class PoseTrain(object):
     def createPH(self):
         x0, x1, x2, y, keep_prob = CNB.createPlaceHolders(self.conf.imsz,
                                                           self.conf.rescale, self.conf.scale, self.conf.pool_scale,
-                                                          self.conf.n_classes)
+                                                          self.conf.n_classes, self.conf.imgDim)
         fine_pred_in = tf.placeholder(tf.float32, y.shape, name='fine_pred_in')
         fine_pred_locs_in = tf.placeholder(tf.float32, [self.conf.batch_size,
                                                         self.conf.n_classes, 2], name='fine_pred_locs_in')
@@ -183,13 +183,13 @@ class PoseTrain(object):
     def updateFeedDict(self, dbType, distort, sess):
         conf = self.conf
         self.readImages(dbType, distort, sess)
-        x0, x1, x2 = PoseTools.multiScaleImages(self.xs.transpose([0, 2, 3, 1]),
-                                                conf.rescale, conf.scale,conf)
+        x0, x1, x2 = PoseTools.multi_scale_images(self.xs.transpose([0, 2, 3, 1]),
+                                                  conf.rescale, conf.scale, conf)
 
-        labelims = PoseTools.createLabelImages(self.locs,
-                                               self.conf.imsz,
-                                               self.conf.pool_scale * self.conf.rescale,
-                                               self.conf.label_blur_rad)
+        labelims = PoseTools.create_label_images(self.locs,
+                                                 self.conf.imsz,
+                                                 self.conf.pool_scale * self.conf.rescale,
+                                                 self.conf.label_blur_rad)
         self.feed_dict[self.ph['x0']] = x0
         self.feed_dict[self.ph['x1']] = x1
         self.feed_dict[self.ph['x2']] = x2
@@ -208,7 +208,7 @@ class PoseTrain(object):
         self.updateFeedDict(dbType, distort, sess)
         pred = sess.run(self.pred_fine_in, feed_dict=self.feed_dict)
         self.feed_dict[self.ph['fine_pred_in']] = pred
-        baseLocs = PoseTools.getBasePredLocs(pred, self.conf)
+        baseLocs = PoseTools.get_base_pred_locs(pred, self.conf)
         j_sz = 2 * self.conf.rescale * self.conf.pool_scale
         baseLocs += np.random.randint(-j_sz, j_sz, baseLocs.shape)
         self.feed_dict[self.ph['fine_pred_locs_in']] = baseLocs
@@ -232,7 +232,7 @@ class PoseTrain(object):
 
         n_classes = self.conf.n_classes
         base_pred = self.basePred if jointTraining else tf.stop_gradient(self.basePred)
-        mrf_weights = PoseTools.initMRFweights(self.conf).astype('float32')
+        mrf_weights = PoseTools.init_mrf_weights(self.conf).astype('float32')
         mrf_weights = old_div(mrf_weights, n_classes)
 
         base_shape = tf.Tensor.get_shape(base_pred).as_list()[1:3]
@@ -371,7 +371,7 @@ class PoseTrain(object):
         locs = self.ph['fine_pred_locs_in']
 
         # Construct fine model
-        labelT = PoseTools.createFineLabelTensor(self.conf)
+        labelT = PoseTools.create_fine_label_tensor(self.conf)
         layers = self.baseLayers
 
         if not jointTraining:
@@ -396,27 +396,27 @@ class PoseTrain(object):
         finepred = CNB.fineOut(curfine1_1u, curfine1_2u, curfine2_1u, curfine2_2u,
                                self.conf, doBatch,
                                self.ph['phase_train_fine'])
-        limgs = PoseTools.createFineLabelImages(self.ph['locs'],
-                                                locs, self.conf, labelT)
+        limgs = PoseTools.create_fine_label_images(self.ph['locs'],
+                                                   locs, self.conf, labelT)
         self.finePred = finepred
         self.fine_labels = limgs
 
     # ---------------- SAVING/RESTORING ---------------------
 
     def createBaseSaver(self):
-        self.basesaver = tf.train.Saver(var_list=PoseTools.getvars('base'),
+        self.basesaver = tf.train.Saver(var_list=PoseTools.get_vars('base'),
                                         max_to_keep=self.conf.maxckpt)
 
     def createMRFSaver(self):
-        self.mrfsaver = tf.train.Saver(var_list=PoseTools.getvars('mrf'),
+        self.mrfsaver = tf.train.Saver(var_list=PoseTools.get_vars('mrf'),
                                        max_to_keep=self.conf.maxckpt)
 
     def createFineSaver(self):
-        self.finesaver = tf.train.Saver(var_list=PoseTools.getvars('fine'),
+        self.finesaver = tf.train.Saver(var_list=PoseTools.get_vars('fine'),
                                         max_to_keep=self.conf.maxckpt)
 
     def createJointSaver(self):
-        vlist = PoseTools.getvars('fine') + PoseTools.getvars('mrf') + PoseTools.getvars('base')
+        vlist = PoseTools.get_vars('fine') + PoseTools.get_vars('mrf') + PoseTools.get_vars('base')
         self.jointsaver = tf.train.Saver(var_list=vlist,
                                          max_to_keep=self.conf.maxckpt)
 
@@ -436,7 +436,7 @@ class PoseTrain(object):
             self.basestartat = 0
             self.basetrainData = {'train_err': [], 'val_err': [], 'step_no': [],
                                   'train_dist': [], 'val_dist': []}
-            sess.run(tf.variables_initializer(PoseTools.getvars('base')), feed_dict=self.feed_dict)
+            sess.run(tf.variables_initializer(PoseTools.get_vars('base')), feed_dict=self.feed_dict)
             print("Not loading base variables. Initializing them")
             return False
         else:
@@ -452,7 +452,7 @@ class PoseTrain(object):
                 if not isinstance(inData, dict):
                     self.basetrainData, loadconf = inData
                     print('Parameters that dont match for base:')
-                    PoseTools.compareConf(self.conf, loadconf)
+                    PoseTools.compare_conf(self.conf, loadconf)
                 else:
                     print("No config was stored for base. Not comparing conf")
                     self.basetrainData = inData
@@ -471,7 +471,7 @@ class PoseTrain(object):
                                  'train_base_err': [], 'val_base_err': [],
                                  'train_dist': [], 'val_dist': [],
                                  'train_base_dist': [], 'val_base_dist': []}
-            sess.run(tf.variables_initializer(PoseTools.getvars('mrf')))
+            sess.run(tf.variables_initializer(PoseTools.get_vars('mrf')))
             print("Not loading mrf variables. Initializing them")
             return False
         else:
@@ -486,7 +486,7 @@ class PoseTrain(object):
                 if not isinstance(inData, dict):
                     self.mrftrainData, loadconf = inData
                     print('Parameters that dont match for mrf:')
-                    PoseTools.compareConf(self.conf, loadconf)
+                    PoseTools.compare_conf(self.conf, loadconf)
                 else:
                     print("No config was stored for mrf. Not comparing conf")
                     self.mrftrainData = inData
@@ -507,7 +507,7 @@ class PoseTrain(object):
                                   'train_dist': [], 'val_dist': [],
                                   'train_mrf_dist': [], 'val_mrf_dist': [],
                                   'train_base_dist': [], 'val_base_dist': []}
-            sess.run(tf.variables_initializer(PoseTools.getvars('fine')))
+            sess.run(tf.variables_initializer(PoseTools.get_vars('fine')))
             print("Not loading fine variables. Initializing them")
             return False
         else:
@@ -526,7 +526,7 @@ class PoseTrain(object):
                     if not isinstance(inData, dict):
                         self.finetrainData, loadconf = inData
                         print('Parameters that dont match for fine:')
-                        PoseTools.compareConf(self.conf, loadconf)
+                        PoseTools.compare_conf(self.conf, loadconf)
                     else:
                         print("No conf was stored for fine. Not comparing conf")
                         self.finetrainData = inData
@@ -568,7 +568,7 @@ class PoseTrain(object):
                 if not isinstance(inData, dict):
                     self.jointtrainData, loadconf = inData
                     print('Parameters that dont match for joint:')
-                    PoseTools.compareConf(self.conf, loadconf)
+                    PoseTools.compare_conf(self.conf, loadconf)
                 else:
                     print("No conf was stored for joint. Not comparing conf")
                     self.jointtrainData = inData
@@ -627,7 +627,8 @@ class PoseTrain(object):
 
 
     def createOptimizer(self):
-        self.opt = tf.train.AdamOptimizer(learning_rate=self.ph['learning_rate']).minimize(self.cost)
+        self.opt = tf.train.AdamOptimizer(
+            learning_rate=self.ph['learning_rate']).minimize(self.cost)
         self.read_time = 0.
         self.opt_time = 0.
 
@@ -661,14 +662,14 @@ class PoseTrain(object):
     def computePredDist(self, sess, predfcn):
         self.feed_dict[self.ph['keep_prob']] = 1.
         pred = sess.run(predfcn, self.feed_dict)
-        bee = PoseTools.getBaseError(self.locs, pred, self.conf)
+        bee = PoseTools.get_base_error(self.locs, pred, self.conf)
         dee = np.sqrt(np.sum(np.square(bee), 2))
         return dee
 
     def computeFinePredDist(self, sess, predfcn):
         self.feed_dict[self.ph['keep_prob']] = 1.
         pred = sess.run(predfcn, self.feed_dict)
-        base_ee, fine_ee = PoseTools.getFineError(self.locs, pred[0], pred[1], self.conf)
+        base_ee, fine_ee = PoseTools.get_fine_error(self.locs, pred[0], pred[1], self.conf)
         fine_dist = np.sqrt(np.sum(np.square(fine_ee), 2))
         return fine_dist
 
@@ -1031,3 +1032,56 @@ class PoseTrain(object):
                     self.saveJoint(sess, step)
             print("Optimization Finished!")
             self.saveJoint(sess, self.conf.joint_training_iters )
+
+    def classify_val_base(self):
+        val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
+        num_val = 0
+        for record in tf.python_io.tf_record_iterator(val_file):
+            num_val += 1
+
+        self.createPH()
+        self.createFeedDict()
+        self.feed_dict[self.ph['phase_train_base']] = False
+        self.feed_dict[self.ph['keep_prob']] = 1.
+        self.trainType = 0
+        self.doBatchNorm = self.conf.doBatchNorm
+        self.openDBs()
+
+        with tf.variable_scope('base'):
+            self.createBaseNetwork(self.doBatchNorm)
+        self.createBaseSaver()
+
+        val_dist = []
+        val_ims = []
+        val_preds = []
+        val_predlocs = []
+        val_locs = []
+        with tf.Session() as sess:
+            self.createCursors(sess)
+            self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
+            self.restoreBase(sess, True)
+            self.initializeRemainingVars(sess)
+            for step in range(num_val/self.conf.batch_size):
+                self.updateFeedDict(self.DBType.Val, distort=False, sess=sess)
+                cur_pred = sess.run(self.basePred, self.feed_dict)
+                cur_predlocs = PoseTools.get_pred_locs(cur_pred)*self.conf.pool_scale*self.conf.rescale
+                cur_dist = np.sqrt(np.sum(
+                    (cur_predlocs-self.locs) ** 2, 2))
+                val_dist.append(cur_dist)
+                val_ims.append(self.xs)
+                val_locs.append(self.locs)
+                val_preds.append(cur_pred)
+                val_predlocs.append(cur_predlocs)
+            self.closeCursors()
+
+        def val_reshape(in_a):
+            in_a = np.array(in_a)
+            return in_a.reshape( (-1,) + in_a.shape[2:])
+        val_dist = val_reshape(val_dist)
+        val_ims = val_reshape(val_ims)
+        val_preds = val_reshape(val_preds)
+        val_predlocs = val_reshape(val_predlocs)
+        val_locs = val_reshape(val_locs)
+
+        return val_dist, val_ims, val_preds, val_predlocs, val_locs
+

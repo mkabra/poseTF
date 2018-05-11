@@ -21,6 +21,7 @@ import cv2
 import copy
 from cvc import cvc
 import sys
+import os
 
 
 # In[ ]:
@@ -116,3 +117,10 @@ def nms(image,rad=3,thresh=0):
     # get coordinates of peaks
     return np.transpose(image_t.nonzero())
 
+
+def save_dbox(name, fig = None, dest = 'temp', dpi=500):
+    if fig is None:
+      fig = plt.gcf()
+    tname = '/groups/branson/home/kabram/temp/' + name
+    fig.savefig(tname,dpi=dpi)
+    os.system('/groups/branson/home/kabram/bin/dbox_to.sh ' + tname + ' ' + dest)

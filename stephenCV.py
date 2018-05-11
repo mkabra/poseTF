@@ -100,7 +100,7 @@ def trainfold(view,curfold,curgpu,batch_size):
     conf.finedataname += ext
     conf.mrfdataname += ext
 
-    _,localdirs,seldirs = multiResData.loadValdata(conf)
+    _,localdirs,seldirs = multiResData.load_val_data(conf)
     for ndx,curl in enumerate(localdirs):
         if not os.path.exists(curl):
             print(curl + ' {} doesnt exist!!!!'.format(ndx))
@@ -108,7 +108,7 @@ def trainfold(view,curfold,curgpu,batch_size):
 
 
     if not os.path.exists(os.path.join(conf.cachedir,conf.trainfilename+'.tfrecords')):
-        multiResData.createTFRecordFromLbl(conf,True)
+        multiResData.create_tf_record_from_lbl(conf, True)
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
     tf.reset_default_graph()
     self = PoseTrain.PoseTrain(conf)
@@ -191,9 +191,9 @@ def classifyfold_fine(curfold,curgpu,batch_size,
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
 
     outtype = 3
-    self = PoseTools.createNetwork(conf,outtype)
+    self = PoseTools.create_network(conf, outtype)
     sess = tf.Session()
-    PoseTools.initNetwork(self,sess,outtype)
+    PoseTools.init_network(self, sess, outtype)
 
 
     for ndx in range(len(movies)):
@@ -272,7 +272,7 @@ if __name__ == "__main__":
 def create_val_data(conf):
     ##
     L  = h5py.File(conf.labelfile)
-    localdirs,seldirs = findLocalDirs(conf)
+    localdirs,seldirs = find_local_dirs(conf)
 
     ##
     pts = L['labeledpos']
@@ -327,7 +327,7 @@ def create_val_data(conf):
 def update_dirnames(conf):
 ##
 
-    localdirs, seldirs = findLocalDirs(conf)
+    localdirs, seldirs = find_local_dirs(conf)
 
     newname = [False]*len(localdirs)
     for ndx in range(len(localdirs)):
@@ -379,7 +379,7 @@ def createViewFiles(view):
 ##
 def createSideValData():
     from stephenHeadConfig import sideconf as sideconf
-    localdirs, seldirs = findLocalDirs(sideconf)
+    localdirs, seldirs = find_local_dirs(sideconf)
 
     folds = 5
     for ndx in range(folds):

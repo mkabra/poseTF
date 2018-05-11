@@ -120,7 +120,7 @@ def createvaldataJan(conf):
     from janLegConfig import conf
     ##
     L  = h5py.File(conf.labelfile)
-    localdirs,seldirs = multiResData.findLocalDirs(conf)
+    localdirs,seldirs = multiResData.find_local_dirs(conf)
 
     ##
     pts = L['labeledpos']
@@ -182,7 +182,7 @@ def createvaldataRoian(conf):
     from roianMouseConfig import conf
     ##
     L  = h5py.File(conf.labelfile)
-    localdirs,seldirs = multiResData.findLocalDirs(conf)
+    localdirs,seldirs = multiResData.find_local_dirs(conf)
 
     ##
     pts = L['labeledpos']
@@ -248,7 +248,7 @@ def createvaldataJay():
     from jayMouseConfig import frontconf
     ##
     L  = h5py.File(conf.labelfile)
-    localdirs,seldirs = multiResData.findLocalDirs(conf)
+    localdirs,seldirs = multiResData.find_local_dirs(conf)
 
     ##
     pts = L['labeledpos']
@@ -302,7 +302,7 @@ def createvaldataJay():
 
 ##
     allisval = []
-    localdirsf,seldirsf = multiResData.findLocalDirs(frontconf)
+    localdirsf,seldirsf = multiResData.find_local_dirs(frontconf)
 
     for ndx in range(folds):
         curvaldatafilename = os.path.join(conf.cachedir,conf.valdatafilename + '_fold_{}'.format(ndx))
@@ -343,13 +343,13 @@ def trainfold(conffile,curfold,curgpu,batch_size,onlydb=False,confname='conf'):
 
 
     if not os.path.exists(os.path.join(conf.cachedir,conf.trainfilename+'.tfrecords')):
-        _, localdirs, seldirs = multiResData.loadValdata(conf)
+        _, localdirs, seldirs = multiResData.load_val_data(conf)
         for ndx, curl in enumerate(localdirs):
             if not os.path.exists(curl):
                 print(curl + ' {} doesnt exist!!!!'.format(ndx))
                 return
 
-        multiResData.createTFRecordFromLbl(conf,True)
+        multiResData.create_tf_record_from_lbl(conf, True)
     if onlydb:
         return
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
@@ -414,7 +414,7 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
     conf.finedataname += ext
     conf.mrfdataname += ext
 
-    isval,localdirs,seldirs = multiResData.loadValdata(conf)
+    isval,localdirs,seldirs = multiResData.load_val_data(conf)
     for ndx,curl in enumerate(localdirs):
         if not os.path.exists(curl):
             print(curl + ' {} doesnt exist!!!!'.format(ndx))
@@ -424,9 +424,9 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
 
 
     max_chunk_size = 1000
-    self = PoseTools.createNetwork(conf,outtype)
+    self = PoseTools.create_network(conf, outtype)
     sess = tf.Session()
-    PoseTools.initNetwork(self,sess,outtype)
+    PoseTools.init_network(self, sess, outtype)
 
     for ndx in range(len(localdirs)):
         if not isval.count(ndx):
@@ -460,9 +460,9 @@ def classifyfold(conffile,curfold,curgpu,batch_size,
                     startat = cur_b*max_chunk_size
                     stopat = min((cur_b+1)*max_chunk_size,nframes)
                     frames_read = stopat-startat
-                    predList = PoseTools.classifyMovie(conf, localdirs[ndx], outtype,
-                                                       self, sess, max_frames=frames_read,
-                                                       start_at=startat)
+                    predList = PoseTools.classify_movie(conf, localdirs[ndx], outtype,
+                                                        self, sess, max_frames=frames_read,
+                                                        start_at=startat)
                     scale_fac = conf.pool_scale*conf.rescale
                     crop_loc = [old_div(x,scale_fac) for x in orig_crop_loc]
                     end_pad = [old_div(height,scale_fac)-crop_loc[0]-old_div(conf.imsz[0],scale_fac),
@@ -508,15 +508,15 @@ def classifyfold_fine(conffile,curfold,curgpu,batch_size,
     conf.finedataname += ext
     conf.mrfdataname += ext
 
-    isval,localdirs,seldirs = multiResData.loadValdata(conf)
+    isval,localdirs,seldirs = multiResData.load_val_data(conf)
 
     os.environ['CUDA_VISIBLE_DEVICES'] = curgpu
 
     max_chunk_size = 5000
     outtype = 3
-    self = PoseTools.createNetwork(conf,outtype)
+    self = PoseTools.create_network(conf, outtype)
     sess = tf.Session()
-    PoseTools.initNetwork(self,sess,outtype)
+    PoseTools.init_network(self, sess, outtype)
 
     for ndx in range(len(localdirs)):
         if not isval.count(ndx):
@@ -577,7 +577,7 @@ def createCVMat(conffile):
         ext = '_fold_{}'.format(curfold)
         conf.valdatafilename = conf.valdatafilename + ext
 
-        isval,localdirs,seldirs = multiResData.loadValdata(conf)
+        isval,localdirs,seldirs = multiResData.load_val_data(conf)
         allisval.append(isval)
     return allisval
 ##
@@ -634,7 +634,7 @@ def duplicatesJan():
     ##
     from janLegConfig import conf
     import collections
-    localdirs,seldirs = multiResData.findLocalDirs(conf)
+    localdirs,seldirs = multiResData.find_local_dirs(conf)
     gg = [conf.getexpname(x) for x in localdirs]
     mm = [item for item, count in list(collections.Counter(gg).items()) if count > 1]
     L = h5py.File(conf.labelfile)

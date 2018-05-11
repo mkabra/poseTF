@@ -88,8 +88,8 @@ for ndx in range(len(test_data)):
     tr_ndx = np.random.choice(len(train_data))
     bpred_tr = train_data[tr_ndx][0]
     bpred_out = -1 * np.ones(bpred_in.shape)
-    tr_locs = PoseTools.getBasePredLocs(bpred_tr, self.conf)/4
-    in_locs = PoseTools.getBasePredLocs(bpred_in, self.conf)/4
+    tr_locs = PoseTools.get_base_pred_locs(bpred_tr, self.conf) / 4
+    in_locs = PoseTools.get_base_pred_locs(bpred_in, self.conf) / 4
 
     # test blobs training locs
     for ex in range(bpred_in.shape[0]):

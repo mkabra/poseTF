@@ -46,7 +46,7 @@ from stephenHeadConfig import sideconf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createFullTFRecord(conf)
+multiResData.create_full_tf_record(conf)
 
 
 # In[ ]:
@@ -277,12 +277,12 @@ redo = False
 # conf.batch_size = 1
 tf.reset_default_graph()
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 valmovies = valmovies[45:55]
 valmovies = ['/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi']
 # for ndx in range(len(valmovies)):
@@ -312,8 +312,8 @@ for ndx in range(len(valmovies)):
     if not os.path.isfile(valmovies[ndx]):
         continue
     
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
-    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+    predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
+    PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
@@ -393,7 +393,7 @@ for count in range(numex):
     self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
     curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
     all_preds[count,:,:,:,0] = curpred[0]
-    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     predLocs[count,:,:,1] = self.locs[0,:,:]
     ims[count,:,:] = self.xs[0,0,:,:]
     tt1 = self.computePredDist(sess,self.basePred)
@@ -464,7 +464,7 @@ for count in range(int(math.floor(old_div(numex,bs)))):
     self.updateFeedDict(self.DBType.Train,sess=sess,distort=False)
     curpred,ll = sess.run([self.basePred,self.cost],feed_dict = self.feed_dict)
     all_preds[count*bs:(count+1)*bs,:,:,:,0] = curpred
-    predLocs[count*bs:(count+1)*bs,:,:,0] = PoseTools.getBasePredLocs(curpred,conf)[:,:,:]
+    predLocs[count*bs:(count+1)*bs,:,:,0] = PoseTools.get_base_pred_locs(curpred, conf)[:, :, :]
     predLocs[count*bs:(count+1)*bs,:,:,1] = self.locs[:,:,:]
     ims[count*bs:(count+1)*bs,:,:] = self.xs[:,0,:,:]
     loss[count*bs:(count+1)*bs] = ll
@@ -628,9 +628,9 @@ conf.batch_size = 1
 conf.useMRF = True
 outtype = 2
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 self.open_dbs()
 self.create_cursors()
@@ -645,8 +645,8 @@ for count in range(numex):
     curpred = sess.run([self.basePred,self.mrfPred],feed_dict = self.feed_dict)
     all_preds[count,:,:,:,0] = curpred[0]
     all_preds[count,:,:,:,1] = curpred[1]
-    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
-    predLocs[count,:,:,1] = PoseTools.getBasePredLocs(curpred[1],conf)[0,:,:]
+    predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
+    predLocs[count,:,:,1] = PoseTools.get_base_pred_locs(curpred[1], conf)[0, :, :]
     predLocs[count,:,:,2] = self.locs[0,:,:]
     ims[count,:,:] = self.xs[0,0,:,:]
 
@@ -671,8 +671,8 @@ nc = 2
 nr = 3
 for ndx in range(1,20):
     curi = oo[-ndx]
-    aa1 = PoseTools.createPredImage(all_preds[curi,:,:,:,0],conf.n_classes)
-    aa2 = PoseTools.createPredImage(2*all_preds[curi,:,:,:,1]-1,conf.n_classes)
+    aa1 = PoseTools.create_pred_image(all_preds[curi, :, :, :, 0], conf.n_classes)
+    aa2 = PoseTools.create_pred_image(2 * all_preds[curi, :, :, :, 1] - 1, conf.n_classes)
     fig = plt.figure(figsize=(10,6))
     ax2 = fig.add_subplot(nc,nr,1)
     ax2.set_title('blank')
@@ -730,9 +730,9 @@ conf.batch_size = 1
 conf.useMRF = True
 outtype = 2
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 
 # In[ ]:
@@ -741,10 +741,10 @@ mov = '/groups/branson/home/kabram/bransonlab/PoseEstimationData/Stephen/7_7_13_
 fnum = 200
 
 predPair = [self.mrfPred,self.basePred,self.baseLayers['conv7']]
-cap,nframes = PoseTools.openMovie(mov)
+cap,nframes = PoseTools.open_movie(mov)
 im = myutils.readframe(cap,fnum)
 im.shape
-x0,x1,x2 = PoseTools.processImage(im,conf)
+x0,x1,x2 = PoseTools.process_image(im, conf)
 self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
 self.feed_dict[self.ph['x2']] = x2
@@ -758,7 +758,7 @@ print(cloc)
 ftrloc = (old_div((locx-cloc[0]),conf.pool_scale),old_div((locy-cloc[1]),conf.pool_scale))
 print(ftrloc)
 
-predImg = PoseTools.createPredImage(pred[0][0,:,:,:]*2-1,conf.n_classes)
+predImg = PoseTools.create_pred_image(pred[0][0, :, :, :] * 2 - 1, conf.n_classes)
 fig = plt.figure(figsize = (12,4))
 ax1 = fig.add_subplot(1,3,1)
 sish(predImg,ax1)
@@ -799,7 +799,7 @@ for count in range(numtr):
     curpred = sess.run([self.basePred,self.baseLayers['conv7']],feed_dict = self.feed_dict)
     tr_preds[count,:,:,:,0] = curpred[0]
     tr_maxsc[count,:] = curpred[0][0,:,:,:].max(axis=1).max(axis=0)
-    curlocs = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    curlocs = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     tr_pred_locs[count,:,:,0] = curlocs
     tr_pred_locs[count,:,:,1] = self.locs[0,:,:]
     tr_ims[count,:,:] = self.xs[0,0,:,:]
@@ -883,7 +883,7 @@ cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(out, y))
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(out,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-baseNet = PoseTools.createNetwork(conf,1)
+baseNet = PoseTools.create_network(conf, 1)
 l7 = baseNet.baseLayers['conv7']
 baseNet.open_dbs()
 txn = baseNet.env.begin()
@@ -1036,7 +1036,7 @@ conf.batch_size = 1
 conf.useMRF = False
 outtype = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
 
 baseNet = self
@@ -1077,7 +1077,7 @@ for count in range(numex):
     self.updateFeedDict(self.DBType.Train) #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
     curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
     all_preds[count,:,:,:,0] = curpred[0]
-    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     predLocs[count,:,:,1] = self.locs[0,:,:] # + 4*np.random.randn(conf.n_classes,2)
      #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
     ims[count,:,:] = self.xs[0,0,:,:]
@@ -1159,7 +1159,7 @@ conf.batch_size = 1
 conf.useMRF = False
 outtype = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
 
 baseNet = self
@@ -1283,7 +1283,7 @@ conf.batch_size = 1
 conf.useMRF = False
 outtype = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
 
 baseNet = self
@@ -1323,7 +1323,7 @@ for count in range(5):
     self.updateFeedDict(self.DBType.Train,sess=sess,distort=False) #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
     curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
     all_preds[count,:,:,:,0] = curpred[0]
-    predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     predLocs[count,:,:,1] = self.locs[0,:,:] # + 4*np.random.randn(conf.n_classes,2)
      #!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!
     ims[count,:,:] = self.xs[0,0,:,:]
@@ -1438,7 +1438,7 @@ conf.batch_size = 1
 conf.useMRF = False
 outtype = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
 
 baseNet = self
@@ -1475,16 +1475,16 @@ evalScores = np.zeros([numex,2,2])
 ims = np.zeros([numex,512,512])
 
 
-cap,nframes = PoseTools.openMovie(mov)
+cap,nframes = PoseTools.open_movie(mov)
 im = myutils.readframe(cap,fnum)
 
-x0,x1,x2 = PoseTools.processImage(im,conf)
+x0,x1,x2 = PoseTools.process_image(im, conf)
 self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
 self.feed_dict[self.ph['x2']] = x2
 
 curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
-predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
 predLocs[count,:,:,1] = predLocs[count,:,:,0]
 # predLocs[count,4,0,1] = 267
 # predLocs[count,4,1,1] = 267
@@ -1548,7 +1548,7 @@ import copy
 mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
 fnum = 405
 
-cap,nframes = PoseTools.openMovie(mov)
+cap,nframes = PoseTools.open_movie(mov)
 im1 = myutils.readframe(cap,fnum)
 fnum = 582
 im2 = myutils.readframe(cap,fnum)
@@ -1566,14 +1566,14 @@ all_preds = np.zeros([2,128,128,5])
 
 
 
-x0,x1,x2 = PoseTools.processImage(im1,conf)
+x0,x1,x2 = PoseTools.process_image(im1, conf)
 self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
 self.feed_dict[self.ph['x2']] = x2
 x01= x0
     
 curpred = sess.run([self.basePred,],feed_dict = self.feed_dict)
-predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
 # predLocs[count,:,:,1] =  np.array([[276,320],[205,285],[276,276],[240,248],[228,328]])
 predLocs[count,:,:,1] = [[394,358],[ 332,336], [407,321], [351,294], [357,374]]
 predLocs[count,:,:,1] -= [128,0]
@@ -1588,7 +1588,7 @@ l7 = baseNet.baseLayers['conv7']
 l7out1 = l7out
 all_preds[0,...] = bout
 
-x0,x1,x2 = PoseTools.processImage(im2,conf)
+x0,x1,x2 = PoseTools.process_image(im2, conf)
 x02 = x0
 self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
@@ -1703,7 +1703,7 @@ conf.batch_size = 1
 conf.useMRF = True # ATTENTION! !!!!!!!!!!!!
 outtype = 2
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
 
 baseNet = self
@@ -1735,7 +1735,7 @@ import copy
 # fnum = 713
 mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
 fnum = 405
-cap,nframes = PoseTools.openMovie(mov)
+cap,nframes = PoseTools.open_movie(mov)
 im1 = myutils.readframe(cap,fnum)
 
 
@@ -1748,14 +1748,14 @@ import cv2
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10,10))
 # im1 = clahe.apply(im1[:,:,:1])
 im1 = im1[:,:,0]
-x0,x1,x2 = PoseTools.processImage(im1[:,:,np.newaxis],conf)
+x0,x1,x2 = PoseTools.process_image(im1[:, :, np.newaxis], conf)
 self.feed_dict[self.ph['x0']] = x0
 self.feed_dict[self.ph['x1']] = x1
 self.feed_dict[self.ph['x2']] = x2
 x01 = x0
     
 curpred = sess.run([self.mrfPred,],feed_dict = self.feed_dict)
-predLocs[count,:,:,0] = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+predLocs[count,:,:,0] = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
 # predLocs[count,:,:,1] =  np.array([[276,300-4*0],[208-4*0,284+4*0],[271-4*0,255-4*0],[238-4*0,258+4*0],[236+4*0,324+4*0]])
 predLocs[count,:,:,1] = [[394,358],[ 332,336], [407,321], [351,294], [357,374]]
 predLocs[count,:,:,1] -= [128,0]
@@ -1847,9 +1847,9 @@ extrastr = ''
 
 # conf.batch_size = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 from scipy import io
 import cv2
@@ -1867,8 +1867,8 @@ for ndx in range(len(valmovies)):
     if not os.path.isfile(valmovies[ndx]):
         continue
     
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
-    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+    predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
+    PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
@@ -1916,11 +1916,11 @@ oldl = copy.deepcopy(self.locs)
 xs = self.xs
 locs = self.locs
 if conf.horzFlip:
-    xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+    xs,locs = PoseTools.randomly_flip_lr(xs, locs)
 if conf.vertFlip:
-    xs,locs = PoseTools.randomlyFlipUD(xs,locs)
-xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
-xs = PoseTools.randomlyAdjust(xs,conf)
+    xs,locs = PoseTools.randomly_flip_ud(xs, locs)
+xs,locs = PoseTools.randomly_rotate(xs, locs, conf)
+xs = PoseTools.randomly_adjust(xs, conf)
 
 for ndx in range(self.xs.shape[0]):
     fig = plt.figure()
@@ -1944,11 +1944,11 @@ oldl = copy.deepcopy(self.locs)
 xs = self.xs
 locs = self.locs
 if conf.horzFlip:
-    xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+    xs,locs = PoseTools.randomly_flip_lr(xs, locs)
 if conf.vertFlip:
-    xs,locs = PoseTools.randomlyFlipUD(xs,locs)
-xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
-xs = PoseTools.randomlyAdjust(xs,conf)
+    xs,locs = PoseTools.randomly_flip_ud(xs, locs)
+xs,locs = PoseTools.randomly_rotate(xs, locs, conf)
+xs = PoseTools.randomly_adjust(xs, conf)
 
 for ndx in range(self.xs.shape[0]):
     fig = plt.figure()
@@ -1984,9 +1984,9 @@ extrastr = ''
 
 conf.batch_size = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 from scipy import io
 import cv2
@@ -2019,7 +2019,7 @@ fig = plt.figure(figsize=(8,15))
 ax = fig.add_subplot(4,3,1)
 ax.imshow(self.xs[0,0,...],cmap='gray')
 ax.scatter(self.locs[0,:,0],self.locs[0,:,1])
-predLocs = PoseTools.getBasePredLocs(outpred[1],conf)[0,:,:]
+predLocs = PoseTools.get_base_pred_locs(outpred[1], conf)[0, :, :]
 ax = fig.add_subplot(4,3,7)
 ax.imshow(self.xs[0,0,...],cmap='gray')
 ax.scatter(predLocs[:,0],predLocs[:,1])
@@ -2066,7 +2066,7 @@ feed_dict = poseGen.createFeedDict(phDict)
 feed_dict[phDict['phase_train']] = True
 feed_dict[phDict['dropout']] = 0.5
 feed_dict[phDict['y']] = np.zeros((conf.batch_size,conf.n_classes*2))
-baseNet = PoseTools.createNetwork(conf,1)
+baseNet = PoseTools.create_network(conf, 1)
 l8 = poseGen.addDropoutLayer(baseNet,phDict['dropout'],conf)
 with tf.variable_scope('poseGen'):
     out,out_m,layer_dict = poseGen.poseGenNet(phDict['locs'],phDict['scores'],l8,
@@ -2101,7 +2101,7 @@ mpred,lpred = poseGen.prepareOpt(baseNet,l8,baseNet.DBType.Val,feed_dict,sess,co
 x = baseNet.xs
 l = baseNet.locs
 bout = sess.run(l8,feed_dict=baseNet.feed_dict)
-predlocs = PoseTools.getBasePredLocs(bout,conf)
+predlocs = PoseTools.get_base_pred_locs(bout, conf)
 in_l = feed_dict[phDict['locs']] + mpred[:,np.newaxis,:]
 out_l,out_lm = sess.run([out,out_m],feed_dict=feed_dict)
 out_l = np.reshape(out_l,[conf.batch_size*10,5,2]) + out_lm[:,np.newaxis,:] + mpred[:,np.newaxis,:]
@@ -2159,7 +2159,7 @@ feed_dict = createFeedDict(phDict)
 feed_dict[phDict['phase_train']] = True
 feed_dict[phDict['dropout']] = 0.02
 feed_dict[phDict['y']] = np.zeros((conf.batch_size,conf.n_classes*2))
-baseNet = PoseTools.createNetwork(conf,1)
+baseNet = PoseTools.create_network(conf, 1)
 l8 = addDropoutLayer(baseNet,phDict['dropout'],conf)
 with tf.variable_scope('poseGen'):
     out,layer_dict = poseGenNet(phDict['locs'],phDict['scores'],l8,
@@ -2286,7 +2286,7 @@ def convert_to(images, labels, name):
 
 
 mov = '/home/mayank/Dropbox/PoseEstimation/Stephen/fly325/C002H001S0020/C002H001S0020_c.avi'
-cap,nframes = PoseTools.openMovie(mov)
+cap,nframes = PoseTools.open_movie(mov)
 
 im = []
 for ndx in range(100):
@@ -2402,7 +2402,7 @@ locs = [[[254,93],[30,40]],[[80,70],[80,40]]]
 
 imsz = conf.imsz
 
-a,b,c = PoseTools.createRegLabelImages(locs,imsz,4,10)
+a,b,c = PoseTools.create_reg_label_images(locs, imsz, 4, 10)
 # plt.figure()
 # plt.imshow(a[0,:,:,0],interpolation='nearest')
 # plt.figure()

@@ -32,8 +32,8 @@ def build_toy_dataset(N):
     k = 1
     sigma = 3
     all_locs = np.random.randint(4,imsz-3,[N,k,2])
-    train_ims = (PoseTools.createLabelImages(all_locs,
-                                             [imsz,imsz], 1, sigma)+1)/2
+    train_ims = (PoseTools.create_label_images(all_locs,
+                                               [imsz,imsz], 1, sigma)+1)/2
     locs = np.zeros([N, 2])
     sample = np.zeros(N)
     mfac = 0.2 + np.random.random([N,k])
@@ -84,7 +84,7 @@ def create_images(pred_means, pred_std, pred_weights, imsz, sel):
     for ndx in range(pred_means.shape[1]):
         cur_locs = pred_means[sel:sel+1,ndx:ndx+1,:].astype('int')
         cur_scale = pred_std[sel,ndx,:].mean().astype('int')
-        curl = (PoseTools.createLabelImages(cur_locs,[imsz,imsz],1,cur_scale)+1)/2
+        curl = (PoseTools.create_label_images(cur_locs, [imsz, imsz], 1, cur_scale) + 1) / 2
         out_test += pred_weights[sel,ndx]*curl[0,...,0]
     return out_test
 
@@ -136,7 +136,7 @@ n_epoch = 1000
 
 #
 inference = mymap.MAP(data={y: y_ph})
-v_list = PoseTools.getvars('nn')
+v_list = PoseTools.get_vars('nn')
 inference.initialize(var_list=v_list,n_iter=n_epoch)
 
 #
@@ -175,8 +175,8 @@ for i in range(n_epoch):
     X_test, test_locs = build_toy_dataset(50)
     X_train = copy.deepcopy(X_all[count][:,np.newaxis,...])
     in_locs = copy.deepcopy(l_all[count][:,np.newaxis,...])
-    X_train, in_locs = PoseTools.randomlyTranslate(X_train, in_locs, conf)
-    X_train, in_locs = PoseTools.randomlyRotate(X_train, in_locs, conf)
+    X_train, in_locs = PoseTools.randomly_translate(X_train, in_locs, conf)
+    X_train, in_locs = PoseTools.randomly_rotate(X_train, in_locs, conf)
     X_train = X_train[:,0,...]
     in_locs = in_locs[:,0,...]
 
@@ -229,7 +229,7 @@ for i in range(n_epoch):
             for ndx in range(pred_means.shape[1]):
                 cur_locs = pred_means[sel:sel + 1, ndx:ndx + 1, :].astype('int')
                 cur_scale = pred_std[sel, ndx, :].mean().astype('int')
-                curl = (PoseTools.createLabelImages(cur_locs, [imsz, imsz], 1, cur_scale) + 1) / 2
+                curl = (PoseTools.create_label_images(cur_locs, [imsz, imsz], 1, cur_scale) + 1) / 2
                 out_test += pred_weights[sel, ndx] * curl[0, ..., 0]
             l2_dist += ((X_test[sel, ...] - out_test) ** 2).sum()
 
@@ -249,7 +249,7 @@ for sel in range(X_test.shape[0]):
     for ndx in range(pred_means.shape[1]):
         cur_locs = pred_means[sel:sel+1,ndx:ndx+1,:].astype('int')
         cur_scale = pred_std[sel,ndx,:].mean().astype('int')
-        curl = (PoseTools.createLabelImages(cur_locs,[imsz,imsz],1,cur_scale)+1)/2
+        curl = (PoseTools.create_label_images(cur_locs, [imsz, imsz], 1, cur_scale) + 1) / 2
         out_test += pred_weights[sel,ndx]*curl[0,...,0]
     l2_dist += ((X_test[sel,...]-out_test)**2).sum()
 

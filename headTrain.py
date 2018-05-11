@@ -93,7 +93,7 @@ def train(conf):
                 batch_xs, locs = multiPawTools.readLMDB(train_cursor,
                                         batch_size,imsz,multiResData)
 
-                locs = multiResData.sanitizelocs(locs)
+                locs = multiResData.sanitize_locs(locs)
                 
                 x0_in,x1_in,x2_in = multiPawTools.multiScaleImages(
                     batch_xs.transpose([0,2,3,1]),rescale,scale)

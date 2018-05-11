@@ -14,8 +14,8 @@ from multiResData import *
 
 L = h5py.File(conf1.labelfile,'r')
 
-createValdata(conf1,force=True)
-isval, localdirs, seldirs = loadValdata(conf1)
+create_val_data(conf1, force=True)
+isval, localdirs, seldirs = load_val_data(conf1)
 pts = np.array(L['labeledpos'])
 
 view = conf1.view
@@ -65,7 +65,7 @@ isval = list(sel[0])
 
 for conf in [conf1,conf2,confb]:
     outfile = os.path.join(conf.cachedir, conf.valdatafilename)
-    localdirs, seldirs = findLocalDirs(conf)
+    localdirs, seldirs = find_local_dirs(conf)
     with open(outfile, 'w') as f:
         pickle.dump([isval, localdirs, seldirs], f)
 

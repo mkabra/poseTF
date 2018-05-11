@@ -304,14 +304,14 @@ def readImages(conf,dbType,distort,sess,data):
         locs.append(curlocs)
     xs = np.array(xs)    
     locs = np.array(locs)
-    locs = multiResData.sanitizelocs(locs)
+    locs = multiResData.sanitize_locs(locs)
     if distort:
         if conf.horzFlip:
-            xs,locs = PoseTools.randomlyFlipLR(xs,locs)
+            xs,locs = PoseTools.randomly_flip_lr(xs, locs)
         if conf.vertFlip:
-            xs,locs = PoseTools.randomlyFlipUD(xs,locs)
-        xs,locs = PoseTools.randomlyRotate(xs,locs,conf)
-        xs = PoseTools.randomlyAdjust(xs,conf)
+            xs,locs = PoseTools.randomly_flip_ud(xs, locs)
+        xs,locs = PoseTools.randomly_rotate(xs, locs, conf)
+        xs = PoseTools.randomly_adjust(xs, conf)
 
     return xs,locs
 
@@ -320,10 +320,10 @@ def readImages(conf,dbType,distort,sess,data):
 
 def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     xs,locs = readImages(conf,dbType,distort,sess,data)
-    labelims = PoseTools.createLabelImages(locs,
-                               conf.imsz,
-                               conf.rescale*conf.eval_scale,
-                               conf.label_blur_rad)
+    labelims = PoseTools.create_label_images(locs,
+                                             conf.imsz,
+                                             conf.rescale * conf.eval_scale,
+                                             conf.label_blur_rad)
     
     nlocs = genNegSamples(labelims,locs,conf,nsamples=1,minlen=conf.eval_minlen,N=conf.N2move4neg)
     
@@ -344,24 +344,24 @@ def updateFeedDict(conf,dbType,distort,sess,data,feed_dict,ph):
     allxs = allxs.transpose([0,4,1,2,3])
     allxs = np.reshape(allxs,[-1,allxs.shape[-3],allxs.shape[-2],allxs.shape[-1]])
     
-    x0,x1,x2 = PoseTools.multiScaleImages(allxs.transpose([0,2,3,1]),
-                                          conf.rescale*conf.eval_scale,
-                                          conf.scale, conf.l1_cropsz,conf)
+    x0,x1,x2 = PoseTools.multi_scale_images(allxs.transpose([0, 2, 3, 1]),
+                                            conf.rescale * conf.eval_scale,
+                                            conf.scale, conf.l1_cropsz, conf)
 
 
     scores_scale = conf.rescale*conf.eval_scale*conf.scale*conf.scale
-    s0 = PoseTools.createLabelImages(alllocs,
-                               conf.imsz,
-                               scores_scale,
-                               conf.label_blur_rad)
-    s1 = PoseTools.createLabelImages(alllocs,
-                               conf.imsz,
-                               scores_scale*conf.scale,
-                               conf.label_blur_rad)
-    s2 = PoseTools.createLabelImages(alllocs,
-                               conf.imsz,
-                               scores_scale*conf.scale*conf.scale,
-                               conf.label_blur_rad)
+    s0 = PoseTools.create_label_images(alllocs,
+                                       conf.imsz,
+                                       scores_scale,
+                                       conf.label_blur_rad)
+    s1 = PoseTools.create_label_images(alllocs,
+                                       conf.imsz,
+                                       scores_scale * conf.scale,
+                                       conf.label_blur_rad)
+    s2 = PoseTools.create_label_images(alllocs,
+                                       conf.imsz,
+                                       scores_scale * conf.scale * conf.scale,
+                                       conf.label_blur_rad)
     
 #     s0,s1,s2 = PoseTools.multiScaleLabelImages(labelims,1,conf.scale,[])
     
@@ -388,7 +388,7 @@ def restoreEval(sess,evalsaver,restore,conf,feed_dict):
                                         latest_filename = conf.evalckptname)
     if not latest_ckpt or not restore:
         evalstartat = 0
-        sess.run(tf.variables_initializer(PoseTools.getvars('eval')),feed_dict=feed_dict)
+        sess.run(tf.variables_initializer(PoseTools.get_vars('eval')), feed_dict=feed_dict)
         print("Not loading Eval variables. Initializing them")
     else:
         evalsaver.restore(sess,latest_ckpt.model_checkpoint_path)
@@ -405,8 +405,8 @@ def saveEval(sess,evalsaver,step,conf):
     print('Saved state to %s-%d' %(outfilename,step))
 
 def createEvalSaver(conf):
-    evalsaver = tf.train.Saver(var_list = PoseTools.getvars('eval'),
-                                    max_to_keep=conf.maxckpt)
+    evalsaver = tf.train.Saver(var_list = PoseTools.get_vars('eval'),
+                               max_to_keep=conf.maxckpt)
     return evalsaver
 
 def initializeRemainingVars(sess,feed_dict):
@@ -838,7 +838,7 @@ def train(conf,restore=True):
     train_step = tf.train.AdamOptimizer(1e-5).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(out,1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    baseNet = PoseTools.createNetwork(conf,1)
+    baseNet = PoseTools.create_network(conf, 1)
     baseNet.openDBs()
     
     with baseNet.env.begin() as txn,baseNet.valenv.begin() as valtxn,tf.Session() as sess:
@@ -897,7 +897,7 @@ def train(conf,restore=True):
                     # 
                     l7 = baseNet.baseLayers['conv7']
                     curpred = sess.run([baseNet.basePred,l7], feed_dict=baseNet.feed_dict)
-                    baseLocs = PoseTools.getBasePredLocs(curpred[0],conf)
+                    baseLocs = PoseTools.get_base_pred_locs(curpred[0], conf)
 
                     neglocs = baseLocs[:,:,:,np.newaxis]
                     locs = np.array(baseNet.locs)[...,np.newaxis]

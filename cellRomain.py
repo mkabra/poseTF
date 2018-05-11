@@ -10,7 +10,7 @@ from romainLegConfig import bottomconf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 import romainLegConfig
 reload(romainLegConfig)
@@ -18,7 +18,7 @@ from romainLegConfig import side1conf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 
 import romainLegConfig
@@ -27,7 +27,7 @@ from romainLegConfig import side2conf as conf
 import multiResData
 reload(multiResData)
 
-multiResData.createTFRecordFromLbl(conf,split=True)
+multiResData.create_tf_record_from_lbl(conf, split=True)
 
 
 ##
@@ -114,7 +114,7 @@ for ndx in range(np.random.randint(15)):
     self.updateFeedDict(self.DBType.Val, sess=sess, distort=True)
 
 pred = sess.run(self.basePred,feed_dict=self.feed_dict)
-plocs = PoseTools.getBasePredLocs(pred,conf)
+plocs = PoseTools.get_base_pred_locs(pred, conf)
 
 selim = np.random.randint(conf.batch_size)
 plt.imshow(self.xs[selim,0,:,:],cmap='gray')

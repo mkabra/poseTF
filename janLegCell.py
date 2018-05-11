@@ -85,7 +85,7 @@ pobj.baseTrain(restore=False)
 from janLegConfig import conf
 import multiResData
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 print(valmovies[0])
 print(conf.getexpname(valmovies[0]))
 
@@ -112,22 +112,22 @@ extrastr = ''
 
 conf.batch_size = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 from scipy import io
 import cv2
 
-_,valmovies = multiResData.getMovieLists(conf)
+_,valmovies = multiResData.get_movie_lists(conf)
 for ndx in [0,3,-3,-1]:
     
     mname,_ = os.path.splitext(os.path.basename(valmovies[ndx]))
     oname = re.sub('!','__',conf.getexpname(valmovies[ndx]))
     pname = '/groups/branson/home/kabram/bransonlab/PoseTF/results/legResults/movies/' + oname + extrastr
     
-    predList = PoseTools.classifyMovie(conf,valmovies[ndx],outtype,self,sess)
-    PoseTools.createPredMovie(conf,predList,valmovies[ndx],pname + '.avi',outtype)
+    predList = PoseTools.classify_movie(conf, valmovies[ndx], outtype, self, sess)
+    PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
 
     cap = cv2.VideoCapture(valmovies[ndx])
@@ -171,9 +171,9 @@ conf.batch_size = 1
 conf.useMRF = False
 outtype = 1
 
-self = PoseTools.createNetwork(conf,outtype)
+self = PoseTools.create_network(conf, outtype)
 sess = tf.InteractiveSession()
-PoseTools.initNetwork(self,sess,outtype)
+PoseTools.init_network(self, sess, outtype)
 
 self.open_dbs()
 self.create_cursors()
@@ -197,7 +197,7 @@ for count in range(numex):
     curpred = sess.run([self.basePred,self.baseLayers['conv7']],feed_dict = self.feed_dict)
     val_preds[count,:,:,:,0] = curpred[0]
     val_maxsc[count,:] = curpred[0][0,:,:,:].max(axis=1).max(axis=0)
-    curlocs = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    curlocs = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     val_pred_locs[count,:,:,0] = curlocs
     val_pred_locs[count,:,:,1] = self.locs[0,:,:]
     val_ims[count,:,:] = self.xs[0,0,:,:]
@@ -214,7 +214,7 @@ for count in range(numtr):
     curpred = sess.run([self.basePred,self.baseLayers['conv7']],feed_dict = self.feed_dict)
     tr_preds[count,:,:,:,0] = curpred[0]
     tr_maxsc[count,:] = curpred[0][0,:,:,:].max(axis=1).max(axis=0)
-    curlocs = PoseTools.getBasePredLocs(curpred[0],conf)[0,:,:]
+    curlocs = PoseTools.get_base_pred_locs(curpred[0], conf)[0, :, :]
     tr_pred_locs[count,:,:,0] = curlocs
     tr_pred_locs[count,:,:,1] = self.locs[0,:,:]
     tr_ims[count,:,:] = self.xs[0,0,:,:]
