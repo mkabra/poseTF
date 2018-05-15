@@ -1,11 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="BookmarkManager">
-    <bookmark url="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" line="399" mnemonic="0" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Changed read_and_decode_without_session to read the whole or a section of tfrecords database">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/codeStyleSettings.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/APT_interface.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DebugUNetAtt.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseCommon.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseUMDN.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseUNet.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PoseUNetAttention.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ScriptAliceConfidence.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ScriptGTSplits_20180425.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/classifyMovie.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/cleanupStephen.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/debug_unet.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/felipe.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/runTrackingStephen.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/script_edit_graph.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/script_stephen_allen_data.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/trackStephenHead_KB_old.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/trackStephenHead_round2.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/mayank.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/mayank.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseMDN.py" afterPath="$PROJECT_DIR$/PoseMDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseRegression.py" afterPath="$PROJECT_DIR$/PoseRegression.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTools.py" afterPath="$PROJECT_DIR$/PoseTools.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PoseTrain.py" afterPath="$PROJECT_DIR$/PoseTrain.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/batch_norm.py" afterPath="$PROJECT_DIR$/batch_norm.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCode.py" afterPath="$PROJECT_DIR$/cellCode.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCodeBody.py" afterPath="$PROJECT_DIR$/cellCodeBody.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellCodeHead.py" afterPath="$PROJECT_DIR$/cellCodeHead.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellPoseEval2.py" afterPath="$PROJECT_DIR$/cellPoseEval2.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cellRomain.py" afterPath="$PROJECT_DIR$/cellRomain.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/createValdataRomain.py" afterPath="$PROJECT_DIR$/createValdataRomain.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/debugMDN.py" afterPath="$PROJECT_DIR$/debugMDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/headTrain.py" afterPath="$PROJECT_DIR$/headTrain.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/janLegCell.py" afterPath="$PROJECT_DIR$/janLegCell.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/localSetup.py" afterPath="$PROJECT_DIR$/localSetup.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/matlab/ScriptCombineStephen20012017.m" afterPath="$PROJECT_DIR$/matlab/ScriptCombineStephen20012017.m" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/matlab/compute3Dfrom2D_KB.m" afterPath="$PROJECT_DIR$/matlab/compute3Dfrom2D_KB.m" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/movies.py" afterPath="$PROJECT_DIR$/movies.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResData.py" afterPath="$PROJECT_DIR$/multiResData.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/multiResTrain.py" afterPath="$PROJECT_DIR$/multiResTrain.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/myutils.py" afterPath="$PROJECT_DIR$/myutils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseConfig.py" afterPath="$PROJECT_DIR$/poseConfig.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseEval.py" afterPath="$PROJECT_DIR$/poseEval.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseEval2.py" afterPath="$PROJECT_DIR$/poseEval2.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseGen.py" afterPath="$PROJECT_DIR$/poseGen.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/poseShape.py" afterPath="$PROJECT_DIR$/poseShape.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/romainCV.py" afterPath="$PROJECT_DIR$/romainCV.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scratch.py" afterPath="$PROJECT_DIR$/scratch.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scratch_ssf.py" afterPath="$PROJECT_DIR$/scratch_ssf.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_conv_MDN.py" afterPath="$PROJECT_DIR$/script_conv_MDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_offline_MDN.py" afterPath="$PROJECT_DIR$/script_offline_MDN.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/script_offline_MDN_joint.py" afterPath="$PROJECT_DIR$/script_offline_MDN_joint.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/singleViewCV.py" afterPath="$PROJECT_DIR$/singleViewCV.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenCV.py" afterPath="$PROJECT_DIR$/stephenCV.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stephenHeadConfig.py" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testEdward_ims.py" afterPath="$PROJECT_DIR$/testEdward_ims.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead.py" afterPath="$PROJECT_DIR$/trackStephenHead.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead_KB.py" afterPath="$PROJECT_DIR$/trackStephenHead_KB.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trackStephenHead_KB_CV.py" afterPath="$PROJECT_DIR$/trackStephenHead_KB_CV.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,109 +84,20 @@
     <option name="SHOW_EMPTY_GROUPS" value="false" />
     <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="poseTF" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5008026">
+    <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
-            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="68">
-                  <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="PoseUNetAttention.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/PoseUNetAttention.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="595">
-                  <caret line="38" column="93" lean-forward="false" selection-start-line="38" selection-start-column="93" selection-end-line="38" selection-end-column="93" />
-                  <folding>
-                    <element signature="e#0#15#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/multiResData.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="679">
-                  <caret line="953" column="34" lean-forward="false" selection-start-line="953" selection-start-column="34" selection-end-line="953" selection-end-column="34" />
-                  <folding>
-                    <element signature="e#0#37#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/APT_interface.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="3026">
-                  <caret line="212" column="66" lean-forward="false" selection-start-line="212" selection-start-column="66" selection-end-line="212" selection-end-column="66" />
-                  <folding>
-                    <element signature="e#0#31#0" expanded="true" />
-                    <element signature="e#823#1102#0" expanded="false" />
-                    <element signature="e#1130#1469#0" expanded="false" />
-                    <element signature="e#1611#1719#0" expanded="false" />
-                    <element signature="e#1747#2007#0" expanded="false" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="20230">
-                  <caret line="1224" column="10" lean-forward="false" selection-start-line="1224" selection-start-column="10" selection-end-line="1224" selection-end-column="10" />
-                  <folding>
-                    <element signature="e#0#31#0" expanded="true" />
-                    <element signature="e#71#86#0" expanded="false" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="748">
-                  <caret line="401" column="97" lean-forward="false" selection-start-line="401" selection-start-column="97" selection-end-line="401" selection-end-column="97" />
-                  <folding>
-                    <element signature="e#0#17#0" expanded="true" />
-                    <element signature="e#4628#4642#0" expanded="false" />
-                    <element signature="e#6069#6104#0" expanded="false" />
-                    <element signature="e#22821#25525#0" expanded="false" />
-                    <element signature="e#30469#31357#0" expanded="false" />
-                    <element signature="e#31421#37198#0" expanded="false" />
-                    <element signature="e#31734#32335#0" expanded="false" />
-                    <element signature="e#32370#32802#0" expanded="false" />
-                    <element signature="e#32843#36692#0" expanded="false" />
-                    <element signature="e#36751#37198#0" expanded="false" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/poseConfig.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2516">
-                  <caret line="160" column="113" lean-forward="false" selection-start-line="160" selection-start-column="113" selection-end-line="160" selection-end-column="113" />
-                  <folding>
-                    <element signature="e#0#31#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="1051">
+                  <caret line="1266" column="4" lean-forward="false" selection-start-line="1266" selection-start-column="4" selection-end-line="1266" selection-end-column="4" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -139,8 +105,8 @@
           <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="3213">
-                  <caret line="234" column="29" lean-forward="false" selection-start-line="234" selection-start-column="29" selection-end-line="234" selection-end-column="29" />
+                <state relative-caret-position="342">
+                  <caret line="208" column="0" lean-forward="false" selection-start-line="208" selection-start-column="0" selection-end-line="208" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#596#1010#0" expanded="false" />
@@ -204,23 +170,151 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="DebugUNetAtt.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/DebugUNetAtt.py">
+          <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="119">
-                  <caret line="8" column="20" lean-forward="false" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+                <state relative-caret-position="3385">
+                  <caret line="726" column="32" lean-forward="true" selection-start-line="726" selection-start-column="32" selection-end-line="726" selection-end-column="32" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="script_stephen_allen_data.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/script_stephen_allen_data.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1105">
+                  <caret line="139" column="35" lean-forward="false" selection-start-line="139" selection-start-column="35" selection-end-line="139" selection-end-column="35" />
                   <folding>
-                    <element signature="e#3#27#0" expanded="true" />
+                    <element signature="e#3#23#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseUMDN.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
+          <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="false">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="561">
-                  <caret line="50" column="7" lean-forward="false" selection-start-line="50" selection-start-column="7" selection-end-line="50" selection-end-column="7" />
+                <state relative-caret-position="799">
+                  <caret line="47" column="0" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#0#19#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="scratch_6.py" pinned="false" current-in-tab="false">
+            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1343">
+                  <caret line="84" column="2" lean-forward="true" selection-start-line="84" selection-start-column="2" selection-end-line="84" selection-end-column="2" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="debugMDN.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/debugMDN.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="235">
+                  <caret line="658" column="0" lean-forward="true" selection-start-line="658" selection-start-column="0" selection-end-line="658" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/poseConfig.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="614">
+                  <caret line="158" column="17" lean-forward="false" selection-start-line="158" selection-start-column="17" selection-end-line="158" selection-end-column="17" />
+                  <folding>
+                    <element signature="e#0#31#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="17">
+                  <caret line="117" column="0" lean-forward="false" selection-start-line="117" selection-start-column="0" selection-end-line="118" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="PoseTrain.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/PoseTrain.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="350">
+                  <caret line="772" column="4" lean-forward="false" selection-start-line="772" selection-start-column="4" selection-end-line="772" selection-end-column="4" />
+                  <folding>
+                    <element signature="e#4105#4168#0" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/APT_interface.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="663">
+                  <caret line="173" column="28" lean-forward="true" selection-start-line="173" selection-start-column="28" selection-end-line="173" selection-end-column="28" />
+                  <folding>
+                    <element signature="e#0#31#0" expanded="true" />
+                    <element signature="e#823#1102#0" expanded="false" />
+                    <element signature="e#1130#1469#0" expanded="false" />
+                    <element signature="e#1611#1719#0" expanded="false" />
+                    <element signature="e#1747#2007#0" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="309">
+                  <caret line="350" column="0" lean-forward="false" selection-start-line="350" selection-start-column="0" selection-end-line="350" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#4628#4642#0" expanded="false" />
+                    <element signature="e#6069#6104#0" expanded="false" />
+                    <element signature="e#22819#25523#0" expanded="false" />
+                    <element signature="e#30467#31355#0" expanded="false" />
+                    <element signature="e#31419#37196#0" expanded="false" />
+                    <element signature="e#31732#32333#0" expanded="false" />
+                    <element signature="e#32368#32800#0" expanded="false" />
+                    <element signature="e#32841#36690#0" expanded="false" />
+                    <element signature="e#36749#37196#0" expanded="false" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="runTrackingStephen.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/runTrackingStephen.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1139">
+                  <caret line="119" column="18" lean-forward="true" selection-start-line="119" selection-start-column="18" selection-end-line="119" selection-end-column="18" />
+                  <folding>
+                    <element signature="e#0#9#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/multiResData.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="184">
+                  <caret line="767" column="50" lean-forward="true" selection-start-line="767" selection-start-column="50" selection-end-line="767" selection-end-column="50" />
                   <folding />
                 </state>
               </provider>
@@ -239,9 +333,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>acsaver</find>
-      <find>params</find>
-      <find>hsv</find>
       <find>feed_dict</find>
       <find>train_data</find>
       <find>alice</find>
@@ -269,6 +360,9 @@
       <find>getexplist</find>
       <find>normalize</find>
       <find>self.dep_nets</find>
+      <find>interactive</find>
+      <find>uncompressed</find>
+      <find>assert</find>
     </findStrings>
     <replaceStrings>
       <replace>localdirs</replace>
@@ -305,9 +399,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/singleViewCV.py" />
-        <option value="$PROJECT_DIR$/roianMouseConfig.py" />
-        <option value="$PROJECT_DIR$/stephenCV.py" />
         <option value="$PROJECT_DIR$/mpiiConfig.py" />
         <option value="$PROJECT_DIR$/mpiiData.py" />
         <option value="$PROJECT_DIR$/poseShape.py" />
@@ -325,16 +416,13 @@
         <option value="$PROJECT_DIR$/script_offline_MDN_joint.py" />
         <option value="$PROJECT_DIR$/scratch_ssf.py" />
         <option value="$PROJECT_DIR$/convNetBase.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
         <option value="$PROJECT_DIR$/PoseMDN.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
         <option value="$PROJECT_DIR$/PoseTrain.py" />
         <option value="$PROJECT_DIR$/PoseCommonMulti.py" />
         <option value="$PROJECT_DIR$/felipe.py" />
         <option value="$PROJECT_DIR$/trackStephenHead_round2.py" />
         <option value="$PROJECT_DIR$/batch_norm.py" />
         <option value="$PROJECT_DIR$/debugMDN.py" />
-        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
         <option value="$PROJECT_DIR$/tf_unet_layers.py" />
         <option value="$PROJECT_DIR$/debug_unet.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
@@ -345,17 +433,23 @@
         <option value="$PROJECT_DIR$/script_edit_graph.py" />
         <option value="$PROJECT_DIR$/trackStephenHead_KB.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
-        <option value="$PROJECT_DIR$/PoseUMDN.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
-        <option value="$PROJECT_DIR$/movies.py" />
         <option value="$PROJECT_DIR$/ScriptGTSplits_20180425.py" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$PROJECT_DIR$/DebugUNetAtt.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/PoseUNetAttention.py" />
-        <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$PROJECT_DIR$/movies.py" />
+        <option value="$PROJECT_DIR$/params.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
+        <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$PROJECT_DIR$/script_stephen_convert_allen_data_to_tf.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
+        <option value="$PROJECT_DIR$/PoseUMDN.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
+        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+        <option value="$PROJECT_DIR$/script_stephen_allen_data.py" />
       </list>
     </option>
   </component>
@@ -366,10 +460,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="59" />
-    <option name="y" value="34" />
-    <option name="width" value="1861" />
-    <option name="height" value="1056" />
+    <option name="x" value="64" />
+    <option name="y" value="-11" />
+    <option name="width" value="2497" />
+    <option name="height" value="1612" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -409,22 +503,25 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
-          <expand>
-            <path>
-              <item name="poseTF" type="b2602c69:ProjectViewProjectNode" />
-              <item name="poseTF" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="poseTF" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="poseTF" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Debugger" />
+    <property name="settings.editor.selected.configurable" value="terminal" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="Python" />
@@ -462,26 +559,27 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.DebugUNetAtt">
-    <configuration name="DebugUNetAtt" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.scratch_6">
+    <configuration default="false" name="scratch (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="poseTF" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DebugUNetAtt.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
+      <method />
     </configuration>
-    <configuration name="ScriptAliceConfidence" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration default="false" name="ScriptAliceConfidence" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -498,6 +596,64 @@
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="DebugUNetAtt" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="poseTF" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DebugUNetAtt.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="scratch_5" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="poseTF" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="scratch_6" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="poseTF" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -516,6 +672,7 @@
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
+      <method />
     </configuration>
     <configuration default="true" type="Tox" factoryName="Tox">
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -528,24 +685,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <module name="poseTF" />
-    </configuration>
-    <configuration default="true" type="tests" factoryName="Attests">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="poseTF" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="Doctests">
@@ -579,15 +718,10 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="poseTF" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
+      <option name="_new_regexPattern" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;.&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="Unittests">
@@ -601,16 +735,9 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="poseTF" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;.&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="py.test">
@@ -624,75 +751,13 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="poseTF" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="testToRun" value="" />
-      <option name="keywords" value="" />
-      <option name="params" value="" />
-      <option name="USE_PARAM" value="false" />
-      <option name="USE_KEYWORD" value="false" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;.&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
-    <configuration name="debug_unet" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="poseTF" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/debug_unet.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
-    <configuration name="scratch (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="poseTF" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
-    <configuration name="scratch_7" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="poseTF" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-    </configuration>
-    <configuration name="script joint offline" type="PythonConfigurationType" factoryName="Python">
+    <configuration default="false" name="script joint offline" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -709,24 +774,44 @@
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
+      <method />
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.script joint offline" />
-      <item index="1" class="java.lang.String" itemvalue="Python.scratch_7" />
-      <item index="2" class="java.lang.String" itemvalue="Python.debug_unet" />
-      <item index="3" class="java.lang.String" itemvalue="Python.scratch (1)" />
-      <item index="4" class="java.lang.String" itemvalue="Python.ScriptAliceConfidence" />
-      <item index="5" class="java.lang.String" itemvalue="Python.DebugUNetAtt" />
+      <item index="1" class="java.lang.String" itemvalue="Python.scratch (1)" />
+      <item index="2" class="java.lang.String" itemvalue="Python.ScriptAliceConfidence" />
+      <item index="3" class="java.lang.String" itemvalue="Python.DebugUNetAtt" />
+      <item index="4" class="java.lang.String" itemvalue="Python.scratch_5" />
+      <item index="5" class="java.lang.String" itemvalue="Python.scratch_6" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.DebugUNetAtt" />
-        <item index="1" class="java.lang.String" itemvalue="Python.scratch (1)" />
-        <item index="2" class="java.lang.String" itemvalue="Python.ScriptAliceConfidence" />
-        <item index="3" class="java.lang.String" itemvalue="Python.scratch_7" />
-        <item index="4" class="java.lang.String" itemvalue="Python.debug_unet" />
+        <item index="0" class="java.lang.String" itemvalue="Python.scratch_6" />
+        <item index="1" class="java.lang.String" itemvalue="Python.scratch_5" />
+        <item index="2" class="java.lang.String" itemvalue="Python.DebugUNetAtt" />
+        <item index="3" class="java.lang.String" itemvalue="Python.scratch (1)" />
+        <item index="4" class="java.lang.String" itemvalue="Python.ScriptAliceConfidence" />
       </list>
     </recent_temporary>
+    <configuration default="true" type="tests" factoryName="Attests">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="poseTF" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method />
+    </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -1098,29 +1183,40 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="59" y="34" width="1861" height="1056" extended-state="0" />
+    <frame x="64" y="-11" width="2497" height="1612" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="1" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274244" sideWeight="0.50519407" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253389" sideWeight="0.4948059" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37163275" sideWeight="0.50136685" order="3" side_tool="false" content_ui="tabs" x="607" y="755" width="1716" height="344" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32638165" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13189057" sideWeight="0.27652735" order="2" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3240866" sideWeight="0.5052083" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3240866" sideWeight="0.49479166" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3221723" sideWeight="0.72347265" order="3" side_tool="true" content_ui="tabs" x="607" y="755" width="1716" height="344" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32640332" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32760474" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32968834" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37163275" sideWeight="0.49863315" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.32938856" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32968834" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30920163" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="344" y="449" width="1940" height="943" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274244" sideWeight="0.50519407" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253389" sideWeight="0.4948059" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37163275" sideWeight="0.50136685" order="3" side_tool="false" content_ui="tabs" x="607" y="755" width="1716" height="344" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32638165" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32760474" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24931657" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="true" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.13176599" sideWeight="0.27652735" order="1" side_tool="false" content_ui="combo" x="815" y="755" width="866" height="503" />
       <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32869378" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32846716" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32968834" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37163275" sideWeight="0.49863315" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32949933" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1214,11 +1310,6 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/PoseCommon.py</url>
-          <line>208</line>
-          <option name="timeStamp" value="341" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/PoseCommon.py</url>
           <line>299</line>
           <option name="timeStamp" value="342" />
         </line-breakpoint>
@@ -1233,76 +1324,11 @@
           </selected-grouping-rules>
         </breakpoints-dialog>
       </breakpoints-dialog>
-      <option name="time" value="343" />
+      <option name="time" value="352" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/PoseMDN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="108" column="12" lean-forward="false" selection-start-line="108" selection-start-column="12" selection-end-line="108" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTrain.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="571">
-          <caret line="133" column="30" lean-forward="true" selection-start-line="133" selection-start-column="30" selection-end-line="133" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/matplotlib/backend_bases.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="2452" column="0" lean-forward="false" selection-start-line="2452" selection-start-column="0" selection-end-line="2452" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/lib/python2.7/dist-packages/gtk-2.0/gtk/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="645">
-          <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/scipy/misc/pilutil.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="23">
-          <caret line="276" column="66" lean-forward="true" selection-start-line="276" selection-start-column="66" selection-end-line="276" selection-end-column="66" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
-    <entry file="file://$PROJECT_DIR$/tf_unet_layers.py" />
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/matplotlib/axes/_axes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="5123" column="0" lean-forward="false" selection-start-line="5123" selection-start-column="0" selection-end-line="5123" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/poseShape.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="782">
-          <caret line="66" column="0" lean-forward="false" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/convNetBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="53" column="4" lean-forward="false" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/array_ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="1047" column="0" lean-forward="false" selection-start-line="1047" selection-start-column="0" selection-end-line="1047" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/myutils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="311">
@@ -1310,24 +1336,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="928">
-          <caret line="202" column="0" lean-forward="false" selection-start-line="202" selection-start-column="0" selection-end-line="202" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py" />
     <entry file="file://$PROJECT_DIR$/trackStephenHead_KB_old.py" />
     <entry file="file://$PROJECT_DIR$/debug_unet.py" />
     <entry file="file://$PROJECT_DIR$/cleanupStephen.py" />
     <entry file="file://$PROJECT_DIR$/trackStephenHead_round2.py" />
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/IPython/core/interactiveshell.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="39">
-          <caret line="2868" column="71" lean-forward="true" selection-start-line="2868" selection-start-column="71" selection-end-line="2868" selection-end-column="71" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/IPython/core/interactiveshell.py" />
     <entry file="file://$PROJECT_DIR$/trackStephenHead_KB.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
@@ -1335,7 +1349,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debugMDN.py" />
     <entry file="file://$PROJECT_DIR$/ScriptAliceConfidence.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="307">
@@ -1344,34 +1357,9 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/classifyMovie.py" />
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/scipy/io/matlab/mio.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="63" column="0" lean-forward="false" selection-start-line="63" selection-start-column="0" selection-end-line="63" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/numpy/core/arrayprint.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="294" column="0" lean-forward="false" selection-start-line="294" selection-start-column="0" selection-end-line="294" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/numpy/lib/arraypad.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="138" column="0" lean-forward="false" selection-start-line="138" selection-start-column="0" selection-end-line="138" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/movies.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="112" column="0" lean-forward="false" selection-start-line="112" selection-start-column="0" selection-end-line="112" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/scipy/io/matlab/mio.py" />
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/numpy/core/arrayprint.py" />
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/numpy/lib/arraypad.py" />
     <entry file="file:///usr/lib/python2.7/pickle.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="328">
@@ -1395,27 +1383,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/script_edit_graph.py" />
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_7.py" />
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="42" column="13" lean-forward="false" selection-start-line="42" selection-start-column="13" selection-end-line="42" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/common_shapes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="690" column="0" lean-forward="false" selection-start-line="690" selection-start-column="0" selection-end-line="690" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/training/saver.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2402">
-          <caret line="1250" column="0" lean-forward="false" selection-start-line="1250" selection-start-column="0" selection-end-line="1250" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/common_shapes.py" />
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/training/saver.py" />
     <entry file="file://$PROJECT_DIR$/ScriptGTSplits_20180425.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
@@ -1423,13 +1392,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/parsing_ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="269" column="0" lean-forward="false" selection-start-line="269" selection-start-column="0" selection-end-line="269" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/parsing_ops.py" />
     <entry file="file:///usr/lib/python2.7/contextlib.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -1437,67 +1400,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="3034" column="0" lean-forward="false" selection-start-line="3034" selection-start-column="0" selection-end-line="3034" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/variable_scope.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
-          <caret line="421" column="68" lean-forward="true" selection-start-line="421" selection-start-column="68" selection-end-line="421" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/client/session.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="1096" column="14" lean-forward="false" selection-start-line="1096" selection-start-column="14" selection-end-line="1096" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/ops.py" />
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/variable_scope.py" />
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/client/session.py" />
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
           <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/tensor_util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
-          <caret line="370" column="0" lean-forward="false" selection-start-line="370" selection-start-column="0" selection-end-line="370" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/poseConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2516">
-          <caret line="160" column="113" lean-forward="false" selection-start-line="160" selection-start-column="113" selection-end-line="160" selection-end-column="113" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/tensor_util.py" />
     <entry file="file://$PROJECT_DIR$/PoseUNetAttention.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="595">
           <caret line="38" column="93" lean-forward="false" selection-start-line="38" selection-start-column="93" selection-end-line="38" selection-end-column="93" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="50" column="7" lean-forward="false" selection-start-line="50" selection-start-column="7" selection-end-line="50" selection-end-column="7" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1505,16 +1422,76 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
           <caret line="8" column="20" lean-forward="false" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scratch_ssf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="23" column="5" lean-forward="false" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
           <folding>
-            <element signature="e#3#27#0" expanded="true" />
+            <element signature="e#0#23#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/script_offline_MDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="99" column="35" lean-forward="false" selection-start-line="99" selection-start-column="35" selection-end-line="99" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/movies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="11" column="19" lean-forward="true" selection-start-line="11" selection-start-column="19" selection-end-line="11" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/params.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="397">
+          <caret line="359" column="41" lean-forward="false" selection-start-line="359" selection-start-column="41" selection-end-line="359" selection-end-column="41" />
+          <folding>
+            <element signature="e#1#12#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4046">
+          <caret line="238" column="61" lean-forward="false" selection-start-line="238" selection-start-column="61" selection-end-line="238" selection-end-column="61" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <marker date="1525715625872" expanded="true" signature="1839:72627" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="2270:2333" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="71817:72420" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="71817:72515" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="71817:72599" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="71817:72627" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="72662:74535" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="73860:74087" ph="..." />
+            <marker date="1525715625872" expanded="true" signature="74156:74381" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/h5py/_hl/dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="40" column="0" lean-forward="false" selection-start-line="40" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3213">
-          <caret line="234" column="29" lean-forward="false" selection-start-line="234" selection-start-column="29" selection-end-line="234" selection-end-column="29" />
+        <state relative-caret-position="342">
+          <caret line="208" column="0" lean-forward="false" selection-start-line="208" selection-start-column="0" selection-end-line="208" selection-end-column="0" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#596#1010#0" expanded="false" />
@@ -1577,10 +1554,98 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1051">
+          <caret line="1266" column="4" lean-forward="false" selection-start-line="1266" selection-start-column="4" selection-end-line="1266" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debugMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="658" column="0" lean-forward="true" selection-start-line="658" selection-start-column="0" selection-end-line="658" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/python2.7/json/encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="183" column="0" lean-forward="false" selection-start-line="183" selection-start-column="0" selection-end-line="183" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1343">
+          <caret line="84" column="2" lean-forward="true" selection-start-line="84" selection-start-column="2" selection-end-line="84" selection-end-column="2" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runTrackingStephen.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1139">
+          <caret line="119" column="18" lean-forward="true" selection-start-line="119" selection-start-column="18" selection-end-line="119" selection-end-column="18" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="767" column="50" lean-forward="true" selection-start-line="767" selection-start-column="50" selection-end-line="767" selection-end-column="50" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="614">
+          <caret line="158" column="17" lean-forward="false" selection-start-line="158" selection-start-column="17" selection-end-line="158" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="799">
+          <caret line="47" column="0" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="117" column="0" lean-forward="false" selection-start-line="117" selection-start-column="0" selection-end-line="118" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTrain.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="350">
+          <caret line="772" column="4" lean-forward="false" selection-start-line="772" selection-start-column="4" selection-end-line="772" selection-end-column="4" />
+          <folding>
+            <element signature="e#4105#4168#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3026">
-          <caret line="212" column="66" lean-forward="false" selection-start-line="212" selection-start-column="66" selection-end-line="212" selection-end-column="66" />
+        <state relative-caret-position="663">
+          <caret line="173" column="28" lean-forward="true" selection-start-line="173" selection-start-column="28" selection-end-line="173" selection-end-column="28" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#823#1102#0" expanded="false" />
@@ -1591,42 +1656,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="20230">
-          <caret line="1224" column="10" lean-forward="false" selection-start-line="1224" selection-start-column="10" selection-end-line="1224" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#71#86#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="679">
-          <caret line="953" column="34" lean-forward="false" selection-start-line="953" selection-start-column="34" selection-end-line="953" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="748">
-          <caret line="401" column="97" lean-forward="false" selection-start-line="401" selection-start-column="97" selection-end-line="401" selection-end-column="97" />
+        <state relative-caret-position="309">
+          <caret line="350" column="0" lean-forward="false" selection-start-line="350" selection-start-column="0" selection-end-line="350" selection-end-column="0" />
           <folding>
-            <element signature="e#0#17#0" expanded="true" />
             <element signature="e#4628#4642#0" expanded="false" />
             <element signature="e#6069#6104#0" expanded="false" />
-            <element signature="e#22821#25525#0" expanded="false" />
-            <element signature="e#30469#31357#0" expanded="false" />
-            <element signature="e#31421#37198#0" expanded="false" />
-            <element signature="e#31734#32335#0" expanded="false" />
-            <element signature="e#32370#32802#0" expanded="false" />
-            <element signature="e#32843#36692#0" expanded="false" />
-            <element signature="e#36751#37198#0" expanded="false" />
+            <element signature="e#22819#25523#0" expanded="false" />
+            <element signature="e#30467#31355#0" expanded="false" />
+            <element signature="e#31419#37196#0" expanded="false" />
+            <element signature="e#31732#32333#0" expanded="false" />
+            <element signature="e#32368#32800#0" expanded="false" />
+            <element signature="e#32841#36690#0" expanded="false" />
+            <element signature="e#36749#37196#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3385">
+          <caret line="726" column="32" lean-forward="true" selection-start-line="726" selection-start-column="32" selection-end-line="726" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/script_stephen_allen_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1105">
+          <caret line="139" column="35" lean-forward="false" selection-start-line="139" selection-start-column="35" selection-end-line="139" selection-end-column="35" />
+          <folding>
+            <element signature="e#3#23#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -335,22 +335,18 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
         frames = np.where(np.invert(np.all(np.isnan(cur_pts[:, :, :]), axis=(1, 2))))[0]
-        cap = cv2.VideoCapture(local_dirs[ndx])
+        cap = movies.Movie(local_dirs[ndx])
 
         for fnum in frames:
 
-            if fnum > cap.get(cvc.FRAME_COUNT):
-                if fnum > cap.get(cvc.FRAME_COUNT) + 1:
-                    raise ValueError('Accessing frames beyond ' +
-                                     'the length of the video for' +
-                                     ' {} expid {:d} '.format(exp_name, ndx) +
-                                     ' at t {:d}'.format(fnum)
-                                     )
+            if not check_fnum(fnum, cap, exp_name, ndx):
                 continue
 
             cur_env = get_cur_env(env, val_env, split, conf, ndx, fnum, 0, is_val, trx_split=None, predefined=predefined)
 
-            frame_in = myutils.readframe(cap, fnum)
+            frame_in, ts = cap.get_frame(fnum)
+            if frame_in.ndim == 2:
+                frame_in = frame_in[:,:,np.newaxis]
             c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
             frame_in = PoseTools.crop_images(frame_in, conf)
             frame_in = frame_in[:, :, 0:conf.imgDim]
@@ -390,7 +386,7 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
                 count += 1
                 splits[0].append([ndx, fnum, 0])
 
-        cap.release()  # close the movie handles
+        cap.close()  # close the movie handles
         print('Done %d of %d movies, count:%d val:%d' % (ndx + 1, len(local_dirs), count, val_count))
     env.close()  # close the database
     if split:
@@ -445,13 +441,16 @@ def create_envs(conf, split, db_type=None):
 def trx_pts(lbl, ndx):
     # new styled sparse labeledpos
     pts = np.array(lbl['labeledpos'])
-    idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
-    val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
-    sz = np.array(lbl[pts[0, ndx]]['size'])[:, 0].astype('int')
-    cur_pts = np.zeros(sz).flatten()
-    cur_pts[:] = np.nan
-    cur_pts[idx] = val
-    return cur_pts.reshape(np.flipud(sz))
+    try:
+        idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
+        val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
+        sz = np.array(lbl[pts[0, ndx]]['size'])[:, 0].astype('int')
+        cur_pts = np.zeros(sz).flatten()
+        cur_pts[:] = np.nan
+        cur_pts[idx] = val
+        return cur_pts.reshape(np.flipud(sz))
+    except ValueError:
+        return np.array(lbl[pts[0,ndx]])
 
 
 def get_cur_env(env, val_env, split, conf, mov_ndx, frame_ndx, trx_ndx, is_val, trx_split, predefined=None):
@@ -827,7 +826,12 @@ def create_tf_record_rnn_from_lbl_with_trx(conf, split=True, split_file=None):
         json.dump(splits, f)
 
 
-def read_and_decode(filename_queue, conf, has_trx_ndx=True):
+def read_and_decode(filename_queue, conf):
+    if hasattr(conf,'has_trx_ndx'):
+        has_trx_ndx = conf.has_trx_ndx
+    else:
+        has_trx_ndx = True
+
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
     if has_trx_ndx:

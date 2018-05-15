@@ -339,7 +339,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=12000/self.conf.batch_size*8,
+            training_iters=20000/self.conf.batch_size*8,
             loss=loss,
             pred_in_key='y',
             learning_rate=0.0001,
@@ -537,7 +537,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                     frame_in = frame_in[:, :, 0:conf.imgDim]
                     all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-                xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize, self.conf.n_classes, 2), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
+                xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros(bsize, self.conf.n_classes, 2), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
 
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False

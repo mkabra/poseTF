@@ -731,6 +731,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
         else:
             n_frames = n_frames - start_at
 
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets.up_layers) + extra_layers
+            locs_offset = float(2**n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz)/2
+        else:
+            raise Exception('Unknown net type')
 
         # pre allocate results
         bsize = conf.batch_size
@@ -754,10 +762,11 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     frame_in = np.flipud(frame_in)
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
-            all_f = all_f.astype('uint8')
-            xs = PoseTools.adjust_contrast(all_f, conf)
-            xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
-            xs = PoseTools.normalize_mean(xs, self.conf)
+            # all_f = all_f.astype('uint8')
+            # xs = PoseTools.adjust_contrast(all_f, conf)
+            # xs = PoseTools.scale_images(xs, conf.unet_rescale, conf)
+            # xs = PoseTools.normalize_mean(xs, self.conf)
+            xs, _ = PoseTools.preprocess_ims(all_f, np.zeros([bsize, self.conf.n_classes,2]),conf=conf,distort=False,scale=self.conf.unet_rescale)
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
             val_means, val_std, val_wts = sess.run(self.pred, self.fd)
@@ -769,7 +778,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                         sel_ex = np.argmax(val_wts[ndx, :, gdx])
                         base_locs[ndx,g,:] = val_means[ndx, sel_ex, g, :]
 
-            pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe,...]
+            pred_locs[ndx_start:ndx_end, :, :] = base_locs[:ppe,...]*locs_offset * conf.unet_rescale
             sys.stdout.write('.')
             if curl % 20 == 19:
                 sys.stdout.write('\n')

@@ -130,7 +130,7 @@ class myconfig(object):
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
-    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound2_Janelia.lbl')
+    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound2_Janelia_fixed.lbl')
  
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'
@@ -144,6 +144,8 @@ class myconfig(object):
     valdatafilename = 'valdata'
     valratio = 0.3
     holdoutratio = 0.8
+    splitType = 'movie'
+    has_trx_ndx = False
 
     # ----- Unet params
     unet_rescale = 2
@@ -153,8 +155,10 @@ class myconfig(object):
     # mdn_min_sigma = 3.
     # mdn_max_sigma = 4.
     # for full res.
-    mdn_min_sigma = 12./unet_rescale
-    mdn_max_sigma = 16./unet_rescale
+    # mdn_min_sigma = 12./unet_rescale
+    # mdn_max_sigma = 16./unet_rescale
+    mdn_min_sigma = 0.7
+    mdn_max_sigma = 1.2
     mdn_logit_eps_training = 0.01
     max_n_animals = 1
     mdn_extra_layers = 0

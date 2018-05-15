@@ -86,7 +86,7 @@ def create_conf(lbl_file, view, name):
         H = loadmat(lbl_file)
     except NotImplementedError:
         print('Label file is in v7.3 format. Loading using h5py')
-        H = h5py.File(lbl_file)
+        H = h5py.File(lbl_file,'r')
 
     from poseConfig import config
     conf = config()
