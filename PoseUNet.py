@@ -443,7 +443,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
             # converting to uint8 is really really important!!!!!
-            xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros(bsize,self.conf.n_classes, 2), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
+            xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros([bsize,self.conf.n_classes, 2]), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
