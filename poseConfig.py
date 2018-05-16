@@ -108,6 +108,7 @@ class config(object):
     valratio = 0.3
     holdoutratio = 0.8
     max_n_animals = 1
+    flipud = False
 
     # ----- UNet params
     unet_rescale = 1
@@ -159,7 +160,8 @@ aliceConfig = config()
 aliceConfig.cachedir = os.path.join(localSetup.bdir, 'cache', 'alice')
 #aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20170925_cv.lbl')
 # aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_20180107.lbl') # round1
-aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_expandedbehavior_20180425_local.lbl')
+# aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_expandedbehavior_20180425_local.lbl')
+aliceConfig.labelfile = os.path.join(localSetup.bdir,'data','alice','multitarget_bubble_expandedbehavior_20180425.lbl')
 def alice_exp_name(dirname):
     return os.path.basename(os.path.dirname(dirname))
 

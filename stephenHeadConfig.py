@@ -115,7 +115,6 @@ class myconfig(object):
     # fine_batch_size = 8
 
 
-    # ----- Data parameters
 
     split = True
     view = 1  # view = 0 is side view view = 1 is front view
@@ -145,7 +144,8 @@ class myconfig(object):
     valratio = 0.3
     holdoutratio = 0.8
     splitType = 'movie'
-    has_trx_ndx = False
+    has_trx_file = False
+    flipud = True
 
     # ----- Unet params
     unet_rescale = 2

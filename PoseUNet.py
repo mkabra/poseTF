@@ -515,11 +515,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                 trx_arr = []
                 for ii in range(ppe):
                     fnum = ndx_start + ii
-                    frame_in = cap.get_frame(fnum)
-                    if len(frame_in) == 2:
-                        frame_in = frame_in[0]
-                        if frame_in.ndim == 2:
-                            frame_in = frame_in[:,:,np.newaxis]
+                    frame_in, cur_loc = multiResData.get_patch_trx(
+                        cap, cur_trx, fnum, conf, np.zeros([conf.n_classes,2]))
                     if flipud:
                         frame_in = np.flipud(frame_in)
 
@@ -532,12 +529,9 @@ class PoseUNet(PoseCommon.PoseCommon):
                     tt = -theta - math.pi/2
                     R = [[np.cos(tt), -np.sin(tt)], [np.sin(tt), np.cos(tt)]]
                     trx_arr.append([x,y,theta,R])
+                    all_f[ii, ...] = frame_in
 
-                    frame_in, _ = multiResData.get_patch_trx(frame_in,x,y,theta,conf.imsz[0], np.zeros([2,2]))
-                    frame_in = frame_in[:, :, 0:conf.imgDim]
-                    all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
-
-                xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros(bsize, self.conf.n_classes, 2), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
+                xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
 
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False

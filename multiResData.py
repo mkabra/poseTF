@@ -27,10 +27,9 @@ def find_local_dirs(conf):
     local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in conf.getexplist(lbl)]
     sel_dirs = [True] * len(local_dirs)
     try:
-        r_dir = u''.join(chr(c) for c in lbl['projMacros']['rootdatadir'])
-        d_dir = u''.join(chr(c) for c in lbl['projMacros']['dataroot'])
-        local_dirs = [s.replace('$rootdatadir', r_dir) for s in local_dirs]
-        local_dirs = [s.replace('$dataroot', d_dir) for s in local_dirs]
+        for k in lbl['projMacros'].keys():
+            r_dir = u''.join(chr(c) for c in lbl['projMacros'][k])
+            local_dirs = [s.replace('${}'.format(k), r_dir) for s in local_dirs]
     except:
         pass
     lbl.close()
@@ -42,10 +41,9 @@ def get_trx_files(lbl, local_dirs):
     movdir = [os.path.dirname(a) for a in local_dirs]
     trx_files = [s.replace('$movdir', m) for (s, m) in zip(trx_files, movdir)]
     try:
-        r_dir = u''.join(chr(c) for c in lbl['projMacros']['rootdatadir'])
-        d_dir = u''.join(chr(c) for c in lbl['projMacros']['dataroot'])
-        trx_files = [s.replace('$rootdatadir', r_dir) for s in trx_files]
-        trx_files = [s.replace('$dataroot', d_dir) for s in trx_files]
+        for k in lbl['projMacros'].keys():
+            r_dir = u''.join(chr(c) for c in lbl['projMacros'][k])
+            trx_files = [s.replace('${}'.format(k), r_dir) for s in trx_files]
     except:
         pass
     return trx_files
@@ -298,6 +296,15 @@ def create_full_tf_record(conf):
     env.close()  # close the database
     print('%d,%d number of pos examples added to the db and val-db' % (count, val_count))
 
+def get_labeled_frames(lbl,ndx ,trx_ndx=None):
+    cur_pts = trx_pts(lbl, ndx)
+    if cur_pts.ndim == 4:
+        frames = np.where(np.invert(np.all(np.isnan(cur_pts[trx_ndx, :, :, :]), axis=(1, 2))))[0]
+    else:
+        frames = np.where(np.invert(np.all(np.isnan(cur_pts[:, :, :]), axis=(1, 2))))[0]
+
+    return frames
+
 
 def create_tf_record_from_lbl(conf, split=True, split_file=None):
     lbl = h5py.File(conf.labelfile, 'r')
@@ -305,22 +312,14 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
     create_val_data(conf)
     is_val, local_dirs, sel_dirs = load_val_data(conf)
 
-    if split:
-        train_filename = os.path.join(conf.cachedir, conf.trainfilename)
-        val_filename = os.path.join(conf.cachedir, conf.valfilename)
-
-        env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
-        val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
-    else:
-        train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename)
-        env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
-        val_env = None
-
+    env, val_env = create_envs(conf, split)
     view = conf.view
-    count = 0
-    val_count = 0
+    npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
+    sel_pts = int(view * npts_per_view) + conf.selpts
 
     splits = [[],[]]
+    count = 0
+    val_count = 0
 
     if conf.splitType is 'predefined':
         assert split_file is not None, 'File for defining splits is not given'
@@ -334,7 +333,7 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
-        frames = np.where(np.invert(np.all(np.isnan(cur_pts[:, :, :]), axis=(1, 2))))[0]
+        frames = get_labeled_frames(lbl, ndx, None)
         cap = movies.Movie(local_dirs[ndx])
 
         for fnum in frames:
@@ -343,29 +342,11 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
                 continue
 
             cur_env = get_cur_env(env, val_env, split, conf, ndx, fnum, 0, is_val, trx_split=None, predefined=predefined)
-
-            frame_in, ts = cap.get_frame(fnum)
-            if frame_in.ndim == 2:
-                frame_in = frame_in[:,:,np.newaxis]
-            c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
-            frame_in = PoseTools.crop_images(frame_in, conf)
-            frame_in = frame_in[:, :, 0:conf.imgDim]
-
-            npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
-            pts_st = int(view * npts_per_view)
-            sel_pts = pts_st + conf.selpts
-            cur_loc = cur_pts[fnum, :, sel_pts]
-            cur_loc[:, 0] = cur_loc[:, 0] - c_loc[1] - 1  # ugh, the nasty x-y business.
-            cur_loc[:, 1] = cur_loc[:, 1] - c_loc[0] - 1
-            # -1 because matlab is 1-indexed
-            cur_loc = cur_loc.clip(min=0, max=[conf.imsz[1] + 7, conf.imsz[0] + 7])
+            frame_in, cur_loc = get_patch(cap, fnum, conf, cur_pts[fnum,:,sel_pts])
 
             rows = frame_in.shape[0]
             cols = frame_in.shape[1]
-            if np.ndim(frame_in) > 2:
-                depth = frame_in.shape[2]
-            else:
-                depth = 1
+            depth = frame_in.shape[2] if frame_in.ndim > 2 else 1
 
             image_raw = frame_in.tostring()
             example = tf.train.Example(features=tf.train.Features(feature={
@@ -396,45 +377,55 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
         json.dump(splits, f)
 
 
+def get_patch(cap, fnum, conf, locs, offset=0, stationary=True, cur_trx=None,flipud=False):
+
+    if cur_trx is not None: # when there are trx
+        return get_patch_trx(cap, cur_trx, fnum, conf, locs, offset, stationary,flipud)
+    else:
+        frame_in, _, _, _ = read_frame(cap,fnum,cur_trx,flipud=flipud)
+        c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
+        frame_in = PoseTools.crop_images(frame_in, conf)
+        cur_loc = locs.copy()
+        cur_loc[:, 0] = cur_loc[:, 0] - c_loc[1] - 1  # ugh, the nasty x-y business.
+        cur_loc[:, 1] = cur_loc[:, 1] - c_loc[0] - 1
+        # -1 because matlab is 1-indexed
+        cur_loc = cur_loc.clip(min=0, max=[conf.imsz[1] + 7, conf.imsz[0] + 7])
+        return  frame_in, cur_loc
+
+
 def create_envs(conf, split, db_type=None):
     if db_type is 'rnn':
         if split:
             train_filename = os.path.join(conf.cachedir, conf.trainfilename_rnn)
             val_filename = os.path.join(conf.cachedir, conf.valfilename_rnn)
-
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
             train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename_rnn)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
-
         return env, val_env
     elif db_type is not None:
         if split:
             train_filename = os.path.join(conf.cachedir, conf.trainfilename + '_' + db_type)
             val_filename = os.path.join(conf.cachedir, conf.valfilename + '_' + db_type)
-
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
             train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename + '_' + db_type)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
-
         return env, val_env
     else:
         if split:
             train_filename = os.path.join(conf.cachedir, conf.trainfilename)
             val_filename = os.path.join(conf.cachedir, conf.valfilename)
-
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
             train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
-
         return env, val_env
 
 
@@ -453,7 +444,9 @@ def trx_pts(lbl, ndx):
         return np.array(lbl[pts[0,ndx]])
 
 
-def get_cur_env(env, val_env, split, conf, mov_ndx, frame_ndx, trx_ndx, is_val, trx_split, predefined=None):
+def get_cur_env(envs, split, conf, info, mov_split, trx_split, predefined=None):
+    env, val_env = envs
+    mov_ndx, frame_ndx, trx_ndx = info
     if split:
         if hasattr(conf, 'splitType'):
             if conf.splitType is 'frame':
@@ -462,14 +455,13 @@ def get_cur_env(env, val_env, split, conf, mov_ndx, frame_ndx, trx_ndx, is_val, 
             elif conf.splitType is 'trx':
                 cur_env = val_env if trx_split[trx_ndx] else env
             elif conf.splitType is 'predefined':
-                cur_env = val_env if predefined[1].count([mov_ndx, trx_ndx, frame_ndx]) > 0 else env
+                cur_env = val_env if predefined[1].count(info) > 0 else env
             else:
-                cur_env = val_env if is_val.count(mov_ndx) else env
+                cur_env = val_env if mov_split.count(mov_ndx) else env
         else:
-            cur_env = val_env if is_val.count(mov_ndx) and split else env
+            cur_env = val_env if mov_split.count(mov_ndx) and split else env
     else:
         cur_env = env
-
     return cur_env
 
 
@@ -487,6 +479,8 @@ def check_fnum(fnum, cap, expname, ndx):
 
 
 def read_trx(cur_trx, fnum):
+    if cur_trx is None:
+        return None,None,None
     trx_fnum = fnum - cur_trx['firstframe'][0, 0]
     x = int(round(cur_trx['x'][0, trx_fnum])) - 1
     y = int(round(cur_trx['y'][0, trx_fnum])) - 1
@@ -495,17 +489,24 @@ def read_trx(cur_trx, fnum):
     return x, y, theta
 
 
-def read_frame(cap, fnum, cur_trx, offset=0, stationary=True):
+def read_frame(cap, fnum, cur_trx, offset=0, stationary=True,flipud=False):
     # stationary means that fly will always be in the center of the frame
     if not check_fnum(fnum, cap, 0, 0):
         return None, None, None, None
     o_fnum = fnum + offset
-    if o_fnum > cur_trx['endframe'][0, 0] - 1:
-        o_fnum = cur_trx['endframe'][0, 0] - 1
-    if o_fnum < cur_trx['firstframe'][0, 0] - 1:
-        o_fnum = cur_trx['firstframe'][0, 0] - 1
+
+    if cur_trx is not None:
+        if o_fnum > cur_trx['endframe'][0, 0] - 1:
+            o_fnum = cur_trx['endframe'][0, 0] - 1
+        if o_fnum < cur_trx['firstframe'][0, 0] - 1:
+            o_fnum = cur_trx['firstframe'][0, 0] - 1
+    else:
+        o_fnum = 0 if o_fnum < 0 else o_fnum
+        o_fnum = cap.get_n_frames()-1 if o_fnum > cap.get_n_frames() else o_fnum
 
     framein = cap.get_frame(o_fnum)[0]
+    if flipud:
+        framein = np.flipud(framein)
     if framein.ndim == 2:
         framein = framein[:, :, np.newaxis]
 
@@ -516,9 +517,10 @@ def read_frame(cap, fnum, cur_trx, offset=0, stationary=True):
     return framein, x, y, theta
 
 
-def get_patch_trx(cap, cur_trx, fnum, psz, locs, offset=0, stationary=True):
-
-    im, x, y, theta = read_frame(cap, fnum, cur_trx, offset, stationary)
+def get_patch_trx(cap, cur_trx, fnum, conf, locs, offset=0, stationary=True,flipud=False):
+    # assert conf.imsz[0] == conf.imsz[1]
+    psz = max(conf.imsz)
+    im, x, y, theta = read_frame(cap, fnum, cur_trx, offset, stationary,flipud)
 
     im = im.copy()
     theta = theta + math.pi / 2
@@ -540,11 +542,21 @@ def get_patch_trx(cap, cur_trx, fnum, psz, locs, offset=0, stationary=True):
     ll = ll - [x, y]
     rot = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
     lr = np.dot(ll, rot) + [psz / 2, psz / 2]
+
+    if conf.imsz[0] < conf.imsz[1]:
+        extra = (psz-conf.imsz[0])/2
+        rpatch = rpatch[extra:-extra,...]
+        lr[:,1] -= extra
+    elif conf.imsz[1] < conf.imsz[0]:
+        extra = (psz-conf.imsz[1])/2
+        rpatch = rpatch[:,extra:-extra,...]
+        lr[:,0] -= extra
+
+    rpath = rpatch[:,:,:conf.imgDim]
     return rpatch, lr
 
 
 def create_tf_record_from_lbl_with_trx(conf, split=True, split_file=None):
-    assert conf.imsz[0] == conf.imsz[1]
     create_val_data(conf)
     is_val, local_dirs, _ = load_val_data(conf)
 
@@ -552,7 +564,7 @@ def create_tf_record_from_lbl_with_trx(conf, split=True, split_file=None):
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
     trx_files = get_trx_files(lbl, local_dirs)
 
-    env, val_env = create_envs(conf, split)
+    envs = create_envs(conf, split)
     view = conf.view
     count = 0
     val_count = 0
@@ -576,18 +588,16 @@ def create_tf_record_from_lbl_with_trx(conf, split=True, split_file=None):
         cap = movies.Movie(local_dirs[ndx])
 
         for trx_ndx in range(n_trx):
-            frames = np.where(np.invert(np.all(np.isnan(curpts[trx_ndx, :, :, :]), axis=(1, 2))))[0]
-            # cap = cv2.VideoCapture(localdirs[ndx])
+            frames = get_labeled_frames(lbl, ndx, trx_ndx)
             cur_trx = trx[trx_ndx]
 
             for fnum in frames:
-
                 if not check_fnum(fnum, cap, exp_name, ndx):
                     continue
-                cur_env = get_cur_env(env, val_env, split, conf, ndx, fnum, trx_ndx, is_val, trx_split, predefined=predefined)
 
-                frame_in, cur_loc = get_patch_trx(cap, cur_trx, fnum, conf.imsz[0], curpts[trx_ndx, fnum, :, sel_pts])
-                frame_in = frame_in[:, :, 0:conf.imgDim]
+                cur_env = get_cur_env(envs, split, conf, [ndx, fnum, trx_ndx], is_val,
+                                      trx_split, predefined=predefined)
+                frame_in, cur_loc = get_patch_trx(cap, cur_trx, fnum, conf, curpts[trx_ndx, fnum, :, sel_pts])
 
                 rows, cols = frame_in.shape[0:2]
                 depth = conf.imgDim
@@ -604,7 +614,7 @@ def create_tf_record_from_lbl_with_trx(conf, split=True, split_file=None):
                     'image_raw': bytes_feature(image_raw)}))
                 cur_env.write(example.SerializeToString())
 
-                if cur_env is val_env:
+                if cur_env is envs[1]:
                     val_count += 1
                     splits[1].append([ndx,fnum,trx_ndx])
                 else:
@@ -613,8 +623,8 @@ def create_tf_record_from_lbl_with_trx(conf, split=True, split_file=None):
 
         cap.close()  # close the movie handles
         print('Done %d of %d movies, count:%d val:%d' % (ndx + 1, len(local_dirs), count, val_count))
-    env.close()
-    val_env.close() if split else None
+    envs[0].close()
+    envs[1].close() if split else None
     print('%d,%d number of pos examples added to the db and valdb' % (count, val_count))
     lbl.close()
     with open(os.path.join(conf.cachedir,'splitdata.json'),'w') as f:
