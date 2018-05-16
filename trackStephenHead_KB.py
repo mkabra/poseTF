@@ -180,8 +180,10 @@ def main(argv):
             if args.detect and os.path.isfile(valmovies[ndx]) and \
                (args.redo or not os.path.isfile(pname + '.mat')):
 
-                predList = self.classify_movie(valmovies[ndx], sess, flipud=True)
-
+                try:
+                    predList = self.classify_movie(valmovies[ndx], sess, flipud=True)
+                except KeyError:
+                    continue
                 # if args.makemovie:
                 #     PoseTools.create_pred_movie(conf, predList, valmovies[ndx], pname + '.avi', outtype)
 
@@ -232,7 +234,10 @@ def main(argv):
                     print("%s, %s, and %s exist, skipping tracking"%(savefile,trkfile_front,trkfile_side))
                     continue
 
-                flynum = int(conf.getflynum(smovies[ndx]))
+                try:
+                    flynum = int(conf.getflynum(smovies[ndx]))
+                except AttributeError:
+                    continue
                 #print "Parsed fly number as %d"%flynum
                 kinematfile = os.path.abspath(dltdict[flynum])
 
@@ -258,7 +263,7 @@ def main(argv):
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 
 #                cmd = "ssh login1 'source /etc/profile; qsub -pe batch %d -N %s -j y -b y -o '%s' -cwd '\"%s\"''"%(args.ncores,jobid,logfile,scriptfile)
-                cmd = "ssh login1 'source /etc/profile; bsub -n %d -J %s -oo '%s' -eo '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
+                cmd = "ssh login2 'source /etc/profile; bsub -n %d -J %s -oo '%s' -eo '%s' -cwd . '\"%s\"''"%(args.ncores,jobid,logfile,errfile,scriptfile)
                 print(cmd)
                 call(cmd,shell=True)
                 

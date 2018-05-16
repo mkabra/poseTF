@@ -129,6 +129,8 @@ def main(argv):
             continue
 
         for b in range(max_jobs): #submit max_jobs/2 new jobs
+            if cur_batch >= tot_batch:
+                continue
             curflist = os.path.join(temp_dir,'missing_' + name + '{:05d}_flist.txt'.format(cur_batch))
             curslist = os.path.join(temp_dir,'missing_' + name + '{:05d}_slist.txt'.format(cur_batch))
             sing_script = os.path.join(temp_dir,'missing_'+ name + '_singularity_{}.sh'.format(cur_batch))
@@ -136,6 +138,10 @@ def main(argv):
             sing_log = os.path.join(temp_dir,'missing_'+ name + '_singularity_{}.log'.format(cur_batch))
             with open(sing_script,'w') as f:
                 f.write('#!/bin/bash\n')
+                f.write('env | grep CUDA\n')
+                f.write('echo "JOBID $LSB_JOBID"\n')
+                f.write('bjobs -uall -m `hostname -s`\n')
+                f.write('nvidia-smi\n')
                 f.write('. /opt/venv/bin/activate\n')
                 f.write('cd /groups/branson/bransonlab/mayank/PoseTF\n')
                 f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
