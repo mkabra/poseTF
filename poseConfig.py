@@ -112,6 +112,7 @@ class config(object):
 
     # ----- UNet params
     unet_rescale = 1
+    unet_steps = 20000
 
     # ----- MDN params
     mdn_min_sigma = 3. # this should just be maybe twice the cell size??
@@ -130,6 +131,7 @@ class config(object):
     # ----- Save parameters
 
     save_step = 2000
+    save_td_step = 100
     maxckpt = 30
     def set_exp_name(self, exp_name):
         self.expname = exp_name

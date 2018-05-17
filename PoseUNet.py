@@ -339,7 +339,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=20000/self.conf.batch_size*8,
+            training_iters=self.conf.unet_steps/self.conf.batch_size*8,
             loss=loss,
             pred_in_key='y',
             learning_rate=0.0001,

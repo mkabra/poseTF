@@ -489,6 +489,7 @@ class PoseCommon(object):
                         self.update_td(cur_dict)
                     if step % self.conf.save_step == 0:
                         self.save(sess, step)
+                    if step % self.conf.save_td_step == 0:
                         self.save_td()
                 print("Optimization Finished!")
                 self.save(sess, training_iters)

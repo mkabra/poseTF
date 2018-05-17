@@ -109,11 +109,12 @@ def create_conf(lbl_file, view, name):
     conf.selpts = np.arange(conf.n_classes)
     vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
     vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
-    im_nr = int(read_entry(dt_params['Size']))
-    conf.imsz = (im_nr, im_nr)
+    width = int(read_entry(dt_params['sizex']))
+    height = int(read_entry(dt_params['sizey']))
+    conf.imsz = (height, width)
     crop_locX = int(read_entry(dt_params['CropX_view{}'.format(view + 1)]))
     crop_locY = int(read_entry(dt_params['CropY_view{}'.format(view + 1)]))
-    conf.cropLoc = {(vid_nr, vid_nc): [crop_locX, crop_locY]}
+    conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
     conf.labelfile = lbl_file
     conf.sel_sz = min(conf.imsz)
     conf.unet_rescale = int(read_entry(dt_params['scale']))
@@ -122,7 +123,35 @@ def create_conf(lbl_file, view, name):
     try:
         conf.flipud = int(read_entry(dt_params['flipud'])) > 0.5
     except KeyError:
-        conf.flipud = False
+        pass
+    try:
+        conf.unet_steps= int(read_entry(dt_params['unet_steps']))
+    except KeyError:
+        pass
+    try:
+        conf.save_td_step = read_entry(dt_params['save_td_step'])
+    except KeyError:
+        pass
+    try:
+        bb = read_entry(dt_params['brange'])
+        conf.brange = [-bb,bb]
+    except KeyError:
+        pass
+    try:
+        bb = read_entry(dt_params['crange'])
+        conf.crange = [1-bb,1+bb]
+    except KeyError:
+        pass
+    try:
+        bb = read_entry(dt_params['trange'])
+        conf.trange = bb
+    except KeyError:
+        pass
+    try:
+        bb = read_entry(dt_params['rrange'])
+        conf.rrange = bb
+    except KeyError:
+        pass
 
     return conf
 

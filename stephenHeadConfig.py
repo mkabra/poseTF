@@ -149,6 +149,7 @@ class myconfig(object):
 
     # ----- Unet params
     unet_rescale = 2
+    unet_steps = 20000
 
     # ----- MDN params
     # for 1/4 res.
@@ -167,6 +168,7 @@ class myconfig(object):
     # ----- Save parameters
 
     save_step = 2000
+    save_td_step = 100
     maxckpt = 30
     baseoutname = expname + baseName
     fineoutname = expname + fineName
