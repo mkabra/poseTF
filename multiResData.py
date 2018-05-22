@@ -481,7 +481,7 @@ def check_fnum(fnum, cap, expname, ndx):
 def read_trx(cur_trx, fnum):
     if cur_trx is None:
         return None,None,None
-    trx_fnum = fnum - cur_trx['firstframe'][0, 0]
+    trx_fnum = fnum - cur_trx['firstframe'][0, 0] + 1
     x = int(round(cur_trx['x'][0, trx_fnum])) - 1
     y = int(round(cur_trx['y'][0, trx_fnum])) - 1
     # -1 for 1-indexing in matlab and 0-indexing in python

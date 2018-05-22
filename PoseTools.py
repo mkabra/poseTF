@@ -1266,7 +1266,8 @@ def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
 
 def preprocess_ims(ims, in_locs, conf, distort, scale):
     locs = in_locs.copy()
-    cur_im = ims.astype('uint8')
+    cur_im = ims.copy()
+    cur_im = cur_im.astype('uint8')
     xs = adjust_contrast(cur_im, conf)
     if distort:
         if conf.horzFlip:

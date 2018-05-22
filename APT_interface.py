@@ -28,7 +28,7 @@ def loadmat(filename):
     which are still mat-objects
     From: https://stackoverflow.com/questions/7008608/scipy-io-loadmat-nested-structures-i-e-dictionaries
     '''
-    data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
+    data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True,appendmat=False)
     return _check_keys(data)
 
 
@@ -280,12 +280,12 @@ def create_tfrecord(conf, split=True, split_file=None):
         json.dump(splits, f)
 
 
-def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz):
+def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz,nvalid):
     # converts locs in cropped image to original image.
     if conf.has_trx_file:
         hsz_p = conf.imsz[0] / 2  # half size for pred
         base_locs_orig = np.zeros(base_locs.shape)
-        for ii in range(base_locs.shape[0]):
+        for ii in range(nvalid):
             trx_fnum = trx_fnum_start + ii
             x = int(round(cur_trx['x'][0, trx_fnum])) - 1
             y = int(round(cur_trx['y'][0, trx_fnum])) - 1
@@ -304,12 +304,115 @@ def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz):
 
     return base_locs_orig
 
-def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
+
+def create_cv_split_files(conf, n_splits=3):
+    # creates json files for the xv splits
+    local_dirs, _ = multiResData.find_local_dirs(conf)
+    lbl = h5py.File(conf.labelfile)
+
+    mov_info = []
+    trx_info = []
+    n_labeled_frames = 0
+    for ndx, dir_name in enumerate(local_dirs):
+        if conf.has_trx_file:
+            trx_files = multiResData.get_trx_files(lbl, local_dirs)
+            trx = sio.loadmat(trx_files[ndx])['trx'][0]
+            n_trx = len(trx)
+        else:
+            n_trx = 1
+
+        cur_mov_info = []
+        for trx_ndx in range(n_trx):
+            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
+            mm = [ndx] * frames.size
+            tt = [trx_ndx] * frames.size
+            cur_trx_info = list(zip(mm,tt,frames.tolist()))
+            trx_info.append(cur_trx_info)
+            cur_mov_info.extend(cur_trx_info)
+            n_labeled_frames += frames.size
+        mov_info.append(cur_mov_info)
+    lbl.close()
+
+    lbls_per_fold = n_labeled_frames/n_splits
+
+    imbalance = True
+    for retry in range(10):
+        per_fold = np.zeros([n_splits])
+        splits = [[] for i in range(n_splits)]
+
+        if conf.splitType is 'movie':
+            for ndx in range(len(local_dirs)):
+                valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                cur_fold = np.random.choice(valid_folds)
+                splits[cur_fold].extend(mov_info[ndx])
+                per_fold[cur_fold] += len(mov_info[ndx])
+
+        elif conf.splitType is 'trx':
+            for tndx in range(len(trx_info)):
+                valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                cur_fold = np.random.choice(valid_folds)
+                splits[cur_fold].extend(trx_info[tndx])
+                per_fold[cur_fold] += len(trx_info[tndx])
+
+        elif conf.splitType is 'frames':
+            for ndx in range(len(local_dirs)):
+                for mndx in range(len(mov_info[ndx])):
+                    valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                    cur_fold = np.random.choice(valid_folds)
+                    splits[cur_fold].extend(mov_info[ndx][mndx:mndx+1])
+                    per_fold[cur_fold] += 1
+
+            else:
+                raise ValueError('splitType has to be either movie trx or frames')
+
+        imbalance = (per_fold.max()-per_fold.min()) > float(lbls_per_fold)/3
+        if not imbalance:
+            break
+
+    if imbalance:
+        print('Couldnt find a valid spilt for split type:{} even after 10 retries.'.format(conf.splitType))
+        print('Try changing the split type')
+        return None
+
+    all_train = []
+    for ndx in range(n_splits):
+        cur_train = []
+        for idx, cur_split in enumerate(splits):
+            if idx is not ndx:
+                cur_train.extend(cur_split)
+        all_train.append(cur_train)
+        with open(os.path.join(conf.cachedir,'cv_split_fold_{}.json'.format(ndx)),'w'):
+            json.dump([cur_train,splits[ndx]])
+
+    return all_train, splits
+
+
+def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
+
+    def write_trk(pred_locs_in,n_done):
+        pred_locs = pred_locs_in.copy()
+        pred_locs = pred_locs.transpose([2, 3, 0, 1])
+        tgt = np.arange(pred_locs.shape[-1]) + 1
+        if not conf.has_trx_file:
+            pred_locs = pred_locs[...,0]
+        ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
+        ts = np.ones(ts_shape) * datetime2matlabdn()
+        tag = np.zeros(ts.shape).astype('bool')
+        tracked_shape = pred_locs.shape[2:]
+        tracked = np.zeros(tracked_shape)
+        tracked[:n_done,:] = 1
+        hdf5storage.savemat(out_file,
+                            {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
+                             'pTrkTag': tag,'pTrkFrm':tracked}, appendmat=False, truncate_existing=True)
+
     cap = movies.Movie(mov_file)
     sz = (cap.get_height(), cap.get_width())
     n_frames = int(cap.get_n_frames())
     if conf.has_trx_file:
-        T = sio.loadmat(trx_file)['trx'][0]
+        try:
+            T = sio.loadmat(trx_file)['trx'][0]
+        except ValueError:
+            raise IOError('Trx file {} is not a mat file'.format(trx_file))
         n_trx = len(T)
         end_frames = np.array([x['endframe'][0, 0] for x in T])
         first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
@@ -366,32 +469,120 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame
             out_start = ndx_start - start_frame
             out_end = ndx_end - start_frame
             trx_fnum_start = ndx_start - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz)
+            base_locs_orig = convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, ppe)
             pred_locs[out_start:out_end, trx_ndx, :, :] = base_locs_orig[:ppe, ...]
-            sys.stdout.write('.')
             if curl % 20 == 19:
+                sys.stdout.write('.')
+            if curl % 400 == 19:
                 sys.stdout.write('\n')
+                write_trk(pred_locs, ndx_end - start_frame)
 
         sys.stdout.write('\n')
 
-    pred_locs = pred_locs.transpose([2, 3, 0, 1])
-    tgt = np.arange(pred_locs.shape[-1]) + 1
-    if not conf.has_trx_file:
-        # remove the trx part.
-        pred_locs = pred_locs[...,0]
-
-    ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
-    ts = np.ones(ts_shape) * datetime2matlabdn()
-    tag = np.zeros(ts.shape).astype('bool')
-    hdf5storage.savemat(out_file,
-                        {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                         'pTrkTag': tag}, appendmat=False, truncate_existing=True)
-
+    write_trk(pred_locs, end_frame - start_frame)
     cap.close()
     tf.reset_default_graph()
     return pred_locs
 
-def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1, skip_rate=1):
+def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[]):
+    # classifies movies frame by frame instead of trx by trx.
+
+    def write_trk(pred_locs_in,n_done):
+        pred_locs = pred_locs_in.copy()
+        pred_locs = pred_locs.transpose([2, 3, 0, 1])
+        pred_locs = pred_locs[:,:,n_done,:]
+        tgt = np.arange(pred_locs.shape[-1]) + 1
+        if not conf.has_trx_file:
+            pred_locs = pred_locs[...,0]
+        ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
+        ts = np.ones(ts_shape) * datetime2matlabdn()
+        tag = np.zeros(ts.shape).astype('bool')
+        tracked_shape = pred_locs.shape[2]
+        tracked = np.zeros([1,tracked_shape])
+        tracked[0,n_done] = np.array(n_done)+1
+        hdf5storage.savemat(out_file,
+                            {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
+                             'pTrkTag': tag,'pTrkFrm':tracked}, appendmat=False, truncate_existing=True)
+
+    cap = movies.Movie(mov_file)
+    sz = (cap.get_height(), cap.get_width())
+    n_frames = int(cap.get_n_frames())
+    if conf.has_trx_file:
+        T = sio.loadmat(trx_file)['trx'][0]
+        n_trx = len(T)
+        end_frames = np.array([x['endframe'][0, 0] for x in T])
+        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
+        if len(trx_ids) == 0:
+            trx_ids = range(n_trx)
+    else:
+        T = [None,]
+        n_trx = 1
+        end_frames = np.array([n_frames])
+        first_frames = np.array([0])
+        trx_ids = [0]
+
+    if end_frame < 0:
+        end_frame = end_frames.max()
+    if end_frame > end_frames.max():
+        end_frame = end_frames.max()
+    if start_frame > end_frame:
+        return None
+
+    max_n_frames = end_frames.max() - first_frames.min()
+    min_first_frame = first_frames.min()
+    pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
+    pred_locs[:] = np.nan
+
+    bsize = conf.batch_size
+    flipud = conf.flipud
+    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+
+    to_do_list = []
+    for cur_f in range(start_frame,end_frame):
+        for t in range(n_trx):
+            if trx_ids.count(t) == 0:
+                continue
+            if (end_frames[t]> cur_f) and (first_frames[t]<=cur_f):
+                to_do_list.append([cur_f,t])
+
+    n_list = len(to_do_list)
+    n_batches = int(math.ceil(float(n_list) / bsize))
+    for cur_b in range(n_batches):
+        cur_start = cur_b*bsize
+        ppe = min(n_list - cur_start, bsize)
+        for cur_t in range(ppe):
+            cur_entry = to_do_list[cur_t + cur_start]
+            trx_ndx = cur_entry[1]
+            cur_trx = T[trx_ndx]
+            cur_f = cur_entry[0]
+
+            frame_in, cur_loc = multiResData.get_patch(
+                cap, cur_f, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
+            all_f[cur_t, ...] = frame_in
+
+        base_locs = pred_fn(all_f)
+        for cur_t in range(ppe):
+            cur_entry = to_do_list[cur_t + cur_start]
+            trx_ndx = cur_entry[1]
+            cur_trx = T[trx_ndx]
+            cur_f = cur_entry[0]
+            trx_fnum_start = cur_f - first_frames[trx_ndx]
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t+1,...], conf, cur_trx, trx_fnum_start, all_f, sz,1)
+            pred_locs[cur_f-min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
+
+        if cur_b%20==19:
+            sys.stdout.write('.')
+        if cur_b % 400 == 399:
+            sys.stdout.write('\n')
+            write_trk(pred_locs,range(start_frame,to_do_list[cur_start][0]))
+
+    write_trk(pred_locs, range(start_frame,end_frame))
+    cap.close()
+    tf.reset_default_graph()
+    return pred_locs
+
+
+def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1, skip_rate=1, trx_ids = []):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -422,13 +613,18 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         base_locs = base_locs * conf.unet_rescale
         return base_locs
 
-    classify_movie(conf, pred_fn, mov_file, out_file, trx_file, start_frame, end_frame, skip_rate)
+    classify_movie(conf, pred_fn, mov_file, out_file, trx_file, start_frame, end_frame, skip_rate, trx_ids)
 
 
-def train(lblfile, nviews, name):
-    for view in range(nviews):
-        conf = create_conf(lblfile, view, name)
-        conf.view = view
+def train(lblfile, nviews, name, view):
+    if view is None:
+        views = range(nviews)
+    else:
+        views = [view]
+
+    for cur_view in views:
+        conf = create_conf(lblfile, cur_view, name)
+        conf.view = cur_view
         create_tfrecord(conf,False)
         tf.reset_default_graph()
         self = PoseUNet.PoseUNet(conf)
@@ -499,6 +695,7 @@ def main(argv):
     parser.add_argument("lbl_file",
                         help="path to lbl file")
     parser.add_argument('-name',dest='name',help='Name for the run. Default - pose_unet', default='pose_unet')
+    parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None)
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
@@ -515,6 +712,7 @@ def main(argv):
     parser_classify.add_argument('-end_frame', dest='end_frame', help='end frame for tracking', type=int, default=-1)
     parser_classify.add_argument('-skip_rate', dest='skip', help='frames to skip while tracking', default=1, type=int)
     parser_classify.add_argument('-out', dest='out_files', help='file to save tracking results to', required=True, nargs='+')
+    parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*',type=int,default=[])
 
     print(argv)
     args = parser.parse_args(argv)
@@ -529,15 +727,24 @@ def main(argv):
     nviews = int(read_entry(H['cfg']['NumViews']))
 
     if args.sub_name == 'train':
-        train(lbl_file, nviews, name)
+        train(lbl_file, nviews, name, args.view)
     elif args.sub_name == 'track':
         assert len(args.mov) == len(args.out_files), 'Number of movie files and number of out files should be the same'
-        assert len(args.mov) == nviews, 'Number of movie files should be same as number of views'
-        if args.trx is None:
-            args.trx = [None]*nviews
-        for view in range(nviews):
-            conf = create_conf(lbl_file, view, name)
-            classify_movie_unet(conf, args.mov[view], args.trx[view], args.out_files[view], args.start_frame, args.end_frame, args.skip)
+
+        if args.view is None:
+            if args.trx is None:
+                args.trx = [None] * nviews
+            else:
+                assert len(args.mov) == len(args.trx), 'Number of movie files should be same as the number of trx files'
+            assert len(args.mov) == nviews, 'Number of movie files should be same as number of views'
+            for view in range(nviews):
+                conf = create_conf(lbl_file, view, name)
+                classify_movie_unet(conf, args.mov[view], args.trx[view], args.out_files[view], args.start_frame, args.end_frame, args.skip, args.trx_ids)
+        else:
+            assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
+            conf = create_conf(lbl_file, args.view, name)
+            classify_movie_unet(conf, args.mov, args.trx, args.out_files, args.start_frame,
+                                args.end_frame, args.skip, args.trx_ids)
 
 
 if __name__ == "__main__":

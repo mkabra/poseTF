@@ -1084,7 +1084,7 @@ class CompressedAvi:
         self.bits_per_pixel = self.color_depth * 8
 
         # allocate the buffer
-        self.buffer = num.zeros((self.height,self.width,self.buffersize),dtype=num.uint8)
+        self.buffer = num.zeros((self.height,self.width,self.color_depth,self.buffersize),dtype=num.uint8)
         self.bufferts = num.zeros(self.buffersize)
 
         # put the first frame in it
@@ -1106,7 +1106,7 @@ class CompressedAvi:
         if framenumber >= self.bufferframe0 and framenumber < self.bufferframe1:
             off = num.mod(framenumber - self.bufferframe0 + self.bufferoff0,self.buffersize)
             if DEBUG_MOVIES: print "frame %d is in buffer at offset %d"%(framenumber,off)
-            return (self.buffer[:,:,off].copy(),self.bufferts[off])
+            return (self.buffer[:,:,:,off].copy(),self.bufferts[off])
 
         # is framenumber the next frame to read in?
         if framenumber == self.currframe:
@@ -1134,7 +1134,7 @@ class CompressedAvi:
         # frame buffered
         self.bufferoff0 = 0
         (frame,ts) = self._get_next_frame_helper()
-        self.buffer[:,:,0] = frame.copy()
+        self.buffer[:,:,:,0] = frame.copy()
         self.bufferts[0] = ts
         # bufferoff is the location in the buffer where we should
         # write the next frame
@@ -1161,16 +1161,16 @@ class CompressedAvi:
         frame = num.fromstring(im.data,num.uint8)
 
         if self.color_depth == 1:
-            frame.resize((im.height,im.width))
+            frame.resize((self.height,self.width))
         else: # color_depth == 3
-            frame.resize( (self.height, self.width*3) )
-            tmp = frame.astype(float)
-            tmp = tmp[:,2:self.width*3:3]*.3 + \
-                tmp[:,1:self.width*3:3]*.59 + \
-                tmp[:,0:self.width*3:3]*.11
-            frame = tmp.astype(num.uint8)
+            frame.resize( (self.height, self.width, 3) )
+            # tmp = frame.astype(float)
+            # tmp = tmp[:,2:self.width*3:3]*.3 + \
+            #     tmp[:,1:self.width*3:3]*.59 + \
+            #     tmp[:,0:self.width*3:3]*.11
+            # frame = tmp.astype(num.uint8)
 
-        frame = num.flipud(frame)
+        # frame = num.flipud(frame)
 
         return (frame,ts)
 
@@ -1192,7 +1192,7 @@ class CompressedAvi:
 
         if DEBUG_MOVIES: print "buffer frames: [%d,%d), bufferoffset0 = %d"%(self.bufferframe0,self.bufferframe1,self.bufferoff0)
 
-        self.buffer[:,:,self.bufferoff] = frame.copy()
+        self.buffer[:,:,:,self.bufferoff] = frame.copy()
         self.bufferts[self.bufferoff] = ts
 
         if DEBUG_MOVIES: print "read into buffer[%d], ts = %f"%(self.bufferoff,ts)

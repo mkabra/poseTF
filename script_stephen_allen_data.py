@@ -10,6 +10,8 @@ import  subprocess
 import copy
 import json
 
+split_type = 'easy'
+
 def create_tfrecords():
     data_file = '/groups/branson/bransonlab/mayank/PoseTF/headTracking/trnDataSH_20180503_notable.mat'
     split_file = '/groups/branson/bransonlab/apt/experiments/data/trnSplits_20180509.mat'
@@ -22,7 +24,10 @@ def create_tfrecords():
     nims = D['IMain_crop2'].shape[1]
     movid = np.array(D['mov_id']).T - 1
     frame_num = np.array(D['frm']).T - 1
-    split_arr = S['xvMain3Hard']
+    if split_type is 'easy':
+        split_arr = S['xvMain3Easy']
+    else:
+        split_arr = S['xvMain3Hard']
 
 
     for view in range(2):
@@ -33,8 +38,11 @@ def create_tfrecords():
 
         for split in range(3):
             outdir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split))
+            if split_type is 'easy':
+                outdir += '_easy'
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
+
             train_filename = os.path.join(outdir,conf.trainfilename)
             val_filename = os.path.join(outdir,conf.valfilename)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
@@ -87,6 +95,8 @@ def train(split_num, view):
     conf.batch_size = 4
     conf.unet_rescale = 1
     conf.cachedir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split_num))
+    if split_type is 'easy':
+        conf.cachedir += '_easy'
     self = PoseUNet.PoseUNet(conf)
     self.train_unet(True,0)
 
@@ -101,6 +111,8 @@ def submit_jobs():
                 from stephenHeadConfig import conf as conf
             curconf = copy.deepcopy(conf)
             curconf.cachedir = os.path.join(curconf.cachedir, 'cv_split_{}'.format(split_num))
+            if split_type is 'easy':
+                curconf.cachedir += '_easy'
             sing_script = os.path.join(curconf.cachedir,'singularity_script.sh')
             sing_log = os.path.join(curconf.cachedir,'singularity_script.log')
             sing_err = os.path.join(curconf.cachedir,'singularity_script.err')
