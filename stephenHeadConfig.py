@@ -96,7 +96,7 @@ class myconfig(object):
     gen_training_iters = 4000*mult_fac
     gamma = 0.1
     step_size = 50000
-    display_step = 30
+    display_step = 50
     numTest = 100
     
     # range for contrast, brightness and rotation adjustment
@@ -125,7 +125,7 @@ class myconfig(object):
     map_size = 100000*psz**2*3
     cropLoc = {(1024,1024):[256,256],(512,768):[0,128]} # for front view crop the central part of the image
     selpts = np.arange(0,5)
-    imgDim = 3
+    imgDim = 1
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')

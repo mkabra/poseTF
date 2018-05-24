@@ -15,9 +15,9 @@ import pickle
 import sys
 import math
 from past.utils import old_div
-#from tensorflow.contrib.layers import batch_norm
-from batch_norm import batch_norm_new as batch_norm
-from matplotlib import pyplot as plt
+from tensorflow.contrib.layers import batch_norm
+#from batch_norm import batch_norm_mine as batch_norm
+#from matplotlib import pyplot as plt
 import copy
 import cv2
 import gc

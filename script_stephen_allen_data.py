@@ -16,6 +16,15 @@ import APT_interface
 import datetime
 
 split_type = 'easy'
+extra_str = '_normal_bnorm'
+imdim = 1
+
+def get_cache_dir(conf, split, split_type):
+    outdir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split))
+    if split_type is 'easy':
+        outdir += '_easy'
+    outdir += extra_str
+    return outdir
 
 def create_tfrecords():
     data_file = '/groups/branson/bransonlab/mayank/PoseTF/headTracking/trnDataSH_20180503_notable.mat'
@@ -23,8 +32,6 @@ def create_tfrecords():
 
     D = h5py.File(data_file,'r')
     S = APT_interface.loadmat(split_file)
-
-    ##
 
     nims = D['IMain_crop2'].shape[1]
     movid = np.array(D['mov_id']).T - 1
@@ -42,9 +49,7 @@ def create_tfrecords():
             from stephenHeadConfig import conf as conf
 
         for split in range(3):
-            outdir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split))
-            if split_type is 'easy':
-                outdir += '_easy'
+            outdir = get_cache_dir(conf, split, split_type)
             if not os.path.exists(outdir):
                 os.mkdir(outdir)
 
@@ -99,11 +104,10 @@ def train(split_num, view):
 
     conf.batch_size = 4
     conf.unet_rescale = 1
-    conf.cachedir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split_num))
-    if split_type is 'easy':
-        conf.cachedir += '_easy'
+    conf.imgDim = 1
+    conf.cachedir = get_cache_dir(conf, split_num, split_type)
     self = PoseUNet.PoseUNet(conf)
-    self.train_unet(True,0)
+    self.train_unet(False,0)
 
 
 def submit_jobs():
@@ -115,9 +119,7 @@ def submit_jobs():
             else:
                 from stephenHeadConfig import conf as conf
             curconf = copy.deepcopy(conf)
-            curconf.cachedir = os.path.join(curconf.cachedir, 'cv_split_{}'.format(split_num))
-            if split_type is 'easy':
-                curconf.cachedir += '_easy'
+            curconf.cachedir = get_cache_dir(conf, split_num, split_type)
             sing_script = os.path.join(curconf.cachedir,'singularity_script.sh')
             sing_log = os.path.join(curconf.cachedir,'singularity_script.log')
             sing_err = os.path.join(curconf.cachedir,'singularity_script.err')
@@ -154,10 +156,8 @@ def compile_results(split_type):
                 curconf.imsz = (350, 350)
             curconf.batch_size = 4
             curconf.unet_rescale = 1
-            curconf.cachedir = os.path.join(curconf.cachedir, 'cv_split_{}'.format(split_num))
-            if split_type is 'easy':
-                curconf.cachedir += '_easy'
-                curconf.imgDim = 1
+            curconf.cachedir = get_cache_dir(conf, split_num, split_type)
+            curconf.imgDim = 1
             tf.reset_default_graph()
             self = PoseUNet.PoseUNet(curconf)
             dist, ims, preds, predlocs, locs, info = self.classify_val(0)
