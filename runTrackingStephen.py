@@ -9,7 +9,6 @@ import re
 
 #!!!!NEED TO RUN: source /groups/branson/bransonlab/mayank/venv/bin/activate   AT COMMAND PROMPT BEFORE RUNNING THIS SCRIPT!!!!!
 
-base_dir ='/groups/huston/hustonlab/flp-chrimson_experiments/'
 #base_dir ='/groups/branson/bransonlab/mayank/stephen_copy'
 temp_dir = os.path.join(base_dir,'tempTrackingOutput')
 cut_off =  time.mktime(datetime.datetime(2018,3,20).timetuple()) # trk files newer than this won't be retracked
@@ -21,7 +20,10 @@ redo = True
 n_batches = 1000
 
 def main(argv):
+    base_dir = '/groups/huston/hustonlab/flp-chrimson_experiments/'
     name = argv[0]
+    if len(argv)>1:
+        base_dir = argv[1]
 
     with open(dltfilename,'r') as f:
         x = f.readlines()
