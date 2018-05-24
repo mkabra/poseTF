@@ -7,7 +7,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("cmd",help="cmd to run",nargs='*')
     parser.add_argument('-name',dest='name',help='name for the singularity files',default='default')
-    parser.add_argument('-dir',dest='dir',help='directory to create the singularity files',default=os.getcwd())
+    parser.add_argument('-dir',dest='dir',help='directory to create the singularity files',default=os.getcwd()+'/singularity_stuff')
 
     args = parser.parse_args(argv)
     name = args.name

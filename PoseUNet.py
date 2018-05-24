@@ -4,7 +4,6 @@ import tensorflow as tf
 import os
 import sys
 import math
-from tensorflow.contrib.layers import batch_norm
 import convNetBase as CNB
 import numpy as np
 import movies
@@ -354,6 +353,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                 val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
         else:
             val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+        print('Classifying data in {}'.format(val_file))
+
         num_val = 0
         for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
@@ -443,7 +444,7 @@ class PoseUNet(PoseCommon.PoseCommon):
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
             # converting to uint8 is really really important!!!!!
-            xs, _ = PoseTools.preprocess_ims(all_f, locs=np.zeros([bsize,self.conf.n_classes, 2]), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
+            xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize,self.conf.n_classes, 2]), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False

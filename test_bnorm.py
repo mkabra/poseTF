@@ -1,6 +1,11 @@
 import tensorflow as tf
 from tensorflow.contrib.layers import batch_norm
+#from batch_norm import batch_norm_new as batch_norm
 
+gpu()
+tf.reset_default_graph()
+
+# Two layer network.
 phase_train_mdn = tf.placeholder(tf.bool)
 
 x_flat = tf.placeholder(tf.float32,[3,5])
@@ -53,3 +58,18 @@ y_1,yy_1 = sess.run([hidden1,hidden1_b],
 y_2,yy_2 = sess.run([hidden1,hidden1_b],
                     feed_dict={x_flat:x_in2,y:y_in,
                                step:0,phase_train_mdn:False})
+y_3,yy_3 = sess.run([hidden1,hidden1_b],
+                    feed_dict={x_flat:x_in1,y:y_in,
+                               step:0,phase_train_mdn:True})
+y_4,yy_4 = sess.run([hidden1,hidden1_b],
+                    feed_dict={x_flat:x_in1,y:y_in,
+                               step:0,phase_train_mdn:True})
+y_5,yy_5 = sess.run([hidden1,hidden1_b],
+                    feed_dict={x_flat:x_in1,y:y_in,
+                               step:0,phase_train_mdn:False})
+
+print y_1
+print y_2
+print y_3
+print y_4
+print y_5

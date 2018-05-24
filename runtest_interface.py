@@ -3,13 +3,15 @@
 import APT_interface
 import tensorflow as tf
 import os
+import datetime
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+dstr = datetime.datetime.now().strftime('%Y%m%d')
 
 ## Double pendulum
 lbl_file = '/groups/branson/home/kabram/bransonlab/PoseTF/data/apt_interface/pend/Doub_pend_stripped_modified.lbl'
 mov_file = '/groups/branson/home/leea30/apt/deeptrackIntegrate20180427/doubpend.mp4'
-out_file = os.path.splitext(mov_file)[0] + '_interface_test.trk'
+out_file = os.path.splitext(mov_file)[0] + '_interface_test_{}.trk'.format(dstr)
 name = 'pend_test_apt'
 cmd = '{} -name {} train'.format(lbl_file,name)
 # APT_interface.main(cmd.split())
@@ -22,7 +24,7 @@ mov_files = ['/groups/branson/bransonlab/mayank/PoseTF/data/apt_interface/stephe
             '/groups/branson/bransonlab/mayank/PoseTF/data/apt_interface/stephen/fly516/C002H001S0001/C002H001S0001_c.avi']
 out_files = []
 for mov_file in mov_files:
-    out_files.append(os.path.splitext(mov_file)[0] + '_interface_test.trk')
+    out_files.append(os.path.splitext(mov_file)[0] + '_interface_test_{}.trk'.format(dstr))
 
 name = 'stephen_test_apt'
 cmd = '{} -name {} train'.format(lbl_file,name)
@@ -37,7 +39,7 @@ cmd = '{} -name {} track -mov {} {} -out {} {}'.format(
 lbl_file = '/groups/branson/bransonlab/mayank/PoseTF/data/alice/multitarget_bubble_expandedbehavior_20180425_modified.lbl'
 mov_file = '/groups/branson/bransonlab/mayank/PoseTF/data/apt_interface/alice/cx_GMR_SS00168_CsChr_RigD_20150909T111218/movie.ufmf'
 trx_file = '/groups/branson/bransonlab/mayank/PoseTF/data/apt_interface/alice/cx_GMR_SS00168_CsChr_RigD_20150909T111218/registered_trx.mat'
-out_file = os.path.splitext(mov_file)[0] + '_interface_test_fast.trk'
+out_file = os.path.splitext(mov_file)[0] + '_interface_test_{}.trk'.format(dstr)
 name = 'alice_test_apt'
 cmd = '{} -name {} train'.format(lbl_file,name)
 #APT_interface.main(cmd.split())

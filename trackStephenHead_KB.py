@@ -181,7 +181,7 @@ def main(argv):
                (args.redo or not os.path.isfile(pname + '.mat')):
 
                 try:
-                    predList = self.classify_movie(valmovies[ndx], sess, flipud=True)
+                    predList = self.classify_movie(valmovies[ndx], sess, flipud=False)
                 except KeyError:
                     continue
                 # if args.makemovie:

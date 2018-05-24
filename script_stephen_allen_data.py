@@ -9,6 +9,11 @@ import  PoseUNet
 import  subprocess
 import copy
 import json
+import copy
+from matplotlib import cm
+import matplotlib.pyplot as plt
+import APT_interface
+import datetime
 
 split_type = 'easy'
 
@@ -133,8 +138,10 @@ def submit_jobs():
             subprocess.call(cmd, shell=True)
             print('Submitted jobs for batch split:{} view:{}'.format(split_num,view))
 
-def compile_results():
+def compile_results(split_type):
     all_dist = [[],[]]
+    rims = [[],[]]
+    rlocs = [[],[]]
     for view in range(2):
         for split_num in range(3):
             if view == 0:
@@ -148,12 +155,44 @@ def compile_results():
             curconf.batch_size = 4
             curconf.unet_rescale = 1
             curconf.cachedir = os.path.join(curconf.cachedir, 'cv_split_{}'.format(split_num))
+            if split_type is 'easy':
+                curconf.cachedir += '_easy'
+                curconf.imgDim = 1
             tf.reset_default_graph()
             self = PoseUNet.PoseUNet(curconf)
             dist, ims, preds, predlocs, locs, info = self.classify_val(0)
             all_dist[view].append(dist)
         all_dist[view] = np.concatenate(all_dist[view],0)
-    return all_dist
+        rims[view] = ims
+        rlocs[view] = locs
+    return all_dist, rims, rlocs
+
+def create_result_images(split_type):
+    dist, ims, locs = compile_results(split_type)
+    in_locs = copy.deepcopy(locs)
+
+    dstr = datetime.datetime.now().strftime('%Y%m%d')
+
+    for view in range(2):
+        perc = np.percentile(dist[view], [75, 90, 95, 98, 99, 99.5], axis=0)
+
+        f, ax = plt.subplots()
+        im = ims[view][0, :, :, 0]
+        locs = in_locs[view][0, ...]
+
+        ax.imshow(im) if im.ndim == 3 else ax.imshow(im, cmap='gray')
+        # ax.scatter(locs[:,0],locs[:,1],s=20)
+        cmap = cm.get_cmap('jet')
+        rgba = cmap(np.linspace(0, 1, perc.shape[0]))
+        for pndx in range(perc.shape[0]):
+            for ndx in range(locs.shape[0]):
+                ci = plt.Circle(locs[ndx, :], fill=False,
+                                radius=perc[pndx, ndx], color=rgba[pndx, :])
+                ax.add_artist(ci)
+            plt.axis('off')
+            f.savefig('/groups/branson/home/kabram/temp/stephen_unet_{}_view{}_results_{}.png'.format(dstr,view, pndx),
+                      bbox_inches='tight', dpi=400)
+
 
 def main(argv):
     split_num = int(argv[0])
