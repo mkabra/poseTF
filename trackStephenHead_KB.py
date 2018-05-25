@@ -68,12 +68,12 @@ def main(argv):
     
 
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.redo is None:
         args.redo = False
     if args.redo_tracking is None:
         args.redo_tracking= False
-        
+
     if args.detect is False and args.track is False: 
         args.detect = True
         args.track = True
@@ -237,6 +237,8 @@ def main(argv):
                 try:
                     flynum = int(conf.getflynum(smovies[ndx]))
                 except AttributeError:
+                    print('Could not find the fly number from movie name')
+                    print('{} isnt in standard format'.format(smovies[ndx]))
                     continue
                 #print "Parsed fly number as %d"%flynum
                 kinematfile = os.path.abspath(dltdict[flynum])
