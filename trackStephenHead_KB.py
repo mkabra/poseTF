@@ -260,6 +260,8 @@ def main(argv):
                 scriptf.write('fi\n')
                 scriptf.write('%s "%s" "%s" "%s" "%s" "%s" "%s"\n'%(matscript,savefile,pname_front,pname_side,kinematfile,trkfile_front,trkfile_side))
                 scriptf.write('chmod g+w {}'.format(savefile))
+                scriptf.write('chmod g+w {}'.format(trkfile_front))
+                scriptf.write('chmod g+w {}'.format(trkfile_side))
                 scriptf.close()
                 os.chmod(scriptfile,stat.S_IRUSR|stat.S_IRGRP|stat.S_IWUSR|stat.S_IWGRP|stat.S_IXUSR|stat.S_IXGRP)
 

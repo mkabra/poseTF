@@ -295,6 +295,7 @@ class PoseUNet(PoseCommon.PoseCommon):
 
 
     def init_net_meta(self, train_type=0, restore=True):
+        print('--- Loading the model using the saved graph ---')
         sess = tf.Session()
         self.train_type = train_type
         try:
@@ -361,7 +362,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
-        if at_step < -1:
+        if at_step < 0:
             sess = self.init_net_meta(train_type,True)
         else:
 

@@ -16,7 +16,8 @@ import APT_interface
 import datetime
 
 split_type = 'easy'
-extra_str = '_normal_bnorm'
+# extra_str = '_normal_bnorm'
+extra_str = '_my_bnorm'
 imdim = 1
 
 def get_cache_dir(conf, split, split_type):
