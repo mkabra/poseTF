@@ -383,6 +383,8 @@ def get_patch(cap, fnum, conf, locs, offset=0, stationary=True, cur_trx=None,fli
         return get_patch_trx(cap, cur_trx, fnum, conf, locs, offset, stationary,flipud)
     else:
         frame_in, _, _, _ = read_frame(cap,fnum,cur_trx,flipud=flipud)
+        frame_in = frame_in[:,:,0:conf.imgDim]
+            # convert grayscale to color if the conf says so.
         c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
         frame_in = PoseTools.crop_images(frame_in, conf)
         cur_loc = locs.copy()

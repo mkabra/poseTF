@@ -228,6 +228,7 @@ class PoseCommon(object):
         if self.dep_nets:
             self.dep_nets.create_joint_saver(name)
 
+
     def restore(self, sess, do_restore, at_step=-1):
         saver = self.saver
         name = self.net_name

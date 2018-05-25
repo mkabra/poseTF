@@ -293,6 +293,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
         return sess
 
+
     def init_net_meta(self, train_type=0, restore=True):
         sess = tf.Session()
         self.train_type = train_type
@@ -329,6 +330,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.create_fd()
         return sess
 
+
     def train_unet(self, restore, train_type=0):
 
         def loss(pred_in, pred_out):
@@ -359,35 +361,41 @@ class PoseUNet(PoseCommon.PoseCommon):
         for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
-        self.init_train(train_type)
-        self.pred = self.create_network()
-        self.create_saver()
+        if at_step < -1:
+            sess = self.init_net_meta(train_type,True)
+        else:
 
-        with tf.Session() as sess:
-            self.init_and_restore(sess, True, ['loss', 'dist'], at_step)
-            val_dist = []
-            val_ims = []
-            val_preds = []
-            val_predlocs = []
-            val_locs = []
-            val_info = []
-            for step in range(num_val/self.conf.batch_size):
-                if onTrain:
-                    self.setup_train(sess, distort=False,treat_as_val=True)
-                else:
-                    self.setup_val(sess)
-                cur_pred = sess.run(self.pred, self.fd)
-                cur_predlocs = PoseTools.get_pred_locs(
-                    cur_pred, self.edge_ignore)
-                cur_dist = np.sqrt(np.sum(
-                    (cur_predlocs-self.locs/self.conf.unet_rescale) ** 2, 2))
-                val_dist.append(cur_dist)
-                val_ims.append(self.xs)
-                val_locs.append(self.locs)
-                val_preds.append(cur_pred)
-                val_predlocs.append(cur_predlocs)
-                val_info.append(self.info)
-            self.close_cursors()
+            self.init_train(train_type)
+            self.pred = self.create_network()
+            self.create_saver()
+            sess = tf.Session()
+            self.init_and_restore(sess,True,['loss','dist'],at_step)
+
+        val_dist = []
+        val_ims = []
+        val_preds = []
+        val_predlocs = []
+        val_locs = []
+        val_info = []
+        for step in range(num_val/self.conf.batch_size):
+            if onTrain:
+                self.setup_train(sess, distort=False,treat_as_val=True)
+            else:
+                self.setup_val(sess)
+            cur_pred = sess.run(self.pred, self.fd)
+            cur_predlocs = PoseTools.get_pred_locs(
+                cur_pred, self.edge_ignore)
+            cur_dist = np.sqrt(np.sum(
+                (cur_predlocs-self.locs/self.conf.unet_rescale) ** 2, 2))
+            val_dist.append(cur_dist)
+            val_ims.append(self.xs)
+            val_locs.append(self.locs)
+            val_preds.append(cur_pred)
+            val_predlocs.append(cur_predlocs)
+            val_info.append(self.info)
+
+        sess.close()
+        self.close_cursors()
 
         def val_reshape(in_a):
             in_a = np.array(in_a)
