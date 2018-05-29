@@ -499,7 +499,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame
         tag = np.zeros(ts.shape).astype('bool')
         tracked_shape = pred_locs.shape[2]
         tracked = np.zeros([1,tracked_shape])
-        tracked[0,n_done] = np.array(n_done)+1
+        tracked[0,:] = np.array(n_done)+1
         hdf5storage.savemat(out_file,
                             {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
                              'pTrkTag': tag,'pTrkFrm':tracked}, appendmat=False, truncate_existing=True)
