@@ -51,7 +51,7 @@ def main(argv):
             dirnames.sort()
             if cur_batch >= n_batches: 
                 break
-            for fnames in fnmatch.filter(filenames, 'C001H0*S*_c.avi'):
+            for fnames in fnmatch.filter(filenames, 'C001H0*S*.avi'):
     
                 cur_mov = os.path.join(root,fnames)
                 front_mov = cur_mov.replace('C001','C002')
