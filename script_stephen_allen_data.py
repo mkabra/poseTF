@@ -108,7 +108,7 @@ def train(split_num, view):
     conf.imgDim = 1
     conf.cachedir = get_cache_dir(conf, split_num, split_type)
     self = PoseUNet.PoseUNet(conf)
-    self.train_unet(False,0)
+    self.train_unet(True,0)
 
 
 def submit_jobs():
