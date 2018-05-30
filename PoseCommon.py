@@ -15,8 +15,8 @@ import pickle
 import sys
 import math
 from past.utils import old_div
-# from tensorflow.contrib.layers import batch_norm
-from batch_norm import batch_norm_mine as batch_norm
+from tensorflow.contrib.layers import batch_norm
+# from batch_norm import batch_norm_mine as batch_norm
 #from matplotlib import pyplot as plt
 import copy
 import cv2
@@ -44,8 +44,8 @@ def conv_relu3(x_in, n_filt, train_phase, keep_prob=None):
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
     conv = batch_norm(conv, decay=0.99, is_training=train_phase)
-    # if keep_prob is not None:
-    #     conv = tf.nn.dropout(conv, keep_prob)
+    if keep_prob is not None:
+        conv = tf.nn.dropout(conv, keep_prob)
     return tf.nn.relu(conv + biases)
 
 def conv_relu3_noscaling(x_in, n_filt, train_phase):

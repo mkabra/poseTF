@@ -29,7 +29,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.up_layers = [] # layers created while up sampling
         self.edge_ignore = 10
         self.net_name = 'pose_unet'
-        self.keep_prob = 0.7
+        self.keep_prob = conf.unet_keep_prob
         self.n_conv = 2
         self.all_layers = None
 

@@ -150,6 +150,7 @@ class myconfig(object):
     # ----- Unet params
     unet_rescale = 2
     unet_steps = 20000
+    unet_keep_prob = 0.7
 
     # ----- MDN params
     # for 1/4 res.
@@ -188,7 +189,6 @@ class myconfig(object):
     mrfdataname = mrfoutname + 'traindata'
     evaldataname = evaloutname + 'traindata'
     gendataname = genoutname + 'traindata'
-    
     mrf_psz = 54
     dilation_rate = 1
 

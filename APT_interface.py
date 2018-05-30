@@ -695,7 +695,7 @@ def main(argv):
     parser.add_argument("lbl_file",
                         help="path to lbl file")
     parser.add_argument('-name',dest='name',help='Name for the run. Default - pose_unet', default='pose_unet')
-    parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None)
+    parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None,type=int)
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')

@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Bug fix in runTrackingStephen.py">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runTrackingStephen.py" beforeDir="false" afterPath="$PROJECT_DIR$/runTrackingStephen.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trackStephenHead_KB.py" beforeDir="false" afterPath="$PROJECT_DIR$/trackStephenHead_KB.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PoseCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PoseTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PoseUMDN.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUMDN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PoseUNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/batch_norm.py" beforeDir="false" afterPath="$PROJECT_DIR$/batch_norm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forSingularity.py" beforeDir="false" afterPath="$PROJECT_DIR$/forSingularity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/poseConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/poseConfig.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/script_stephen_allen_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/script_stephen_allen_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stephenHeadConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/stephenHeadConfig.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -35,46 +43,13 @@
     <splitter split-orientation="horizontal" split-proportion="0.5">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/PoseCommon.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="153">
-                  <caret line="23" column="15" lean-forward="true" selection-start-line="23" selection-start-column="15" selection-end-line="23" selection-end-column="15" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_bnorm.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/test_bnorm.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1275">
-                  <caret line="75" selection-start-line="75" selection-end-line="75" />
-                  <folding>
-                    <element signature="e#0#23#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="runtest_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/runtest_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="816">
-                  <caret line="48" selection-start-line="48" selection-end-line="48" />
+                <state relative-caret-position="170">
+                  <caret line="10" column="18" lean-forward="true" selection-start-line="10" selection-start-column="18" selection-end-line="10" selection-end-column="18" />
                   <folding>
                     <element signature="e#56#76#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="forSingularity.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/forSingularity.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="163">
-                  <caret line="120" column="17" lean-forward="true" selection-start-line="120" selection-start-column="17" selection-end-line="120" selection-end-column="17" />
-                  <folding>
-                    <element signature="e#2973#2984#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -83,8 +58,8 @@
           <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="57">
-                  <caret line="59" column="31" selection-start-line="59" selection-start-column="31" selection-end-line="59" selection-end-column="31" />
+                <state relative-caret-position="34">
+                  <caret line="92" column="15" lean-forward="true" selection-start-line="92" selection-start-column="15" selection-end-line="92" selection-end-column="15" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -92,11 +67,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="script_stephen_allen_data.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="script_stephen_allen_data.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/script_stephen_allen_data.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="459">
-                  <caret line="27" selection-start-line="27" selection-end-line="27" />
+                <state relative-caret-position="2547">
+                  <caret line="160" lean-forward="true" selection-start-line="160" selection-end-line="160" />
                   <folding>
                     <element signature="e#3#23#0" expanded="true" />
                   </folding>
@@ -106,7 +81,29 @@
           </file>
           <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
-              <provider selected="true" editor-type-id="text-editor" />
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="493">
+                  <caret line="29" column="19" selection-start-line="29" selection-start-column="19" selection-end-line="29" selection-end-column="19" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="374">
+                  <caret line="22" column="9" lean-forward="true" selection-start-line="22" selection-start-column="9" selection-end-line="22" selection-end-column="9" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="layers.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/contrib/layers/python/layers/layers.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="218">
+                  <caret line="798" column="25" selection-start-line="798" selection-start-column="25" selection-end-line="798" selection-end-column="25" />
+                </state>
+              </provider>
             </entry>
           </file>
         </leaf>
@@ -116,17 +113,17 @@
           <file leaf-file-name="stephenHeadConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="676">
-                  <caret line="190" column="4" lean-forward="true" selection-start-line="190" selection-start-column="4" selection-end-line="190" selection-end-column="4" />
+                <state relative-caret-position="148">
+                  <caret line="143" column="18" lean-forward="true" selection-start-line="143" selection-start-column="18" selection-end-line="143" selection-end-column="18" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="523">
-                  <caret line="705" column="10" selection-start-line="705" selection-start-column="10" selection-end-line="705" selection-end-column="10" />
+                <state relative-caret-position="676">
+                  <caret line="714" selection-start-line="714" selection-end-line="714" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -137,10 +134,54 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1016">
-                  <caret line="1266" column="4" selection-start-line="1266" selection-start-column="4" selection-end-line="1266" selection-end-column="4" />
+                <state relative-caret-position="1047">
+                  <caret line="1243" selection-start-line="1243" selection-end-line="1243" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
+                    <element signature="e#4181#4632#0" />
+                    <element signature="e#4672#4888#0" />
+                    <element signature="e#5640#6151#0" />
+                    <element signature="e#6204#6716#0" />
+                    <element signature="e#6778#8647#0" />
+                    <element signature="e#8706#10823#0" />
+                    <element signature="e#10876#11578#0" />
+                    <element signature="e#11630#12154#0" />
+                    <element signature="e#12216#13781#0" />
+                    <element signature="e#13847#15447#0" />
+                    <element signature="e#15490#15815#0" />
+                    <element signature="e#15875#15950#0" />
+                    <element signature="e#16018#16826#0" />
+                    <element signature="e#16855#17181#0" />
+                    <element signature="e#17224#17668#0" />
+                    <element signature="e#17715#18416#0" />
+                    <element signature="e#18465#19222#0" />
+                    <element signature="e#19276#20152#0" />
+                    <element signature="e#20197#20668#0" />
+                    <element signature="e#20724#21771#0" />
+                    <element signature="e#21806#24220#0" />
+                    <element signature="e#24264#24917#0" />
+                    <element signature="e#24944#25103#0" />
+                    <element signature="e#25146#25961#0" />
+                    <element signature="e#26003#26963#0" />
+                    <element signature="e#27009#27189#0" />
+                    <element signature="e#27224#27326#0" />
+                    <element signature="e#27380#27688#0" />
+                    <element signature="e#27792#31847#0" />
+                    <element signature="e#31942#34579#0" />
+                    <element signature="e#34627#35074#0" />
+                    <element signature="e#35164#37446#0" />
+                    <element signature="e#37530#39434#0" />
+                    <element signature="e#39487#39942#0" />
+                    <element signature="e#39978#40326#0" />
+                    <element signature="e#40378#41288#0" />
+                    <element signature="e#41339#41556#0" />
+                    <element signature="e#41592#41692#0" />
+                    <element signature="e#41738#42080#0" />
+                    <element signature="e#42136#42847#0" />
+                    <element signature="e#42885#43030#0" />
+                    <element signature="e#43060#43736#0" />
+                    <element signature="e#43828#45821#0" />
+                    <element signature="e#45899#46420#0" />
                   </folding>
                 </state>
               </provider>
@@ -149,20 +190,21 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="40">
-                  <caret line="333" selection-start-line="333" selection-end-line="333" />
+                <state relative-caret-position="436">
+                  <caret line="31" column="35" selection-start-line="31" selection-start-column="35" selection-end-line="31" selection-end-column="35" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
+                    <element signature="e#6020#6055#0" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="trackStephenHead_KB.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="trackStephenHead_KB.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/trackStephenHead_KB.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1101">
-                  <caret line="265" column="45" selection-start-line="265" selection-start-column="45" selection-end-line="265" selection-end-column="45" />
+                <state relative-caret-position="200">
+                  <caret line="35" column="36" lean-forward="true" selection-start-line="35" selection-start-column="36" selection-end-line="35" selection-end-column="36" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -170,20 +212,14 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="runTrackingStephen.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/runTrackingStephen.py">
+          <file leaf-file-name="forSingularity.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/forSingularity.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-633">
-                  <caret line="53" column="62" lean-forward="true" selection-start-line="53" selection-start-column="62" selection-end-line="53" selection-end-column="62" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="batch_norm.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/batch_norm.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="8398">
-                  <caret line="505" column="53" selection-start-line="505" selection-start-column="53" selection-end-line="505" selection-end-column="53" />
+                <state relative-caret-position="40">
+                  <caret line="109" column="13" lean-forward="true" selection-start-line="109" selection-start-column="13" selection-end-line="109" selection-end-column="13" />
+                  <folding>
+                    <element signature="e#2962#2973#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -201,7 +237,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>gpunum</find>
       <find>normalize_mean_img</find>
       <find>batch_norm</find>
       <find>val_</find>
@@ -210,9 +245,8 @@
       <find>cmap</find>
       <find>contrast</find>
       <find>group_sz</find>
-      <find>in group_sz</find>
+      <find />
       <find>get_curenv</find>
-      <find>keep_prob</find>
       <find>misc.imresize</find>
       <find>imresize</find>
       <find>skimage</find>
@@ -228,9 +262,11 @@
       <find>cur_pts.ndim</find>
       <find>has_trx_file</find>
       <find>opencv</find>
-      <find>try opencv</find>
-      <find>... point \d+:</find>
+      <find />
+      <find />
       <find>74</find>
+      <find>keep_dims</find>
+      <find>keep_prob</find>
     </findStrings>
     <replaceStrings>
       <replace>localdirs</replace>
@@ -251,12 +287,13 @@
       <replace>felipe</replace>
       <replace>felipeConfigMulti</replace>
       <replace>train_</replace>
-      <replace>in range(group_sz)</replace>
+      <replace />
       <replace>skimage.transform.resize</replace>
       <replace>unet</replace>
       <replace>[</replace>
       <replace>13</replace>
       <replace>14</replace>
+      <replace>keepdims</replace>
     </replaceStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$</dir>
@@ -298,29 +335,29 @@
         <option value="$PROJECT_DIR$/PoseUNetAttention.py" />
         <option value="$PROJECT_DIR$/params.py" />
         <option value="$PROJECT_DIR$/script_stephen_convert_allen_data_to_tf.py" />
-        <option value="$PROJECT_DIR$/PoseUMDN.py" />
         <option value="$PROJECT_DIR$/forSingularityScript.sh" />
         <option value="$PROJECT_DIR$/singularityCmd.sh" />
         <option value="$PROJECT_DIR$/runSingularity.sh.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_6.py" />
-        <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$PROJECT_DIR$/test_interface.py" />
         <option value="$PROJECT_DIR$/movies.py" />
-        <option value="$PROJECT_DIR$/PoseTools.py" />
-        <option value="$PROJECT_DIR$/APT_interface.py" />
         <option value="$PROJECT_DIR$/runSingularity.py" />
         <option value="$PROJECT_DIR$/runtest_interface.py" />
         <option value="$PROJECT_DIR$/test_bnorm.py" />
-        <option value="$PROJECT_DIR$/batch_norm.py" />
-        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
-        <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
-        <option value="$PROJECT_DIR$/script_stephen_allen_data.py" />
-        <option value="$PROJECT_DIR$/forSingularity.py" />
         <option value="$PROJECT_DIR$/runTrackingStephen.py" />
         <option value="$PROJECT_DIR$/trackStephenHead_KB.py" />
+        <option value="$PROJECT_DIR$/PoseUMDN.py" />
+        <option value="$PROJECT_DIR$/PoseTools.py" />
+        <option value="$PROJECT_DIR$/forSingularity.py" />
+        <option value="$PROJECT_DIR$/batch_norm.py" />
+        <option value="$PROJECT_DIR$/PoseCommon.py" />
+        <option value="$PROJECT_DIR$/stephenHeadConfig.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
+        <option value="$PROJECT_DIR$/poseConfig.py" />
+        <option value="$PROJECT_DIR$/script_stephen_allen_data.py" />
+        <option value="$PROJECT_DIR$/APT_interface.py" />
       </list>
     </option>
   </component>
@@ -331,10 +368,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="64" />
-    <option name="y" value="-11" />
-    <option name="width" value="2497" />
-    <option name="height" value="1612" />
+    <option name="x" value="65" />
+    <option name="y" value="-4" />
+    <option name="width" value="2495" />
+    <option name="height" value="1604" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -363,6 +400,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -374,7 +412,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -384,12 +421,12 @@
     <property name="full.screen.before.presentation.mode" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../lstm_tutorial/ptb_word_lm.py" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Console Colors" />
+    <property name="settings.editor.selected.configurable" value="PyConsoleConfigurable.Python Console" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
-      <console-settings custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;import numpy as np&#10;import matplotlib&#10;matplotlib.use('Qt4Agg')&#10;import matplotlib.pyplot as plt&#10;import os&#10;def gpu(gpunum=0):&#10;    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpunum)" module-name="poseTF" is-module-sdk="true">
-        <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;import numpy as np&#10;import matplotlib&#10;matplotlib.use('Qt4Agg')&#10;import matplotlib.pyplot as plt&#10;import os&#10;def gpu(gpunum=0):&#10;    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpunum)" />
+      <console-settings custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;import numpy as np&#10;import matplotlib&#10;matplotlib.use('Qt4Agg')&#10;import matplotlib.pyplot as plt&#10;import os&#10;import tensorflow as tf&#10;import PoseTools&#10;import PoseUNet&#10;def gpu(gpunum=0):&#10;    tf.reset_default_graph()&#10;    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpunum)" module-name="poseTF" is-module-sdk="true">
+        <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;import numpy as np&#10;import matplotlib&#10;matplotlib.use('Qt4Agg')&#10;import matplotlib.pyplot as plt&#10;import os&#10;import tensorflow as tf&#10;import PoseTools&#10;import PoseUNet&#10;def gpu(gpunum=0):&#10;    tf.reset_default_graph()&#10;    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpunum)" />
         <option name="myUseModuleSdk" value="true" />
         <option name="myModuleName" value="poseTF" />
       </console-settings>
@@ -418,26 +455,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.scratch_5">
-    <configuration name="DebugUNetAtt" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="poseTF" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DebugUNetAtt.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-    </configuration>
+  <component name="RunManager" selected="Python.forSingularity">
     <configuration name="ScriptAliceConfidence" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="poseTF" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -471,6 +489,25 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="forSingularity" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="poseTF" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/forSingularity.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -666,19 +703,19 @@
     <list>
       <item itemvalue="Python.scratch_5" />
       <item itemvalue="Python.script joint offline" />
-      <item itemvalue="Python.DebugUNetAtt" />
       <item itemvalue="Python.ScriptAliceConfidence" />
       <item itemvalue="Python.scratch (1)" />
       <item itemvalue="Python.scratch_6" />
       <item itemvalue="Python.runtest_interface" />
+      <item itemvalue="Python.forSingularity" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.forSingularity" />
         <item itemvalue="Python.runtest_interface" />
         <item itemvalue="Python.scratch_6" />
         <item itemvalue="Python.scratch (1)" />
         <item itemvalue="Python.ScriptAliceConfidence" />
-        <item itemvalue="Python.DebugUNetAtt" />
       </list>
     </recent_temporary>
   </component>
@@ -692,13 +729,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
-    </task>
-    <task id="LOCAL-00088" summary="removing contrast adjustment for alice's flies">
-      <created>1517405951517</created>
-      <option name="number" value="00088" />
-      <option name="presentableId" value="LOCAL-00088" />
-      <option name="project" value="LOCAL" />
-      <updated>1517405951517</updated>
     </task>
     <task id="LOCAL-00089" summary="Fixed a huge bug with MDN where the lower layers were not being used at all.">
       <created>1517556191194</created>
@@ -1036,7 +1066,14 @@
       <option name="project" value="LOCAL" />
       <updated>1527614331279</updated>
     </task>
-    <option name="localTasksCounter" value="137" />
+    <task id="LOCAL-00137" summary="Bug fix in runTrackingStephen.py">
+      <created>1527615382175</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1527615382175</updated>
+    </task>
+    <option name="localTasksCounter" value="138" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1081,14 +1118,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="2497" height="1612" extended-state="6" />
+    <frame x="65" y="-4" width="2495" height="1604" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="1" sideWeight="0.27652735" type="SLIDING" weight="0.13176599" />
+      <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="1" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" auto_hide="true" id="Event Log" order="0" sideWeight="0.5002996" side_tool="true" weight="0.39782757" />
       <window_info anchor="bottom" id="Version Control" order="1" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.3248382" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.3248382" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info id="Structure" order="0" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="9" weight="0.32926002" />
@@ -1171,6 +1208,11 @@
           <line>303</line>
           <option name="timeStamp" value="176" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/forSingularity.py</url>
+          <line>134</line>
+          <option name="timeStamp" value="405" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-defaults>
         <breakpoint type="python-line" />
@@ -1190,7 +1232,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="399" />
+      <option name="time" value="407" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -1203,16 +1245,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/common_shapes.py" />
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/training/saver.py" />
-    <entry file="file://$PROJECT_DIR$/ScriptGTSplits_20180425.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/ops/parsing_ops.py" />
     <entry file="file:///usr/lib/python2.7/contextlib.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -1316,13 +1348,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/singularity.log" />
-    <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="920">
-          <caret line="726" column="32" selection-start-line="726" selection-start-column="32" selection-end-line="726" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/future/types/newrange.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="544">
@@ -1391,13 +1416,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/contrib/layers/python/layers/layers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
-          <caret line="536" column="9" lean-forward="true" selection-start-line="536" selection-start-column="9" selection-end-line="536" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/runSingularity.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
@@ -1412,53 +1430,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/batch_norm.py">
+    <entry file="file://$PROJECT_DIR$/localSetup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8398">
-          <caret line="505" column="53" selection-start-line="505" selection-start-column="53" selection-end-line="505" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/script_stephen_allen_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="27" selection-start-line="27" selection-end-line="27" />
-          <folding>
-            <element signature="e#3#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/poseConfig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="59" column="31" selection-start-line="59" selection-start-column="31" selection-end-line="59" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/forSingularity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="120" column="17" lean-forward="true" selection-start-line="120" selection-start-column="17" selection-end-line="120" selection-end-column="17" />
-          <folding>
-            <element signature="e#2973#2984#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runtest_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="816">
-          <caret line="48" selection-start-line="48" selection-end-line="48" />
-          <folding>
-            <element signature="e#56#76#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="374">
+          <caret line="23" selection-start-line="23" selection-end-line="23" />
         </state>
       </provider>
     </entry>
@@ -1472,61 +1447,195 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/python/layers/normalization.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="23" column="15" lean-forward="true" selection-start-line="23" selection-start-column="15" selection-end-line="23" selection-end-column="15" />
+        <state relative-caret-position="-3896">
+          <caret line="119" column="6" selection-start-line="119" selection-start-column="6" selection-end-line="119" selection-end-column="6" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
+    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/contrib/layers/python/layers/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="676">
-          <caret line="190" column="4" lean-forward="true" selection-start-line="190" selection-start-column="4" selection-end-line="190" selection-end-column="4" />
+        <state relative-caret-position="235">
+          <caret line="196" column="4" selection-start-line="196" selection-start-column="4" selection-end-line="196" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/python/training/moving_averages.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="523">
-          <caret line="705" column="10" selection-start-line="705" selection-start-column="10" selection-end-line="705" selection-end-column="10" />
+        <state relative-caret-position="-428">
+          <caret line="32" column="4" selection-start-line="32" selection-start-column="4" selection-end-line="32" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="29" column="19" selection-start-line="29" selection-start-column="19" selection-end-line="29" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runtest_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" column="18" lean-forward="true" selection-start-line="10" selection-start-column="18" selection-end-line="10" selection-end-column="18" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#56#76#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/contrib/layers/python/layers/layers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="218">
+          <caret line="798" column="25" selection-start-line="798" selection-start-column="25" selection-end-line="798" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/batch_norm.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="57">
+          <caret line="486" column="37" lean-forward="true" selection-start-line="486" selection-start-column="37" selection-end-line="486" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/forSingularity.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="40">
+          <caret line="109" column="13" lean-forward="true" selection-start-line="109" selection-start-column="13" selection-end-line="109" selection-end-column="13" />
+          <folding>
+            <element signature="e#2962#2973#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="139">
+          <caret line="483" column="15" selection-start-line="483" selection-start-column="15" selection-end-line="483" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/runTrackingStephen.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="53" column="62" selection-start-line="53" selection-start-column="62" selection-end-line="53" selection-end-column="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="436">
+          <caret line="31" column="35" selection-start-line="31" selection-start-column="35" selection-end-line="31" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+            <element signature="e#6020#6055#0" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1016">
-          <caret line="1266" column="4" selection-start-line="1266" selection-start-column="4" selection-end-line="1266" selection-end-column="4" />
+        <state relative-caret-position="1047">
+          <caret line="1243" selection-start-line="1243" selection-end-line="1243" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#4181#4632#0" />
+            <element signature="e#4672#4888#0" />
+            <element signature="e#5640#6151#0" />
+            <element signature="e#6204#6716#0" />
+            <element signature="e#6778#8647#0" />
+            <element signature="e#8706#10823#0" />
+            <element signature="e#10876#11578#0" />
+            <element signature="e#11630#12154#0" />
+            <element signature="e#12216#13781#0" />
+            <element signature="e#13847#15447#0" />
+            <element signature="e#15490#15815#0" />
+            <element signature="e#15875#15950#0" />
+            <element signature="e#16018#16826#0" />
+            <element signature="e#16855#17181#0" />
+            <element signature="e#17224#17668#0" />
+            <element signature="e#17715#18416#0" />
+            <element signature="e#18465#19222#0" />
+            <element signature="e#19276#20152#0" />
+            <element signature="e#20197#20668#0" />
+            <element signature="e#20724#21771#0" />
+            <element signature="e#21806#24220#0" />
+            <element signature="e#24264#24917#0" />
+            <element signature="e#24944#25103#0" />
+            <element signature="e#25146#25961#0" />
+            <element signature="e#26003#26963#0" />
+            <element signature="e#27009#27189#0" />
+            <element signature="e#27224#27326#0" />
+            <element signature="e#27380#27688#0" />
+            <element signature="e#27792#31847#0" />
+            <element signature="e#31942#34579#0" />
+            <element signature="e#34627#35074#0" />
+            <element signature="e#35164#37446#0" />
+            <element signature="e#37530#39434#0" />
+            <element signature="e#39487#39942#0" />
+            <element signature="e#39978#40326#0" />
+            <element signature="e#40378#41288#0" />
+            <element signature="e#41339#41556#0" />
+            <element signature="e#41592#41692#0" />
+            <element signature="e#41738#42080#0" />
+            <element signature="e#42136#42847#0" />
+            <element signature="e#42885#43030#0" />
+            <element signature="e#43060#43736#0" />
+            <element signature="e#43828#45821#0" />
+            <element signature="e#45899#46420#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" column="9" lean-forward="true" selection-start-line="22" selection-start-column="9" selection-end-line="22" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="92" column="15" lean-forward="true" selection-start-line="92" selection-start-column="15" selection-end-line="92" selection-end-column="15" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+    <entry file="file://$PROJECT_DIR$/stephenHeadConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="40">
-          <caret line="333" selection-start-line="333" selection-end-line="333" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/runTrackingStephen.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-633">
-          <caret line="53" column="62" lean-forward="true" selection-start-line="53" selection-start-column="62" selection-end-line="53" selection-end-column="62" />
+        <state relative-caret-position="148">
+          <caret line="143" column="18" lean-forward="true" selection-start-line="143" selection-start-column="18" selection-end-line="143" selection-end-column="18" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/trackStephenHead_KB.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1101">
-          <caret line="265" column="45" selection-start-line="265" selection-start-column="45" selection-end-line="265" selection-end-column="45" />
+        <state relative-caret-position="200">
+          <caret line="35" column="36" lean-forward="true" selection-start-line="35" selection-start-column="36" selection-end-line="35" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/script_stephen_allen_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2547">
+          <caret line="160" lean-forward="true" selection-start-line="160" selection-end-line="160" />
+          <folding>
+            <element signature="e#3#23#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="676">
+          <caret line="714" selection-start-line="714" selection-end-line="714" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>

@@ -503,7 +503,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
         logit_eps = self.conf.mdn_logit_eps_training
         ll = tf.cond(self.ph['phase_train'], lambda: ll + logit_eps, lambda: tf.identity(ll))
-        ll = ll / tf.reduce_sum(ll, axis=1, keep_dims=True)
+        ll = ll / tf.reduce_sum(ll, axis=1, keepdims=True)
         for cls in range(self.conf.n_classes):
             cur_scales = mdn_scales[:, :, cls]
             pp = y[:, cls:cls + 1, :]/locs_offset
@@ -1106,7 +1106,7 @@ class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
         # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
         logit_eps = self.conf.mdn_logit_eps_training
         ll = tf.cond(self.ph['phase_train'], lambda: ll + logit_eps, lambda: tf.identity(ll))
-        ll = ll / tf.reduce_sum(ll, axis=1, keep_dims=True)
+        ll = ll / tf.reduce_sum(ll, axis=1, keepdims=True)
 
         # find distance of each predicted gaussian to all the labels.
         # soft assign each prediction to the labels.

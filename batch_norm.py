@@ -298,8 +298,13 @@ copy of tensorflow.contrib.layers
     # Determine whether we can use the core layer class.
     if (batch_weights is None and
         updates_collections is ops.GraphKeys.UPDATE_OPS and
-        not zero_debias_moving_mean):
-      # Use the core layer class.
+        not zero_debias_moving_mean and False):
+        # !!!!!!!!!!!!!!!!!!!!!!!!
+        # This is different than earlier batch_norm
+        # !!!!!!!!!!!!!!!!!!!!!!!!
+        # Making sure that this layer is never used.
+
+        # Use the core layer class.
       axis = 1 if data_format == DATA_FORMAT_NCHW else -1
       if not param_initializers:
         param_initializers = {}

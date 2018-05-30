@@ -14,20 +14,53 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 import APT_interface
 import datetime
+import argparse
 
-split_type = 'easy'
-# extra_str = '_normal_bnorm'
-extra_str = '_my_bnorm'
+# split_type = 'easy'
+extra_str = '_normal_bnorm'
+# extra_str = '_my_bnorm'
+# dropout = True
 imdim = 1
+
+def get_name(dropout):
+    cur_str = 'unet' + extra_str
+    if dropout:
+        cur_str += '_do'  # dropout during training
+    return cur_str
+
 
 def get_cache_dir(conf, split, split_type):
     outdir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split))
     if split_type is 'easy':
         outdir += '_easy'
-    outdir += extra_str
+    else:
+        outdir += '_hard'
+    # cur_str = extra_str
+    # if dropout:
+    #     cur_str += '_do'  # dropout during training
+    # outdir += cur_str
     return outdir
 
-def create_tfrecords():
+
+def get_conf(view, split_num, split_type,dropout):
+    if view == 0:
+        from stephenHeadConfig import sideconf as conf
+        curconf = copy.deepcopy(conf)
+        curconf.imsz = (350, 230)
+    else:
+        from stephenHeadConfig import conf as conf
+        curconf = copy.deepcopy(conf)
+        curconf.imsz = (350, 350)
+    curconf.batch_size = 4
+    curconf.unet_rescale = 1
+    curconf.cachedir = get_cache_dir(conf, split_num, split_type)
+    curconf.imgDim = 1
+    if not dropout:
+        curconf.unet_keep_prob = 1.
+    return  curconf
+
+
+def create_tfrecords(args):
     data_file = '/groups/branson/bransonlab/mayank/PoseTF/headTracking/trnDataSH_20180503_notable.mat'
     split_file = '/groups/branson/bransonlab/apt/experiments/data/trnSplits_20180509.mat'
 
@@ -37,23 +70,19 @@ def create_tfrecords():
     nims = D['IMain_crop2'].shape[1]
     movid = np.array(D['mov_id']).T - 1
     frame_num = np.array(D['frm']).T - 1
-    if split_type is 'easy':
+    if args.split_type is 'easy':
         split_arr = S['xvMain3Easy']
     else:
         split_arr = S['xvMain3Hard']
 
 
     for view in range(2):
-        if view == 0:
-            from stephenHeadConfig import sideconf as conf
-        else:
-            from stephenHeadConfig import conf as conf
-
         for split in range(3):
-            outdir = get_cache_dir(conf, split, split_type)
-            if not os.path.exists(outdir):
-                os.mkdir(outdir)
+            conf = get_conf(view, split, args.split_type)
+            if not os.path.exists(conf.cachedir):
+                os.mkdir(conf.cachedir)
 
+            outdir = conf.cachedir
             train_filename = os.path.join(outdir,conf.trainfilename)
             val_filename = os.path.join(outdir,conf.valfilename)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
@@ -95,44 +124,38 @@ def create_tfrecords():
 
     D.close()
 
-def train(split_num, view):
-    if view == 0:
-        from stephenHeadConfig import sideconf as conf
-        conf.imsz = (350,230)
-    else:
-        from stephenHeadConfig import conf as conf
-        conf.imsz = (350,350)
+def train(args):
+    split_num = args.split_num
+    view = args.view
+    dropout = args.dropout
+    split_type = args.split_type
+    print('split:{}, view:{} dropout:{}'.format(split_num,view,dropout))
 
-    conf.batch_size = 4
-    conf.unet_rescale = 1
-    conf.imgDim = 1
-    conf.cachedir = get_cache_dir(conf, split_num, split_type)
-    self = PoseUNet.PoseUNet(conf)
-    self.train_unet(True,0)
+    conf = get_conf(view, split_num, split_type,dropout)
+    self = PoseUNet.PoseUNet(conf,name=get_name(args.dropout))
+    self.train_unet(False,0)
 
 
-def submit_jobs():
+def submit_jobs(split_type,dropout=True):
 
     for view in range(2):
         for split_num in range(3):
-            if view == 0:
-                from stephenHeadConfig import sideconf as conf
-            else:
-                from stephenHeadConfig import conf as conf
-            curconf = copy.deepcopy(conf)
-            curconf.cachedir = get_cache_dir(conf, split_num, split_type)
-            sing_script = os.path.join(curconf.cachedir,'singularity_script.sh')
-            sing_log = os.path.join(curconf.cachedir,'singularity_script.log')
-            sing_err = os.path.join(curconf.cachedir,'singularity_script.err')
+            curconf = get_conf(view, split_num, split_type,dropout)
+            name = get_name(dropout)
+            sing_script = os.path.join(curconf.cachedir,'singularity_script_{}.sh'.format(name))
+            sing_log = os.path.join(curconf.cachedir,'singularity_script_{}.log'.format(name))
+            sing_err = os.path.join(curconf.cachedir,'singularity_script_{}.err'.format(name))
             with open(sing_script, 'w') as f:
                 f.write('#!/bin/bash\n')
                 f.write('. /opt/venv/bin/activate\n')
                 f.write('cd /groups/branson/home/kabram/PycharmProjects/poseTF\n')
-                f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
-                f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
-                f.write('fi\n')
-                f.write('numCores2use={} \n'.format(1))
-                f.write('python script_stephen_allen_data.py {} {}'.format(split_num,view))
+                # f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
+                # f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
+                # f.write('fi\n')
+                f.write('python script_stephen_allen_data.py -split_num {} -view {} -split_type {}'.format(split_num,view,split_type))
+                if dropout:
+                    f.write(' -dropout')
+                f.write('\n')
 
             os.chmod(sing_script, 0755)
 
@@ -141,32 +164,23 @@ def submit_jobs():
             subprocess.call(cmd, shell=True)
             print('Submitted jobs for batch split:{} view:{}'.format(split_num,view))
 
-def compile_results(split_type):
+
+def compile_results(split_type, dropout):
     all_dist = [[],[]]
     rims = [[],[]]
     rlocs = [[],[]]
     for view in range(2):
         for split_num in range(3):
-            if view == 0:
-                from stephenHeadConfig import sideconf as conf
-                curconf = copy.deepcopy(conf)
-                curconf.imsz = (350, 230)
-            else:
-                from stephenHeadConfig import conf as conf
-                curconf = copy.deepcopy(conf)
-                curconf.imsz = (350, 350)
-            curconf.batch_size = 4
-            curconf.unet_rescale = 1
-            curconf.cachedir = get_cache_dir(conf, split_num, split_type)
-            curconf.imgDim = 1
+            curconf = get_conf(view, split_num, split_type,dropout)
             tf.reset_default_graph()
-            self = PoseUNet.PoseUNet(curconf)
+            self = PoseUNet.PoseUNet(curconf,name=get_name(dropout))
             dist, ims, preds, predlocs, locs, info = self.classify_val(0)
             all_dist[view].append(dist)
         all_dist[view] = np.concatenate(all_dist[view],0)
         rims[view] = ims
         rlocs[view] = locs
     return all_dist, rims, rlocs
+
 
 def create_result_images(split_type):
     dist, ims, locs = compile_results(split_type)
@@ -196,10 +210,13 @@ def create_result_images(split_type):
 
 
 def main(argv):
-    split_num = int(argv[0])
-    view = int(argv[1])
-    print('split:{}, view:{}'.format(split_num,view))
-    train(split_num, view)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-split_num", dest='split_num',required=True,type=int)
+    parser.add_argument('-dropout',dest='dropout',action="store_true")
+    parser.add_argument('-view',dest='view',required=True,type=int)
+    parser.add_argument('-split_type',dest='split_type',required=True)
+    args = parser.parse_args(argv)
+    train(args)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -160,32 +160,6 @@ def crop_images(frame_in, conf):
     return frame_in[start[0]:end[0], start[1]:end[1], :]
 
 
-# In[ ]:
-
-# def readLMDB(cursor,num,imsz,dataMod):
-# #     imsz = conf.imsz
-#     images = np.zeros((num,1,imsz[0],imsz[1]))
-#     locs = []
-#     datum = caffe.proto.caffe_pb2.Datum()
-
-# #     print(images.shape)
-#     for ndx in range(num):
-#         if not cursor.next():
-#             cursor.first()
-# #             print('restarting at %d' % ndx)
-
-#         value = cursor.value()
-#         key = cursor.key()
-#         datum.ParseFromString(value)
-#         expname,curloc,t = dataMod.decodeID(cursor.key())
-
-#         curlabel = datum.label
-#         data = caffe.io.datum_to_array(datum)
-#         images[ndx,0,:,:] = data.squeeze()
-#         locs.append(curloc)
-#     return images,locs
-
-
 def randomly_flip_lr(img, locs, group_sz = 1):
     if locs.ndim == 3:
         reduce_dim = True
@@ -1173,11 +1147,13 @@ def show_result(ims, ndx, locs, predlocs= None):
             ax[idx].scatter(predlocs[ndx[idx], :, 0], predlocs[ndx[idx], :, 1],
                             c=rgba, marker='+')
 
-def output_graph(logdir):
-    sess = tf.get_default_session()
+
+def output_graph(logdir, sess):
+    # sess = tf.get_default_session()
     train_writer = tf.summary.FileWriter(
         logdir,sess.graph)
     train_writer.add_summary(tf.Summary())
+
 
 def get_timestamps(conf, info):
     L = h5py.File(conf.labelfile)
@@ -1277,7 +1253,7 @@ def preprocess_ims(ims, in_locs, conf, distort, scale):
         xs, locs = randomly_rotate(xs, locs, conf)
         xs, locs = randomly_translate(xs, locs, conf)
         xs = randomly_adjust(xs, conf)
-        xs = adjust_contrast(xs, conf)
+    # xs = adjust_contrast(xs, conf)
     xs = scale_images(xs, scale, conf)
     xs = normalize_mean(xs, conf)
     return xs, locs
