@@ -317,11 +317,12 @@ class PoseUNet(PoseCommon.PoseCommon):
             restore=restore,
             train_type=train_type,
             create_network=self.create_network,
-            training_iters=self.conf.unet_steps/self.conf.batch_size*8,
+            training_iters=self.conf.unet_steps,
             loss=loss,
             pred_in_key='y',
             learning_rate=0.0001,
             td_fields=('loss','dist'))
+
 
     def classify_val(self, train_type=0, at_step=-1, onTrain=False):
 
@@ -387,6 +388,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
 
+
     def classify_movie(self, movie_name, sess, end_frame=-1, start_frame=0, flipud=False):
         # maxframes if specificied reads that many frames
         # start at specifies where to start reading.
@@ -447,6 +449,7 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         cap.close()
         return pred_locs, pred_scores, pred_max_scores
+
 
     def classify_movie_trx(self, movie_name, trx, sess, end_frame=-1, start_frame=0, flipud=False, return_ims=False):
         # maxframes if specificied reads up to that  frame
@@ -551,6 +554,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         else:
             return pred_locs
 
+
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
         conf = self.conf
         sess = self.init_net(0,True)
@@ -619,6 +623,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         os.system(mencoder_cmd)
         cap.close()
         tf.reset_default_graph()
+
 
     def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False, trace=True):
         conf = self.conf
@@ -731,10 +736,12 @@ class PoseUNet(PoseCommon.PoseCommon):
         cap.close()
         tf.reset_default_graph()
 
+
 class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 
     def __init__(self, conf, name='pose_unet_multi'):
         PoseUNet.__init__(self, conf, name)
+
 
     def update_fd(self, db_type, sess, distort):
         self.read_images(db_type, distort, sess, distort)
@@ -751,11 +758,13 @@ class PoseUNetMulti(PoseUNet, PoseCommon.PoseCommonMulti):
 
         self.fd[self.ph['y']] = label_ims
 
+
     def create_cursors(self, sess):
         PoseCommon.PoseCommonMulti.create_cursors(self,sess)
 
 
 class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
+
     def __init__(self,conf,name='pose_unet_time'):
         PoseUNet.__init__(self, conf, name)
         self.net_name = 'pose_unet_time'
@@ -899,6 +908,7 @@ class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
             self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
+
 class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
 
     def __init__(self, conf, name='pose_unet_rnn', unet_name='pose_unet',joint=True):
@@ -912,8 +922,10 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         self.keep_prob = 0.7
         self.edge_ignore = 1
 
+
     def read_images(self, db_type, distort, sess, shuffle=None):
         PoseCommon.PoseCommonRNN.read_images(self,db_type,distort,sess,shuffle)
+
 
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
@@ -930,6 +942,7 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         self.ph['keep_prob'] = tf.placeholder(tf.float32)
         self.ph['rnn_keep_prob'] = tf.placeholder(tf.float32)
 
+
     def create_fd(self):
         b_sz = self.conf.batch_size
         t_sz = self.conf.rnn_before + self.conf.rnn_after + 1
@@ -940,6 +953,7 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
                    self.ph['phase_train']:False,
                    self.ph['learning_rate']:0.
                    }
+
 
     def create_network(self):
         with tf.variable_scope(self.net_unet_name):
@@ -1023,6 +1037,7 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
 
         return X
 
+
     def slice_time(self, X):
         bsz = self.conf.batch_size
         tw = (self.conf.rnn_before + self.conf.rnn_after + 1)
@@ -1044,7 +1059,6 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
                     top_layers.append(X)
             self.top_layers = top_layers
 
-
         in_layer = self.top_layers[0]
         in_shape = in_layer.get_shape().as_list()
         in_units = np.prod(in_shape[1:])
@@ -1053,11 +1067,9 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         out_layer = self.top_layers[1]
         out_shape = out_layer.get_shape().as_list()
         n_units = np.prod(out_shape[1:])
-
         n_rnn_layers = 3
 
         with tf.variable_scope(self.net_name):
-
             cells = []
             for _ in range(n_rnn_layers):
                 cell = tf.contrib.rnn.GRUCell(n_units)
@@ -1086,7 +1098,6 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
                     X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
                     top_layers.append(X)
             self.top_layers = top_layers
-
         X = self.slice_time(X)
 
         in_layer = tf.stop_gradient(self.top_layers[0])
@@ -1097,11 +1108,9 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         out_layer = self.top_layers[1]
         out_shape = out_layer.get_shape().as_list()
         n_units = np.prod(out_shape[1:])
-
         n_rnn_layers = 3
 
         with tf.variable_scope(self.net_name):
-
             cells = []
             for _ in range(n_rnn_layers):
                 cell = tf.contrib.rnn.GRUCell(n_units)
@@ -1146,13 +1155,13 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         else:
             return tf.nn.l2_loss(pred_in-pred_out)
 
+
     def train_unet_rnn(self, restore, train_type=0):
 
         if self.joint:
-            training_iters = 20000/self.conf.batch_size*8
+            training_iters = 20000
         else:
-            training_iters = 4000/self.conf.batch_size*8
-
+            training_iters = 4000
 
         PoseCommon.PoseCommon.train(self,
             restore=restore,

@@ -4,7 +4,6 @@ from stephenHeadConfig import  conf as conf
 import tensorflow as tf
 import multiResData
 
-multiResData.create_tf_record_from_lbl(conf,False)
 self = PoseUNet.PoseUNet(conf,name='pose_unet_full_20180601')
 self.train_unet(False,train_type=1)
 

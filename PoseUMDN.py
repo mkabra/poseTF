@@ -590,9 +590,9 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.joint = joint
         # self.net_type = net_type
         if joint:
-            training_iters = 40000/self.conf.batch_size*8
+            training_iters = 40000
         else:
-            training_iters = 20000/self.conf.batch_size*8
+            training_iters = 20000
 
         super(self.__class__, self).train(
             restore=restore,
