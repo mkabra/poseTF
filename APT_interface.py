@@ -743,7 +743,7 @@ def main(argv):
         else:
             assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
             conf = create_conf(lbl_file, args.view, name)
-            classify_movie_unet(conf, args.mov[0], args.trx[0], args.out_files, args.start_frame,
+            classify_movie_unet(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
                                 args.end_frame, args.skip, args.trx_ids)
 
 
