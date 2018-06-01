@@ -10,7 +10,6 @@ import re
 #!!!!NEED TO RUN: source /groups/branson/bransonlab/mayank/venv/bin/activate   AT COMMAND PROMPT BEFORE RUNNING THIS SCRIPT!!!!!
 
 #base_dir ='/groups/branson/bransonlab/mayank/stephen_copy'
-temp_dir = os.path.join('/groups/huston/hustonlab/flp-chrimson_experiments', 'tempTrackingOutput')
 cut_off =  time.mktime(datetime.datetime(2018,3,20).timetuple()) # trk files newer than this won't be retracked
 bsize = 20 # size of each batch
 max_jobs = 1000 #16 # max number of jobs that should be running on cluster to start a new batch of jobs
@@ -21,6 +20,7 @@ n_batches = 1000
 
 def main(argv):
     base_dir = '/groups/huston/hustonlab/flp-chrimson_experiments/'
+    temp_dir = os.path.join('/groups/huston/hustonlab/flp-chrimson_experiments', 'tempTrackingOutput')
     name = argv[0]
     if len(argv)>1:
         base_dir = argv[1]
