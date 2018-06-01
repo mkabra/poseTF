@@ -129,7 +129,7 @@ class myconfig(object):
 
     cachedir = os.path.join(localSetup.bdir,'cacheHead')
 #    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenCuratedData_Janelia.mat')
-    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound2_Janelia_fixed.lbl')
+    labelfile = os.path.join(localSetup.bdir,'headTracking','FlyHeadStephenRound2_Janelia_fixed2.lbl')
  
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenCuratedData.mat'
 #     labelfile = '/home/mayank/work/tensorflow/headTracking/FlyHeadStephenTestData_20160318.mat'

@@ -309,7 +309,7 @@ def get_labeled_frames(lbl,ndx ,trx_ndx=None):
 def create_tf_record_from_lbl(conf, split=True, split_file=None):
     lbl = h5py.File(conf.labelfile, 'r')
 
-    create_val_data(conf)
+    create_val_data(conf,True)
     is_val, local_dirs, sel_dirs = load_val_data(conf)
 
     env, val_env = create_envs(conf, split)
@@ -341,7 +341,7 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
             if not check_fnum(fnum, cap, exp_name, ndx):
                 continue
 
-            cur_env = get_cur_env(env, val_env, split, conf, ndx, fnum, 0, is_val, trx_split=None, predefined=predefined)
+            cur_env = get_cur_env([env, val_env], split, conf, [ndx, fnum, 0], is_val, trx_split=None, predefined=predefined)
             frame_in, cur_loc = get_patch(cap, fnum, conf, cur_pts[fnum,:,sel_pts])
 
             rows = frame_in.shape[0]

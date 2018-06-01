@@ -1241,7 +1241,7 @@ def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
 
 
 def preprocess_ims(ims, in_locs, conf, distort, scale):
-    assert ims.dtype == 'uint8', 'Preprocessing only work on uint8 images'
+#    assert ims.dtype == 'uint8', 'Preprocessing only work on uint8 images'
     locs = in_locs.copy()
     cur_im = ims.copy()
     cur_im = cur_im.astype('uint8')
