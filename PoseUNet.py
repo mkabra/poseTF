@@ -59,25 +59,25 @@ class PoseUNet(PoseCommon.PoseCommon):
         with tf.variable_scope(self.net_name):
             return self.create_network1()
 
+
     def compute_dist(self, preds, locs):
         tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - \
               locs/self.conf.unet_rescale
         tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
         return np.nanmean(tt1)
 
+
     def create_network1(self):
         m_sz = min(self.conf.imsz)/self.conf.unet_rescale
         max_layers = int(math.ceil(math.log(m_sz,2)))-1
         sel_sz = self.conf.sel_sz
         n_layers = int(math.ceil(math.log(sel_sz,2)))+2
-        # max_layers = int(math.floor(math.log(m_sz)))
-        # sel_sz = self.conf.sel_sz
-        # n_layers = int(math.ceil(math.log(sel_sz)))+2
         n_layers = min(max_layers,n_layers) - 2
+        n_conv = self.n_conv
+        conv = lambda a, b: PoseCommon.conv_relu3(
+            a,b,self.ph['phase_train'], self.ph['keep_prob'],
+            self.conf.unet_use_leaky)
 
-        n_conv = self.n_conv #3
-        conv = PoseCommon.conv_relu3
-        # conv = PoseCommon.conv_relu3_noscaling
         layers = []
         up_layers = []
         layers_sz = []
@@ -88,19 +88,10 @@ class PoseUNet(PoseCommon.PoseCommon):
         # downsample
         n_filt = 128
         for ndx in range(n_layers):
-            # if ndx is 0:
-            #     n_filt = 64 #32
-            # elif ndx is 1:
-            #     n_filt = 128 #64
-            # elif ndx is 2:
-            #     n_filt = 256
-            # else:
-            #     n_filt = 512 #128
-
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                    X = conv(X, n_filt)
                 all_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
@@ -108,42 +99,26 @@ class PoseUNet(PoseCommon.PoseCommon):
             #                    padding='SAME')
             X = tf.nn.avg_pool(X,ksize=[1,3,3,1],strides=[1,2,2,1],
                                padding='SAME')
-
         self.down_layers = layers
+
         # few more convolution for the final layers
         top_layers = []
         for cndx in range(n_conv):
             sc_name = 'layer_{}_{}'.format(n_layers,cndx)
             with tf.variable_scope(sc_name):
-                X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                X = conv(X, n_filt)
                 top_layers.append(X)
         self.top_layers = top_layers
         all_layers.extend(top_layers)
 
         # upsample
         for ndx in reversed(range(n_layers)):
-            # if ndx is 0:
-            #     n_filt = 64
-            # elif ndx is 1:
-            #     n_filt = 64
-            # # elif ndx is 2:
-            # #     n_filt = 256
-            # else:
-            #     n_filt = 128
-            # if ndx is 0:
-            #     n_filt = 64  # 32
-            # elif ndx is 1:
-            #     n_filt = 128  # 64
-            # elif ndx is 2:
-            #     n_filt = 256
-            # else:
-            #     n_filt = 512  # 128
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt, self.ph['phase_train'], self.ph['keep_prob'])
+                    X = conv(X, n_filt)
                 all_layers.append(X)
             up_layers.append(X)
         self.all_layers = all_layers
@@ -284,6 +259,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['y']] = label_ims
 
     def init_net(self, train_type=0, restore=True):
+        print('--- Loading the model by reconstructing the graph ---')
         self.init_train(train_type=train_type)
         self.pred = self.create_network()
         saver = self.create_saver()

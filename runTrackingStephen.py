@@ -12,8 +12,8 @@ import re
 #base_dir ='/groups/branson/bransonlab/mayank/stephen_copy'
 temp_dir = os.path.join('/groups/huston/hustonlab/flp-chrimson_experiments', 'tempTrackingOutput')
 cut_off =  time.mktime(datetime.datetime(2018,3,20).timetuple()) # trk files newer than this won't be retracked
-bsize = 16 # size of each batch
-max_jobs = 16 # max number of jobs that should be running on cluster to start a new batch of jobs
+bsize = 20 # size of each batch
+max_jobs = 1000 #16 # max number of jobs that should be running on cluster to start a new batch of jobs
 coresPerMatJob = 3 #Number of cores to use for each Matlab (non-GPU) job.  Smaller=cheaper, larger=fewer complaints from SciComp. SciComp recommmends = 3
 dltfilename="/groups/huston/hustonlab/flp-chrimson_experiments/fly2DLT_lookupTableStephen.csv"
 redo = True
@@ -24,6 +24,8 @@ def main(argv):
     name = argv[0]
     if len(argv)>1:
         base_dir = argv[1]
+    if len(argv)>2:
+        temp_dir = argv[2]
 
     with open(dltfilename,'r') as f:
         x = f.readlines()
@@ -123,7 +125,7 @@ def main(argv):
         cmd = 'python cleanupStephen.py -o {} -s {} -f {}'.format(temp_dir,donelist_s,donelist_f)
         subprocess.call(cmd,shell=True)
         
-        bjobs_status = subprocess.check_output('ssh login1 ". /misc/lsf/conf/profile.lsf; bjobs"',shell=True)     
+        bjobs_status = subprocess.check_output('ssh 10.36.11.34 ". /misc/lsf/conf/profile.lsf; bjobs"',shell=True)
         njobs = bjobs_status.count('gpu')
         if njobs > (max_jobs)/2:
             print('{} jobs running on GPU queue. Sleeping for 5 minutes'.format(njobs))
@@ -154,7 +156,7 @@ def main(argv):
 
             os.chmod(sing_script,0755)
 
-            cmd = '''ssh login1 '. /misc/lsf/conf/profile.lsf; bsub -oo {} -eo {} -n2 -gpu "num=1" -q gpu_any "singularity exec --nv /misc/local/singularity/branson_v2.simg {}"' '''.format(sing_log, sing_err, sing_script) #-n2 because SciComp says we need 2 slots for the RAM           
+            cmd = '''ssh 10.36.11.34 '. /misc/lsf/conf/profile.lsf; bsub -oo {} -eo {} -n2 -gpu "num=1" -q gpu_any "singularity exec --nv /misc/local/singularity/branson_v2.simg {}"' '''.format(sing_log, sing_err, sing_script) #-n2 because SciComp says we need 2 slots for the RAM
             subprocess.call(cmd,shell=True)
             print('Submitted jobs for batch {}'.format(cur_batch))
 

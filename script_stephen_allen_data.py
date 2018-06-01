@@ -14,6 +14,7 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 import APT_interface
 import datetime
+import ast
 import argparse
 
 # split_type = 'easy'
@@ -22,27 +23,26 @@ extra_str = '_normal_bnorm'
 # dropout = True
 imdim = 1
 
-def get_name(dropout):
-    cur_str = 'unet' + extra_str
-    if dropout:
-        cur_str += '_do'  # dropout during training
-    return cur_str
+def get_name(args):
+    return 'unet_' + args['name']
+    # cur_str = 'unet' + extra_str
+    # if bool(args['dropout']):
+    #     cur_str += '_do'  # dropout during training
+    # return cur_str
 
 
 def get_cache_dir(conf, split, split_type):
     outdir = os.path.join(conf.cachedir, 'cv_split_{}'.format(split))
-    if split_type is 'easy':
+    if split_type == 'easy':
         outdir += '_easy'
     else:
         outdir += '_hard'
-    # cur_str = extra_str
-    # if dropout:
-    #     cur_str += '_do'  # dropout during training
-    # outdir += cur_str
     return outdir
 
 
-def get_conf(view, split_num, split_type,dropout):
+def get_conf(pdict):
+    # Fixed
+    view = int(pdict['view'])
     if view == 0:
         from stephenHeadConfig import sideconf as conf
         curconf = copy.deepcopy(conf)
@@ -53,10 +53,20 @@ def get_conf(view, split_num, split_type,dropout):
         curconf.imsz = (350, 350)
     curconf.batch_size = 4
     curconf.unet_rescale = 1
-    curconf.cachedir = get_cache_dir(conf, split_num, split_type)
     curconf.imgDim = 1
-    if not dropout:
-        curconf.unet_keep_prob = 1.
+    split_num = int(pdict['split_num'])
+    split_type = pdict['split_type']
+    curconf.cachedir = get_cache_dir(conf, split_num, split_type)
+
+    for k in pdict.keys():
+        if k in ['view','split_num','split_type','restore']:
+            continue
+        try:
+            curval = ast.literal_eval(pdict[k])
+        except ValueError:
+            curval = pdict[k]
+        setattr(curconf,k,curval)
+
     return  curconf
 
 
@@ -70,7 +80,7 @@ def create_tfrecords(args):
     nims = D['IMain_crop2'].shape[1]
     movid = np.array(D['mov_id']).T - 1
     frame_num = np.array(D['frm']).T - 1
-    if args.split_type is 'easy':
+    if args['split_type'] == 'easy':
         split_arr = S['xvMain3Easy']
     else:
         split_arr = S['xvMain3Hard']
@@ -78,7 +88,9 @@ def create_tfrecords(args):
 
     for view in range(2):
         for split in range(3):
-            conf = get_conf(view, split, args.split_type)
+            args['view'] = view
+            args['split_num'] = split
+            conf = get_conf(args)
             if not os.path.exists(conf.cachedir):
                 os.mkdir(conf.cachedir)
 
@@ -125,36 +137,38 @@ def create_tfrecords(args):
     D.close()
 
 def train(args):
-    split_num = args.split_num
-    view = args.view
-    dropout = args.dropout
-    split_type = args.split_type
-    print('split:{}, view:{} dropout:{}'.format(split_num,view,dropout))
+    split_num = int(args['split_num'])
+    view = int(args['view'])
+    split_type = args['split_type']
+    if 'restore' in args.keys():
+        restart = ast.literal_eval(args['restore'])
+    else:
+        restart = False
+    conf = get_conf(args)
+    print('split:{}, view:{} split_type:{}'.format(split_num,view,split_type))
+    self = PoseUNet.PoseUNet(conf,name=get_name(args))
+    self.train_unet(restart,0)
 
-    conf = get_conf(view, split_num, split_type,dropout)
-    self = PoseUNet.PoseUNet(conf,name=get_name(args.dropout))
-    self.train_unet(False,0)
 
+def submit_jobs(args,views=range(2)):
 
-def submit_jobs(split_type,dropout=True):
-
-    for view in range(2):
+    for view in views:
         for split_num in range(3):
-            curconf = get_conf(view, split_num, split_type,dropout)
-            name = get_name(dropout)
+            args['view'] = view
+            args['split_num'] = split_num
+            curconf = get_conf(args)
+            name = get_name(args)
             sing_script = os.path.join(curconf.cachedir,'singularity_script_{}.sh'.format(name))
             sing_log = os.path.join(curconf.cachedir,'singularity_script_{}.log'.format(name))
             sing_err = os.path.join(curconf.cachedir,'singularity_script_{}.err'.format(name))
+            arg_str = ''
+            for k in args.keys():
+                arg_str = '{} -{} {}'.format(arg_str,k,args[k])
             with open(sing_script, 'w') as f:
                 f.write('#!/bin/bash\n')
                 f.write('. /opt/venv/bin/activate\n')
                 f.write('cd /groups/branson/home/kabram/PycharmProjects/poseTF\n')
-                # f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
-                # f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
-                # f.write('fi\n')
-                f.write('python script_stephen_allen_data.py -split_num {} -view {} -split_type {}'.format(split_num,view,split_type))
-                if dropout:
-                    f.write(' -dropout')
+                f.write('python script_stephen_allen_data.py {}'.format(arg_str))
                 f.write('\n')
 
             os.chmod(sing_script, 0755)
@@ -165,20 +179,24 @@ def submit_jobs(split_type,dropout=True):
             print('Submitted jobs for batch split:{} view:{}'.format(split_num,view))
 
 
-def compile_results(split_type, dropout):
+def compile_results(args,views=range(2)):
     all_dist = [[],[]]
     rims = [[],[]]
     rlocs = [[],[]]
-    for view in range(2):
+    for view in views:
         for split_num in range(3):
-            curconf = get_conf(view, split_num, split_type,dropout)
+            args['view'] = view
+            args['split_num'] = split_num
+            curconf = get_conf(args)
             tf.reset_default_graph()
-            self = PoseUNet.PoseUNet(curconf,name=get_name(dropout))
+            self = PoseUNet.PoseUNet(curconf,name=get_name(args))
             dist, ims, preds, predlocs, locs, info = self.classify_val(0)
             all_dist[view].append(dist)
+            rims[view].append(ims)
+            rlocs[view].append(locs)
         all_dist[view] = np.concatenate(all_dist[view],0)
-        rims[view] = ims
-        rlocs[view] = locs
+        rims[view] = np.concatenate(rims[view],0)
+        rlocs[view] = np.concatenate(rlocs[view],0)
     return all_dist, rims, rlocs
 
 
@@ -210,13 +228,19 @@ def create_result_images(split_type):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-split_num", dest='split_num',required=True,type=int)
-    parser.add_argument('-dropout',dest='dropout',action="store_true")
-    parser.add_argument('-view',dest='view',required=True,type=int)
-    parser.add_argument('-split_type',dest='split_type',required=True)
-    args = parser.parse_args(argv)
-    train(args)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-split_num", dest='split_num',required=True,type=int)
+    # parser.add_argument('-dropout',dest='dropout',action="store_true")
+    # parser.add_argument('-view',dest='view',required=True,type=int)
+    # parser.add_argument('-split_type',dest='split_type',required=True)
+    # args = parser.parse_args(argv)
+    print argv
+    pdict = {}
+    assert len(argv)%2 == 0, 'Number of params should be even'
+    for ndx in range(0,len(argv),2):
+        assert argv[ndx][0] == '-', 'Odd Arguments should start with -'
+        pdict[argv[ndx][1:]] = argv[ndx+1]
+    train(pdict)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

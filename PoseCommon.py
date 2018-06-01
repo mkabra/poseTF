@@ -17,7 +17,7 @@ import math
 from past.utils import old_div
 from tensorflow.contrib.layers import batch_norm
 # from batch_norm import batch_norm_mine as batch_norm
-#from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 import copy
 import cv2
 import gc
@@ -35,7 +35,7 @@ def conv_relu(x_in, kernel_shape, train_phase):
     return tf.nn.relu(conv + biases)
 
 
-def conv_relu3(x_in, n_filt, train_phase, keep_prob=None):
+def conv_relu3(x_in, n_filt, train_phase, keep_prob=None,use_leaky=False):
     in_dim = x_in.get_shape().as_list()[3]
     kernel_shape = [3, 3, in_dim, n_filt]
     weights = tf.get_variable("weights", kernel_shape,
@@ -44,9 +44,15 @@ def conv_relu3(x_in, n_filt, train_phase, keep_prob=None):
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
     conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+
     if keep_prob is not None:
         conv = tf.nn.dropout(conv, keep_prob)
-    return tf.nn.relu(conv + biases)
+
+    if use_leaky:
+        return tf.nn.leaky_relu(conv+biases)
+    else:
+        return tf.nn.relu(conv + biases)
+
 
 def conv_relu3_noscaling(x_in, n_filt, train_phase):
     in_dim = x_in.get_shape().as_list()[3]
@@ -61,6 +67,7 @@ def conv_relu3_noscaling(x_in, n_filt, train_phase):
     conv = batch_norm(conv, decay=0.99, is_training=train_phase)
     return tf.nn.relu(conv + biases)
 
+
 def print_train_data(cur_dict):
     p_str = ''
     for k in cur_dict.keys():
@@ -73,30 +80,24 @@ def initialize_remaining_vars(sess):
     vlist = [v for v in tf.global_variables() if \
              v.name.split(':')[0] in var_list]
     sess.run(tf.variables_initializer(vlist))
-    # at some stage do faster initialization.
-    # var_list = tf.global_variables()
-    # for var in var_list:
-    #     # if ignore_name is not None and var.name.startswith(ignore_name):
-    #     #     continue
-    #     try:
-    #         sess.run(tf.assert_variables_initialized([var]))
-    #     except tf.errors.FailedPreconditionError:
-    #         sess.run(tf.variables_initializer([var]))
-    #         print('Initializing variable:%s' % var.name)
+
 
 def moving_average(a, n=3) :
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
     return ret[n - 1:] / n
 
+
 def l2_dist(x,y):
     return np.sqrt(np.sum((x-y)**2,axis=-1))
+
 
 class PoseCommon(object):
 
     class DBType(Enum):
         Train = 1
         Val = 2
+
 
     def __init__(self, conf, name):
         self.coord = None
@@ -128,6 +129,7 @@ class PoseCommon(object):
         self.db_name = ''
         self.read_and_decode = multiResData.read_and_decode
 
+
     def open_dbs(self):
         assert self.train_type is not None, 'traintype has not been set'
         if self.train_type == 0:
@@ -141,6 +143,7 @@ class PoseCommon(object):
             self.train_queue = tf.train.string_input_producer([train_filename])
             self.val_queue = tf.train.string_input_producer([val_filename])
 
+
     def create_cursors(self, sess):
         tdata = self.read_and_decode(self.train_queue, self.conf)
         vdata = self.read_and_decode(self.val_queue, self.conf)
@@ -149,9 +152,20 @@ class PoseCommon(object):
         self.coord = tf.train.Coordinator()
         self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
 
+
     def close_cursors(self):
         self.coord.request_stop()
         self.coord.join(self.threads)
+
+
+    def get_latest_model_file(self):
+        ckpt_file = os.path.join(
+            self.conf.cachedir,
+            self.conf.expname + '_' + self.name + '_ckpt')
+        latest_ckpt = tf.train.get_checkpoint_state(
+            self.conf.cachedir, ckpt_file)
+        return latest_ckpt.model_checkpoint_path
+
 
     def read_images(self, db_type, distort, sess, shuffle=None, scale = 1):
         conf = self.conf
@@ -189,6 +203,7 @@ class PoseCommon(object):
         self.info = info
         self.extra_data = extra_data
 
+
     def create_saver(self):
         saver = {}
         name = self.name
@@ -208,6 +223,7 @@ class PoseCommon(object):
         self.saver = saver
         if self.dep_nets:
             self.dep_nets.create_joint_saver(self.name)
+
 
     def create_joint_saver(self, o_name):
         saver = {}
@@ -264,6 +280,7 @@ class PoseCommon(object):
 
         return start_at
 
+
     def restore_joint(self, sess, o_name, joint_train, do_restore):
         # when to restore and from to restore is kinda complicated.
         # if not doing joint training, then always restore from trained dependent model.
@@ -292,6 +309,7 @@ class PoseCommon(object):
         saver['saver'].restore(sess, latest_ckpt.model_checkpoint_path)
         print("Loading {:s} variables from {:s}".format(name, latest_ckpt.model_checkpoint_path))
 
+
     def save(self, sess, step):
         saver = self.saver
         out_file = saver['out_file'].replace('\\', '/')
@@ -312,6 +330,7 @@ class PoseCommon(object):
             train_info[t_f] = []
         self.train_info = train_info
 
+
     def restore_td(self):
         saver = self.saver
         train_data_file = saver['train_data_file'].replace('\\', '/')
@@ -330,6 +349,7 @@ class PoseCommon(object):
                 train_info = in_data
         self.train_info = train_info
 
+
     def save_td(self):
         saver = self.saver
         train_data_file = saver['train_data_file']
@@ -341,10 +361,12 @@ class PoseCommon(object):
         with open(train_data_file+'.json','w') as json_file:
             json.dump(json_data, json_file)
 
+
     def update_td(self, cur_dict):
         for k in cur_dict.keys():
             self.train_info[k].append(cur_dict[k])
         print_train_data(cur_dict)
+
 
     def create_ph(self):
         self.ph = {}
@@ -355,6 +377,7 @@ class PoseCommon(object):
             tf.bool, name='phase_train')
         if self.dep_nets:
             self.dep_nets.create_ph()
+
 
     def create_fd(self):
         # to be subclassed
@@ -369,11 +392,13 @@ class PoseCommon(object):
     def update_fd(self, db_type, sess, distort):
         return None
 
+
     def init_train(self, train_type):
         self.train_type = train_type
         self.create_ph()
         self.create_fd()
         self.open_dbs()
+
 
     def init_and_restore(self, sess, restore, td_fields, at_step=-1):
         self.create_cursors(sess)
@@ -390,6 +415,7 @@ class PoseCommon(object):
             self.init_td(td_fields)
 
         return start_at
+
 
     def train_step(self, step, sess, learning_rate):
         ex_count = step * self.conf.batch_size
@@ -423,9 +449,11 @@ class PoseCommon(object):
             self.fd_train()
         self.update_fd(self.DBType.Train, sess=sess, distort=distort)
 
+
     def setup_val(self, sess):
         self.fd_val()
         self.update_fd(self.DBType.Val, sess=sess, distort=False)
+
 
     def create_optimizer(self):
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -443,10 +471,12 @@ class PoseCommon(object):
                     for gradient in gradients]
             self.opt = optimizer.apply_gradients(zip(gradients,variables))
 
+
     def compute_dist(self, preds, locs):
         tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - locs
         tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
         return np.nanmean(tt1)
+
 
     def compute_train_data(self, sess, db_type):
         self.setup_train(sess) if db_type is self.DBType.Train \

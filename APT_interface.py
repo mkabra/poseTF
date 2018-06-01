@@ -387,6 +387,10 @@ def create_cv_split_files(conf, n_splits=3):
     return all_train, splits
 
 
+def get_matlab_ts(filename):
+    k = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
+    return datetime2matlabdn(k)
+
 def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
 
     def write_trk(pred_locs_in,n_done):
@@ -484,7 +488,9 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
     tf.reset_default_graph()
     return pred_locs
 
-def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[]):
+def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
+                   start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[],
+                   model_file = ''):
     # classifies movies frame by frame instead of trx by trx.
 
     def write_trk(pred_locs_in,n_done):
@@ -500,9 +506,13 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame
         tracked_shape = pred_locs.shape[2]
         tracked = np.zeros([1,tracked_shape])
         tracked[0,:] = np.array(n_done)+1
+        info = {}
+        info[u'model_file'] = model_file
+        info[u'trnTS'] = get_matlab_ts(model_file + '.meta')
         hdf5storage.savemat(out_file,
                             {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                             'pTrkTag': tag,'pTrkFrm':tracked}, appendmat=False, truncate_existing=True)
+                             'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
+                            appendmat=False, truncate_existing=True)
 
     cap = movies.Movie(mov_file)
     sz = (cap.get_height(), cap.get_width())
@@ -592,6 +602,7 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
     sess = self.init_net_meta(0, True)
+    model_file = self.get_latest_model_file()
 
     def pred_fn(all_f):
         # this is the function that is passed to classify_movie.
@@ -613,7 +624,8 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         base_locs = base_locs * conf.unet_rescale
         return base_locs
 
-    classify_movie(conf, pred_fn, mov_file, out_file, trx_file, start_frame, end_frame, skip_rate, trx_ids)
+    classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
+                   start_frame, end_frame, skip_rate, trx_ids, model_file)
 
 
 def train(lblfile, nviews, name, view):
@@ -690,7 +702,7 @@ def train(lblfile, nviews, name, view):
 #                              'pTrkTag': tag}, appendmat=False, truncate_existing=True)
 #
 
-def main(argv):
+def parse_args(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("lbl_file",
                         help="path to lbl file")
@@ -715,7 +727,12 @@ def main(argv):
     parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*',type=int,default=[])
 
     print(argv)
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
+
+
+def main(argv):
+
+    args = parse_args(argv)
     name = args.name
 
     lbl_file = args.lbl_file
