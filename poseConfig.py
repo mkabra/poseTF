@@ -113,6 +113,7 @@ class config(object):
     # ----- UNet params
     unet_rescale = 1
     unet_steps = 20000
+    unet_keep_prob = 0.7
 
     # ----- MDN params
     mdn_min_sigma = 3. # this should just be maybe twice the cell size??

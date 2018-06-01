@@ -87,6 +87,10 @@ import PoseUNet
 import os
 import numpy as np
 import PoseTools
+import pickle
+import socket
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 tf.reset_default_graph()
 
 split_type = 'easy'
@@ -123,8 +127,8 @@ self = PoseUNet.PoseUNet(curconf)
 
 self.init_train(0)
 self.pred = self.create_network()
-self.cost = tf.nn.l2_loss(self.pred - self.ph['y'])
-self.create_saver()
+# self.cost = tf.nn.l2_loss(self.pred - self.ph['y'])
+# self.create_saver()
 
 sess = tf.Session()
 
@@ -137,7 +141,11 @@ nn = 377
 info = []
 dist = []
 for idx in range(nn):
+    self.setup_train(sess)
     self.setup_val(sess)
+    self.fd[self.ph['keep_prob']] = 1.
+    self.fd[self.ph['phase_train']] = True
+    cur_pred_t = sess.run(self.pred, self.fd)
     self.fd[self.ph['keep_prob']] = 1.
     self.fd[self.ph['phase_train']] = False
     cur_pred = sess.run(self.pred, self.fd)
@@ -150,6 +158,12 @@ for idx in range(nn):
     td += train_dist
     if (idx+1)%50==0:
         print('.')
+    # if idx is 0:
+    #     A = [self.xs, cur_pred]
+    #     hname = socket.gethostname().split('.')[0]
+    #     with open('delete_{}.p'.format(hname),'w') as f:
+    #         pickle.dump(A,f)
+
 print(td/nn)
 dist = np.array(dist)
 info = np.array(info)
@@ -159,7 +173,7 @@ print(info[:10,:])
 info = []
 dist = []
 for idx in range(nn):
-    self.setup_train(sess)
+    self.setup_val(sess)
     self.fd[self.ph['keep_prob']] = 1.
     self.fd[self.ph['phase_train']] = True
     cur_pred = sess.run(self.pred, self.fd)
