@@ -18,7 +18,7 @@ import stat
 import h5py
 import hdf5storage
 
-net_name = 'pose_unet_full_20180302'
+default_net_name = 'pose_unet_full_20180302'
 
 def main(argv):
 
@@ -37,6 +37,9 @@ def main(argv):
     parser.add_argument("-d",dest="dltfilename",
                       help="text file with list of DLTs, one per fly as 'flynum,/path/to/dltfile'",
                       required=True)
+    parser.add_argument("-net",dest="net_name",
+                      help="Name of the net to use for tracking",
+                      default=default_net_name)
     parser.add_argument("-o",dest="outdir",
                       help="temporary output directory to store intermediate computations",
                       required=True)
@@ -65,8 +68,6 @@ def main(argv):
                         help="Do only the detection part of tracking which requires GPU")
     group.add_argument("-only_track",dest='track',action="store_true",
                         help="Do only the tracking part of the tracking which requires MATLAB")
-    
-
 
     args = parser.parse_args(argv)
     if args.redo is None:
@@ -160,7 +161,7 @@ def main(argv):
         if args.detect:        
             for try_num in range(4):
                 try:
-                    self = PoseUNet.PoseUNet(conf, net_name)
+                    self = PoseUNet.PoseUNet(conf, args.net_name)
                     sess = self.init_net_meta(0,True)
                     break
                 except tf.python.framework.errors_impl.InvalidArgumentError:

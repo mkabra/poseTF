@@ -383,7 +383,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         val_preds = val_reshape(val_preds)
         val_predlocs = val_reshape(val_predlocs)
         val_locs = val_reshape(val_locs)
-        n_records = len(val_info[0])
+        n_records = len(val_info[0][0])
         val_info = np.array(val_info).reshape([-1, n_records ])
         tf.reset_default_graph()
         return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info

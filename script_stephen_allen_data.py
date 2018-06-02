@@ -16,6 +16,8 @@ import APT_interface
 import datetime
 import ast
 import argparse
+import pickle
+import hdf5storage
 
 # split_type = 'easy'
 extra_str = '_normal_bnorm'
@@ -183,6 +185,8 @@ def compile_results(args,views=range(2)):
     all_dist = [[],[]]
     rims = [[],[]]
     rlocs = [[],[]]
+    rinfo = [[],[]]
+    rpredlocs = [[],[]]
     for view in views:
         for split_num in range(3):
             args['view'] = view
@@ -194,11 +198,45 @@ def compile_results(args,views=range(2)):
             all_dist[view].append(dist)
             rims[view].append(ims)
             rlocs[view].append(locs)
+            rinfo[view].append(info)
+            rpredlocs[view].append(predlocs)
         all_dist[view] = np.concatenate(all_dist[view],0)
         rims[view] = np.concatenate(rims[view],0)
         rlocs[view] = np.concatenate(rlocs[view],0)
-    return all_dist, rims, rlocs
+        rinfo[view] = np.concatenate(rinfo[view], 0)
+        rpredlocs[view] = np.concatenate(rpredlocs[view], 0)
+    return all_dist, rims, rlocs, rinfo, rpredlocs
 
+
+def save_data(name='normal'):
+    for split_type in ['easy','hard']:
+        args = {'name': name,
+                'split_num': 2,
+                'split_type': split_type,
+                'view': 1}
+        all_dist, _, locs, info, predlocs = compile_results(args)
+        fname = '/groups/branson/home/kabram/bransonlab/PoseTF/headTracking/{}_{}_cv_data.p'.format(name,args['split_type'])
+        with open(fname,'w') as f:
+            pickle.dump([all_dist,locs, info,predlocs],f)
+
+    convert_saved_to_matlab(name)
+
+def convert_saved_to_matlab(name='normal'):
+    data = {}
+    for split_type in ['easy','hard']:
+        fname = '/groups/branson/home/kabram/bransonlab/PoseTF/headTracking/{}_{}_cv_data.p'.format(name,split_type)
+        with open(fname,'r') as f:
+            all_dist, locs, info, predlocs = pickle.load(f)
+            data['dist_{}_side'.format(split_type)] = all_dist[0]
+            data['dist_{}_front'.format(split_type)] = all_dist[1]
+            data['locs_{}_side'.format(split_type)] = locs[0]
+            data['locs_{}_front'.format(split_type)] = locs[1]
+            data['info_{}_side'.format(split_type)] = info[0]
+            data['info_{}_front'.format(split_type)] = info[1]
+            data['pred_{}_side'.format(split_type)] = predlocs[0]
+            data['pred_{}_front'.format(split_type)] = predlocs[1]
+    fname = '/groups/branson/home/kabram/bransonlab/PoseTF/headTracking/{}_cv_data.mat'.format(name)
+    hdf5storage.savemat(fname,data)
 
 def create_result_images(split_type):
     dist, ims, locs = compile_results(split_type)

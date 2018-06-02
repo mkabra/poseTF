@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import json
 from skimage import transform
+import datetime
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -1258,3 +1259,7 @@ def preprocess_ims(ims, in_locs, conf, distort, scale):
     xs = scale_images(xs, scale, conf)
     xs = normalize_mean(xs, conf)
     return xs, locs
+
+
+def get_datestr():
+    return datetime.datetime.now().strftime('%Y%m%d')

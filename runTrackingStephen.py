@@ -26,6 +26,11 @@ def main(argv):
         base_dir = argv[1]
     if len(argv)>2:
         temp_dir = argv[2]
+    if len(argv)>3:
+        net_name = argv[3]
+        use_net_name = True
+    else:
+        use_net_name = False
 
     with open(dltfilename,'r') as f:
         x = f.readlines()
@@ -152,7 +157,10 @@ def main(argv):
                 f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
                 f.write('fi\n')
                 f.write('numCores2use={} \n'.format(coresPerMatJob))
-                f.write('python trackStephenHead_KB.py -s {} -f {} -d {} -o {} -ncores $numCores2use -rt\n'.format(curslist,curflist, dltfilename, temp_dir))
+                f.write('python trackStephenHead_KB.py -s {} -f {} -d {} -o {} -ncores $numCores2use -rt '.format(curslist,curflist, dltfilename, temp_dir))
+                if use_net_name:
+                    f.write('-net {}'.format(net_name))
+                f.write('\n')
 
             os.chmod(sing_script,0755)
 
