@@ -442,7 +442,8 @@ class PoseCommon(object):
         #     self.train_loss[:-1] = self.train_loss[1:]
         #     self.train_loss[-1] = cur_loss
 
-        sess.run(self.opt, self.fd)
+        run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
+        sess.run(self.opt, self.fd,options=run_options)
 
 
     def setup_train(self, sess, distort=True, treat_as_val = False):
@@ -529,6 +530,46 @@ class PoseCommon(object):
                 self.save(sess, training_iters)
                 self.save_td()
             self.close_cursors()
+
+
+    def init_net_common(self, create_network_fn, train_type=0, restore=True):
+        print('--- Loading the model by reconstructing the graph ---')
+        self.init_train(train_type=train_type)
+        self.pred = create_network_fn()
+        saver = self.create_saver()
+        self.joint = True
+        sess = tf.InteractiveSession()
+        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
+        return sess
+
+
+    def init_net_meta(self, train_type):
+        print('--- Loading the model using the saved graph ---')
+        sess = tf.Session()
+        self.train_type = train_type
+        try:
+            self.open_dbs()
+            self.create_cursors(sess)
+        except tf.python.framework.errors_impl.NotFoundError:
+            pass
+
+        self.restore_meta(self.name, sess)
+        return sess
+
+
+    def restore_meta(self, name, sess):
+        if self.dep_nets:
+            if type(self.dep_nets) is list:
+                for dd in self.dep_nets:
+                    dd.restore_meta(name + '_' + dd.name, sess)
+            else:
+                self.dep_nets.restore_meta(name + '_' + self.dep_nets.name, sess)
+
+        ckpt_file = os.path.join( self.conf.cachedir, self.conf.expname + '_' + name + '_ckpt')
+        latest_ckpt = tf.train.get_checkpoint_state( self.conf.cachedir, ckpt_file)
+        saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
+        saver.restore(sess, latest_ckpt.model_checkpoint_path)
+
 
     def classify_val(self,train_type=0, at_step=-1):
 

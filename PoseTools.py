@@ -68,7 +68,7 @@ def get_cmap(n_classes):
     return cmap(np.linspace(0, 1, n_classes))
 
 
-def scale_images(img, scale, conf):
+def scale_images(img, locs, scale, conf):
     sz = img.shape
     simg = np.zeros((sz[0], old_div(sz[1], scale), old_div(sz[2], scale), sz[3]))
     for ndx in range(sz[0]):
@@ -76,7 +76,9 @@ def scale_images(img, scale, conf):
             simg[ndx, :, :, 0] = transform.resize(img[ndx, :, :, 0], simg.shape[1:3], preserve_range=True)
         else:
             simg[ndx, :, :, :] = transform.resize(img[ndx, :, :, :], simg.shape[1:3], preserve_range= True)
-    return simg
+    new_locs = locs.copy()
+    new_locs = locs/scale
+    return simg, new_locs
 
 
 def normalize_mean(in_img, conf):
@@ -1256,7 +1258,7 @@ def preprocess_ims(ims, in_locs, conf, distort, scale):
         xs, locs = randomly_translate(xs, locs, conf)
         xs = randomly_adjust(xs, conf)
     # xs = adjust_contrast(xs, conf)
-    xs = scale_images(xs, scale, conf)
+    xs, locs = scale_images(xs, locs, scale, conf)
     xs = normalize_mean(xs, conf)
     return xs, locs
 

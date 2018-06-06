@@ -5,7 +5,8 @@ import PoseUNet
 import os
 import sys
 import math
-from batch_norm import batch_norm_new as batch_norm
+# from batch_norm import batch_norm_new as batch_norm
+from tensorflow.contrib.layers import batch_norm
 import convNetBase as CNB
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,6 +46,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.i_locs = None
         self.dep_nets.keep_prob = 1.
 
+
     def create_ph(self):
         PoseCommon.PoseCommon.create_ph(self)
         # self.dep_nets.create_ph()
@@ -52,7 +54,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.ph['locs'] = tf.placeholder(tf.float32,
                            [None, self.conf.n_classes, 2],
                            name='locs')
-        self.ph['step'] = tf.placeholder(tf.float32)
+        self.ph['step'] = tf.placeholder(tf.float32,name='step')
+
 
     def create_fd(self):
         x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
@@ -68,6 +71,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def create_network(self):
         X = self.dep_nets.create_network()
+        self.dep_nets.pred = X
         if not self.joint:
             X = tf.stop_gradient(X)
 
@@ -76,6 +80,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 return self.create_network_fixed(X)
             else:
                 return self.create_network1(X)
+
 
     def create_network1(self, X):
 
@@ -159,9 +164,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
             # with multiplying grid_size/2, o_locs will have variance grid_size/2
             # with adding grid_size/2, o_locs initially will be centered
             # in the center of the grid.
+            o_locs =  ((tf.sigmoid(o_locs)*2) - 0.5) * locs_offset
             self.i_locs = o_locs
-            o_locs *= float(locs_offset)/2*5
-            o_locs += float(locs_offset)/2
+            # o_locs *= float(locs_offset)/2
+            # o_locs += float(locs_offset)/2
 
             # adding offset of each grid location.
             x_off, y_off = np.meshgrid(np.arange(loc_shape[2]), np.arange(loc_shape[1]))
@@ -172,7 +178,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             x_locs = o_locs[:,:,:,:,:,0] + x_off
             y_locs = o_locs[:,:,:,:,:,1] + y_off
             o_locs = tf.stack([x_locs, y_locs], axis=5)
-            locs = tf.reshape(o_locs,[-1, n_x*n_y*k,n_out,2])
+            locs = tf.reshape(o_locs,[-1, n_x*n_y*k,n_out,2],name='locs_final')
 
         with tf.variable_scope('scales'):
             with tf.variable_scope('layer_scales'):
@@ -202,7 +208,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             o_scales = o_scales + (max_sig-min_sig)/2 + min_sig
             scales = tf.minimum(max_sig, tf.maximum(min_sig, o_scales))
             scales = tf.reshape(scales, [-1, n_x*n_y,k,n_out])
-            scales = tf.reshape(scales,[-1, n_x*n_y*k,n_out])
+            scales = tf.reshape(scales,[-1, n_x*n_y*k,n_out],name='scales_final')
 
         with tf.variable_scope('logits'):
             with tf.variable_scope('layer_logits'):
@@ -224,9 +230,10 @@ class PoseUMDN(PoseCommon.PoseCommon):
             logits = tf.nn.conv2d(mdn_l, weights_logits,
                                   [1, 1, 1, 1], padding='SAME') + biases_logits
             logits = tf.reshape(logits, [-1, n_x * n_y, k *n_groups])
-            logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups])
+            logits = tf.reshape(logits, [-1, n_x * n_y * k, n_groups],name='logits_final')
 
         return [locs,scales,logits]
+
 
     def create_network_fixed(self, X):
         # Downsample to a size between 4x4 and 2x2
@@ -467,22 +474,25 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         return [locs,scales,logits]
 
+
     def fd_train(self):
         self.fd[self.ph['phase_train']] = True
-        self.dep_nets.fd[self.ph['phase_train']] = self.joint
+        self.fd[self.dep_nets.ph['phase_train']] = self.joint
+
 
     def fd_val(self):
         self.fd[self.ph['phase_train']] = False
-        self.dep_nets.fd[self.ph['phase_train']] = False
+        self.fd[self.dep_nets.ph['phase_train']] = False
+
 
     def update_fd(self, db_type, sess, distort):
-        self.read_images(db_type, distort, sess, distort)
-        rescale = self.conf.unet_rescale
-        xs = PoseTools.scale_images(self.xs, rescale, self.conf)
-        self.fd[self.ph['x']] = PoseTools.normalize_mean(xs, self.conf)
+        self.read_images(db_type, distort, sess, shuffle=distort,
+                         scale=self.conf.unet_rescale)
+        self.fd[self.ph['x']] = self.xs
         self.locs[np.isnan(self.locs)] = -500000.
-        self.fd[self.ph['locs']] = self.locs/rescale
-        self.fd[self.ph['step']] = self.step
+        self.fd[self.ph['locs']] = self.locs
+#        self.fd[self.ph['step']] = self.step
+
 
     def my_loss(self, X, y):
 
@@ -497,7 +507,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         mdn_locs, mdn_scales, mdn_logits = X
         cur_comp = []
-        ll = tf.nn.softmax(mdn_logits, dim=1)
+        ll = tf.nn.softmax(mdn_logits, axis=1)
 
         n_preds = mdn_locs.get_shape().as_list()[1]
         # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
@@ -508,7 +518,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
             cur_scales = mdn_scales[:, :, cls]
             pp = y[:, cls:cls + 1, :]/locs_offset
             kk = tf.sqrt(tf.reduce_sum(tf.square(pp - mdn_locs[:, :, cls, :]), axis=2))
-            # div is actual correct implementation of gaussian distance.
+            # tf.div is actual correct implementation of gaussian distance.
             # but we run into numerical issues. Since the scales are withing
             # the same range, I'm just ignoring them for now.
             # dd = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
@@ -530,6 +540,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         # loss = -tf.log(tf.reduce_sum(pp, axis=1))
         return tf.reduce_sum(cur_loss)
 
+
     def compute_dist(self, preds, locs):
 
         if self.net_type is 'conv':
@@ -541,7 +552,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         else:
             raise Exception('Unknown net type')
 
-        locs = locs.copy()/self.conf.unet_rescale
+        locs = locs.copy()
         if locs.ndim == 3:
             locs = locs[:,np.newaxis,:,:]
         val_means, val_std, val_wts = preds
@@ -575,6 +586,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         label_mean = np.nanmean(val_dist)
         return (pred_mean+label_mean)/2
 
+
     def compute_train_data(self, sess, db_type):
         self.setup_train(sess) if db_type is self.DBType.Train \
             else self.setup_val(sess)
@@ -584,6 +596,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
         pred_weights = softmax(pred_weights, axis=1)
         cur_dist = self.compute_dist( [pred_means, pred_std, pred_weights], self.locs)
         return cur_loss, cur_dist
+
 
     def train_umdn(self, restore, train_type=0,joint=True):
 
@@ -604,17 +617,46 @@ class PoseUMDN(PoseCommon.PoseCommon):
             learning_rate=0.0001,
             td_fields=('loss','dist'))
 
-    def init_net(self,train_type=0, restore= True):
-        self.init_train(train_type=train_type)
-        self.pred = self.create_network()
-        saver = self.create_saver()
-        self.joint = True
 
-        sess = tf.InteractiveSession()
-        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
+    def init_net(self,train_type=0, restore= True):
+        return self.init_net_common(self.create_network, train_type,restore)
+
+
+    def init_net_meta(self, train_type):
+        sess = PoseCommon.PoseCommon.init_net_meta(self,train_type)
+
+        graph = tf.get_default_graph()
+        try:
+            kp = graph.get_tensor_by_name('keep_prob:0')
+        except KeyError:
+            kp = graph.get_tensor_by_name('Placeholder:0')
+
+        self.dep_nets.ph['keep_prob'] = kp
+        self.dep_nets.ph['x'] = graph.get_tensor_by_name('x:0')
+        self.dep_nets.ph['y'] = graph.get_tensor_by_name('y:0')
+        self.dep_nets.ph['learning_rate'] = graph.get_tensor_by_name('learning_r_1:0')
+        self.dep_nets.ph['phase_train'] = graph.get_tensor_by_name('phase_train_1:0')
+
+        self.ph['x'] = self.dep_nets.ph['x']
+        self.ph['learning_rate'] = graph.get_tensor_by_name('learning_r:0')
+        self.ph['phase_train'] = graph.get_tensor_by_name('phase_train:0')
+        self.ph['locs'] = graph.get_tensor_by_name('locs:0')
+
+        try:
+            unet_pred = graph.get_tensor_by_name('pose_unet/unet_pred:0')
+        except KeyError:
+            unet_pred = graph.get_tensor_by_name('pose_unet/add:0')
+        self.dep_nets.pred = unet_pred
+
+        locs = graph.get_tensor_by_name('pose_umdn/locs/locs_final:0')
+        logits = graph.get_tensor_by_name('pose_umdn/logits/logits_final:0')
+        scales = graph.get_tensor_by_name('pose_umdn/scales/scales_final:0')
+
+        self.pred = [locs,scales,logits]
+        self.create_fd()
         return sess
-      
-	
+
+
     def classify_val(self, train_type=0, at_step=-1, onTrain = False):
         if train_type is 0:
             if not onTrain:

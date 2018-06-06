@@ -255,38 +255,18 @@ class PoseUNet(PoseCommon.PoseCommon):
         rescale = self.conf.unet_rescale
         imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
         label_ims = PoseTools.create_label_images(
-            self.locs/rescale, imsz, 1, self.conf.label_blur_rad)
+            self.locs, imsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
+
     def init_net(self, train_type=0, restore=True):
-        print('--- Loading the model by reconstructing the graph ---')
-        self.init_train(train_type=train_type)
-        self.pred = self.create_network()
-        saver = self.create_saver()
-        self.joint = True
-
-        sess = tf.InteractiveSession()
-        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
-        return sess
+        return  self.init_net_common(self.create_network,
+                                       train_type, restore)
 
 
-    def init_net_meta(self, train_type=0, restore=True):
-        print('--- Loading the model using the saved graph ---')
-        sess = tf.Session()
-        self.train_type = train_type
-        try:
-            self.open_dbs()
-            self.create_cursors(sess)
-        except tf.python.framework.errors_impl.NotFoundError:
-            pass
+    def init_net_meta(self, train_type=0):
 
-        ckpt_file = os.path.join(
-            self.conf.cachedir,
-            self.conf.expname + '_' + self.name + '_ckpt')
-        latest_ckpt = tf.train.get_checkpoint_state(
-            self.conf.cachedir, ckpt_file)
-        saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
-        saver.restore(sess, latest_ckpt.model_checkpoint_path)
+        sess = PoseCommon.PoseCommon.init_net_meta(self, train_type)
         graph = tf.get_default_graph()
         try:
             kp = graph.get_tensor_by_name('keep_prob:0')

@@ -19,6 +19,9 @@ import PoseTools
 from multiResData import *
 import json
 from random import sample
+import traceback
+import logging
+from os.path import expanduser
 
 def loadmat(filename):
     '''
@@ -87,10 +90,13 @@ def has_trx_file(x):
 
 def create_conf(lbl_file, view, name):
     try:
-        H = loadmat(lbl_file)
-    except NotImplementedError:
-        print('Label file is in v7.3 format. Loading using h5py')
-        H = h5py.File(lbl_file,'r')
+        try:
+            H = loadmat(lbl_file)
+        except NotImplementedError:
+            print('Label file is in v7.3 format. Loading using h5py')
+            H = h5py.File(lbl_file,'r')
+    except TypeError as e:
+        logging.exception('LBL_READ: Could not read the lbl file {}'.format(lbl_file))
 
     from poseConfig import config
     conf = config()
@@ -105,7 +111,6 @@ def create_conf(lbl_file, view, name):
         os.mkdir(os.path.split(conf.cachedir)[0])
     # conf.cachedir = os.path.join(localSetup.bdir, 'cache', proj_name)
     conf.has_trx_file = has_trx_file(H[H['trxFilesAll'][0, 0]])
-    conf.imgDim = int(read_entry(dt_params['NChannels']))
     conf.selpts = np.arange(conf.n_classes)
     vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
     vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
@@ -120,6 +125,12 @@ def create_conf(lbl_file, view, name):
     conf.unet_rescale = int(read_entry(dt_params['scale']))
     conf.adjustContrast = int(read_entry(dt_params['adjustContrast'])) > 0.5
     conf.normalize_img_mean = int(read_entry(dt_params['normalize'])) > 0.5
+    # conf.imgDim = int(read_entry(dt_params['NChannels']))
+    ex_mov = u''.join(chr(c) for c in H[H['movieFilesAll'][0,0]])
+    cap = movies.Movie(ex_mov)
+    ex_frame = cap.get_frame(5)
+    conf.imgDim = ex_frame[0].shape[2]
+    cap.close()
     try:
         conf.flipud = int(read_entry(dt_params['flipud'])) > 0.5
     except KeyError:
@@ -490,7 +501,7 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
 
 def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                    start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[],
-                   model_file = ''):
+                   model_file = '',name=''):
     # classifies movies frame by frame instead of trx by trx.
 
     def write_trk(pred_locs_in,n_done):
@@ -509,10 +520,15 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         info = {}
         info[u'model_file'] = model_file
         info[u'trnTS'] = get_matlab_ts(model_file + '.meta')
-        hdf5storage.savemat(out_file,
-                            {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                             'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
-                            appendmat=False, truncate_existing=True)
+        info[u'name'] = name
+        try:
+            hdf5storage.savemat(out_file,
+                                {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
+                                 'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
+                                appendmat=False, truncate_existing=True)
+        except IOError:
+            logging.exception('TRK_WRITE: Could output results to trk file {}'.format(out_file))
+            exit(1)
 
     cap = movies.Movie(mov_file)
     sz = (cap.get_height(), cap.get_width())
@@ -592,7 +608,8 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
     return pred_locs
 
 
-def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1, skip_rate=1, trx_ids = []):
+def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
+                        skip_rate=1, trx_ids = [],name=''):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -625,7 +642,7 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         return base_locs
 
     classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file)
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
 
 
 def train(lblfile, nviews, name, view):
@@ -730,17 +747,20 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
-def main(argv):
-
-    args = parse_args(argv)
+def run(args):
     name = args.name
 
     lbl_file = args.lbl_file
     try:
-        H = loadmat(lbl_file)
-    except NotImplementedError:
-        print('Label file is in v7.3 format. Loading using h5py')
-        H = h5py.File(lbl_file)
+        try:
+            H = loadmat(lbl_file)
+        except NotImplementedError:
+            print('Label file is in v7.3 format. Loading using h5py')
+            H = h5py.File(lbl_file)
+    except TypeError as e:
+        logging.exception('LBL_READ: Could not read the lbl file {}'.format(lbl_file))
+        exit(1)
+
     nviews = int(read_entry(H['cfg']['NumViews']))
 
     if args.sub_name == 'train':
@@ -759,12 +779,30 @@ def main(argv):
                 classify_movie_unet(conf, args.mov[view], args.trx[view], args.out_files[view], args.start_frame, args.end_frame, args.skip, args.trx_ids)
         else:
             if args.trx is None:
-                args.trx = [None] 
+                args.trx = [None]
             assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
             conf = create_conf(lbl_file, args.view, name)
             classify_movie_unet(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
-                                args.end_frame, args.skip, args.trx_ids)
+                                args.end_frame, args.skip, args.trx_ids, name=name)
 
+
+def main(argv):
+    args = parse_args(argv)
+
+    logfile = os.path.join(expanduser("~"), '{}.err'.format(args.name))
+    fileh = logging.FileHandler(logfile, 'w')
+    log = logging.getLogger()  # root logger
+    for hdlr in log.handlers[:]:  # remove all old handlers
+        log.removeHandler(hdlr)
+    log.addHandler(fileh)
+    log.setLevel(logging.ERROR)
+    formatter = logging.Formatter('%(levelname)s:%(message)s -- %(asctime)s')
+    log.handlers[0].setFormatter(formatter)
+
+    try:
+        run(args)
+    except Exception as e:
+        logging.exception(e)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
