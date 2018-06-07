@@ -215,7 +215,8 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
         try:
             cap = movies.Movie(local_dirs[ndx])
         except ValueError:
-            raise IOError(local_dirs[ndx] + ' is missing')
+            logging.exception('MOV_READ: ' + local_dirs[ndx] + ' is missing')
+            exit(1)
 
         if conf.has_trx_file:
             trx_files = multiResData.get_trx_files(lbl, local_dirs)
@@ -280,15 +281,24 @@ def create_tfrecord(conf, split=True, split_file=None):
     # function showing how to use db_from_lbl for tfrecords
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
-    envs = multiResData.create_envs(conf, split)
+
+    try:
+        envs = multiResData.create_envs(conf, split)
+    except IOError:
+        logging.exception('DB_WRITE: Could not write to tfrecord database')
+        exit(1)
+
     out_fns = []
     out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
     out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
     splits = db_from_lbl(conf,out_fns, split, split_file)
     envs[0].close()
     envs[1].close() if split else None
-    with open(os.path.join(conf.cachedir,'splitdata.json'),'w') as f:
-        json.dump(splits, f)
+    try:
+        with open(os.path.join(conf.cachedir,'splitdata.json'),'w') as f:
+            json.dump(splits, f)
+    except IOError:
+        logging.warning('SPLIT: Could not output split data information')
 
 
 def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz,nvalid):
@@ -506,9 +516,10 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
 
     def write_trk(pred_locs_in,n_done):
         pred_locs = pred_locs_in.copy()
+        pred_locs = pred_locs[:,trx_ids,...]
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
         pred_locs = pred_locs[:,:,n_done,:]
-        tgt = np.arange(pred_locs.shape[-1]) + 1
+        tgt = trx_ids + 1
         if not conf.has_trx_file:
             pred_locs = pred_locs[...,0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
@@ -527,10 +538,15 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                                  'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
                                 appendmat=False, truncate_existing=True)
         except IOError:
-            logging.exception('TRK_WRITE: Could output results to trk file {}'.format(out_file))
+            logging.exception('TRK_WRITE: Could not the output results to trk file {}'.format(out_file))
             exit(1)
 
-    cap = movies.Movie(mov_file)
+    try:
+        cap = movies.Movie(mov_file)
+    except ValueError:
+        logging.exception('MOV_READ: ' + mov_file + ' is missing')
+        exit(1)
+
     sz = (cap.get_height(), cap.get_width())
     n_frames = int(cap.get_n_frames())
     if conf.has_trx_file:
@@ -609,7 +625,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
 
 
 def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [],name=''):
+                        skip_rate=1, trx_ids = [], name=''):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -618,7 +634,11 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
 
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
-    sess = self.init_net_meta(0, True)
+    try:
+        sess = self.init_net_meta(0)
+    except tf.errors.InternalError:
+        logging.exception('Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
+        exit(1)
     model_file = self.get_latest_model_file()
 
     def pred_fn(all_f):
@@ -636,7 +656,11 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         self.fd[self.ph['x']] = xs
         self.fd[self.ph['phase_train']] = False
         self.fd[self.ph['keep_prob']] = 1.
-        pred = sess.run(self.pred, self.fd)
+        try:
+            pred = sess.run(self.pred, self.fd)
+        except tf.errors.ResourceExhaustedError:
+            logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
+            exit(1)
         base_locs = PoseTools.get_pred_locs(pred)
         base_locs = base_locs * conf.unet_rescale
         return base_locs
@@ -657,7 +681,15 @@ def train(lblfile, nviews, name, view):
         create_tfrecord(conf,False)
         tf.reset_default_graph()
         self = PoseUNet.PoseUNet(conf)
-        self.train_unet(False, 1)
+        try:
+            self.train_unet(False, 1)
+        except tf.errors.InternalError:
+            logging.exception(
+                'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
+            exit(1)
+        except tf.errors.ResourceExhaustedError:
+            logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
+            exit(1)
 
 # def classify(lbl_file, n_views, name, mov_file, trx_file, out_file, start_frame, end_frame, skip_rate):
 #     # print(mov_file)
