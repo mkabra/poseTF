@@ -19,13 +19,25 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 tf.reset_default_graph()
 dirs = ['/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00006_CsChr_RigC_20151014T093157',
-'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00217_CsChr_RigB_20150929T095409',
-'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00277_CsChr_RigD_20150819T094557',
-'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_JRC_SS03500_CsChr_RigB_20150811T114536',
-'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00243_CsChr_RigD_20150812T155340']
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00217_CsChr_RigB_20150929T095409',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00277_CsChr_RigD_20150819T094557',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_JRC_SS03500_CsChr_RigB_20150811T114536',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/witinAssayData/cx_GMR_SS00243_CsChr_RigD_20150812T155340'
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/withGenotypeData/cx_GMR_SS00030_CsChr_RigD_20150826T145307'
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/withGenotypeData/cx_GMR_SS00038_CsChr_RigC_20150908T140450'
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/withGenotypeData/cx_GMR_SS00168_CsChr_RigC_20150909T110456',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/withGenotypeData/cx_GMR_SS00238_CsChr_RigD_20150826T143306',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/Austin_labelerprojects_expandedbehaviors/GT/withGenotypeData/cx_JHS_K_85321_CsChr_RigB_20151021T095119',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/cx_GMR_SS00038_CsChr_RigB_20150729T150617',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/cx_GMR_SS00030_CsChr_RigC_20150826T144616',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/cx_JHS_K_85321_CsChr_RigD_20150909T163219',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/cx_GMR_SS00168_CsChr_RigD_20150909T111218',
+	'/groups/branson/home/robiea/Projects_data/Labeler_APT/cx_GMR_SS00238_CsChr_RigC_20151007T150343',
+	        ]
+
 
 self = PoseUNet.PoseUNet(conf, name='pose_unet_full_20180521')
-sess = self.init_net_meta(1, True)
+sess = self.init_net_meta(1)
 model_file = self.get_latest_model_file()
 
 def pred_fn(all_f):

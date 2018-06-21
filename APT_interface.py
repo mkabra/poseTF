@@ -417,7 +417,7 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
     def write_trk(pred_locs_in,n_done):
         pred_locs = pred_locs_in.copy()
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
-        tgt = np.arange(pred_locs.shape[-1]) + 1
+        tgt = np.arange(pred_locs.shape[-1]) 
         if not conf.has_trx_file:
             pred_locs = pred_locs[...,0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
@@ -489,7 +489,7 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
                     cap, fnum, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
                 all_f[ii, ...] = frame_in
 
-            base_locs = pred_fn(all_f)
+            base_locs = pred_fn(all_f) + 1
 
             out_start = ndx_start - start_frame
             out_end = ndx_end - start_frame
@@ -518,8 +518,8 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         pred_locs = pred_locs_in.copy()
         pred_locs = pred_locs[:,trx_ids,...]
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
-        pred_locs = pred_locs[:,:,n_done,:]
-        tgt = trx_ids + 1
+        pred_locs = pred_locs[:,:,n_done,:] + 1
+        tgt = [t + 1 for t in trx_ids]
         if not conf.has_trx_file:
             pred_locs = pred_locs[...,0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
@@ -602,7 +602,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                 cap, cur_f, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
             all_f[cur_t, ...] = frame_in
 
-        base_locs = pred_fn(all_f)
+        base_locs = pred_fn(all_f) + 1
         for cur_t in range(ppe):
             cur_entry = to_do_list[cur_t + cur_start]
             trx_ndx = cur_entry[1]

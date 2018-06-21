@@ -162,9 +162,9 @@ def main(argv):
             for try_num in range(4):
                 try:
                     self = PoseUNet.PoseUNet(conf, args.net_name)
-                    sess = self.init_net_meta(0,True)
+                    sess = self.init_net_meta(1)
                     break
-                except tf.python.framework.errors_impl.InvalidArgumentError:
+                except tf.errors.InvalidArgumentError:
                     tf.reset_default_graph()
                     print('Loading the net failed, retrying')
                     if try_num is 3:

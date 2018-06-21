@@ -20,7 +20,7 @@ def main(argv):
     with open(sing_script, 'w') as f:
         f.write('#!/bin/bash\n')
         f.write('. /opt/venv/bin/activate\n')
-        f.write('cd /groups/branson/home/kabram/PycharmProjects/poseTF\n')
+        f.write('cd /groups/branson/home/kabram/bransonlab/poseTF_bkps/poseTF_noqueue\n')
         f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
         f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
         f.write('fi\n')
