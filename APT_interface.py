@@ -584,7 +584,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         if len(trx_ids) == 0:
             trx_ids = np.arange(n_trx)
         else:
-            trx_ids = np.array(trx_ids) - 1
+            trx_ids = np.array(trx_ids)
     else:
         T = [None,]
         n_trx = 1
@@ -856,7 +856,12 @@ def parse_args(argv):
     parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*',type=int,default=[])
 
     print(argv)
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.view is not None:
+        args.view = args.view - 1
+    if len(args.trx_ids) > 0:
+        args.trx_ids = [t - 1 for t in args.trx_ids]
+    return args
 
 
 def run(args):

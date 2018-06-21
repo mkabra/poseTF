@@ -13,22 +13,23 @@
 # self = PoseUNet.PoseUNet(conf,name=name,for_training=True)
 # self.train_unet(False,0)
 
-from stephenHeadConfig import conf
-import tensorflow as tf
-
-conf.scale_range = 0.1
-
-import PoseUNet
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-name = 'pose_unet_increasing_filter_32'
-self = PoseUNet.PoseUNet(conf,name=name)
-self.train_unet(False,0)
-
-tf.reset_default_graph()
-self = PoseUNet.PoseUNet(conf,name=name)
-val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
+##
+# from stephenHeadConfig import conf
+# import tensorflow as tf
+#
+# conf.scale_range = 0.1
+#
+# import PoseUNet
+# import os
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+#
+# name = 'pose_unet_increasing_filter_32'
+# self = PoseUNet.PoseUNet(conf,name=name)
+# self.train_unet(False,0)
+#
+# tf.reset_default_graph()
+# self = PoseUNet.PoseUNet(conf,name=name)
+# val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
 
 
 

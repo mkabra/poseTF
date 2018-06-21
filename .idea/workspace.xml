@@ -4,8 +4,7 @@
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dependencies.txt" beforeDir="false" afterPath="$PROJECT_DIR$/dependencies.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forSingularity.py" beforeDir="false" afterPath="$PROJECT_DIR$/forSingularity.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -109,8 +108,8 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="138">
-                  <caret line="553" column="25" selection-start-line="553" selection-start-column="25" selection-end-line="553" selection-end-column="25" />
+                <state relative-caret-position="169">
+                  <caret line="562" column="17" lean-forward="true" selection-start-line="562" selection-start-column="17" selection-end-line="562" selection-end-column="17" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#26544#26649#0" />
@@ -138,8 +137,8 @@
           <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="51">
-                  <caret line="3" column="29" lean-forward="true" selection-start-line="3" selection-start-column="29" selection-end-line="3" selection-end-column="29" />
+                <state relative-caret-position="204">
+                  <caret line="12" column="42" lean-forward="true" selection-start-line="12" selection-start-column="42" selection-end-line="12" selection-end-column="42" />
                   <folding>
                     <element signature="e#3#26#0" expanded="true" />
                   </folding>
@@ -165,11 +164,8 @@
           <file leaf-file-name="forSingularity.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/forSingularity.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="527">
-                  <caret line="31" selection-start-line="31" selection-end-line="31" />
-                  <folding>
-                    <element signature="e#446#480#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="170">
+                  <caret line="10" column="50" lean-forward="true" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
                 </state>
               </provider>
             </entry>
@@ -241,9 +237,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>l1_cropsz</find>
-      <find>conf.split</find>
-      <find>getexplist</find>
       <find>normalize</find>
       <find>self.dep_nets</find>
       <find>interactive</find>
@@ -252,8 +245,8 @@
       <find>cur_pts.ndim</find>
       <find>has_trx_file</find>
       <find>opencv</find>
-      <find />
-      <find />
+      <find>try opencv</find>
+      <find>... point \d+:</find>
       <find>74</find>
       <find>keep_dims</find>
       <find>keep_prob</find>
@@ -271,6 +264,9 @@
       <find>date</find>
       <find>lmdb</find>
       <find>compute_train_data</find>
+      <find>create_conf</find>
+      <find>args.view</find>
+      <find>trx_ids</find>
     </findStrings>
     <replaceStrings>
       <replace>localdirs</replace>
@@ -291,7 +287,7 @@
       <replace>felipe</replace>
       <replace>felipeConfigMulti</replace>
       <replace>train_</replace>
-      <replace />
+      <replace>in range(group_sz)</replace>
       <replace>skimage.transform.resize</replace>
       <replace>unet</replace>
       <replace>[</replace>
@@ -358,11 +354,11 @@
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/localSetup.py" />
         <option value="$PROJECT_DIR$/PoseUNet.py" />
-        <option value="$PROJECT_DIR$/forSingularity.py" />
         <option value="$PROJECT_DIR$/dependencies.txt" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+        <option value="$PROJECT_DIR$/forSingularity.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
       </list>
     </option>
   </component>
@@ -735,13 +731,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00102" summary="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range.">
-      <created>1518773538100</created>
-      <option name="number" value="00102" />
-      <option name="presentableId" value="LOCAL-00102" />
-      <option name="project" value="LOCAL" />
-      <updated>1518773538100</updated>
-    </task>
     <task id="LOCAL-00103" summary="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range.">
       <created>1518773564124</created>
       <option name="number" value="00103" />
@@ -1078,7 +1067,14 @@
       <option name="project" value="LOCAL" />
       <updated>1529611685727</updated>
     </task>
-    <option name="localTasksCounter" value="151" />
+    <task id="LOCAL-00151" summary="Fixed off by one error in APT tracking.">
+      <created>1529613717917</created>
+      <option name="number" value="00151" />
+      <option name="presentableId" value="LOCAL-00151" />
+      <option name="project" value="LOCAL" />
+      <updated>1529613717917</updated>
+    </task>
+    <option name="localTasksCounter" value="152" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1175,7 +1171,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="moving to h5py from hdf5storage for storing results because hdf5storage is unreasonably slow." />
     <MESSAGE value="Adding a cleanup script for Stephen. And, starting to code an interface for APT" />
     <MESSAGE value="Interface script for APT" />
     <MESSAGE value="APT interface is now tested for both with and without trx" />
@@ -1200,16 +1195,12 @@
     <MESSAGE value="Minor bug fix. And output CV results to a json file." />
     <MESSAGE value="Fixed training with fullTrainDatafile." />
     <MESSAGE value="Bug fixes. Added timeout in preloading threads so that they die earlier when the training/validation ends." />
-    <option name="LAST_COMMIT_MESSAGE" value="Bug fixes. Added timeout in preloading threads so that they die earlier when the training/validation ends." />
+    <MESSAGE value="Fixed off by one error in APT tracking." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed off by one error in APT tracking." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/APT_interface.py</url>
-          <line>569</line>
-          <option name="timeStamp" value="539" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py</url>
           <line>12</line>
@@ -1234,18 +1225,18 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="541" />
+      <option name="time" value="542" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="breakpointCondition">
       <expression>
-        <expression-string />
+        <expression-string>step == 25</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>'base/scale0/layer2/batch_norm/base/scale0/layer2/batch_norm/moments/Squeeze_1/ExponentialMovingAverage' in op.name</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -1539,16 +1530,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/forSingularity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="527">
-          <caret line="31" selection-start-line="31" selection-end-line="31" />
-          <folding>
-            <element signature="e#446#480#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../../../bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/python/client/session.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="27">
@@ -1650,23 +1631,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+    <entry file="file://$PROJECT_DIR$/forSingularity.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" column="29" lean-forward="true" selection-start-line="3" selection-start-column="29" selection-end-line="3" selection-end-column="29" />
-          <folding>
-            <element signature="e#3#26#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="170">
+          <caret line="10" column="50" lean-forward="true" selection-start-line="10" selection-start-column="50" selection-end-line="10" selection-end-column="50" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="553" column="25" selection-start-line="553" selection-start-column="25" selection-end-line="553" selection-end-column="25" />
+        <state relative-caret-position="169">
+          <caret line="562" column="17" lean-forward="true" selection-start-line="562" selection-start-column="17" selection-end-line="562" selection-end-column="17" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#26544#26649#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="42" lean-forward="true" selection-start-line="12" selection-start-column="42" selection-end-line="12" selection-end-column="42" />
+          <folding>
+            <element signature="e#3#26#0" expanded="true" />
           </folding>
         </state>
       </provider>
