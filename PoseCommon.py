@@ -23,6 +23,7 @@ import cv2
 import gc
 import resource
 import json
+import threading
 
 
 def conv_relu(x_in, kernel_shape, train_phase):
@@ -128,43 +129,196 @@ class PoseCommon(object):
         self.extra_data = None
         self.db_name = ''
         self.read_and_decode = multiResData.read_and_decode
+        self.scale = 1
+        self.extra_info_sz = 1
+
+        self.q_placeholder_spec = []
+        self.q_placeholders = []
+        self.q_fns = []
+        self.for_training = True
+
+
+    def create_q_specs(self):
+        # preloading queues specifications.
+        extra_info_sz = self.extra_info_sz
+        scale = self.scale
+        imsz = self.conf.imsz
+        self.q_placeholder_spec.append(['images', [self.conf.batch_size, imsz[0]//scale, imsz[1]//scale, self.conf.imgDim]])
+        self.q_placeholder_spec.append(['locs',  [self.conf.batch_size, self.conf.n_classes, 2]])
+        self.q_placeholder_spec.append(['orig_images', [self.conf.batch_size, imsz[0], imsz[1], self.conf.imgDim]])
+        self.q_placeholder_spec.append(['orig_locs',  [self.conf.batch_size, self.conf.n_classes, 2]])
+        self.q_placeholder_spec.append(['info',  [self.conf.batch_size, 3]])
+        self.q_placeholder_spec.append(['extra_info', [self.conf.batch_size, extra_info_sz]])
+        self.q_fns.append(self.create_update_fd_fn())
+
+
+    def open_db_meta(self):
+        # When we reload using the graph, we don't need to recreate the queues.
+        graph = tf.get_default_graph()
+        self.train_enqueue_op = graph.get_operation_by_name('trainq_enqueue')
+        self.train_dequeue_op = graph.get_operation_by_name('trainq_Dequeue')
+        self.val_enqueue_op = graph.get_operation_by_name('valq_enqueue')
+        self.val_dequeue_op = graph.get_operation_by_name('valq_Dequeue')
+        self.q_placeholders = []
+        for name,_ in self.q_placeholder_spec:
+            cur_tensor = graph.get_tensor_by_name('{}:0'.format(name))
+            self.q_placeholders.append([name,cur_tensor])
+
+        self.locs_op = graph.get_tensor_by_name('locs_op:0')
+        self.info_op = graph.get_tensor_by_name('info_op:0')
+        self.orig_xs_op = graph.get_tensor_by_name('orig_images_op:0')
+        self.orig_locs_op = graph.get_tensor_by_name('orig_locs_op:0')
+        self.extra_data_op = graph.get_tensor_by_name('extra_data_op:0')
 
 
     def open_dbs(self):
+        # name is legacy. Now it just sets up the pre loading threads
+
+        self.create_q_specs()
         assert self.train_type is not None, 'traintype has not been set'
-        if self.train_type == 0:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + self.db_name + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + self.db_name + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([train_filename])
-            self.val_queue = tf.train.string_input_producer([val_filename])
-        else:
-            train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
-            val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
-            self.train_queue = tf.train.string_input_producer([train_filename])
-            self.val_queue = tf.train.string_input_producer([val_filename])
+        # if self.train_type == 0:
+        #     train_filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + self.db_name + '.tfrecords'
+        #     val_filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + self.db_name + '.tfrecords'
+        #     self.train_queue = tf.train.string_input_producer([train_filename])
+        #     self.val_queue = tf.train.string_input_producer([val_filename])
+        # else:
+        #     train_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
+        #     val_filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + self.db_name + '.tfrecords'
+        #     self.train_queue = tf.train.string_input_producer([train_filename])
+        #     self.val_queue = tf.train.string_input_producer([val_filename])
+        #
+        placeholders = [[name, tf.placeholder(tf.float32, shape=spec,name=name)] \
+                        for (name, spec) in self.q_placeholder_spec] #.items()}
+        self.q_placeholders = placeholders
+        names = []
+        shapes = []
+        for k,v in self.q_placeholder_spec:
+            names.append(k)
+            shapes.append(v)
+        placeholders_list = [v for k,v in placeholders]
+
+        QUEUE_SIZE = 10
+
+        q = tf.FIFOQueue(QUEUE_SIZE, [tf.float32]*len(names), shapes=shapes, name='trainq')
+        enqueue_op = q.enqueue(placeholders_list)
+        dequeue_op = q.dequeue()
+
+        self.train_enqueue_op = enqueue_op
+        self.train_dequeue_op = dequeue_op
+
+#        self.train_qr = tf.train.QueueRunner(q, [enqueue_op]*4)
+
+        q = tf.FIFOQueue(QUEUE_SIZE, [tf.float32]*len(names), shapes=shapes, name='valq')
+        enqueue_op = q.enqueue(placeholders_list)
+        dequeue_op = q.dequeue()
+
+        self.val_enqueue_op = enqueue_op
+        self.val_dequeue_op = dequeue_op
+ #       self.val_qr = tf.train.QueueRunner(q, [enqueue_op]*4)
 
 
-    def create_cursors(self, sess):
-        tdata = self.read_and_decode(self.train_queue, self.conf)
-        vdata = self.read_and_decode(self.val_queue, self.conf)
-        self.train_data = tdata
-        self.val_data = vdata
+    def create_cursors(self, sess, distort, shuffle):
+        # start the preloading threads.
+
+        # tdata = self.read_and_decode(self.train_queue, self.conf)
+        # vdata = self.read_and_decode(self.val_queue, self.conf)
+        # self.train_data = tdata
+        # self.val_data = vdata
         self.coord = tf.train.Coordinator()
-        self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
+        scale = self.scale
+
+        train_threads = []
+        val_threads = []
+
+        n_threads = 4 if self.for_training else 1
+        for ndx in range(n_threads):
+
+            train_t = threading.Thread(target=self.read_image_thread,
+                                 args=(sess, self.DBType.Train, distort, shuffle, scale))
+            train_t.start()
+            train_threads.append(train_t)
+
+            val_t = threading.Thread(target=self.read_image_thread,
+                                       args=(sess, self.DBType.Val, False, False, scale))
+            val_t.start()
+            val_threads.append(val_t)
+
+        # self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coord)
+        # self.val_threads1 = self.val_qr.create_threads(sess, coord=self.coord, start=True)
+        # self.train_threads1 = self.train_qr.create_threads(sess, coord=self.coord, start=True)
+        self.train_threads = train_threads
+        self.val_threads = val_threads
 
 
     def close_cursors(self):
         self.coord.request_stop()
         self.coord.join(self.threads)
+        self.coord.join(self.train_threads)
+        self.coord.join(self.val_threads)
 
 
-    def get_latest_model_file(self):
-        ckpt_file = os.path.join(
-            self.conf.cachedir,
-            self.conf.expname + '_' + self.name + '_ckpt')
-        latest_ckpt = tf.train.get_checkpoint_state(
-            self.conf.cachedir, ckpt_file)
-        return latest_ckpt.model_checkpoint_path
+    def read_image_thread(self, sess, db_type, distort, shuffle, scale):
+        # Thread that does the pre processing.
+
+        if db_type == self.DBType.Val:
+            filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
+        elif db_type == self.DBType.Train:
+            filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+        else:
+            raise IOError, 'Unspecified DB Type'
+
+        cur_db = multiResData.tf_reader(self.conf, filename, shuffle)
+        placeholders = self.q_placeholders
+
+        print('Starting preloading thread of type ... {}'.format(db_type))
+        while not self.coord.should_stop():
+            batch_np = cur_db.next()
+            xs, locs = PoseTools.preprocess_ims(batch_np['orig_images'], batch_np['orig_locs'], self.conf,
+                                                distort, scale)
+
+            batch_np['images'] = xs
+            batch_np['locs'] = locs
+
+            for fn in self.q_fns:
+                fn(batch_np)
+
+            food = {pl: batch_np[name] for (name, pl) in placeholders}
+
+            if sess._closed:
+                return
+
+            try:
+                if db_type == self.DBType.Val:
+                    sess.run(self.val_enqueue_op, feed_dict=food)
+                elif db_type == self.DBType.Train:
+                    sess.run(self.train_enqueue_op, feed_dict=food)
+                else:
+                    raise IOError, 'Unspecified DB Type'
+            except (tf.errors.CancelledError, RuntimeError) as e:
+                return
+
+
+    def dequeue_thread_op(self, sess, db_type):
+        if db_type == self.DBType.Val:
+            batch_out = sess.run(self.val_dequeue_op)
+        elif db_type == self.DBType.Train:
+            batch_out = sess.run(self.train_dequeue_op)
+        else:
+            raise IOError, 'Unspecified DB Type'
+
+        names = [k for k,v in self.q_placeholders]
+        batch = {}
+        for idx, name in enumerate(names):
+            batch[name] = batch_out[idx]
+
+        self.orig_xs = batch['orig_images']
+        self.orig_locs = batch['orig_locs']
+        self.xs = batch['images']
+        self.locs = batch['locs']
+        self.info = batch['info']
+        self.extra_data = batch['extra_info']
+
+        return batch
 
 
     def read_images(self, db_type, distort, sess, shuffle=None, scale = 1):
@@ -202,6 +356,15 @@ class PoseCommon(object):
         self.locs = locs
         self.info = info
         self.extra_data = extra_data
+
+
+    def get_latest_model_file(self):
+        ckpt_file = os.path.join(
+            self.conf.cachedir,
+            self.conf.expname + '_' + self.name + '_ckpt')
+        latest_ckpt = tf.train.get_checkpoint_state(
+            self.conf.cachedir, ckpt_file)
+        return latest_ckpt.model_checkpoint_path
 
 
     def create_saver(self):
@@ -368,7 +531,7 @@ class PoseCommon(object):
         print_train_data(cur_dict)
 
 
-    def create_ph(self):
+    def create_ph_fd(self):
         self.ph = {}
         learning_rate_ph = tf.placeholder(
             tf.float32, shape=[], name='learning_r')
@@ -376,33 +539,35 @@ class PoseCommon(object):
         self.ph['phase_train'] = tf.placeholder(
             tf.bool, name='phase_train')
         if self.dep_nets:
-            self.dep_nets.create_ph()
+            self.dep_nets.create_ph_fd()
 
-
-    def create_fd(self):
-        # to be subclassed
-        return None
+    # def create_fd(self):
+    #     # to be subclassed
+    #     return None
 
     def fd_train(self):
-        return None
+        assert False, 'Write fd_train for the subclass'
 
     def fd_val(self):
-        return None
+        assert False, 'Write fd_val for the subclass'
 
     def update_fd(self, db_type, sess, distort):
-        return None
+        assert False, 'Write update_fd for the subclass'
+
+    def create_update_fd_fn(self):
+        assert False, 'Write create_fd_fn for the subclass'
 
 
     def init_train(self, train_type):
         self.train_type = train_type
-        self.create_ph()
-        self.create_fd()
         self.open_dbs()
+        self.create_ph_fd()
+#        self.create_fd()
 
 
-    def init_and_restore(self, sess, restore, td_fields, at_step=-1):
-        self.create_cursors(sess)
-        self.update_fd(self.DBType.Train, sess=sess, distort=True)
+    def init_and_restore(self, sess, restore, td_fields, distort, shuffle, at_step=-1):
+        self.create_cursors(sess,distort,shuffle)
+        #self.update_fd(db_type=self.DBType.Train, sess=sess, distort=True)
         start_at = self.restore(sess, restore, at_step)
         initialize_remaining_vars(sess)
 
@@ -423,10 +588,10 @@ class PoseCommon(object):
 
         # for most cases the learning rate should decay to 1/100 - 1/1000 by the end of the training.
 
-        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*3/ self.conf.unet_steps))
+        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*3/ training_iters))
         self.fd[self.ph['learning_rate']] = cur_lr
         self.fd_train()
-        self.update_fd(self.DBType.Train, sess, True)
+        self.update_fd(db_type=self.DBType.Train, sess=sess, distort=True)
         # doTrain = False
         # while not doTrain: # importance sampling
         #     self.update_fd(self.DBType.Train, sess, True)
@@ -451,12 +616,12 @@ class PoseCommon(object):
             self.fd_val()
         else:
             self.fd_train()
-        self.update_fd(self.DBType.Train, sess=sess, distort=distort)
+        self.update_fd(db_type=self.DBType.Train, sess=sess, distort=distort)
 
 
     def setup_val(self, sess):
         self.fd_val()
-        self.update_fd(self.DBType.Val, sess=sess, distort=False)
+        self.update_fd(db_type=self.DBType.Val, sess=sess, distort=False)
 
 
     def create_optimizer(self):
@@ -485,10 +650,13 @@ class PoseCommon(object):
     def compute_train_data(self, sess, db_type):
         self.setup_train(sess) if db_type is self.DBType.Train \
             else self.setup_val(sess)
-        cur_loss, cur_pred = sess.run(
-            [self.cost, self.pred], self.fd)
+        cur_loss, cur_pred, self.locs, self.info, self.extra_data, cur_im, cur_label = \
+            sess.run( [self.cost, self.pred, self.locs_op, self.info_op, self.extra_data_op,
+                       self.ph['x'], self.ph['y']], self.fd)
+
         cur_dist = self.compute_dist(cur_pred, self.locs)
         return cur_loss, cur_dist
+
 
     def train(self, restore, train_type, create_network,
               training_iters, loss, pred_in_key, learning_rate,
@@ -502,8 +670,7 @@ class PoseCommon(object):
         num_val_rep = self.conf.numTest / self.conf.batch_size + 1
 
         with tf.Session() as sess:
-            start_at = self.init_and_restore(
-                sess, restore, td_fields)
+            start_at = self.init_and_restore( sess, restore, td_fields, True, True)
 
             if start_at < training_iters:
                 for step in range(start_at, training_iters + 1):
@@ -548,12 +715,15 @@ class PoseCommon(object):
         sess = tf.Session()
         self.train_type = train_type
         try:
-            self.open_dbs()
-            self.create_cursors(sess)
-        except tf.python.framework.errors_impl.NotFoundError:
+            self.create_q_specs()
+          # self.open_dbs()
+#            self.create_ph_fd()
+            self.restore_meta(self.name, sess)
+            self.open_db_meta()
+            self.create_cursors(sess,distort=False, shuffle=False)
+        except tf.errors.NotFoundError:
             pass
 
-        self.restore_meta(self.name, sess)
         return sess
 
 

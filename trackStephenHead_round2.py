@@ -141,7 +141,7 @@ def main(argv):
 
         if args.detect:
             self = PoseUNet.PoseUNet(conf,args.name)
-            self.create_ph()
+            self.create_ph_fd()
             self.create_fd()
             self.pred = self.create_network()
             sess = tf.Session()

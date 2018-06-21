@@ -152,7 +152,7 @@ def main(argv):
                 f.write('bjobs -uall -m `hostname -s`\n')
                 f.write('nvidia-smi\n')
                 f.write('. /opt/venv/bin/activate\n')
-                f.write('cd /groups/branson/bransonlab/mayank/PoseTF\n')
+                f.write('cd /groups/branson/home/kabram/bransonlab/poseTF_bkps/poseTF_noqueue\n')
                 f.write("if nvidia-smi | grep -q 'No devices were found'; then \n")
                 f.write('{ echo "No GPU devices were found. quitting"; exit 1; }\n')
                 f.write('fi\n')

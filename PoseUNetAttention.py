@@ -21,8 +21,8 @@ class PoseUNetAttention(PoseUNet.PoseUNet):
         self.sel_layers = None
         self.sel_layers_ndx = None
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
+    def create_ph_fd(self):
+        PoseCommon.PoseCommon.create_ph_fd(self)
         self.ph['x'] = self.dep_nets.ph['x']
         self.ph['y'] = self.dep_nets.ph['y']
         self.ph['phase_train'] = self.dep_nets.ph['phase_train']

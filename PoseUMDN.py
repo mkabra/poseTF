@@ -47,8 +47,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.dep_nets.keep_prob = 1.
 
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
+    def create_ph_fd(self):
+        PoseCommon.PoseCommon.create_ph_fd(self)
         # self.dep_nets.create_ph()
         self.ph['x'] = self.dep_nets.ph['x']
         self.ph['locs'] = tf.placeholder(tf.float32,
@@ -1131,9 +1131,9 @@ class PoseUMDNMulti(PoseUMDN, PoseCommon.PoseCommonMulti):
     def create_cursors(self, sess):
         PoseCommon.PoseCommonMulti.create_cursors(self, sess)
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
-        self.dep_nets.create_ph()
+    def create_ph_fd(self):
+        PoseCommon.PoseCommon.create_ph_fd(self)
+        self.dep_nets.create_ph_fd()
         self.ph['x'] = self.dep_nets.ph['x']
         self.ph['locs'] = tf.placeholder(tf.float32,
                            [None, self.conf.max_n_animals, self.conf.n_classes, 2],

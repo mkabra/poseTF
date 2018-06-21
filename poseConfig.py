@@ -122,6 +122,13 @@ class config(object):
     mdn_logit_eps_training = 0.001
     mdn_extra_layers = 1
 
+    # ----- OPEN POSE PARAMS
+    op_label_scale = 8
+
+    # ----- Deep Lab Cut
+    dlc_train_img_dir = 'deepcut_train'
+    dlc_train_data_file = 'deepcut_data.mat'
+
     # ----- Time parameters
     time_window_size = 1
     do_time = False

@@ -161,7 +161,7 @@ def main(argv):
         if args.detect:        
             for try_num in range(4):
                 try:
-                    self = PoseUNet.PoseUNet(conf, args.net_name)
+                    self = PoseUNet.PoseUNet(conf, args.net_name,for_training=True)
                     sess = self.init_net_meta(0,True)
                     break
                 except tf.python.framework.errors_impl.InvalidArgumentError:

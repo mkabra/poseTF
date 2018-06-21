@@ -34,6 +34,7 @@ from matplotlib import cm
 import json
 from skimage import transform
 import datetime
+from scipy.ndimage.interpolation import zoom
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg
 
@@ -350,6 +351,28 @@ def randomly_adjust(img, conf, group_sz = 1):
             jj = jj.clip(0, imax)
             img[st+g, ...] = jj
     return img
+
+
+def randomly_scale(img,locs,conf,group_sz=1):
+    # For images between 0 to 255
+    # and single channel
+    im_sz = conf.imsz + (conf.imgDim,)
+    num = img.shape[0]
+    srange = conf.scale_range
+    n_groups = num/group_sz
+    for ndx in range(n_groups):
+        st = ndx*group_sz
+        en = (ndx+1)*group_sz
+        sfactor = (np.random.rand()-0.5)*srange + 1
+
+        for g in range(group_sz):
+            jj = img[st+g, ...].copy()
+            cur_img = zoom(jj, sfactor) if srange != 0 else jj
+            cur_img, dx, dy = crop_to_size(cur_img, im_sz)
+            img[st+g, ...] =cur_img
+            locs[st+g,...,0] = locs[st+g,...,0]*sfactor + dx/2
+            locs[st + g, ..., 1] = locs[st + g, ..., 1]*sfactor + dy / 2
+    return img, locs
 
 
 def blur_label(im_sz, loc, scale, blur_rad):
@@ -1242,6 +1265,22 @@ def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
     out_im = out_im.astype('uint8')
     return cv2.cvtColor(out_im, cv2.COLOR_HSV2RGB)
 
+def crop_to_size(img, sz):
+    new_sz = img.shape[:2]
+    dx = sz[1] - new_sz[1]
+    dy = sz[0] - new_sz[0]
+    out_img = np.zeros(sz).astype(img.dtype)
+    if dx < 0:
+        hdx = -int(dx/2)
+        hdy = -int(dy/2)
+        out_img[:,:,...] = img[hdy:(sz[0]+hdy),hdx:(sz[1]+hdx),...]
+    else:
+        hdx = int(dx/2)
+        hdy = int(dy/2)
+        out_img[hdy:(new_sz[0] + hdy), hdx:(new_sz[1] + hdx), ...] = img
+    return out_img, dx, dy
+
+
 
 def preprocess_ims(ims, in_locs, conf, distort, scale):
 #    assert ims.dtype == 'uint8', 'Preprocessing only work on uint8 images'
@@ -1249,16 +1288,17 @@ def preprocess_ims(ims, in_locs, conf, distort, scale):
     cur_im = ims.copy()
     cur_im = cur_im.astype('uint8')
     xs = adjust_contrast(cur_im, conf)
+    xs, locs = scale_images(xs, locs, scale, conf)
     if distort:
         if conf.horzFlip:
             xs, locs = randomly_flip_lr(xs, locs)
         if conf.vertFlip:
             xs, locs = randomly_flip_ud(xs, locs)
+        xs, locs = randomly_scale(xs, locs, conf)
         xs, locs = randomly_rotate(xs, locs, conf)
         xs, locs = randomly_translate(xs, locs, conf)
         xs = randomly_adjust(xs, conf)
     # xs = adjust_contrast(xs, conf)
-    xs, locs = scale_images(xs, locs, scale, conf)
     xs = normalize_mean(xs, conf)
     return xs, locs
 

@@ -1000,3 +1000,71 @@ def read_and_decode_without_session(filename, conf, indices=(0,)):
 
     xx.close()
     return all_ims, all_locs, all_info
+
+
+class tf_reader(object):
+
+    def __init__(self, conf, filename, shuffle):
+        self.conf = conf
+        self.file = filename
+        self.iterator  = None
+        self.shuffle = shuffle
+        self.batch_size = self.conf.batch_size
+#        self.vec_num = len(conf.op_affinity_graph)
+        self.heat_num = self.conf.n_classes
+        self.N = PoseTools.count_records(filename)
+
+
+    def reset(self):
+        if self.iterator:
+            self.iterator.close()
+        self.iterator = tf.python_io.tf_record_iterator(self.file)
+
+
+    def read_next(self):
+        if not self.iterator:
+            self.iterator = tf.python_io.tf_record_iterator(self.file)
+        try:
+            record = self.iterator.next()
+        except StopIteration:
+            self.reset()
+            record = self.iterator.next()
+        return  record
+
+    def next(self):
+
+        all_ims = []
+        all_locs = []
+        all_info = []
+        for b_ndx in range(self.batch_size):
+            n_skip = np.random.randint(30) if self.shuffle else 0
+            for _ in range(n_skip+1):
+                record = self.read_next()
+
+            example = tf.train.Example()
+            example.ParseFromString(record)
+            height = int(example.features.feature['height'].int64_list.value[0])
+            width = int(example.features.feature['width'].int64_list.value[0])
+            depth = int(example.features.feature['depth'].int64_list.value[0])
+            expid = int(example.features.feature['expndx'].float_list.value[0])
+            t = int(example.features.feature['ts'].float_list.value[0])
+            img_string = example.features.feature['image_raw'].bytes_list.value[0]
+            img_1d = np.fromstring(img_string, dtype=np.uint8)
+            reconstructed_img = img_1d.reshape((height, width, depth))
+            locs = np.array(example.features.feature['locs'].float_list.value)
+            locs = locs.reshape([self.conf.n_classes, 2])
+            if 'trx_ndx' in example.features.feature.keys():
+                trx_ndx = int(example.features.feature['trx_ndx'].int64_list.value[0])
+            else:
+                trx_ndx = 0
+            all_ims.append(reconstructed_img)
+            all_locs.append(locs)
+            all_info.append(np.array([expid, t, trx_ndx]))
+
+        ims = np.stack(all_ims)
+        locs = np.stack(all_locs)
+        info = np.stack(all_info)
+
+        return {'orig_images':ims, 'orig_locs':locs, 'info':info, 'extra_info':np.zeros([self.batch_size,1])}
+
+

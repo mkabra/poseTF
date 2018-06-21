@@ -21,6 +21,9 @@ import json
 from random import sample
 import traceback
 import logging
+import collections
+#import  open_pose
+
 from os.path import expanduser
 
 def loadmat(filename):
@@ -88,7 +91,7 @@ def has_trx_file(x):
     return has_trx
 
 
-def create_conf(lbl_file, view, name):
+def create_conf(lbl_file, view, name, net_type='unet'):
     try:
         try:
             H = loadmat(lbl_file)
@@ -105,7 +108,13 @@ def create_conf(lbl_file, view, name):
     conf.view = view
     conf.set_exp_name(proj_name)
     # conf.cacheDir = read_string(H['cachedir'])
-    dt_params = H['trackerDeepData']['sPrm']
+    dt_params_ndx = None
+    for ndx in range(H['trackerClass']).shape[0]:
+        cur_tracker = ''.join([chr(c) for c in H[H['trackerClass'][ndx][0]]])
+        if cur_tracker == 'DeepTracker':
+            dt_params_ndx = ndx
+
+    dt_params = H[H['trackerData'][dt_params_ndx][0]]['sPrm']
     conf.cachedir = os.path.join(read_string(dt_params['CacheDir']), proj_name, name)
     if not os.path.exists(os.path.split(conf.cachedir)[0]):
         os.mkdir(os.path.split(conf.cachedir)[0])
@@ -122,21 +131,28 @@ def create_conf(lbl_file, view, name):
     conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
     conf.labelfile = lbl_file
     conf.sel_sz = min(conf.imsz)
-    conf.unet_rescale = int(read_entry(dt_params['scale']))
+    conf.unet_rescale = float(read_entry(dt_params['scale']))
+    conf.op_rescale = float(read_entry(dt_params['scale']))
+    conf.dlc_rescale = float(read_entry(dt_params['scale']))
     conf.adjustContrast = int(read_entry(dt_params['adjustContrast'])) > 0.5
     conf.normalize_img_mean = int(read_entry(dt_params['normalize'])) > 0.5
     # conf.imgDim = int(read_entry(dt_params['NChannels']))
-    ex_mov = u''.join(chr(c) for c in H[H['movieFilesAll'][0,0]])
-    cap = movies.Movie(ex_mov)
-    ex_frame = cap.get_frame(5)
-    conf.imgDim = ex_frame[0].shape[2]
+    ex_mov = multiResData.find_local_dirs(conf)[0][0]
+    cap = movies.Movie(ex_mov,interactive=False)
+    ex_frame = cap.get_frame(0)
+    if np.ndim(ex_frame)>2:
+        conf.imgDim = ex_frame[0].shape[2]
+    else:
+        conf.imgDim = 1
     cap.close()
     try:
         conf.flipud = int(read_entry(dt_params['flipud'])) > 0.5
     except KeyError:
         pass
     try:
-        conf.unet_steps= int(read_entry(dt_params['unet_steps']))
+        conf.unet_steps= int(read_entry(dt_params['dl_steps']))
+        conf.op_steps= int(read_entry(dt_params['dl_steps']))
+        conf.dlc_steps = int(read_entry(dt_params['dl_steps']))
     except KeyError:
         pass
     try:
@@ -163,6 +179,10 @@ def create_conf(lbl_file, view, name):
         conf.rrange = bb
     except KeyError:
         pass
+
+    if net_type == 'openpose':
+        # openpose uses its own normalization
+        conf.normalize_img_mean = False
 
     return conf
 
@@ -215,7 +235,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
         try:
             cap = movies.Movie(local_dirs[ndx])
         except ValueError:
-            logging.exception('MOV_READ: ' + local_dirs[ndx] + ' is missing')
+            logging.exception('MOVIE_READ: ' + local_dirs[ndx] + ' is missing')
             exit(1)
 
         if conf.has_trx_file:
@@ -298,7 +318,7 @@ def create_tfrecord(conf, split=True, split_file=None):
         with open(os.path.join(conf.cachedir,'splitdata.json'),'w') as f:
             json.dump(splits, f)
     except IOError:
-        logging.warning('SPLIT: Could not output split data information')
+        logging.warning('SPLIT_WRITE: Could not output the split data information')
 
 
 def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz,nvalid):
@@ -412,6 +432,18 @@ def get_matlab_ts(filename):
     k = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
     return datetime2matlabdn(k)
 
+
+def convert_unicode(data):
+    if isinstance(data, basestring):
+        return unicode(data)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert_unicode, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert_unicode, data))
+    else:
+        return data
+
+
 def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
 
     def write_trk(pred_locs_in,n_done):
@@ -519,7 +551,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         pred_locs = pred_locs[:,trx_ids,...]
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
         pred_locs = pred_locs[:,:,n_done,:]
-        tgt = trx_ids + 1
+        tgt = [t + 1 for t in trx_ids]
         if not conf.has_trx_file:
             pred_locs = pred_locs[...,0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
@@ -532,13 +564,16 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         info[u'model_file'] = model_file
         info[u'trnTS'] = get_matlab_ts(model_file + '.meta')
         info[u'name'] = name
+        param_dict = convert_unicode(conf.__dict__.copy())
+        param_dict.pop('cropLoc',None)
+        info[u'params'] = param_dict
         try:
             hdf5storage.savemat(out_file,
                                 {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
                                  'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
                                 appendmat=False, truncate_existing=True)
         except IOError:
-            logging.exception('TRK_WRITE: Could not the output results to trk file {}'.format(out_file))
+            logging.exception('TRK_WRITE: Could not the tracking results to trk file {}'.format(out_file))
             exit(1)
 
     try:
@@ -602,7 +637,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                 cap, cur_f, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
             all_f[cur_t, ...] = frame_in
 
-        base_locs = pred_fn(all_f)
+        base_locs = pred_fn(all_f) + 1 # for matlabs 1 - indexing
         for cur_t in range(ppe):
             cur_entry = to_do_list[cur_t + cur_start]
             trx_ndx = cur_entry[1]
@@ -633,7 +668,7 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
     # returns the predicted locations.
 
     tf.reset_default_graph()
-    self = PoseUNet.PoseUNet(conf)
+    self = PoseUNet.PoseUNet(conf,for_training=False)
     try:
         sess = self.init_net_meta(0)
     except tf.errors.InternalError:
@@ -669,7 +704,40 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
                    start_frame, end_frame, skip_rate, trx_ids, model_file, name)
 
 
-def train(lblfile, nviews, name, view):
+def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
+                        skip_rate=1, trx_ids = [], name=''):
+    # classify movies using unet network.
+    # this is the function that should be changed for different networks.
+    # The main thing to do here is to define the pred_fn
+    # which takes as input a batch of images and
+    # returns the predicted locations.
+
+    tf.reset_default_graph()
+    pred_fn, model_file = open_pose.get_pred_fn(conf)
+    classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
+
+
+def classify_movie_all(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
+                        skip_rate=1, trx_ids = [], name='',model_type=''):
+    if model_type == 'openpose':
+        classify_movie_op(conf,mov_file, trx_file, out_file, start_frame, end_frame,
+                        skip_rate, trx_ids, name)
+    elif model_type == 'unet':
+        classify_movie_unet(conf,mov_file, trx_file, out_file, start_frame, end_frame,
+                        skip_rate, trx_ids, name)
+    else:
+        raise ValueError('Undefined type of model')
+
+
+def train_unet(conf):
+    create_tfrecord(conf, False)
+    tf.reset_default_graph()
+    self = PoseUNet.PoseUNet(conf,for_training=True)
+    self.train_unet(False, 1)
+
+
+def train(lblfile, nviews, name, view, type):
     if view is None:
         views = range(nviews)
     else:
@@ -678,11 +746,12 @@ def train(lblfile, nviews, name, view):
     for cur_view in views:
         conf = create_conf(lblfile, cur_view, name)
         conf.view = cur_view
-        create_tfrecord(conf,False)
-        tf.reset_default_graph()
-        self = PoseUNet.PoseUNet(conf)
+
         try:
-            self.train_unet(False, 1)
+            if type=='unet':
+                train_unet(conf)
+            elif type=='openpose':
+                open_pose.training(conf)
         except tf.errors.InternalError:
             logging.exception(
                 'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
@@ -757,6 +826,8 @@ def parse_args(argv):
                         help="path to lbl file")
     parser.add_argument('-name',dest='name',help='Name for the run. Default - pose_unet', default='pose_unet')
     parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None,type=int)
+    parser.add_argument('-type',dest='type',help='Network type, default is unet', default='unet',
+                        choices=['unet','openpose'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
@@ -796,7 +867,8 @@ def run(args):
     nviews = int(read_entry(H['cfg']['NumViews']))
 
     if args.sub_name == 'train':
-        train(lbl_file, nviews, name, args.view)
+        train(lbl_file, nviews, name, args.view, args.type)
+
     elif args.sub_name == 'track':
         assert len(args.mov) == len(args.out_files), 'Number of movie files and number of out files should be the same'
 
@@ -808,14 +880,15 @@ def run(args):
             assert len(args.mov) == nviews, 'Number of movie files should be same as number of views'
             for view in range(nviews):
                 conf = create_conf(lbl_file, view, name)
-                classify_movie_unet(conf, args.mov[view], args.trx[view], args.out_files[view], args.start_frame, args.end_frame, args.skip, args.trx_ids)
+                classify_movie_all(conf, args.mov[view], args.trx[view], args.out_files[view],
+                                args.start_frame, args.end_frame, args.skip, args.trx_ids,model_type=args.type)
         else:
             if args.trx is None:
                 args.trx = [None]
             assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
             conf = create_conf(lbl_file, args.view, name)
-            classify_movie_unet(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
-                                args.end_frame, args.skip, args.trx_ids, name=name)
+            classify_movie_all(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
+                                args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type)
 
 
 def main(argv):
@@ -833,8 +906,8 @@ def main(argv):
 
     try:
         run(args)
-    except Exception as e:
-        logging.exception(e)
+    except Exception:
+        logging.exception('UNKNOWN: APT_interface errored because of some error')
 
 if __name__ == "__main__":
     main(sys.argv[1:])

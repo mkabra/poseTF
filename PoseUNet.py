@@ -23,7 +23,7 @@ from collections import OrderedDict
 
 class PoseUNet(PoseCommon.PoseCommon):
 
-    def __init__(self, conf, name='pose_unet'):
+    def __init__(self, conf, name='pose_unet', for_training=True):
         PoseCommon.PoseCommon.__init__(self, conf, name)
         self.down_layers = [] # layers created while down sampling
         self.up_layers = [] # layers created while up sampling
@@ -32,40 +32,108 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.keep_prob = conf.unet_keep_prob
         self.n_conv = 2
         self.all_layers = None
+        self.for_training = for_training
+        self.scale = self.conf.unet_rescale
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
-        imsz = self.conf.imsz
+
+    def create_q_specs(self):
+        PoseCommon.PoseCommon.create_q_specs(self)
+        self.q_placeholder_spec.append(['label_ims',[self.conf.batch_size,
+                                                self.conf.imsz[0]//self.conf.unet_rescale,
+                                                self.conf.imsz[1]//self.conf.unet_rescale,
+                                                self.conf.n_classes]])
+
+
+    def create_ph_fd(self):
+        # create feed dict and place holders.
+
+        PoseCommon.PoseCommon.create_ph_fd(self)
+#        self.ph['keep_prob'] = tf.placeholder(tf.float32,name='keep_prob')
+        self.ph['keep_prob'] = None
+        self.ph['db_type'] = tf.placeholder(tf.int8,name='db_type')
+
+        batch_out = tf.cond(tf.equal(self.ph['db_type'], 1),
+                lambda: self.train_dequeue_op,
+                lambda: self.val_dequeue_op)
+
+        names = [k for k,v in self.q_placeholders]
+        batch = {}
+        for idx, name in enumerate(names):
+            batch[name] = batch_out[idx]
+
+        if self.for_training:
+            # Add zero so that we can name the operation to access them later
+            # when reloading with init_net_meta
+            self.ph['x'] = tf.add(batch['images'],0,name='x')
+            self.ph['y'] = tf.add(batch['label_ims'],0,name='y')
+            img_shape = [v for k,v in self.q_placeholder_spec if k=='images']
+            self.ph['x'].set_shape(img_shape[0])
+            img_shape = [v for k,v in self.q_placeholder_spec if k=='label_ims']
+            self.ph['y'].set_shape(img_shape[0])
+            self.locs_op = tf.add(batch['locs'],0,name='locs_op')
+            self.info_op = tf.add(batch['info'],0,name='info_op')
+            self.orig_xs_op = tf.add(batch['orig_images'],0,name='orig_images_op')
+            self.orig_locs_op = tf.add(batch['orig_locs'],0,name='orig_locs_op')
+            self.extra_data_op = tf.add(batch['extra_info'],0,name='extra_data_op')
+
+            self.fd = {self.ph['phase_train']:False,
+                       self.ph['learning_rate']:0.,
+#                       self.ph['keep_prob']:1.,
+                       self.ph['db_type']:1
+                       }
+        else:
+            imsz = self.conf.imsz
+            rescale = self.conf.unet_rescale
+            self.ph['x'] = tf.placeholder(tf.float32,
+                               [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
+                               name='x')
+            self.ph['y'] = tf.placeholder(tf.float32,
+                               [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
+                               name='y')
+
+            x_shape = [self.conf.batch_size, ] + self.ph['x'].get_shape().as_list()[1:]
+            y_shape = [self.conf.batch_size, ] + self.ph['y'].get_shape().as_list()[1:]
+            self.fd = {  self.ph['x']:np.zeros(x_shape),
+                self.ph['y']:np.zeros(y_shape),
+                self.ph['phase_train']: False,
+                self.ph['learning_rate']: 0.,
+#                self.ph['keep_prob']: 1.,
+                self.ph['db_type']: 1
+            }
+
+    def create_update_fd_fn(self):
         rescale = self.conf.unet_rescale
-        self.ph['x'] = tf.placeholder(tf.float32,
-                           [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
-                           name='x')
-        self.ph['y'] = tf.placeholder(tf.float32,
-                           [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
-                           name='y')
-        self.ph['keep_prob'] = tf.placeholder(tf.float32,name='keep_prob')
+        imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
 
-    def create_fd(self):
-        x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
-        y_shape = [self.conf.batch_size,] + self.ph['y'].get_shape().as_list()[1:]
-        self.fd = {self.ph['x']:np.zeros(x_shape),
-                   self.ph['y']:np.zeros(y_shape),
-                   self.ph['phase_train']:False,
-                   self.ph['learning_rate']:0.,
-                   self.ph['keep_prob']:1.
-                   }
+        def update_fn(batch):
+            label_ims = PoseTools.create_label_images(
+                batch['locs'], imsz, 1, self.conf.label_blur_rad)
+            batch['label_ims'] = label_ims
+
+        return update_fn
+
+
+    # def create_fd(self):
+    #     x_shape = [self.conf.batch_size,] + self.ph['x'].get_shape().as_list()[1:]
+    #     y_shape = [self.conf.batch_size,] + self.ph['y'].get_shape().as_list()[1:]
+    #     self.fd = {self.ph['x']:np.zeros(x_shape),
+    #                self.ph['y']:np.zeros(y_shape),
+    #                self.ph['phase_train']:False,
+    #                self.ph['learning_rate']:0.,
+    #                self.ph['keep_prob']:1.
+    #                }
+    #
 
     def create_network(self, ):
         with tf.variable_scope(self.net_name):
             return self.create_network1()
 
-
-    def compute_dist(self, preds, locs):
-        tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - \
-              locs/self.conf.unet_rescale
-        tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
-        return np.nanmean(tt1)
-
+    # def compute_dist(self, preds, locs):
+    #     tt1 = PoseTools.get_pred_locs(preds,self.edge_ignore) - \
+    #           locs
+    #     tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
+    #     return np.nanmean(tt1)
+    #
 
     def create_network1(self):
         m_sz = min(self.conf.imsz)/self.conf.unet_rescale
@@ -75,8 +143,8 @@ class PoseUNet(PoseCommon.PoseCommon):
         n_layers = min(max_layers,n_layers) - 2
         n_conv = self.n_conv
         conv = lambda a, b: PoseCommon.conv_relu3(
-            a,b,self.ph['phase_train'], self.ph['keep_prob'],
-            self.conf.unet_use_leaky)
+            a,b,self.ph['phase_train'], keep_prob=None,
+            use_leaky=self.conf.unet_use_leaky)
 
         layers = []
         up_layers = []
@@ -87,7 +155,10 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         # downsample
         n_filt = 128
+        n_filt_base = 32
+        max_filt = 512
         for ndx in range(n_layers):
+            n_filt = min(max_filt, n_filt_base * (2** ndx))
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
@@ -104,6 +175,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         # few more convolution for the final layers
         top_layers = []
         for cndx in range(n_conv):
+            n_filt = min(max_filt, n_filt_base * (2** (n_layers)))
             sc_name = 'layer_{}_{}'.format(n_layers,cndx)
             with tf.variable_scope(sc_name):
                 X = conv(X, n_filt)
@@ -115,6 +187,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         for ndx in reversed(range(n_layers)):
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             X = tf.concat([X,layers[ndx]], axis=3)
+            n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
@@ -241,13 +314,16 @@ class PoseUNet(PoseCommon.PoseCommon):
 
     def fd_train(self):
         self.fd[self.ph['phase_train']] = True
-        self.fd[self.ph['keep_prob']] = self.keep_prob
+        # self.fd[self.ph['keep_prob']] = self.keep_prob
+        self.fd[self.ph['db_type']] = 1
 
     def fd_val(self):
         self.fd[self.ph['phase_train']] = False
-        self.fd[self.ph['keep_prob']] = 1.
+        # self.fd[self.ph['keep_prob']] = 1.
+        self.fd[self.ph['db_type']] = 0
 
-    def update_fd(self, db_type, sess, distort):
+    def update_fd_nothread(self, db_type, sess, distort):
+        bb = self.dequeue_thread_op(sess, db_type)
 
         self.read_images(db_type, distort, sess, distort, self.conf.unet_rescale)
         self.fd[self.ph['x']] = self.xs
@@ -259,6 +335,12 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['y']] = label_ims
 
 
+    def update_fd(self, db_type, sess, distort):
+        pass
+        # batch = self.dequeue_thread_op(sess, db_type)
+        # self.fd[self.ph['y']] = batch['label_ims']
+        # self.fd[self.ph['x']] = batch['images']
+
     def init_net(self, train_type=0, restore=True):
         return  self.init_net_common(self.create_network,
                                        train_type, restore)
@@ -268,23 +350,25 @@ class PoseUNet(PoseCommon.PoseCommon):
 
         sess = PoseCommon.PoseCommon.init_net_meta(self, train_type)
         graph = tf.get_default_graph()
-        try:
-            kp = graph.get_tensor_by_name('keep_prob:0')
-        except KeyError:
-            kp = graph.get_tensor_by_name('Placeholder:0')
 
-        self.ph['keep_prob'] = kp
+        # try:
+        #     kp = graph.get_tensor_by_name('keep_prob:0')
+        # except KeyError:
+        #     kp = graph.get_tensor_by_name('Placeholder:0')
+        # self.ph['keep_prob'] = kp
+
         self.ph['x'] = graph.get_tensor_by_name('x:0')
         self.ph['y'] = graph.get_tensor_by_name('y:0')
         self.ph['learning_rate'] = graph.get_tensor_by_name('learning_r:0')
         self.ph['phase_train'] = graph.get_tensor_by_name('phase_train:0')
+        self.ph['db_type'] = graph.get_tensor_by_name('db_type:0')
 
         try:
             pred = graph.get_tensor_by_name('pose_unet/unet_pred:0')
         except KeyError:
             pred = graph.get_tensor_by_name('pose_unet/add:0')
         self.pred = pred
-        self.create_fd()
+#        self.create_fd()
         return sess
 
 
@@ -320,14 +404,15 @@ class PoseUNet(PoseCommon.PoseCommon):
             num_val += 1
 
         if at_step < 0:
-            sess = self.init_net_meta(train_type,True)
+            sess = self.init_net_meta(train_type) #,True)
         else:
 
             self.init_train(train_type)
             self.pred = self.create_network()
             self.create_saver()
             sess = tf.Session()
-            self.init_and_restore(sess,True,['loss','dist'],at_step)
+            self.init_and_restore(sess,True,['loss','dist'],distort=False, shuffle=False,
+                                  at_step=at_step)
 
         val_dist = []
         val_ims = []
@@ -340,11 +425,12 @@ class PoseUNet(PoseCommon.PoseCommon):
                 self.setup_train(sess, distort=False,treat_as_val=True)
             else:
                 self.setup_val(sess)
-            cur_pred = sess.run(self.pred, self.fd)
+            cur_pred, self.locs, self.info, self.xs = sess.run(
+                [self.pred, self.locs_op, self.info_op, self.ph['x']], self.fd)
             cur_predlocs = PoseTools.get_pred_locs(
                 cur_pred, self.edge_ignore)
             cur_dist = np.sqrt(np.sum(
-                (cur_predlocs-self.locs/self.conf.unet_rescale) ** 2, 2))
+                (cur_predlocs-self.locs) ** 2, 2))
             val_dist.append(cur_dist)
             val_ims.append(self.xs)
             val_locs.append(self.locs)
@@ -411,11 +497,12 @@ class PoseUNet(PoseCommon.PoseCommon):
                 all_f[ii, ...] = frame_in[..., 0:conf.imgDim]
 
             # converting to uint8 is really really important!!!!!
-            xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize,self.conf.n_classes, 2]), conf=self.conf, distort=False, scale=self.conf.unet_rescale)
+            xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize,self.conf.n_classes, 2]),
+                                             conf=self.conf, distort=False, scale=self.conf.unet_rescale)
 
             self.fd[self.ph['x']] = xs
             self.fd[self.ph['phase_train']] = False
-            self.fd[self.ph['keep_prob']] = 1.
+#            self.fd[self.ph['keep_prob']] = 1.
             pred = sess.run(self.pred, self.fd)
 
             base_locs = PoseTools.get_pred_locs(pred)
@@ -500,7 +587,8 @@ class PoseUNet(PoseCommon.PoseCommon):
                     trx_arr.append([x,y,theta,R])
                     all_f[ii, ...] = frame_in
 
-                xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]), conf=self.conf,           distort=False, scale=self.conf.unet_rescale)
+                xs, _ = PoseTools.preprocess_ims(all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]),
+                                                 conf=self.conf,distort=False, scale=self.conf.unet_rescale)
 
                 self.fd[self.ph['x']] = xs
                 self.fd[self.ph['phase_train']] = False
@@ -752,8 +840,8 @@ class PoseUNetTime(PoseUNet, PoseCommon.PoseCommonTime):
     def read_images(self, db_type, distort, sess, shuffle=None):
         PoseCommon.PoseCommonTime.read_images(self,db_type,distort,sess,shuffle)
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
+    def create_ph_fd(self):
+        PoseCommon.PoseCommon.create_ph_fd(self)
         imsz = self.conf.imsz
         rescale = self.conf.unet_rescale
         b_sz = self.conf.batch_size
@@ -907,8 +995,8 @@ class PoseUNetRNN(PoseUNet, PoseCommon.PoseCommonRNN):
         PoseCommon.PoseCommonRNN.read_images(self,db_type,distort,sess,shuffle)
 
 
-    def create_ph(self):
-        PoseCommon.PoseCommon.create_ph(self)
+    def create_ph_fd(self):
+        PoseCommon.PoseCommon.create_ph_fd(self)
         imsz = self.conf.imsz
         rescale = self.conf.unet_rescale
         b_sz = self.conf.batch_size
