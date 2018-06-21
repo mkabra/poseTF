@@ -71,7 +71,7 @@ def get_cmap(n_classes):
 
 def scale_images(img, locs, scale, conf):
     sz = img.shape
-    simg = np.zeros((sz[0], old_div(sz[1], scale), old_div(sz[2], scale), sz[3]))
+    simg = np.zeros((sz[0], int(sz[1]/ scale), int(sz[2]/ scale), sz[3]))
     for ndx in range(sz[0]):
         if sz[3] == 1:
             simg[ndx, :, :, 0] = transform.resize(img[ndx, :, :, 0], simg.shape[1:3], preserve_range=True)
@@ -356,7 +356,7 @@ def randomly_adjust(img, conf, group_sz = 1):
 def randomly_scale(img,locs,conf,group_sz=1):
     # For images between 0 to 255
     # and single channel
-    im_sz = conf.imsz + (conf.imgDim,)
+    im_sz = img.shape[1:]
     num = img.shape[0]
     srange = conf.scale_range
     n_groups = num/group_sz
@@ -1305,3 +1305,14 @@ def preprocess_ims(ims, in_locs, conf, distort, scale):
 
 def get_datestr():
     return datetime.datetime.now().strftime('%Y%m%d')
+
+
+def runningInDocker():
+    # From https://gist.github.com/anantkamath/623ce7f5432680749e087cf8cfba9b69
+    with open('/proc/self/cgroup', 'r') as procfile:
+        for line in procfile:
+            fields = line.strip().split('/')
+            if 'docker' in fields:
+                return True
+
+    return False

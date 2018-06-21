@@ -16,7 +16,7 @@ from past.utils import old_div
 import tensorflow as tf
 import os,sys
 # import caffe
-import lmdb
+# import lmdb
 # import caffe.proto.caffe_pb2
 # from caffe.io import datum_to_array
 import matplotlib

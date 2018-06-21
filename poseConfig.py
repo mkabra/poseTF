@@ -90,6 +90,7 @@ class config(object):
     crange = [0.7, 1.3]
     rrange = 30
     trange = 10
+    scale_range = 0.1
     imax = 255.
     adjustContrast = False
     clahegridsize = 20

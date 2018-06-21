@@ -730,14 +730,18 @@ def classify_movie_all(conf, mov_file, trx_file, out_file, start_frame=0, end_fr
         raise ValueError('Undefined type of model')
 
 
-def train_unet(conf):
-    create_tfrecord(conf, False)
+def train_unet(conf,args):
+    if not args.skip_db:
+        create_tfrecord(conf, False)
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf,for_training=True)
     self.train_unet(False, 1)
 
 
-def train(lblfile, nviews, name, view, type):
+def train(lblfile, nviews, name, args):
+
+    view = args.view
+    type = args.type
     if view is None:
         views = range(nviews)
     else:
@@ -745,18 +749,21 @@ def train(lblfile, nviews, name, view, type):
 
     for cur_view in views:
         conf = create_conf(lblfile, cur_view, name)
+        if args.cache is not None:
+            conf.cachedir = args.cache
+
         conf.view = cur_view
 
         try:
             if type=='unet':
-                train_unet(conf)
+                train_unet(conf,args)
             elif type=='openpose':
                 open_pose.training(conf)
-        except tf.errors.InternalError:
+        except tf.errors.InternalError as e:
             logging.exception(
                 'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
             exit(1)
-        except tf.errors.ResourceExhaustedError:
+        except tf.errors.ResourceExhaustedError as e:
             logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
             exit(1)
 
@@ -826,6 +833,8 @@ def parse_args(argv):
                         help="path to lbl file")
     parser.add_argument('-name',dest='name',help='Name for the run. Default - pose_unet', default='pose_unet')
     parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None,type=int)
+    parser.add_argument('-cache',dest='cache',help='Override cachedir in lbl file', default=None)
+    parser.add_argument('-skip_db',dest='skip_db',help='Skip creating the data base', action='store_true')
     parser.add_argument('-type',dest='type',help='Network type, default is unet', default='unet',
                         choices=['unet','openpose'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
@@ -867,7 +876,7 @@ def run(args):
     nviews = int(read_entry(H['cfg']['NumViews']))
 
     if args.sub_name == 'train':
-        train(lbl_file, nviews, name, args.view, args.type)
+        train(lbl_file, nviews, name, args)
 
     elif args.sub_name == 'track':
         assert len(args.mov) == len(args.out_files), 'Number of movie files and number of out files should be the same'

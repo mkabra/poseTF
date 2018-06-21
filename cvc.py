@@ -7,7 +7,8 @@
 from builtins import object
 import cv2
 class cvc(object):
-    (major,minor,_) = cv2.__version__.split('.')
+    x = cv2.__version__.split('.')
+    major = x[0]
     if major == '2':
         FRAME_COUNT = cv2.cv.CV_CAP_PROP_FRAME_COUNT
         FRAME_WIDTH = cv2.cv.CV_CAP_PROP_FRAME_WIDTH
