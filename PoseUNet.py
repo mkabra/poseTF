@@ -15,6 +15,8 @@ from matplotlib import cm
 import movies
 import multiResData
 from scipy import io as sio
+import re
+import json
 # for tf_unet
 #from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
 #                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
@@ -411,7 +413,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             self.pred = self.create_network()
             self.create_saver()
             sess = tf.Session()
-            self.init_and_restore(sess,True,['loss','dist'],distort=False, shuffle=False,
+            start_at = self.init_and_restore(sess,True,['loss','dist'],distort=False, shuffle=False,
                                   at_step=at_step)
 
         val_dist = []
@@ -452,7 +454,32 @@ class PoseUNet(PoseCommon.PoseCommon):
         n_records = len(val_info[0][0])
         val_info = np.array(val_info).reshape([-1, n_records ])
         tf.reset_default_graph()
-        return val_dist, val_ims, val_preds, val_predlocs, val_locs/self.conf.unet_rescale, val_info
+
+        dstr = PoseTools.get_datestr()
+        if at_step < 0:
+            model_file = self.get_latest_model_file()
+            start_at = int(re.findall('\d+$',model_file)[0]) + 1
+        else:
+            model_file = self.get_latest_model_file()
+            last_iter = re.findall('\d+$',model_file)[0]
+            model_file.replace(last_iter,'{}'.format(start_at-1))
+
+
+        f_name = '_'.join([ self.conf.expname, self.name, '{}'.format(start_at+1),dstr])
+        out_file = os.path.join(self.conf.cachedir,f_name+'.json')
+
+        json_data = {}
+        json_data['val_dist'] = val_dist
+        json_data['val_predlocs'] = val_predlocs
+        json_data['val_locs'] = np.aray(val_locs)
+        json_data['val_info'] = val_info
+        json_data['model_file'] = model_file
+        json_data['step'] = start_at-1
+
+        with open(out_file,'w') as f:
+            json.dump(json_data,f)
+
+        return val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info
 
 
     def classify_movie(self, movie_name, sess, end_frame=-1, start_frame=0, flipud=False):

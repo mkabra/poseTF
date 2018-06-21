@@ -109,7 +109,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     conf.set_exp_name(proj_name)
     # conf.cacheDir = read_string(H['cachedir'])
     dt_params_ndx = None
-    for ndx in range(H['trackerClass']).shape[0]:
+    for ndx in range(H['trackerClass'].shape[0]):
         cur_tracker = ''.join([chr(c) for c in H[H['trackerClass'][ndx][0]]])
         if cur_tracker == 'DeepTracker':
             dt_params_ndx = ndx

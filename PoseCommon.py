@@ -727,6 +727,7 @@ class PoseCommon(object):
         return sess
 
 
+
     def restore_meta(self, name, sess):
         if self.dep_nets:
             if type(self.dep_nets) is list:
