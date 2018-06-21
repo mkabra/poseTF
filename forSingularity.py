@@ -1,17 +1,17 @@
-#
-#
-#
-# from poseConfig import aliceConfig as conf
-#
-# import PoseUNet
-# import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-# conf.batch_size = 16
-# name = 'pose_unet_increasing_filter_32_bsize16'
-# # self = PoseUNet.PoseUNet(conf,name=name,for_training=False)
-# # val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
-# self = PoseUNet.PoseUNet(conf,name=name,for_training=True)
-# self.train_unet(False,0)
+
+
+
+from poseConfig import aliceConfig as conf
+
+import PoseUNet
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+conf.batch_size = 8
+name = 'pose_unet_increasing_filter_32_bsize8'
+# self = PoseUNet.PoseUNet(conf,name=name,for_training=False)
+# val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
+self = PoseUNet.PoseUNet(conf,name=name)
+self.train_unet(False,0)
 
 ##
 # from stephenHeadConfig import conf

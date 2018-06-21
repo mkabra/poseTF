@@ -849,7 +849,7 @@ def parse_args(argv):
     parser_classify.add_argument("-trx", dest="trx",
                                  help='trx file for above movie', default=None, nargs='*')
     parser_classify.add_argument('-start_frame', dest='start_frame', help='start tracking from this frame', type=int,
-                                 default=0)
+                                 default=1)
     parser_classify.add_argument('-end_frame', dest='end_frame', help='end frame for tracking', type=int, default=-1)
     parser_classify.add_argument('-skip_rate', dest='skip', help='frames to skip while tracking', default=1, type=int)
     parser_classify.add_argument('-out', dest='out_files', help='file to save tracking results to', required=True, nargs='+')
@@ -862,6 +862,7 @@ def parse_args(argv):
     if args.sub_name == 'track':
         if len(args.trx_ids) > 0:
             args.trx_ids = [t - 1 for t in args.trx_ids]
+        args.start_frame = args.start_frame - 1
     return args
 
 

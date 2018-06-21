@@ -107,6 +107,7 @@ class myconfig(object):
     rrange = 30
     trange = 50
     imax = 255.
+    scale_range = 0.1
     adjustContrast = True
     clahegridsize = 20
     normalize_img_mean = True
