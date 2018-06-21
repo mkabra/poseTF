@@ -10,3 +10,5 @@
 * EasyDict
 * future
 * matplotlib
+* python-tk
+* scikit-image

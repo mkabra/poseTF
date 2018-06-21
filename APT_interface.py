@@ -551,7 +551,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         pred_locs = pred_locs[:,trx_ids,...]
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
         pred_locs = pred_locs[:,:,n_done,:]
-        tgt = [t + 1 for t in trx_ids]
+        tgt = trx_ids + 1
         if not conf.has_trx_file:
             pred_locs = pred_locs[...,0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
@@ -582,7 +582,9 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         end_frames = np.array([x['endframe'][0, 0] for x in T])
         first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
         if len(trx_ids) == 0:
-            trx_ids = range(n_trx)
+            trx_ids = np.arange(n_trx)
+        else:
+            trx_ids = np.array(trx_ids) - 1
     else:
         T = [None,]
         n_trx = 1
@@ -609,7 +611,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
     to_do_list = []
     for cur_f in range(start_frame,end_frame):
         for t in range(n_trx):
-            if trx_ids.count(t) == 0:
+            if not np.any(trx_ids==t):
                 continue
             if (end_frames[t]> cur_f) and (first_frames[t]<=cur_f):
                 to_do_list.append([cur_f,t])

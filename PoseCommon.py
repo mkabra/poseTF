@@ -160,6 +160,13 @@ class PoseCommon(object):
         self.train_dequeue_op = graph.get_operation_by_name('trainq_Dequeue')
         self.val_enqueue_op = graph.get_operation_by_name('valq_enqueue')
         self.val_dequeue_op = graph.get_operation_by_name('valq_Dequeue')
+
+        saved_batch_size = self.train_enqueue_op.inputs[1].get_shape().as_list()[0]
+        if saved_batch_size != self.conf.batch_size:
+            self.conf.batch_size = saved_batch_size
+            logging.info('Over-riding the batch size with the batch size that was used to train the model')
+
+        self.create_q_specs()
         self.q_placeholders = []
         for name,_ in self.q_placeholder_spec:
             cur_tensor = graph.get_tensor_by_name('{}:0'.format(name))
@@ -746,7 +753,6 @@ class PoseCommon(object):
         sess = tf.Session()
         self.train_type = train_type
         try:
-            self.create_q_specs()
           # self.open_dbs()
 #            self.create_ph_fd()
             self.restore_meta(self.name, sess)
