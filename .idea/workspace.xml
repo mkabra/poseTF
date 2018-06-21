@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Fixed training with fullTrainDatafile.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PoseCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PoseUNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUNet.py" afterDir="false" />
     </list>
@@ -48,11 +47,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="464">
-                  <caret line="567" column="8" selection-start-line="567" selection-start-column="8" selection-end-line="567" selection-end-column="8" />
+                <state relative-caret-position="510">
+                  <caret line="261" lean-forward="true" selection-start-line="261" selection-end-line="261" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#9098#10132#0" />
@@ -91,11 +90,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="102">
-                  <caret line="111" column="48" selection-start-line="111" selection-start-column="48" selection-end-line="111" selection-end-column="48" />
+                <state relative-caret-position="77">
+                  <caret line="106" column="64" selection-start-line="106" selection-start-column="64" selection-end-line="106" selection-end-column="64" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#26544#26649#0" />
@@ -122,8 +121,8 @@
           <file leaf-file-name="PoseUNet.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUNet.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="299">
-                  <caret line="475" column="44" lean-forward="true" selection-start-line="475" selection-start-column="44" selection-end-line="475" selection-end-column="44" />
+                <state relative-caret-position="527">
+                  <caret line="381" column="31" selection-start-line="381" selection-start-column="31" selection-end-line="381" selection-end-column="31" />
                   <folding>
                     <element signature="e#0#17#0" expanded="true" />
                   </folding>
@@ -138,8 +137,8 @@
           <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="51">
-                  <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
+                <state relative-caret-position="153">
+                  <caret line="9" column="39" lean-forward="true" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="39" />
                 </state>
               </provider>
             </entry>
@@ -347,10 +346,10 @@
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/forSingularity.py" />
         <option value="$PROJECT_DIR$/dependencies.txt" />
-        <option value="$PROJECT_DIR$/PoseCommon.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
+        <option value="$PROJECT_DIR$/PoseCommon.py" />
       </list>
     </option>
   </component>
@@ -360,11 +359,11 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="65" />
-    <option name="y" value="24" />
-    <option name="width" value="2495" />
-    <option name="height" value="1576" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="64" />
+    <option name="y" value="-11" />
+    <option name="width" value="2497" />
+    <option name="height" value="1612" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -723,13 +722,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00098" summary="Adding time stuff">
-      <created>1517997803192</created>
-      <option name="number" value="00098" />
-      <option name="presentableId" value="LOCAL-00098" />
-      <option name="project" value="LOCAL" />
-      <updated>1517997803193</updated>
-    </task>
     <task id="LOCAL-00099" summary="Using 3 FC layers in UMDN Fixed network instead of 1. And adding stuff to generate coco compatible annotation files from tfrecords file">
       <created>1518608433116</created>
       <option name="number" value="00099" />
@@ -1066,7 +1058,14 @@
       <option name="project" value="LOCAL" />
       <updated>1529588346067</updated>
     </task>
-    <option name="localTasksCounter" value="147" />
+    <task id="LOCAL-00147" summary="Minor bug fix. And output CV results to a json file.">
+      <created>1529590046226</created>
+      <option name="number" value="00147" />
+      <option name="presentableId" value="LOCAL-00147" />
+      <option name="project" value="LOCAL" />
+      <updated>1529590046226</updated>
+    </task>
+    <option name="localTasksCounter" value="148" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1111,7 +1110,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="24" width="2495" height="1576" extended-state="0" />
+    <frame x="65" y="-4" width="2495" height="1604" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="1" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
@@ -1120,10 +1119,10 @@
       <window_info anchor="bottom" id="Find" order="5" weight="0.32941177" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="1" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.29490292" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.29490292" />
       <window_info id="Structure" order="0" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="9" weight="0.32871974" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49970043" visible="true" weight="0.34256056" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970043" visible="true" weight="0.33604887" />
       <window_info id="Favorites" order="1" show_stripe_button="false" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="8" weight="0.4" />
@@ -1163,7 +1162,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fix in matlab scripts for stephen's tracking for larger sizes" />
     <MESSAGE value="Movies can now be classified by loading the graph from meta file." />
     <MESSAGE value="changed misc.imresize to skimage.transform.resize as it has been deprecated." />
     <MESSAGE value="moving to h5py from hdf5storage for storing results because hdf5storage is unreasonably slow." />
@@ -1188,22 +1186,11 @@
     <MESSAGE value="APT_interface now logs error to file!" />
     <MESSAGE value="Error catching in APT_interface and target specific trk files in classify_movie" />
     <MESSAGE value="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages." />
-    <option name="LAST_COMMIT_MESSAGE" value="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages." />
+    <MESSAGE value="Minor bug fix. And output CV results to a json file." />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor bug fix. And output CV results to a json file." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/PoseUNet.py</url>
-          <line>479</line>
-          <option name="timeStamp" value="513" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/APT_interface.py</url>
-          <line>111</line>
-          <option name="timeStamp" value="514" />
-        </line-breakpoint>
-      </breakpoints>
       <breakpoints-defaults>
         <breakpoint type="python-line" />
       </breakpoints-defaults>
@@ -1215,14 +1202,14 @@
         </breakpoints-dialog>
       </breakpoints-dialog>
       <default-breakpoints>
-        <breakpoint type="python-exception">
+        <breakpoint enabled="true" type="python-exception">
           <properties notifyOnTerminate="true" ignoreLibraries="true" exception="BaseException">
             <option name="ignoreLibraries" value="true" />
             <option name="notifyOnTerminate" value="true" />
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="515" />
+      <option name="time" value="516" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -1582,6 +1569,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="77">
+          <caret line="106" column="64" selection-start-line="106" selection-start-column="64" selection-end-line="106" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#26544#26649#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1053">
@@ -1595,23 +1593,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="464">
-          <caret line="567" column="8" selection-start-line="567" selection-start-column="8" selection-end-line="567" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#9098#10132#0" />
-            <element signature="e#10480#11269#0" />
-            <element signature="e#11322#12094#0" />
-            <element signature="e#13670#15284#0" />
-            <element signature="e#15731#16005#0" />
-            <element signature="e#16042#16769#0" />
-            <element signature="e#17299#17410#0" />
-            <element signature="e#18268#18315#0" />
-            <element signature="e#18347#18392#0" />
-            <element signature="e#18451#18499#0" />
-          </folding>
+        <state relative-caret-position="153">
+          <caret line="9" column="39" lean-forward="true" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="39" />
         </state>
       </provider>
     </entry>
@@ -1627,28 +1612,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
-          <caret line="475" column="44" lean-forward="true" selection-start-line="475" selection-start-column="44" selection-end-line="475" selection-end-column="44" />
+        <state relative-caret-position="527">
+          <caret line="381" column="31" selection-start-line="381" selection-start-column="31" selection-end-line="381" selection-end-column="31" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
+    <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="111" column="48" selection-start-line="111" selection-start-column="48" selection-end-line="111" selection-end-column="48" />
+        <state relative-caret-position="510">
+          <caret line="261" lean-forward="true" selection-start-line="261" selection-end-line="261" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#26544#26649#0" />
+            <element signature="e#9098#10132#0" />
+            <element signature="e#10480#11269#0" />
+            <element signature="e#11322#12094#0" />
+            <element signature="e#13670#15284#0" />
+            <element signature="e#15731#16005#0" />
+            <element signature="e#16042#16769#0" />
+            <element signature="e#17299#17410#0" />
+            <element signature="e#18268#18315#0" />
+            <element signature="e#18347#18392#0" />
+            <element signature="e#18451#18499#0" />
           </folding>
         </state>
       </provider>

@@ -465,14 +465,14 @@ class PoseUNet(PoseCommon.PoseCommon):
             model_file.replace(last_iter,'{}'.format(start_at-1))
 
 
-        f_name = '_'.join([ self.conf.expname, self.name, '{}'.format(start_at+1),dstr])
+        f_name = '_'.join([ self.conf.expname, self.name, 'cv_results','{}'.format(start_at-1),dstr])
         out_file = os.path.join(self.conf.cachedir,f_name+'.json')
 
         json_data = {}
-        json_data['val_dist'] = val_dist
-        json_data['val_predlocs'] = val_predlocs
-        json_data['val_locs'] = np.aray(val_locs)
-        json_data['val_info'] = val_info
+        json_data['val_dist'] = val_dist.tolist()
+        json_data['val_predlocs'] = val_predlocs.tolist()
+        json_data['val_locs'] = np.array(val_locs).tolist()
+        json_data['val_info'] = val_info.tolist()
         json_data['model_file'] = model_file
         json_data['step'] = start_at-1
 

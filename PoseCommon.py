@@ -260,12 +260,15 @@ class PoseCommon(object):
     def read_image_thread(self, sess, db_type, distort, shuffle, scale):
         # Thread that does the pre processing.
 
-        if db_type == self.DBType.Val:
-            filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
-        elif db_type == self.DBType.Train:
-            filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+        if self.train_type == 0:
+            if db_type == self.DBType.Val:
+                filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
+            elif db_type == self.DBType.Train:
+                filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
+            else:
+                raise IOError, 'Unspecified DB Type'
         else:
-            raise IOError, 'Unspecified DB Type'
+            filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
 
         cur_db = multiResData.tf_reader(self.conf, filename, shuffle)
         placeholders = self.q_placeholders
