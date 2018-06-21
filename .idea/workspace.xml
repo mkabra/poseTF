@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="view for APT_interface is now 1 indexed.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forSingularity.py" beforeDir="false" afterPath="$PROJECT_DIR$/forSingularity.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -108,8 +107,8 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="169">
-                  <caret line="562" column="17" lean-forward="true" selection-start-line="562" selection-start-column="17" selection-end-line="562" selection-end-column="17" />
+                <state relative-caret-position="472">
+                  <caret line="861" column="32" selection-start-line="861" selection-start-column="32" selection-end-line="861" selection-end-column="32" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#26544#26649#0" />
@@ -137,11 +136,8 @@
           <file leaf-file-name="scratch_5.py" pinned="false" current-in-tab="true">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="204">
-                  <caret line="12" column="42" lean-forward="true" selection-start-line="12" selection-start-column="42" selection-end-line="12" selection-end-column="42" />
-                  <folding>
-                    <element signature="e#3#26#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="102">
+                  <caret line="6" column="37" selection-start-line="6" selection-start-column="37" selection-end-line="6" selection-end-column="37" />
                 </state>
               </provider>
             </entry>
@@ -731,13 +727,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00103" summary="For MDN, moving the offset for locs from network to loss so that the gradients for both locs and logits are in same range.">
-      <created>1518773564124</created>
-      <option name="number" value="00103" />
-      <option name="presentableId" value="LOCAL-00103" />
-      <option name="project" value="LOCAL" />
-      <updated>1518773564124</updated>
-    </task>
     <task id="LOCAL-00104" summary="Bug fix for moving offset from net to loss.">
       <created>1518774180901</created>
       <option name="number" value="00104" />
@@ -1074,7 +1063,14 @@
       <option name="project" value="LOCAL" />
       <updated>1529613717917</updated>
     </task>
-    <option name="localTasksCounter" value="152" />
+    <task id="LOCAL-00152" summary="view for APT_interface is now 1 indexed.">
+      <created>1529615122006</created>
+      <option name="number" value="00152" />
+      <option name="presentableId" value="LOCAL-00152" />
+      <option name="project" value="LOCAL" />
+      <updated>1529615122006</updated>
+    </task>
+    <option name="localTasksCounter" value="153" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1171,7 +1167,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Adding a cleanup script for Stephen. And, starting to code an interface for APT" />
     <MESSAGE value="Interface script for APT" />
     <MESSAGE value="APT interface is now tested for both with and without trx" />
     <MESSAGE value="Adding UNet attention. Also, name for APT_interface" />
@@ -1196,14 +1191,15 @@
     <MESSAGE value="Fixed training with fullTrainDatafile." />
     <MESSAGE value="Bug fixes. Added timeout in preloading threads so that they die earlier when the training/validation ends." />
     <MESSAGE value="Fixed off by one error in APT tracking." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed off by one error in APT tracking." />
+    <MESSAGE value="view for APT_interface is now 1 indexed." />
+    <option name="LAST_COMMIT_MESSAGE" value="view for APT_interface is now 1 indexed." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py</url>
-          <line>12</line>
+          <line>23</line>
           <option name="timeStamp" value="540" />
         </line-breakpoint>
       </breakpoints>
@@ -1640,8 +1636,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="169">
-          <caret line="562" column="17" lean-forward="true" selection-start-line="562" selection-start-column="17" selection-end-line="562" selection-end-column="17" />
+        <state relative-caret-position="472">
+          <caret line="861" column="32" selection-start-line="861" selection-start-column="32" selection-end-line="861" selection-end-column="32" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#26544#26649#0" />
@@ -1651,11 +1647,8 @@
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="12" column="42" lean-forward="true" selection-start-line="12" selection-start-column="42" selection-end-line="12" selection-end-column="42" />
-          <folding>
-            <element signature="e#3#26#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="102">
+          <caret line="6" column="37" selection-start-line="6" selection-start-column="37" selection-end-line="6" selection-end-column="37" />
         </state>
       </provider>
     </entry>

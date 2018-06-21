@@ -859,8 +859,9 @@ def parse_args(argv):
     args = parser.parse_args(argv)
     if args.view is not None:
         args.view = args.view - 1
-    if len(args.trx_ids) > 0:
-        args.trx_ids = [t - 1 for t in args.trx_ids]
+    if args.sub_name == 'track':
+        if len(args.trx_ids) > 0:
+            args.trx_ids = [t - 1 for t in args.trx_ids]
     return args
 
 
