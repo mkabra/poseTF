@@ -1,13 +1,13 @@
-
-
-
+#
+#
+#
 # from poseConfig import aliceConfig as conf
 #
 # import PoseUNet
 # import os
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-#
-# name = 'pose_unet_increasing_filter_32'
+# conf.batch_size = 16
+# name = 'pose_unet_increasing_filter_32_bsize16'
 # # self = PoseUNet.PoseUNet(conf,name=name,for_training=False)
 # # val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
 # self = PoseUNet.PoseUNet(conf,name=name,for_training=True)
@@ -20,14 +20,14 @@ conf.scale_range = 0.1
 
 import PoseUNet
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-name = 'pose_unet_increasing_filter_32_docker'
-self = PoseUNet.PoseUNet(conf,name=name,for_training=True)
+name = 'pose_unet_increasing_filter_32'
+self = PoseUNet.PoseUNet(conf,name=name)
 self.train_unet(False,0)
 
 tf.reset_default_graph()
-self = PoseUNet.PoseUNet(conf,name=name,for_training=False)
+self = PoseUNet.PoseUNet(conf,name=name)
 val_dist, val_ims, val_preds, val_predlocs, val_locs, val_info = self.classify_val(0)
 
 

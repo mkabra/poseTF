@@ -24,6 +24,7 @@ import gc
 import resource
 import json
 import threading
+import logging
 
 
 def conv_relu(x_in, kernel_shape, train_phase):
@@ -135,7 +136,7 @@ class PoseCommon(object):
         self.q_placeholder_spec = []
         self.q_placeholders = []
         self.q_fns = []
-        self.for_training = True
+        self.for_training = 0
 
 
     def create_q_specs(self):
@@ -230,7 +231,16 @@ class PoseCommon(object):
         train_threads = []
         val_threads = []
 
-        n_threads = 4 if self.for_training else 1
+        if self.for_training == 0:
+            # for training
+            n_threads = 4
+        elif self.for_training == 1:
+            # for prediction
+            n_threads = 0
+        elif self.for_training == 2:
+            # for cross validation
+            n_threads = 1
+
         for ndx in range(n_threads):
 
             train_t = threading.Thread(target=self.read_image_thread,
@@ -251,10 +261,13 @@ class PoseCommon(object):
 
 
     def close_cursors(self):
-        self.coord.request_stop()
-        self.coord.join(self.threads)
-        self.coord.join(self.train_threads)
-        self.coord.join(self.val_threads)
+        try:
+            self.coord.request_stop()
+            self.coord.join(self.threads)
+            self.coord.join(self.train_threads)
+            self.coord.join(self.val_threads)
+        except RuntimeError as e:
+            pass
 
 
     def read_image_thread(self, sess, db_type, distort, shuffle, scale):
@@ -287,17 +300,32 @@ class PoseCommon(object):
 
             food = {pl: batch_np[name] for (name, pl) in placeholders}
 
-            if sess._closed:
-                return
-
+            success = False
+            run_options = tf.RunOptions(timeout_in_ms=2000)
             try:
-                if db_type == self.DBType.Val:
-                    sess.run(self.val_enqueue_op, feed_dict=food)
-                elif db_type == self.DBType.Train:
-                    sess.run(self.train_enqueue_op, feed_dict=food)
-                else:
-                    raise IOError, 'Unspecified DB Type'
-            except (tf.errors.CancelledError, RuntimeError) as e:
+                while not success:
+
+                    if sess._closed or self.coord.should_stop():
+                        return
+
+                    try:
+                        if db_type == self.DBType.Val:
+                            sess.run(self.val_enqueue_op, feed_dict=food,options=run_options)
+                        elif db_type == self.DBType.Train:
+                            sess.run(self.train_enqueue_op, feed_dict=food, options=run_options)
+                        else:
+                            raise IOError, 'Unspecified DB Type'
+                        success = True
+
+                    except tf.errors.DeadlineExceededError:
+                        pass
+
+            except (tf.errors.CancelledError,) as e:
+                return
+            except Exception as e:
+                logging.exception('Error in preloading thread')
+                self.close_cursors()
+                sys.exit(1)
                 return
 
 

@@ -25,7 +25,8 @@ from collections import OrderedDict
 
 class PoseUNet(PoseCommon.PoseCommon):
 
-    def __init__(self, conf, name='pose_unet', for_training=True):
+    def __init__(self, conf, name='pose_unet'):
+
         PoseCommon.PoseCommon.__init__(self, conf, name)
         self.down_layers = [] # layers created while down sampling
         self.up_layers = [] # layers created while up sampling
@@ -34,7 +35,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.keep_prob = conf.unet_keep_prob
         self.n_conv = 2
         self.all_layers = None
-        self.for_training = for_training
+        self.for_training = 1 # for prediction.
         self.scale = self.conf.unet_rescale
 
 
@@ -63,7 +64,7 @@ class PoseUNet(PoseCommon.PoseCommon):
         for idx, name in enumerate(names):
             batch[name] = batch_out[idx]
 
-        if self.for_training:
+        if self.for_training ==0 or self.for_training==2:
             # Add zero so that we can name the operation to access them later
             # when reloading with init_net_meta
             self.ph['x'] = tf.add(batch['images'],0,name='x')
@@ -375,6 +376,7 @@ class PoseUNet(PoseCommon.PoseCommon):
 
 
     def train_unet(self, restore, train_type=0):
+        self.for_training = 0
 
         def loss(pred_in, pred_out):
             return tf.nn.l2_loss(pred_in-pred_out)
@@ -391,7 +393,7 @@ class PoseUNet(PoseCommon.PoseCommon):
 
 
     def classify_val(self, train_type=0, at_step=-1, onTrain=False):
-
+        self.for_training = 2
         if train_type is 0:
             if not onTrain:
                 val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')

@@ -567,20 +567,12 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         param_dict = convert_unicode(conf.__dict__.copy())
         param_dict.pop('cropLoc',None)
         info[u'params'] = param_dict
-        try:
-            hdf5storage.savemat(out_file,
+        hdf5storage.savemat(out_file,
                                 {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
                                  'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
                                 appendmat=False, truncate_existing=True)
-        except IOError:
-            logging.exception('TRK_WRITE: Could not the tracking results to trk file {}'.format(out_file))
-            exit(1)
 
-    try:
-        cap = movies.Movie(mov_file)
-    except ValueError:
-        logging.exception('MOV_READ: ' + mov_file + ' is missing')
-        exit(1)
+    cap = movies.Movie(mov_file)
 
     sz = (cap.get_height(), cap.get_width())
     n_frames = int(cap.get_n_frames())
@@ -668,12 +660,12 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
     # returns the predicted locations.
 
     tf.reset_default_graph()
-    self = PoseUNet.PoseUNet(conf,for_training=False)
+    self = PoseUNet.PoseUNet(conf)
     try:
-        sess = self.init_net_meta(0)
+        sess = self.init_net_meta(1)
     except tf.errors.InternalError:
         logging.exception('Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
-        exit(1)
+        sys.exit(1)
     model_file = self.get_latest_model_file()
 
     def pred_fn(all_f):
@@ -690,7 +682,7 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
 
         self.fd[self.ph['x']] = xs
         self.fd[self.ph['phase_train']] = False
-        self.fd[self.ph['keep_prob']] = 1.
+        # self.fd[self.ph['keep_prob']] = 1.
         try:
             pred = sess.run(self.pred, self.fd)
         except tf.errors.ResourceExhaustedError:
@@ -700,9 +692,15 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         base_locs = base_locs * conf.unet_rescale
         return base_locs
 
-    classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
 
+
+    try:
+        classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
+    except (IOError,ValueError) as e:
+        sess.close()
+        self.close_cursors()
+        logging.exception('Could not track movie')
 
 def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
                         skip_rate=1, trx_ids = [], name=''):
@@ -734,7 +732,7 @@ def train_unet(conf,args):
     if not args.skip_db:
         create_tfrecord(conf, False)
     tf.reset_default_graph()
-    self = PoseUNet.PoseUNet(conf,for_training=True)
+    self = PoseUNet.PoseUNet(conf)
     self.train_unet(False, 1)
 
 
@@ -889,6 +887,8 @@ def run(args):
             assert len(args.mov) == nviews, 'Number of movie files should be same as number of views'
             for view in range(nviews):
                 conf = create_conf(lbl_file, view, name)
+                if args.cache is not None:
+                    conf.cachedir = args.cache
                 classify_movie_all(conf, args.mov[view], args.trx[view], args.out_files[view],
                                 args.start_frame, args.end_frame, args.skip, args.trx_ids,model_type=args.type)
         else:
@@ -896,6 +896,8 @@ def run(args):
                 args.trx = [None]
             assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
             conf = create_conf(lbl_file, args.view, name)
+            if args.cache is not None:
+                conf.cachedir = args.cache
             classify_movie_all(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
                                 args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type)
 
@@ -912,10 +914,13 @@ def main(argv):
     log.setLevel(logging.ERROR)
     formatter = logging.Formatter('%(levelname)s:%(message)s -- %(asctime)s')
     log.handlers[0].setFormatter(formatter)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(formatter)
+    log.addHandler(consoleHandler)
 
     try:
         run(args)
-    except Exception:
+    except Exception as e:
         logging.exception('UNKNOWN: APT_interface errored because of some error')
 
 if __name__ == "__main__":
