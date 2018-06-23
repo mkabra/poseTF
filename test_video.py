@@ -9,37 +9,39 @@ import glob
 import imageio
 import logging
 
-on_compressed = False
-# machine = 'GLNXA64_h06u08.int.janelia.org_R2018a'
-# machine = 'GLNXA64_verman-ws1.hhmi.org_R2018a'
-machine = 'PCWIN64_User7910_R2017b'
-bdir = '/groups/branson/bransonlab/apt/videotest/'
-mov = 'C001H001S0001'
-if on_compressed:
-    mov = mov + '_c'
+on_compressed = True
+dd_all = []
+for machine in ['GLNXA64_h06u08.int.janelia.org_R2018a',
+                'PCWIN64_User7910_R2017b',
+                'GLNXA64_verman-ws1.hhmi.org_R2018a']:
+    bdir = '/groups/branson/bransonlab/apt/videotest/'
+    mov = 'C001H001S0001'
+    if on_compressed:
+        mov = mov + '_c'
 
-frame_dir = bdir + 'VideoTest_' + mov + '_'+ machine
-mov = bdir + mov + '.avi'
+    frame_dir = bdir + 'VideoTest_' + mov + '_'+ machine
+    mov = bdir + mov + '.avi'
 
-oo = glob.glob(frame_dir + '*')
-frame_dir = oo[0]
+    oo = glob.glob(frame_dir + '*')
+    frame_dir = oo[0]
 
-log = logging.getLogger()
-log.setLevel(logging.INFO)
+    log = logging.getLogger()
+    log.setLevel(logging.INFO)
 
-cap = movies.Movie(mov)
-nfr = cap.get_n_frames()
-dd = []
-for ndx in range(20):
-    curfr = np.random.randint(nfr)
-    curim = cap.get_frame(curfr)[0][:, :, 0]
-    mat_im = imageio.imread(os.path.join(frame_dir,'sr_{:06d}.png'.format(curfr+1)))
-    if np.ndim(mat_im)>2:
-        mat_im = mat_im[...,0]
-    ff = curim.astype('float64')- mat_im.astype('float64')
-    cur_i = [curfr, np.abs(ff[2:-1,2:-1]).max()]
-    dd.append(cur_i)
-
+    cap = movies.Movie(mov)
+    nfr = 1000 # cap.get_n_frames()
+    dd = []
+    for ndx in range(20):
+        curfr = np.random.randint(nfr)
+        curim = cap.get_frame(curfr)[0][:, :, 0]
+        mat_im = imageio.imread(os.path.join(frame_dir,'sr_{:06d}.png'.format(curfr+1)))
+        if np.ndim(mat_im)>2:
+            mat_im = mat_im[...,0]
+        ff = curim.astype('float64')- mat_im.astype('float64')
+        cur_i = [curfr, np.abs(ff[2:-1,2:-1]).max()]
+        dd.append(cur_i)
+    dd_all.append(dd)
+print dd_all
 
 
 ##

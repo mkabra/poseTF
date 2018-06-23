@@ -17,9 +17,8 @@ from scipy import ndimage
 import tensorflow as tf
 import multiResData
 import tempfile
-import cv2
-import PoseTrain
-import localSetup
+#import cv2
+#import PoseTrain
 import myutils
 import os
 import cv2
@@ -707,37 +706,37 @@ def compare_conf(curconf, oldconf):
             print('%s doesnt match' % f)
 
 
-def create_network(conf, outtype):
-    self = PoseTrain.PoseTrain(conf)
-    self.createPH()
-    self.createFeedDict()
-    do_batch_norm = self.conf.doBatchNorm
-    self.feed_dict[self.ph['phase_train_base']] = False
-    self.feed_dict[self.ph['phase_train_fine']] = False
-    self.feed_dict[self.ph['keep_prob']] = 1.
-    self.feed_dict[self.ph['learning_rate']] = 0
-    tt = self.ph['y'].get_shape().as_list()
-    tt[0] = 1
-    self.feed_dict[self.ph['y']] = np.zeros(tt)
-    tt = self.ph['locs'].get_shape().as_list()
-    self.feed_dict[self.ph['locs']] = np.zeros(tt)
-
-    with tf.variable_scope('base'):
-        self.createBaseNetwork(do_batch_norm)
-    self.createBaseSaver()
-
-    if outtype > 1 and self.conf.useMRF:
-        with tf.variable_scope('mrf'):
-            self.createMRFNetwork(do_batch_norm)
-        self.createMRFSaver()
-
-    if outtype > 2:
-        with tf.variable_scope('fine'):
-            self.createFineNetwork(do_batch_norm)
-        self.createFineSaver()
-
-    return self
-
+# def create_network(conf, outtype):
+#     self = PoseTrain.PoseTrain(conf)
+#     self.createPH()
+#     self.createFeedDict()
+#     do_batch_norm = self.conf.doBatchNorm
+#     self.feed_dict[self.ph['phase_train_base']] = False
+#     self.feed_dict[self.ph['phase_train_fine']] = False
+#     self.feed_dict[self.ph['keep_prob']] = 1.
+#     self.feed_dict[self.ph['learning_rate']] = 0
+#     tt = self.ph['y'].get_shape().as_list()
+#     tt[0] = 1
+#     self.feed_dict[self.ph['y']] = np.zeros(tt)
+#     tt = self.ph['locs'].get_shape().as_list()
+#     self.feed_dict[self.ph['locs']] = np.zeros(tt)
+#
+#     with tf.variable_scope('base'):
+#         self.createBaseNetwork(do_batch_norm)
+#     self.createBaseSaver()
+#
+#     if outtype > 1 and self.conf.useMRF:
+#         with tf.variable_scope('mrf'):
+#             self.createMRFNetwork(do_batch_norm)
+#         self.createMRFSaver()
+#
+#     if outtype > 2:
+#         with tf.variable_scope('fine'):
+#             self.createFineNetwork(do_batch_norm)
+#         self.createFineSaver()
+#
+#     return self
+#
 
 def init_network(self, sess, outtype):
     self.restoreBase(sess, True)
@@ -1068,24 +1067,24 @@ def create_pred_movie_no_conf(conf, predList, moviename, outmovie, outtype):
     os.system(mencoder_cmd)
     cap.release()
 
-
-def gen_distorted_images(conf, train_type=0):
-    self = PoseTrain.PoseTrain(conf)
-    self.createPH()
-    self.createFeedDict()
-    self.trainType = train_type
-    self.openDBs()
-
-    with tf.Session() as sess:
-        self.createCursors(sess)
-        for _ in range(np.random.randint(50)):
-            self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
-        self.closeCursors()
-
-    orig_img = self.xs
-    dist_img = self.feed_dict[self.ph['x0']]
-    return orig_img, dist_img, self.locs
-
+#
+# def gen_distorted_images(conf, train_type=0):
+#     self = PoseTrain.PoseTrain(conf)
+#     self.createPH()
+#     self.createFeedDict()
+#     self.trainType = train_type
+#     self.openDBs()
+#
+#     with tf.Session() as sess:
+#         self.createCursors(sess)
+#         for _ in range(np.random.randint(50)):
+#             self.updateFeedDict(self.DBType.Train, sess=sess, distort=True)
+#         self.closeCursors()
+#
+#     orig_img = self.xs
+#     dist_img = self.feed_dict[self.ph['x0']]
+#     return orig_img, dist_img, self.locs
+#
 
 def variable_summaries(var):
     """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
@@ -1316,3 +1315,9 @@ def runningInDocker():
                 return True
 
     return False
+
+
+def json_load(filename):
+    with open(filename,'r') as f:
+        K = json.load(f)
+    return K

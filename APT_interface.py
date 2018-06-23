@@ -22,6 +22,7 @@ from random import sample
 import traceback
 import logging
 import collections
+import imageio
 #import  open_pose
 
 from os.path import expanduser
@@ -541,9 +542,17 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
     tf.reset_default_graph()
     return pred_locs
 
+def write_hmaps(hmaps,hmaps_dir, trx_ndx,frame_num):
+    for bpart in range(hmaps.shape[-1]):
+        cur_out = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx+1,frame_num+1,bpart+1))
+        cur_im = hmaps[:,:,bpart]
+        cur_im = ((np.clip(cur_im,-1,1)*128)+128).astype('uint8')
+        imageio.imwrite(cur_out,cur_im,'jpg',quality=75)
+
+
 def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                    start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[],
-                   model_file = '',name=''):
+                   model_file = '',name='', save_hmaps=False):
     # classifies movies frame by frame instead of trx by trx.
 
     def write_trk(pred_locs_in,n_done):
@@ -608,6 +617,10 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
     flipud = conf.flipud
     all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
 
+    hmap_out_dir = os.path.splitext(out_file)[0] + '_hmap'
+    if not os.path.exists(hmap_out_dir):
+        os.mkdir(hmap_out_dir)
+
     to_do_list = []
     for cur_f in range(start_frame,end_frame):
         for t in range(n_trx):
@@ -631,7 +644,8 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                 cap, cur_f, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
             all_f[cur_t, ...] = frame_in
 
-        base_locs = pred_fn(all_f) + 1 # for matlabs 1 - indexing
+        base_locs, hmaps = pred_fn(all_f)
+        base_locs = base_locs + 1 # for matlabs 1 - indexing
         for cur_t in range(ppe):
             cur_entry = to_do_list[cur_t + cur_start]
             trx_ndx = cur_entry[1]
@@ -640,6 +654,9 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
             trx_fnum_start = cur_f - first_frames[trx_ndx]
             base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t+1,...], conf, cur_trx, trx_fnum_start, all_f, sz,1)
             pred_locs[cur_f-min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
+
+            if save_hmaps:
+                write_hmaps(hmaps[cur_t,...],hmap_out_dir, trx_ndx,cur_f)
 
         if cur_b%20==19:
             sys.stdout.write('.')
@@ -654,7 +671,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
 
 
 def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name=''):
+                        skip_rate=1, trx_ids = [], name='',hmaps=False):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -692,20 +709,21 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
             exit(1)
         base_locs = PoseTools.get_pred_locs(pred)
         base_locs = base_locs * conf.unet_rescale
-        return base_locs
+        return base_locs, pred
 
 
 
     try:
         classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name,
+                       save_hmaps=hmaps)
     except (IOError,ValueError) as e:
         sess.close()
         self.close_cursors()
         logging.exception('Could not track movie')
 
 def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name=''):
+                        skip_rate=1, trx_ids = [], name='',hmaps=False):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -715,17 +733,17 @@ def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_fra
     tf.reset_default_graph()
     pred_fn, model_file = open_pose.get_pred_fn(conf)
     classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name)
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name,save_hmaps=hmaps)
 
 
 def classify_movie_all(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name='',model_type=''):
+                        skip_rate=1, trx_ids = [], name='',model_type='',hmaps=False):
     if model_type == 'openpose':
         classify_movie_op(conf,mov_file, trx_file, out_file, start_frame, end_frame,
-                        skip_rate, trx_ids, name)
+                        skip_rate, trx_ids, name,hmaps=hmaps)
     elif model_type == 'unet':
         classify_movie_unet(conf,mov_file, trx_file, out_file, start_frame, end_frame,
-                        skip_rate, trx_ids, name)
+                        skip_rate, trx_ids, name,hmaps=hmaps)
     else:
         raise ValueError('Undefined type of model')
 
@@ -835,6 +853,7 @@ def parse_args(argv):
     parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None,type=int)
     parser.add_argument('-cache',dest='cache',help='Override cachedir in lbl file', default=None)
     parser.add_argument('-skip_db',dest='skip_db',help='Skip creating the data base', action='store_true')
+    parser.add_argument('-out_dir',dest='out_dir',help='Directory to output log files', default=None)
     parser.add_argument('-type',dest='type',help='Network type, default is unet', default='unet',
                         choices=['unet','openpose'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
@@ -854,6 +873,7 @@ def parse_args(argv):
     parser_classify.add_argument('-skip_rate', dest='skip', help='frames to skip while tracking', default=1, type=int)
     parser_classify.add_argument('-out', dest='out_files', help='file to save tracking results to', required=True, nargs='+')
     parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*',type=int,default=[])
+    parser_classify.add_argument('-hmaps', dest='hmaps', help='generate heatmpas',action='store_true')
 
     print(argv)
     args = parser.parse_args(argv)
@@ -899,7 +919,7 @@ def run(args):
                 if args.cache is not None:
                     conf.cachedir = args.cache
                 classify_movie_all(conf, args.mov[view], args.trx[view], args.out_files[view],
-                                args.start_frame, args.end_frame, args.skip, args.trx_ids,model_type=args.type)
+                                args.start_frame, args.end_frame, args.skip, args.trx_ids,model_type=args.type,hmaps=args.hmaps)
         else:
             if args.trx is None:
                 args.trx = [None]
@@ -908,13 +928,17 @@ def run(args):
             if args.cache is not None:
                 conf.cachedir = args.cache
             classify_movie_all(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
-                                args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type)
+                                args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type,hmaps=args.hmaps)
 
 
 def main(argv):
     args = parse_args(argv)
 
-    logfile = os.path.join(expanduser("~"), '{}.err'.format(args.name))
+    if args.out_dir is not None:
+        assert os.path.exists(args.out_dir), 'Output directory doesnt exist'
+        logfile = os.path.join(args.out_dir, '{}.err'.format(args.name))
+    else:
+        logfile = os.path.join(expanduser("~"), '{}.err'.format(args.name))
     fileh = logging.FileHandler(logfile, 'w')
     log = logging.getLogger()  # root logger
     for hdlr in log.handlers[:]:  # remove all old handlers

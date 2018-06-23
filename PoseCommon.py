@@ -240,7 +240,7 @@ class PoseCommon(object):
 
         if self.for_training == 0:
             # for training
-            n_threads = 4
+            n_threads = 10
         elif self.for_training == 1:
             # for prediction
             n_threads = 0

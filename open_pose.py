@@ -639,6 +639,6 @@ def get_pred_fn(conf):
         pred = model.predict(xs)[-1]
         base_locs = PoseTools.get_pred_locs(pred)
         base_locs = base_locs * conf.op_rescale
-        return base_locs
+        return base_locs, pred
 
     return pred_fn, latest_model_file
