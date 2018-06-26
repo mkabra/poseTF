@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forSingularity.py" beforeDir="false" afterPath="$PROJECT_DIR$/forSingularity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/open_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/open_pose.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_video.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_video.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -99,8 +93,8 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="353">
-                  <caret line="546" column="108" selection-start-line="546" selection-start-column="108" selection-end-line="546" selection-end-column="108" />
+                <state relative-caret-position="646">
+                  <caret line="550" lean-forward="true" selection-start-line="550" selection-end-line="550" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -707,13 +701,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00106" summary="Separate fc for locs, scales and logits">
-      <created>1518777419169</created>
-      <option name="number" value="00106" />
-      <option name="presentableId" value="LOCAL-00106" />
-      <option name="project" value="LOCAL" />
-      <updated>1518777419170</updated>
-    </task>
     <task id="LOCAL-00107" summary="Adding RNN for UNet">
       <created>1519719680002</created>
       <option name="number" value="00107" />
@@ -1050,7 +1037,14 @@
       <option name="project" value="LOCAL" />
       <updated>1529617362667</updated>
     </task>
-    <option name="localTasksCounter" value="155" />
+    <task id="LOCAL-00155" summary="Added the option to output heatmaps.">
+      <created>1529770551891</created>
+      <option name="number" value="00155" />
+      <option name="presentableId" value="LOCAL-00155" />
+      <option name="project" value="LOCAL" />
+      <updated>1529770551891</updated>
+    </task>
+    <option name="localTasksCounter" value="156" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1096,17 +1090,16 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="65" y="26" width="2495" height="1576" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="1" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" auto_hide="true" id="Event Log" order="0" sideWeight="0.5002996" side_tool="true" weight="0.39782757" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="1" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.29490292" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="2" sideWeight="0.72347265" side_tool="true" visible="true" weight="0.29490292" />
       <window_info id="Structure" order="0" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="9" weight="0.32871974" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" sideWeight="0.49970043" visible="true" weight="0.33564013" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49970043" weight="0.33564013" />
       <window_info id="Favorites" order="1" show_stripe_button="false" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="8" weight="0.4" />
@@ -1147,7 +1140,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Adding UNet attention. Also, name for APT_interface" />
     <MESSAGE value="Changed read_and_decode_without_session to read the whole or a section of tfrecords database" />
     <MESSAGE value="Working version APT_interface that is more object oriented." />
     <MESSAGE value="Changed how movies are classified in APT_interface. Added code to create CV json files." />
@@ -1172,16 +1164,12 @@
     <MESSAGE value="view for APT_interface is now 1 indexed." />
     <MESSAGE value="Not all arguments are always visible. sigh." />
     <MESSAGE value="Fixed indexing for start frame and end frame in APT_interface" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed indexing for start frame and end frame in APT_interface" />
+    <MESSAGE value="Added the option to output heatmaps." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added the option to output heatmaps." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/APT_interface.py</url>
-          <line>549</line>
-          <option name="timeStamp" value="542" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$APPLICATION_CONFIG_DIR$/scratches/scratch_5.py</url>
           <line>13</line>
@@ -1611,8 +1599,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="353">
-          <caret line="546" column="108" selection-start-line="546" selection-start-column="108" selection-end-line="546" selection-end-column="108" />
+        <state relative-caret-position="646">
+          <caret line="550" lean-forward="true" selection-start-line="550" selection-end-line="550" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>

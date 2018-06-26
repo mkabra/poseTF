@@ -548,6 +548,9 @@ def write_hmaps(hmaps,hmaps_dir, trx_ndx,frame_num):
         cur_im = hmaps[:,:,bpart]
         cur_im = ((np.clip(cur_im,-1,1)*128)+128).astype('uint8')
         imageio.imwrite(cur_out,cur_im,'jpg',quality=75)
+        # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
+        # imageio.imwrite(cur_out_png,cur_im)
+
 
 
 def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
