@@ -240,7 +240,7 @@ class PoseCommon(object):
 
         if self.for_training == 0:
             # for training
-            n_threads = 10
+            n_threads = 5
         elif self.for_training == 1:
             # for prediction
             n_threads = 0
@@ -308,7 +308,7 @@ class PoseCommon(object):
             food = {pl: batch_np[name] for (name, pl) in placeholders}
 
             success = False
-            run_options = tf.RunOptions(timeout_in_ms=2000)
+            run_options = tf.RunOptions(timeout_in_ms=5000)
             try:
                 while not success:
 
