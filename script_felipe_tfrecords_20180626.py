@@ -36,12 +36,14 @@ for dtype in ['train','val']:
     im_name = [k['file_name'] for k in L['images']]
 
     for ndx in range(n_labels):
-        im_ndx = np.where(im_id==ann_im_id[ndx])[0]
+        im_ndx = np.where(im_id==ann_im_id[ndx])[0][0]
         cur_im = os.path.join(im_dir,im_name[im_ndx])
         im = imageio.imread(cur_im)
+        im = np.pad(im,((hsz,hsz),(hsz,hsz),(0,0)),'constant')
 
-        cur_mid_x,cur_mid_y = mid_pt[ndx,:]
-        cur_patch = im[cur_mid_y-hsz:cur_mid_y+hsz,cur_mid_x-hsz:cur_mid_x+hsz,:]
+        cur_mid_x,cur_mid_y = mid_pt[ndx,:].astype('int32')
+
+        cur_patch = im[cur_mid_y:cur_mid_y+2*hsz,cur_mid_x:cur_mid_x+2*hsz,:]
         cur_locs = locs[ndx,:,:]-mid_pt[ndx:ndx+1,:] + hsz
 
         image_raw = cur_patch.tostring()
