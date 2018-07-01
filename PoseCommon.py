@@ -137,6 +137,7 @@ class PoseCommon(object):
         self.q_placeholders = []
         self.q_fns = []
         self.for_training = 0
+        self.train_data_name = None
 
 
     def create_q_specs(self):
@@ -205,7 +206,7 @@ class PoseCommon(object):
             shapes.append(v)
         placeholders_list = [v for k,v in placeholders]
 
-        QUEUE_SIZE = 10
+        QUEUE_SIZE = 50
 
         q = tf.FIFOQueue(QUEUE_SIZE, [tf.float32]*len(names), shapes=shapes, name='trainq')
         enqueue_op = q.enqueue(placeholders_list)
@@ -240,7 +241,7 @@ class PoseCommon(object):
 
         if self.for_training == 0:
             # for training
-            n_threads = 5
+            n_threads = 20
         elif self.for_training == 1:
             # for prediction
             n_threads = 0
@@ -308,7 +309,7 @@ class PoseCommon(object):
             food = {pl: batch_np[name] for (name, pl) in placeholders}
 
             success = False
-            run_options = tf.RunOptions(timeout_in_ms=5000)
+            run_options = tf.RunOptions(timeout_in_ms=20000)
             try:
                 while not success:
 
@@ -412,9 +413,15 @@ class PoseCommon(object):
         saver['out_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name)
-        saver['train_data_file'] = os.path.join(
-            self.conf.cachedir,
-            self.conf.expname + '_' + name + '_traindata')
+        if self.train_data_name is None:
+            saver['train_data_file'] = os.path.join(
+                self.conf.cachedir,
+                self.conf.expname + '_' + name + '_traindata')
+        else:
+            saver['train_data_file'] = os.path.join(
+                self.conf.cachedir,
+                self.train_data_name)
+
         saver['ckpt_file'] = os.path.join(
             self.conf.cachedir,
             self.conf.expname + '_' + name + '_ckpt')

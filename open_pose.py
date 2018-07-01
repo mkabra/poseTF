@@ -581,8 +581,7 @@ def training(conf):
 
             if (epoch + 1) % self.config.save_td_step == 0 or self.force:
                 train_data_file = os.path.join(
-                    self.config.cachedir,
-                    self.config.expname + '_' + name + '_traindata')
+                    self.config.cachedir, 'traindata')
                 json_data = {}
                 for x in self.train_info.keys():
                     json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()

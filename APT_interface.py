@@ -1,31 +1,22 @@
 from __future__ import division
 from __future__ import print_function
 
-from builtins import range
-import os
-import sys
 import argparse
-import h5py
-import scipy.io as sio
-import hdf5storage
-import multiResData
-import PoseUNet
-import numpy as np
-import tensorflow as tf
-import datetime
-import movies
-import math
-import PoseTools
-from multiResData import *
-import json
-from random import sample
-import traceback
-import logging
 import collections
-import imageio
-#import  open_pose
-
+import datetime
+import json
+import logging
 from os.path import expanduser
+from random import sample
+
+import PoseUNet
+import hdf5storage
+import imageio
+import multiResData
+from multiResData import *
+from leap.training import train_apt as train_leap_apt
+
+#import  open_pose
 
 def loadmat(filename):
     '''
@@ -35,7 +26,7 @@ def loadmat(filename):
     which are still mat-objects
     From: https://stackoverflow.com/questions/7008608/scipy-io-loadmat-nested-structures-i-e-dictionaries
     '''
-    data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True,appendmat=False)
+    data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True, appendmat=False)
     return _check_keys(data)
 
 
@@ -98,7 +89,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
             H = loadmat(lbl_file)
         except NotImplementedError:
             print('Label file is in v7.3 format. Loading using h5py')
-            H = h5py.File(lbl_file,'r')
+            H = h5py.File(lbl_file, 'r')
     except TypeError as e:
         logging.exception('LBL_READ: Could not read the lbl file {}'.format(lbl_file))
 
@@ -139,9 +130,9 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     conf.normalize_img_mean = int(read_entry(dt_params['normalize'])) > 0.5
     # conf.imgDim = int(read_entry(dt_params['NChannels']))
     ex_mov = multiResData.find_local_dirs(conf)[0][0]
-    cap = movies.Movie(ex_mov,interactive=False)
+    cap = movies.Movie(ex_mov, interactive=False)
     ex_frame = cap.get_frame(0)
-    if np.ndim(ex_frame)>2:
+    if np.ndim(ex_frame) > 2:
         conf.imgDim = ex_frame[0].shape[2]
     else:
         conf.imgDim = 1
@@ -151,9 +142,9 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     except KeyError:
         pass
     try:
-        conf.unet_steps= int(read_entry(dt_params['dl_steps']))
-        conf.op_steps= int(read_entry(dt_params['dl_steps']))
-        conf.dlc_steps = int(read_entry(dt_params['dl_steps']))
+        conf.unet_steps = int(read_entry(dt_params['dl_steps']))
+        conf.dl_steps = int(read_entry(dt_params['dl_steps']))
+        #conf.dlc_steps = int(read_entry(dt_params['dl_steps']))
     except KeyError:
         pass
     try:
@@ -162,12 +153,12 @@ def create_conf(lbl_file, view, name, net_type='unet'):
         pass
     try:
         bb = read_entry(dt_params['brange'])
-        conf.brange = [-bb,bb]
+        conf.brange = [-bb, bb]
     except KeyError:
         pass
     try:
         bb = read_entry(dt_params['crange'])
-        conf.crange = [1-bb,1+bb]
+        conf.crange = [1 - bb, 1 + bb]
     except KeyError:
         pass
     try:
@@ -194,6 +185,7 @@ def datetime2matlabdn(dt=datetime.datetime.now()):
     frac_microseconds = dt.microsecond / (24.0 * 60.0 * 60.0 * 1000000.0)
     return mdn.toordinal() + frac_seconds + frac_microseconds
 
+
 def db_from_lbl(conf, out_fns, split=True, split_file=None):
     # outputs is a list of functions. The first element writes
     # to the training dataset while the second one write to the validation
@@ -213,7 +205,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
     sel_pts = int(view * npts_per_view) + conf.selpts
 
-    splits = [[],[]]
+    splits = [[], []]
     count = 0
     val_count = 0
 
@@ -248,7 +240,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
             trx = [None]
             n_trx = 1
             trx_split = None
-            cur_pts = cur_pts[np.newaxis,...]
+            cur_pts = cur_pts[np.newaxis, ...]
 
         for trx_ndx in range(n_trx):
 
@@ -259,11 +251,11 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
                     continue
 
                 info = [ndx, fnum, trx_ndx]
-                cur_out = multiResData.get_cur_env( out_fns, split, conf, info,
-                    mov_split, trx_split=trx_split, predefined=predefined)
+                cur_out = multiResData.get_cur_env(out_fns, split, conf, info,
+                                                   mov_split, trx_split=trx_split, predefined=predefined)
 
                 frame_in, cur_loc = multiResData.get_patch(
-                        cap, fnum, conf, cur_pts[trx_ndx, fnum, :, sel_pts],cur_trx=cur_trx,flipud=flipud)
+                    cap, fnum, conf, cur_pts[trx_ndx, fnum, :, sel_pts], cur_trx=cur_trx, flipud=flipud)
                 cur_out([frame_in, cur_loc, info])
 
                 if cur_out is out_fns[1] and split:
@@ -280,7 +272,9 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     lbl.close()
     return splits
 
+
 def tf_serialize(data):
+    # serialize data for writing to tf records file.
     frame_in, cur_loc, info = data
     rows, cols, depth = frame_in.shape
     expid, fnum, trxid = info
@@ -298,8 +292,9 @@ def tf_serialize(data):
 
     return example.SerializeToString()
 
+
 def create_tfrecord(conf, split=True, split_file=None):
-    # function showing how to use db_from_lbl for tfrecords
+    # function that creates tfrecords using db_from_lbl
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
 
@@ -312,18 +307,66 @@ def create_tfrecord(conf, split=True, split_file=None):
     out_fns = []
     out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
     out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
-    splits = db_from_lbl(conf,out_fns, split, split_file)
+    splits = db_from_lbl(conf, out_fns, split, split_file)
     envs[0].close()
     envs[1].close() if split else None
     try:
-        with open(os.path.join(conf.cachedir,'splitdata.json'),'w') as f:
+        with open(os.path.join(conf.cachedir, 'splitdata.json'), 'w') as f:
             json.dump(splits, f)
     except IOError:
         logging.warning('SPLIT_WRITE: Could not output the split data information')
 
 
-def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz,nvalid):
-    # converts locs in cropped image to original image.
+def create_leap_db(conf, split=False, split_file=None):
+    # function showing how to use db_from_lbl for tfrecords
+    if not os.path.exists(conf.cachedir):
+        os.mkdir(conf.cachedir)
+
+    train_data = []
+    val_data = []
+
+    # collect the images and labels in arrays
+    out_fns = []
+    out_fns.append(lambda data: train_data.append(data))
+    out_fns.append(lambda data: val_data.append(data))
+    splits = db_from_lbl(conf, out_fns, split, split_file)
+
+    # save the split data
+    try:
+        with open(os.path.join(conf.cachedir, 'splitdata.json'), 'w') as f:
+            json.dump(splits, f)
+    except IOError:
+        logging.warning('SPLIT_WRITE: Could not output the split data information')
+
+    for ndx in range(2):
+        if not split and ndx == 1:  # nothing to do if we dont split
+            continue
+
+        if ndx == 0:
+            cur_data = train_data
+            out_file = os.path.join(conf.cachedir, 'leap_train.h5')
+        else:
+            cur_data = val_data
+            out_file = os.path.join(conf.cachedir, 'leap_val.h5')
+
+        ims = np.array([i[0] for i in cur_data])
+        locs = np.array([i[1] for i in cur_data])
+        info = np.array([i[2] for i in cur_data])
+        hmaps = PoseTools.create_label_images(locs, conf.imsz[:2], 1, 3)
+        hmaps = (hmaps + 1) / 2  # brings it back to [0,1]
+
+        hf = h5py.File(out_file, 'w')
+        hf.create_dataset('box', data=ims)
+        hf.create_dataset('confmaps', data=hmaps)
+        hf.create_dataset('joints', data=locs)
+        hf.create_dataset('exptID', data=info[:, 0])
+        hf.create_dataset('framesIdx', data=info[:, 1])
+        hf.create_dataset('trxID', data=info[:, 2])
+        hf.close()
+
+
+def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid):
+    # converts locs in cropped image back to locations in original image.
     if conf.has_trx_file:
         hsz_p = conf.imsz[0] / 2  # half size for pred
         base_locs_orig = np.zeros(base_locs.shape)
@@ -336,7 +379,7 @@ def convert_to_orig(base_locs,conf,cur_trx,trx_fnum_start,all_f, sz,nvalid):
             assert conf.imsz[0] == conf.imsz[1]
             tt = -theta - math.pi / 2
             R = [[np.cos(tt), -np.sin(tt)], [np.sin(tt), np.cos(tt)]]
-            curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p],R) + [x,y]
+            curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], R) + [x, y]
             base_locs_orig[ii, ...] = curlocs
     else:
         orig_crop_loc = conf.cropLoc[sz]
@@ -368,14 +411,14 @@ def create_cv_split_files(conf, n_splits=3):
             frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
             mm = [ndx] * frames.size
             tt = [trx_ndx] * frames.size
-            cur_trx_info = list(zip(mm,tt,frames.tolist()))
+            cur_trx_info = list(zip(mm, tt, frames.tolist()))
             trx_info.append(cur_trx_info)
             cur_mov_info.extend(cur_trx_info)
             n_labeled_frames += frames.size
         mov_info.append(cur_mov_info)
     lbl.close()
 
-    lbls_per_fold = n_labeled_frames/n_splits
+    lbls_per_fold = n_labeled_frames / n_splits
 
     imbalance = True
     for retry in range(10):
@@ -384,14 +427,14 @@ def create_cv_split_files(conf, n_splits=3):
 
         if conf.splitType is 'movie':
             for ndx in range(len(local_dirs)):
-                valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                valid_folds = np.where(per_fold < lbls_per_fold)[0]
                 cur_fold = np.random.choice(valid_folds)
                 splits[cur_fold].extend(mov_info[ndx])
                 per_fold[cur_fold] += len(mov_info[ndx])
 
         elif conf.splitType is 'trx':
             for tndx in range(len(trx_info)):
-                valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                valid_folds = np.where(per_fold < lbls_per_fold)[0]
                 cur_fold = np.random.choice(valid_folds)
                 splits[cur_fold].extend(trx_info[tndx])
                 per_fold[cur_fold] += len(trx_info[tndx])
@@ -399,15 +442,15 @@ def create_cv_split_files(conf, n_splits=3):
         elif conf.splitType is 'frames':
             for ndx in range(len(local_dirs)):
                 for mndx in range(len(mov_info[ndx])):
-                    valid_folds = np.where(per_fold<lbls_per_fold)[0]
+                    valid_folds = np.where(per_fold < lbls_per_fold)[0]
                     cur_fold = np.random.choice(valid_folds)
-                    splits[cur_fold].extend(mov_info[ndx][mndx:mndx+1])
+                    splits[cur_fold].extend(mov_info[ndx][mndx:mndx + 1])
                     per_fold[cur_fold] += 1
 
             else:
                 raise ValueError('splitType has to be either movie trx or frames')
 
-        imbalance = (per_fold.max()-per_fold.min()) > float(lbls_per_fold)/3
+        imbalance = (per_fold.max() - per_fold.min()) > float(lbls_per_fold) / 3
         if not imbalance:
             break
 
@@ -423,13 +466,14 @@ def create_cv_split_files(conf, n_splits=3):
             if idx is not ndx:
                 cur_train.extend(cur_split)
         all_train.append(cur_train)
-        with open(os.path.join(conf.cachedir,'cv_split_fold_{}.json'.format(ndx)),'w'):
-            json.dump([cur_train,splits[ndx]])
+        with open(os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)), 'w'):
+            json.dump([cur_train, splits[ndx]])
 
     return all_train, splits
 
 
 def get_matlab_ts(filename):
+    # matlab's time is different from python
     k = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
     return datetime2matlabdn(k)
 
@@ -446,22 +490,21 @@ def convert_unicode(data):
 
 
 def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
-
-    def write_trk(pred_locs_in,n_done):
+    def write_trk(pred_locs_in, n_done):
         pred_locs = pred_locs_in.copy()
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
         tgt = np.arange(pred_locs.shape[-1]) + 1
         if not conf.has_trx_file:
-            pred_locs = pred_locs[...,0]
+            pred_locs = pred_locs[..., 0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
         ts = np.ones(ts_shape) * datetime2matlabdn()
         tag = np.zeros(ts.shape).astype('bool')
         tracked_shape = pred_locs.shape[2:]
         tracked = np.zeros(tracked_shape)
-        tracked[:n_done,:] = 1
+        tracked[:n_done, :] = 1
         hdf5storage.savemat(out_file,
                             {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                             'pTrkTag': tag,'pTrkFrm':tracked}, appendmat=False, truncate_existing=True)
+                             'pTrkTag': tag, 'pTrkFrm': tracked}, appendmat=False, truncate_existing=True)
 
     cap = movies.Movie(mov_file)
     sz = (cap.get_height(), cap.get_width())
@@ -475,7 +518,7 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
         end_frames = np.array([x['endframe'][0, 0] for x in T])
         first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
     else:
-        T = [None,]
+        T = [None, ]
         n_trx = 1
         end_frames = np.array([n_frames])
         first_frames = np.array([0])
@@ -519,7 +562,7 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
             for ii in range(ppe):
                 fnum = ndx_start + ii
                 frame_in, cur_loc = multiResData.get_patch(
-                    cap, fnum, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
+                    cap, fnum, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud)
                 all_f[ii, ...] = frame_in
 
             base_locs = pred_fn(all_f)
@@ -542,47 +585,51 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
     tf.reset_default_graph()
     return pred_locs
 
-def write_hmaps(hmaps,hmaps_dir, trx_ndx,frame_num):
+
+def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
     for bpart in range(hmaps.shape[-1]):
-        cur_out = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx+1,frame_num+1,bpart+1))
-        cur_im = hmaps[:,:,bpart]
-        cur_im = ((np.clip(cur_im,-1,1)*128)+128).astype('uint8')
-        imageio.imwrite(cur_out,cur_im,'jpg',quality=75)
+        cur_out = os.path.join(hmaps_dir, 'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx + 1, frame_num + 1, bpart + 1))
+        cur_im = hmaps[:, :, bpart]
+        cur_im = ((np.clip(cur_im, -1, 1) * 128) + 128).astype('uint8')
+        imageio.imwrite(cur_out, cur_im, 'jpg', quality=75)
         # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
         # imageio.imwrite(cur_out_png,cur_im)
 
 
-
 def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
                    start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[],
-                   model_file = '',name='', save_hmaps=False):
+                   model_file='', name='', save_hmaps=False):
     # classifies movies frame by frame instead of trx by trx.
 
-    def write_trk(pred_locs_in,n_done):
+    def write_trk(pred_locs_in, n_done):
+        # pred_locs is the predicted locations of size
+        # n_frames in the movie x n_Trx x n_body_parts x 2
+        # n_done is the number of frames that have been tracked.
         pred_locs = pred_locs_in.copy()
-        pred_locs = pred_locs[:,trx_ids,...]
+        pred_locs = pred_locs[:, trx_ids, ...]
         pred_locs = pred_locs.transpose([2, 3, 0, 1])
-        pred_locs = pred_locs[:,:,n_done,:]
-        tgt = trx_ids + 1
+        pred_locs = pred_locs[:, :, n_done, :]
+        tgt = trx_ids + 1  # target animals that have been tracked.
+        # For projects without trx file this is always 1.
         if not conf.has_trx_file:
-            pred_locs = pred_locs[...,0]
+            pred_locs = pred_locs[..., 0]
         ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
-        ts = np.ones(ts_shape) * datetime2matlabdn()
-        tag = np.zeros(ts.shape).astype('bool')
+        ts = np.ones(ts_shape) * datetime2matlabdn() # time stamp
+        tag = np.zeros(ts.shape).astype('bool') # tag which is always false for now.
         tracked_shape = pred_locs.shape[2]
-        tracked = np.zeros([1,tracked_shape])
-        tracked[0,:] = np.array(n_done)+1
-        info = {}
+        tracked = np.zeros([1, tracked_shape]) # which of the predlocs have been tracked. Mostly to help APT know how much tracking has been done.
+        tracked[0, :] = np.array(n_done) + 1
+        info = {} # tracking info. Can be empty.
         info[u'model_file'] = model_file
         info[u'trnTS'] = get_matlab_ts(model_file + '.meta')
         info[u'name'] = name
         param_dict = convert_unicode(conf.__dict__.copy())
-        param_dict.pop('cropLoc',None)
+        param_dict.pop('cropLoc', None)
         info[u'params'] = param_dict
         hdf5storage.savemat(out_file,
-                                {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                                 'pTrkTag': tag,'pTrkFrm':tracked,'trkInfo':info},
-                                appendmat=False, truncate_existing=True)
+                            {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
+                             'pTrkTag': tag, 'pTrkFrm': tracked, 'trkInfo': info},
+                            appendmat=False, truncate_existing=True)
 
     cap = movies.Movie(mov_file)
 
@@ -598,7 +645,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         else:
             trx_ids = np.array(trx_ids)
     else:
-        T = [None,]
+        T = [None, ]
         n_trx = 1
         end_frames = np.array([n_frames])
         first_frames = np.array([0])
@@ -625,17 +672,17 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
         os.mkdir(hmap_out_dir)
 
     to_do_list = []
-    for cur_f in range(start_frame,end_frame):
+    for cur_f in range(start_frame, end_frame):
         for t in range(n_trx):
-            if not np.any(trx_ids==t):
+            if not np.any(trx_ids == t):
                 continue
-            if (end_frames[t]> cur_f) and (first_frames[t]<=cur_f):
-                to_do_list.append([cur_f,t])
+            if (end_frames[t] > cur_f) and (first_frames[t] <= cur_f):
+                to_do_list.append([cur_f, t])
 
     n_list = len(to_do_list)
     n_batches = int(math.ceil(float(n_list) / bsize))
     for cur_b in range(n_batches):
-        cur_start = cur_b*bsize
+        cur_start = cur_b * bsize
         ppe = min(n_list - cur_start, bsize)
         for cur_t in range(ppe):
             cur_entry = to_do_list[cur_t + cur_start]
@@ -644,37 +691,38 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
             cur_f = cur_entry[0]
 
             frame_in, cur_loc = multiResData.get_patch(
-                cap, cur_f, conf, np.zeros([conf.n_classes, 2]),cur_trx=cur_trx,flipud=flipud)
+                cap, cur_f, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud)
             all_f[cur_t, ...] = frame_in
 
         base_locs, hmaps = pred_fn(all_f)
-        base_locs = base_locs + 1 # for matlabs 1 - indexing
+        base_locs = base_locs + 1  # for matlabs 1 - indexing
         for cur_t in range(ppe):
             cur_entry = to_do_list[cur_t + cur_start]
             trx_ndx = cur_entry[1]
             cur_trx = T[trx_ndx]
             cur_f = cur_entry[0]
             trx_fnum_start = cur_f - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t+1,...], conf, cur_trx, trx_fnum_start, all_f, sz,1)
-            pred_locs[cur_f-min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz,
+                                             1)
+            pred_locs[cur_f - min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
 
             if save_hmaps:
-                write_hmaps(hmaps[cur_t,...],hmap_out_dir, trx_ndx,cur_f)
+                write_hmaps(hmaps[cur_t, ...], hmap_out_dir, trx_ndx, cur_f)
 
-        if cur_b%20==19:
+        if cur_b % 20 == 19:
             sys.stdout.write('.')
         if cur_b % 400 == 399:
             sys.stdout.write('\n')
-            write_trk(pred_locs,range(start_frame,to_do_list[cur_start][0]))
+            write_trk(pred_locs, range(start_frame, to_do_list[cur_start][0]))
 
-    write_trk(pred_locs, range(start_frame,end_frame))
+    write_trk(pred_locs, range(start_frame, end_frame))
     cap.close()
     tf.reset_default_graph()
     return pred_locs
 
 
 def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name='',hmaps=False):
+                        skip_rate=1, trx_ids=[], name='', hmaps=False):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -686,7 +734,8 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
     try:
         sess = self.init_net_meta(1)
     except tf.errors.InternalError:
-        logging.exception('Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
+        logging.exception(
+            'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
         sys.exit(1)
     model_file = self.get_latest_model_file()
 
@@ -714,19 +763,18 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         base_locs = base_locs * conf.unet_rescale
         return base_locs, pred
 
-
-
     try:
         classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name,
+                       start_frame, end_frame, skip_rate, trx_ids, model_file, name,
                        save_hmaps=hmaps)
-    except (IOError,ValueError) as e:
+    except (IOError, ValueError) as e:
         sess.close()
         self.close_cursors()
         logging.exception('Could not track movie')
 
+
 def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name='',hmaps=False):
+                      skip_rate=1, trx_ids=[], name='', hmaps=False):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -736,31 +784,39 @@ def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_fra
     tf.reset_default_graph()
     pred_fn, model_file = open_pose.get_pred_fn(conf)
     classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name,save_hmaps=hmaps)
+                   start_frame, end_frame, skip_rate, trx_ids, model_file, name, save_hmaps=hmaps)
 
 
 def classify_movie_all(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids = [], name='',model_type='',hmaps=False):
+                       skip_rate=1, trx_ids=[], name='', model_type='', hmaps=False):
     if model_type == 'openpose':
-        classify_movie_op(conf,mov_file, trx_file, out_file, start_frame, end_frame,
-                        skip_rate, trx_ids, name,hmaps=hmaps)
+        classify_movie_op(conf, mov_file, trx_file, out_file, start_frame, end_frame,
+                          skip_rate, trx_ids, name, hmaps=hmaps)
     elif model_type == 'unet':
-        classify_movie_unet(conf,mov_file, trx_file, out_file, start_frame, end_frame,
-                        skip_rate, trx_ids, name,hmaps=hmaps)
+        classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame, end_frame,
+                            skip_rate, trx_ids, name, hmaps=hmaps)
     else:
         raise ValueError('Undefined type of model')
 
 
-def train_unet(conf,args):
+def train_unet(conf, args):
     if not args.skip_db:
         create_tfrecord(conf, False)
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
+    self.train_data_name = 'traindata'
     self.train_unet(False, 1)
 
 
-def train(lblfile, nviews, name, args):
+def train_leap(conf, args):
+    if not args.skip_db:
+        create_leap_db(conf, False)
+    db_path = [os.path.join(conf.cachedir, 'leap_train.h5')]
+    train_leap_apt(db_path, conf, run_name = args.name, net_name='stacked_hourglass')
 
+
+
+def train(lblfile, nviews, name, args):
     view = args.view
     type = args.type
     if view is None:
@@ -776,9 +832,9 @@ def train(lblfile, nviews, name, args):
         conf.view = cur_view
 
         try:
-            if type=='unet':
-                train_unet(conf,args)
-            elif type=='openpose':
+            if type == 'unet':
+                train_unet(conf, args)
+            elif type == 'openpose':
                 open_pose.training(conf)
         except tf.errors.InternalError as e:
             logging.exception(
@@ -787,6 +843,7 @@ def train(lblfile, nviews, name, args):
         except tf.errors.ResourceExhaustedError as e:
             logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
             exit(1)
+
 
 # def classify(lbl_file, n_views, name, mov_file, trx_file, out_file, start_frame, end_frame, skip_rate):
 #     # print(mov_file)
@@ -852,13 +909,14 @@ def parse_args(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("lbl_file",
                         help="path to lbl file")
-    parser.add_argument('-name',dest='name',help='Name for the run. Default - pose_unet', default='pose_unet')
-    parser.add_argument('-view',dest='view',help='Run only for this view. If not specified, run for all views', default=None,type=int)
-    parser.add_argument('-cache',dest='cache',help='Override cachedir in lbl file', default=None)
-    parser.add_argument('-skip_db',dest='skip_db',help='Skip creating the data base', action='store_true')
-    parser.add_argument('-out_dir',dest='out_dir',help='Directory to output log files', default=None)
-    parser.add_argument('-type',dest='type',help='Network type, default is unet', default='unet',
-                        choices=['unet','openpose'])
+    parser.add_argument('-name', dest='name', help='Name for the run. Default - pose_unet', default='pose_unet')
+    parser.add_argument('-view', dest='view', help='Run only for this view. If not specified, run for all views',
+                        default=None, type=int)
+    parser.add_argument('-cache', dest='cache', help='Override cachedir in lbl file', default=None)
+    parser.add_argument('-skip_db', dest='skip_db', help='Skip creating the data base', action='store_true')
+    parser.add_argument('-out_dir', dest='out_dir', help='Directory to output log files', default=None)
+    parser.add_argument('-type', dest='type', help='Network type, default is unet', default='unet',
+                        choices=['unet', 'openpose'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
@@ -874,9 +932,11 @@ def parse_args(argv):
                                  default=1)
     parser_classify.add_argument('-end_frame', dest='end_frame', help='end frame for tracking', type=int, default=-1)
     parser_classify.add_argument('-skip_rate', dest='skip', help='frames to skip while tracking', default=1, type=int)
-    parser_classify.add_argument('-out', dest='out_files', help='file to save tracking results to', required=True, nargs='+')
-    parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*',type=int,default=[])
-    parser_classify.add_argument('-hmaps', dest='hmaps', help='generate heatmpas',action='store_true')
+    parser_classify.add_argument('-out', dest='out_files', help='file to save tracking results to', required=True,
+                                 nargs='+')
+    parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*', type=int,
+                                 default=[])
+    parser_classify.add_argument('-hmaps', dest='hmaps', help='generate heatmpas', action='store_true')
 
     print(argv)
     args = parser.parse_args(argv)
@@ -922,7 +982,8 @@ def run(args):
                 if args.cache is not None:
                     conf.cachedir = args.cache
                 classify_movie_all(conf, args.mov[view], args.trx[view], args.out_files[view],
-                                args.start_frame, args.end_frame, args.skip, args.trx_ids,model_type=args.type,hmaps=args.hmaps)
+                                   args.start_frame, args.end_frame, args.skip, args.trx_ids, model_type=args.type,
+                                   hmaps=args.hmaps)
         else:
             if args.trx is None:
                 args.trx = [None]
@@ -931,7 +992,8 @@ def run(args):
             if args.cache is not None:
                 conf.cachedir = args.cache
             classify_movie_all(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
-                                args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type,hmaps=args.hmaps)
+                               args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type,
+                               hmaps=args.hmaps)
 
 
 def main(argv):
@@ -958,6 +1020,7 @@ def main(argv):
         run(args)
     except Exception as e:
         logging.exception('UNKNOWN: APT_interface errored because of some error')
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

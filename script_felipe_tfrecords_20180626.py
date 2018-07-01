@@ -19,10 +19,15 @@ def create_iterators():
         val_distort = False
 
     conf.n_classes = 5
-    conf.op_affinity_graph = [[0,1],[1,2]] # Edit this. Dummy affinity maps
-    conf.normalize_img_mean = False #Edit this. Set it to true if image mean should be subtracted.
+    conf.op_affinity_graph = [[0,1],[1,2]] # EDIT THIS. Dummy affinity maps
+    conf.normalize_img_mean = False #EDIT THIS to True if image mean should be subtracted.
+    conf.scale_range = 0.2 # image will be scaled by (1-scale_range) to (1+scale_range)
+    conf.rrange = 30 # image will rotated by +-30
+    conf.trange = 30 # image will be translated by +-30 in both x and y direction
+    conf.brange = [1-0.2, 1+0.2] # brightness is adjusted by this much. 0 is no adjustment and 1 is maximum adjustment
+    conf.crange = [0.7, 1.3] # contrast range. [1, 1] does nothing, [0,2] adjusts the contrast by maximum
     conf.imgDim = 3
-    conf.adjustContrast = False
+    conf.adjustContrast = False # this is different contrast adjustment than earlier. Should be false for colored images.
     conf.perturb_color = False
     conf.op_label_scale = 8
     conf.op_rescale = 1
@@ -39,6 +44,8 @@ def create_iterators():
 
 
 def create_db():
+    hsz = 250 # EDIT THIS
+
     for dtype in ['train','val']:
 
         cachedir = '/groups/branson/bransonlab/mayank/PoseTF/cache/felipe/'
@@ -63,7 +70,6 @@ def create_db():
         bbox = bbox.reshape([n_labels,4,2])
 
         mid_pt = bbox.mean(axis=1)
-        hsz = 250
 
         im_id = [k['id'] for k in L['images']]
         im_name = [k['file_name'] for k in L['images']]
