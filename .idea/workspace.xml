@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/debug_apt_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_apt_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/multiResData.py" beforeDir="false" afterPath="$PROJECT_DIR$/multiResData.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -61,11 +59,17 @@
               <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
                 <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="170">
-                      <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
-                      <folding>
-                        <element signature="e#4#17#0" expanded="true" />
-                      </folding>
+                    <state relative-caret-position="68">
+                      <caret line="3" column="118" selection-start-line="3" selection-start-column="118" selection-end-line="3" selection-end-column="118" />
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="genericpath.py" pinned="false" current-in-tab="false">
+                <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/lib/python2.7/genericpath.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="374">
+                      <caret line="19" selection-start-line="19" selection-end-line="19" />
                     </state>
                   </provider>
                 </entry>
@@ -94,10 +98,10 @@
                   </provider>
                 </entry>
               </file>
-              <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
+              <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/multiResData.py">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="294">
+                    <state relative-caret-position="1212">
                       <caret line="445" column="4" selection-start-line="445" selection-start-column="4" selection-end-line="445" selection-end-column="4" />
                       <folding>
                         <element signature="e#0#37#0" expanded="true" />
@@ -106,11 +110,11 @@
                   </provider>
                 </entry>
               </file>
-              <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+              <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
                 <entry file="file://$PROJECT_DIR$/APT_interface.py">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="1078">
-                      <caret line="1011" column="22" selection-start-line="1011" selection-start-column="22" selection-end-line="1011" selection-end-column="22" />
+                    <state relative-caret-position="705">
+                      <caret line="125" column="13" lean-forward="true" selection-start-line="125" selection-start-column="13" selection-end-line="125" selection-end-column="13" />
                       <folding>
                         <element signature="e#0#31#0" expanded="true" />
                         <element signature="e#17385#20936#0" />
@@ -128,7 +132,7 @@
               <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/APT_interface.py">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="-223">
+                    <state relative-caret-position="-172">
                       <caret line="1033" selection-start-line="1033" selection-end-line="1033" />
                       <folding>
                         <element signature="e#0#31#0" expanded="true" />
@@ -147,8 +151,8 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="294">
-                  <caret line="158" column="4" selection-start-line="158" selection-start-column="4" selection-end-line="158" selection-end-column="4" />
+                <state relative-caret-position="56">
+                  <caret line="145" column="34" selection-start-line="145" selection-start-column="34" selection-end-line="145" selection-end-column="34" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#71#86#0" />
@@ -213,8 +217,8 @@
       <find>cur_pts.ndim</find>
       <find>has_trx_file</find>
       <find>opencv</find>
-      <find />
-      <find />
+      <find>try opencv</find>
+      <find>... point \d+:</find>
       <find>74</find>
       <find>keep_dims</find>
       <find>keep_prob</find>
@@ -257,7 +261,7 @@
       <replace>felipe</replace>
       <replace>felipeConfigMulti</replace>
       <replace>train_</replace>
-      <replace />
+      <replace>in range(group_sz)</replace>
       <replace>skimage.transform.resize</replace>
       <replace>unet</replace>
       <replace>[</replace>
@@ -326,9 +330,9 @@
         <option value="$PROJECT_DIR$/open_pose.py" />
         <option value="$PROJECT_DIR$/PoseCommon.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
-        <option value="$PROJECT_DIR$/debug_apt_interface.py" />
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$PROJECT_DIR$/debug_apt_interface.py" />
       </list>
     </option>
   </component>
@@ -681,13 +685,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00109" summary="Changes to PoseUNetRNN UNet network">
-      <created>1519796921252</created>
-      <option name="number" value="00109" />
-      <option name="presentableId" value="LOCAL-00109" />
-      <option name="project" value="LOCAL" />
-      <updated>1519796921252</updated>
-    </task>
     <task id="LOCAL-00110" summary="Changes to PoseUNetRNN UNet network">
       <created>1519891427736</created>
       <option name="number" value="00110" />
@@ -1024,7 +1021,14 @@
       <option name="project" value="LOCAL" />
       <updated>1530429962023</updated>
     </task>
-    <option name="localTasksCounter" value="158" />
+    <task id="LOCAL-00158" summary="Using newer cropping where cropping location is specified for each video">
+      <created>1530527441189</created>
+      <option name="number" value="00158" />
+      <option name="presentableId" value="LOCAL-00158" />
+      <option name="project" value="LOCAL" />
+      <updated>1530527441190</updated>
+    </task>
+    <option name="localTasksCounter" value="159" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1070,12 +1074,13 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="59" y="34" width="1871" height="1056" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
       <window_info anchor="bottom" id="Event Log" order="0" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.4296142" visible="true" weight="0.31135136" />
+      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.4296142" weight="0.31135136" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
       <window_info id="Structure" order="2" sideWeight="0.5703858" side_tool="true" weight="0.25567567" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.32760474" />
@@ -1145,7 +1150,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Working version APT_interface that is more object oriented." />
     <MESSAGE value="Changed how movies are classified in APT_interface. Added code to create CV json files." />
     <MESSAGE value="Bug fix in trackStephenHead_py and PoseUNet for classifying movies." />
     <MESSAGE value="Adding option to runTrackingStephen to accept directory name as input" />
@@ -1170,7 +1174,8 @@
     <MESSAGE value="Fixed indexing for start frame and end frame in APT_interface" />
     <MESSAGE value="Script to convert felipe's data into tfrecords format to test out open-pose" />
     <MESSAGE value="Integrating Leap" />
-    <option name="LAST_COMMIT_MESSAGE" value="Integrating Leap" />
+    <MESSAGE value="Using newer cropping where cropping location is specified for each video" />
+    <option name="LAST_COMMIT_MESSAGE" value="Using newer cropping where cropping location is specified for each video" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1217,13 +1222,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/lib/python2.7/threading.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="762" selection-start-line="762" selection-end-line="762" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/python/ops/data_flow_ops.py" />
     <entry file="file:///bransonlab/mayank/venv/local/lib/python2.7/site-packages/tensorflow/python/ops/io_ops.py" />
     <entry file="file:///bransonlab/mayank/venv/lib/python2.7/linecache.py" />
@@ -1401,16 +1399,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/script_felipe_tfrecords_20180626.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="23" column="54" selection-start-line="23" selection-start-column="54" selection-end-line="23" selection-end-column="54" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/keras/utils/generic_utils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="192">
@@ -1470,23 +1458,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
-          <folding>
-            <element signature="e#4#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="158" column="4" selection-start-line="158" selection-start-column="4" selection-end-line="158" selection-end-column="4" />
+        <state relative-caret-position="56">
+          <caret line="145" column="34" selection-start-line="145" selection-start-column="34" selection-end-line="145" selection-end-column="34" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#71#86#0" />
@@ -1524,25 +1499,52 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/script_felipe_tfrecords_20180626.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="445" column="4" selection-start-line="445" selection-start-column="4" selection-end-line="445" selection-end-column="4" />
+        <state relative-caret-position="272">
+          <caret line="23" column="54" selection-start-line="23" selection-start-column="54" selection-end-line="23" selection-end-column="54" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#16#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="3" column="118" selection-start-line="3" selection-start-column="118" selection-end-line="3" selection-end-column="118" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/lib/python2.7/genericpath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="19" selection-start-line="19" selection-end-line="19" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1078">
-          <caret line="1011" column="22" selection-start-line="1011" selection-start-column="22" selection-end-line="1011" selection-end-column="22" />
+        <state relative-caret-position="705">
+          <caret line="125" column="13" lean-forward="true" selection-start-line="125" selection-start-column="13" selection-end-line="125" selection-end-column="13" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#17385#20936#0" />
             <element signature="e#17430#18166#0" />
             <element signature="e#31433#31538#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1212">
+          <caret line="445" column="4" selection-start-line="445" selection-start-column="4" selection-end-line="445" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>

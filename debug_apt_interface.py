@@ -1,4 +1,7 @@
 
+
+import APT_interface as apt
+conf = apt.create_conf('/home/mayank/work/poseTF/data/stephen/sh_trn4523_gt080618_made20180627_stripped.lbl',0,'crop')
 ##
 import socket
 import APT_interface
