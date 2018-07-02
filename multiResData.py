@@ -398,10 +398,10 @@ def get_patch(cap, fnum, conf, locs, offset=0, stationary=True, cur_trx=None, fl
             # convert grayscale to color if the conf says so.
         #c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
         #frame_in = PoseTools.crop_images(frame_in, conf)
-        frame_in = frame_in[xlo:xhi,ylo:yhi,:]
+        frame_in = frame_in[ylo:yhi,xlo:xhi,:]
         cur_loc = locs.copy()
-        cur_loc[:, 0] = cur_loc[:, 0] - xlo -1  # ugh, the nasty x-y business.
-        cur_loc[:, 1] = cur_loc[:, 1] - ylo - 1
+        cur_loc[:, 0] = cur_loc[:, 0] - xlo   # ugh, the nasty x-y business.
+        cur_loc[:, 1] = cur_loc[:, 1] - ylo
         # -1 because matlab is 1-indexed
         cur_loc = cur_loc.clip(min=0, max=[(xhi-xlo) + 7, (yhi-ylo) + 7])
         return  frame_in, cur_loc
