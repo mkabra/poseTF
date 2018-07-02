@@ -14,7 +14,7 @@ import hdf5storage
 import imageio
 import multiResData
 from multiResData import *
-from leap.training import train_apt as train_leap_apt
+#from leap.training import train_apt as train_leap_apt
 
 #import  open_pose
 
@@ -235,7 +235,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
         if lbl['cropIsCropMode'].value[0,0] == 0:
-            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0]
+            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0].astype('int')
             crop_loc -= 1 # from matlab to python
         else:
             crop_loc = None
