@@ -9,11 +9,11 @@ import h5py
 lbl_file = '/home/mayank/work/poseTF/data/alice/multitarget_bubble_expandedbehavior_20180425_local.lbl'
 
 conf = APT_interface.create_conf(lbl_file,view=0,name='test_leap')
-APT_interface.create_leap_db(conf,True)
+# APT_interface.create_leap_db(conf,True)
 
 conf.batch_size = 32
 conf.rrange = 15
-conf.dl_steps = 2500
+# conf.dl_steps = 2500
 
 db_path = [os.path.join(conf.cachedir, 'leap_train.h5')]
 db_path.append(os.path.join(conf.cachedir, 'leap_val.h5'))

@@ -377,21 +377,33 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
         json.dump(splits, f)
 
 
-def get_patch(cap, fnum, conf, locs, offset=0, stationary=True, cur_trx=None,flipud=False):
+def get_patch(cap, fnum, conf, locs, offset=0, stationary=True, cur_trx=None, flipud=False, crop_loc=None):
+    # fnum is the frame number
+    # cur_trx == None indicates that the project doesnt have trx file.
+    # offset is used for multiframe
+    # stationary is also used for multiframe.
+    # crop_loc is the cropping location.
 
     if cur_trx is not None: # when there are trx
         return get_patch_trx(cap, cur_trx, fnum, conf, locs, offset, stationary,flipud)
     else:
         frame_in, _, _, _ = read_frame(cap,fnum,cur_trx,flipud=flipud)
         frame_in = frame_in[:,:,0:conf.imgDim]
+        if crop_loc is not None:
+            xlo, xhi, ylo, yhi = crop_loc
+        else:
+            xlo = 0; ylo = 0
+            yhi, xhi = frame_in.shape[0:2]
+
             # convert grayscale to color if the conf says so.
-        c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
-        frame_in = PoseTools.crop_images(frame_in, conf)
+        #c_loc = conf.cropLoc[tuple(frame_in.shape[0:2])]
+        #frame_in = PoseTools.crop_images(frame_in, conf)
+        frame_in = frame_in[xlo:xhi,ylo:yhi,:]
         cur_loc = locs.copy()
-        cur_loc[:, 0] = cur_loc[:, 0] - c_loc[1] - 1  # ugh, the nasty x-y business.
-        cur_loc[:, 1] = cur_loc[:, 1] - c_loc[0] - 1
+        cur_loc[:, 0] = cur_loc[:, 0] - xlo -1  # ugh, the nasty x-y business.
+        cur_loc[:, 1] = cur_loc[:, 1] - ylo - 1
         # -1 because matlab is 1-indexed
-        cur_loc = cur_loc.clip(min=0, max=[conf.imsz[1] + 7, conf.imsz[0] + 7])
+        cur_loc = cur_loc.clip(min=0, max=[(xhi-xlo) + 7, (yhi-ylo) + 7])
         return  frame_in, cur_loc
 
 

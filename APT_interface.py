@@ -113,14 +113,23 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     # conf.cachedir = os.path.join(localSetup.bdir, 'cache', proj_name)
     conf.has_trx_file = has_trx_file(H[H['trxFilesAll'][0, 0]])
     conf.selpts = np.arange(conf.n_classes)
-    vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
-    vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
-    width = int(read_entry(dt_params['sizex']))
-    height = int(read_entry(dt_params['sizey']))
-    conf.imsz = (height, width)
-    crop_locX = int(read_entry(dt_params['CropX_view{}'.format(view + 1)]))
-    crop_locY = int(read_entry(dt_params['CropY_view{}'.format(view + 1)]))
-    conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
+
+    # If the project has trx file then we use the crop locs specified by the user. If the project doesnt have trx files then we use the crop size specified by user else use the whole frame.
+    if conf.has_trx_file:
+        width = int(read_entry(dt_params['sizex']))
+        height = int(read_entry(dt_params['sizey']))
+        conf.imsz = (height, width)
+    else:
+        if H['cropIsCropMode'][0,0] == 0:
+            xlo, xhi, ylo, yhi = H[H[H['movieFilesAllCropInfo'][0,0]]['roi'][view][0]].value[:,0]
+            conf.imsz = (yhi-ylo+1, xhi-xlo+1)
+        else:
+            vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
+            vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
+            conf.imsz = (vid_nc, vid_nr)
+    # crop_locX = int(read_entry(dt_params['CropX_view{}'.format(view + 1)]))
+    # crop_locY = int(read_entry(dt_params['CropY_view{}'.format(view + 1)]))
+    # conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
     conf.labelfile = lbl_file
     conf.sel_sz = min(conf.imsz)
     conf.unet_rescale = float(read_entry(dt_params['scale']))
@@ -225,6 +234,11 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
+        if lbl['cropIsCropMode'].value[0,0] == 0:
+            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0]
+            crop_loc -= 1 # from matlab to python
+        else:
+            crop_loc = None
         try:
             cap = movies.Movie(local_dirs[ndx])
         except ValueError:
@@ -255,7 +269,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
                                                    mov_split, trx_split=trx_split, predefined=predefined)
 
                 frame_in, cur_loc = multiResData.get_patch(
-                    cap, fnum, conf, cur_pts[trx_ndx, fnum, :, sel_pts], cur_trx=cur_trx, flipud=flipud)
+                    cap, fnum, conf, cur_pts[trx_ndx, fnum, :, sel_pts], cur_trx=cur_trx, flipud=flipud, crop_loc=crop_loc)
                 cur_out([frame_in, cur_loc, info])
 
                 if cur_out is out_fns[1] and split:
@@ -596,9 +610,18 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
         # imageio.imwrite(cur_out_png,cur_im)
 
 
-def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
-                   start_frame=0, end_frame=-1, skip_rate=1, trx_ids=[],
-                   model_file='', name='', save_hmaps=False):
+def classify_movie(conf, pred_fn,
+                   mov_file='',
+                   out_file='',
+                   trx_file=None,
+                   start_frame=0,
+                   end_frame=-1,
+                   skip_rate=1,
+                   trx_ids=[],
+                   model_file='',
+                   name='',
+                   save_hmaps=False,
+                   crop_loc=None):
     # classifies movies frame by frame instead of trx by trx.
 
     def write_trk(pred_locs_in, n_done):
@@ -691,7 +714,7 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
             cur_f = cur_entry[0]
 
             frame_in, cur_loc = multiResData.get_patch(
-                cap, cur_f, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud)
+                cap, cur_f, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud, crop_loc=crop_loc)
             all_f[cur_t, ...] = frame_in
 
         base_locs, hmaps = pred_fn(all_f)
@@ -721,8 +744,10 @@ def classify_movie(conf, pred_fn, mov_file, out_file, trx_file=None,
     return pred_locs
 
 
-def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                        skip_rate=1, trx_ids=[], name='', hmaps=False):
+def classify_movie_unet(conf,**kwargs) :
+    #mov_file, trx_file, out_file, start_frame=0,
+    # end_frame=-1,skip_rate=1, trx_ids=[], name='', hmaps=False):
+
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -764,17 +789,14 @@ def classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame=0, end_f
         return base_locs, pred
 
     try:
-        classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                       start_frame, end_frame, skip_rate, trx_ids, model_file, name,
-                       save_hmaps=hmaps)
+        classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
     except (IOError, ValueError) as e:
         sess.close()
         self.close_cursors()
         logging.exception('Could not track movie')
 
 
-def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                      skip_rate=1, trx_ids=[], name='', hmaps=False):
+def classify_movie_op(conf, **kwargs):
     # classify movies using unet network.
     # this is the function that should be changed for different networks.
     # The main thing to do here is to define the pred_fn
@@ -783,18 +805,14 @@ def classify_movie_op(conf, mov_file, trx_file, out_file, start_frame=0, end_fra
 
     tf.reset_default_graph()
     pred_fn, model_file = open_pose.get_pred_fn(conf)
-    classify_movie(conf, pred_fn, mov_file, out_file, trx_file,
-                   start_frame, end_frame, skip_rate, trx_ids, model_file, name, save_hmaps=hmaps)
+    classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
 
 
-def classify_movie_all(conf, mov_file, trx_file, out_file, start_frame=0, end_frame=-1,
-                       skip_rate=1, trx_ids=[], name='', model_type='', hmaps=False):
+def classify_movie_all(model_type, **kwargs):
     if model_type == 'openpose':
-        classify_movie_op(conf, mov_file, trx_file, out_file, start_frame, end_frame,
-                          skip_rate, trx_ids, name, hmaps=hmaps)
+        classify_movie_op(**kwargs)
     elif model_type == 'unet':
-        classify_movie_unet(conf, mov_file, trx_file, out_file, start_frame, end_frame,
-                            skip_rate, trx_ids, name, hmaps=hmaps)
+        classify_movie_unet(**kwargs)
     else:
         raise ValueError('Undefined type of model')
 
@@ -937,6 +955,7 @@ def parse_args(argv):
     parser_classify.add_argument('-trx_ids', dest='trx_ids', help='only track these animals', nargs='*', type=int,
                                  default=[])
     parser_classify.add_argument('-hmaps', dest='hmaps', help='generate heatmpas', action='store_true')
+    parser_classify.add_argument('-crop_loc', dest='crop_loc', help='crop location given xlo xhi ylo yhi', nargs='*', default=None)
 
     print(argv)
     args = parser.parse_args(argv)
@@ -969,31 +988,49 @@ def run(args):
         train(lbl_file, nviews, name, args)
 
     elif args.sub_name == 'track':
-        assert len(args.mov) == len(args.out_files), 'Number of movie files and number of out files should be the same'
 
         if args.view is None:
+            assert len(args.mov) == nviews, 'Number of movie files should be same number of views'
+            assert len(args.out_files) == nviews, 'Number of out files should be same as number of views'
             if args.trx is None:
                 args.trx = [None] * nviews
             else:
                 assert len(args.mov) == len(args.trx), 'Number of movie files should be same as the number of trx files'
-            assert len(args.mov) == nviews, 'Number of movie files should be same as number of views'
-            for view in range(nviews):
-                conf = create_conf(lbl_file, view, name)
-                if args.cache is not None:
-                    conf.cachedir = args.cache
-                classify_movie_all(conf, args.mov[view], args.trx[view], args.out_files[view],
-                                   args.start_frame, args.end_frame, args.skip, args.trx_ids, model_type=args.type,
-                                   hmaps=args.hmaps)
+            if args.crop_loc is not None:
+                assert len(args.crop_loc)==4*nviews, 'cropping location should be specified as xlo xhi ylo yhi for all the views'
+            views = range(nviews)
         else:
             if args.trx is None:
                 args.trx = [None]
-            assert len(args.mov) == 1, 'Number of movie files should be one when view is speicified'
-            conf = create_conf(lbl_file, args.view, name)
+            assert len(args.mov) == 1, 'Number of movie files should be one when view is specified'
+            assert len(args.trx) == 1, 'Number of trx files should be one when view is specified'
+            assert len(args.out_files) == 1, 'Number of out files should be one when view is specified'
+            if args.crop_loc is not None:
+                assert len(args.crop_loc)==4*nviews, 'cropping location should be specified as xlo xhi ylo yhi'
+            views = [args.view]
+
+        for view_ndx, view in enumerate(views):
+            conf = create_conf(lbl_file, view, name)
             if args.cache is not None:
                 conf.cachedir = args.cache
-            classify_movie_all(conf, args.mov[0], args.trx[0], args.out_files[0], args.start_frame,
-                               args.end_frame, args.skip, args.trx_ids, name=name, model_type=args.type,
-                               hmaps=args.hmaps)
+            if args.crop_loc is not None:
+                crop_loc = np.array(args.crop_loc).reshape([len(views), 4])[view_ndx,:]
+            else:
+                crop_loc = None
+
+            classify_movie_all(args.type,
+                               conf= conf,
+                               mov_file=args.mov[view_ndx],
+                               trx_file=args.trx[view_ndx],
+                               out_file=args.out_files[view_ndx],
+                               start_frame=args.start_frame,
+                               end_frame=args.end_frame,
+                               skip_rate=args.skip,
+                               trx_ids=args.trx_ids,
+                               name=name,
+                               save_hmaps=args.hmaps,
+                               crop_loc=crop_loc
+                               )
 
 
 def main(argv):
