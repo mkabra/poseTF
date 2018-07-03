@@ -609,7 +609,6 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
         # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
         # imageio.imwrite(cur_out_png,cur_im)
 
-
 def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
     bsize = conf.batch_size
     all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
@@ -625,17 +624,38 @@ def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
             all_f[cur_t, ...] = frame_in
     return all_f
 
+def get_trx_info(trx_file, conf, n_frames):
+    if conf.has_trx_file:
+        T = sio.loadmat(trx_file)['trx'][0]
+        n_trx = len(T)
+        end_frames = np.array([x['endframe'][0, 0] for x in T])
+        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
+    else:
+        T = [None, ]
+        n_trx = 1
+        end_frames = np.array([n_frames])
+        first_frames = np.array([0])
+    return T, first_frames, end_frames, n_trx
 
-def classify_list(conf, pred_fn, cap, to_do_list, trx_file, n_frames,
-                  crop_loc, flipud):
+def get_trx_ids(trx_ids_in, n_trx, has_trx_file):
+    if has_trx_file:
+        if len(trx_ids_in) == 0:
+            trx_ids = np.arange(n_trx)
+        else:
+            trx_ids = np.array(trx_ids_in)
+    else:
+        trx_ids = [0]
+    return trx_ids
 
+
+def classify_list(conf, pred_fn, cap, to_do_list, trx_file, crop_loc):
+    flipud = conf.flipud
     bsize = conf.batch_size
     n_list = len(to_do_list)
     n_batches = int(math.ceil(float(n_list) / bsize))
-    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
     pred_locs = np.zeros([n_list, conf.n_classes, 2])
     pred_locs[:] = np.nan
-    trx, first_frames, end_frames, n_trx = get_trx_info(trx_file, conf, n_frames)
+    trx, first_frames, _, _ = get_trx_info(trx_file, conf, 0)
     sz = (cap.get_height(), cap.get_width())
 
     for cur_b in range(n_batches):
@@ -659,29 +679,105 @@ def classify_list(conf, pred_fn, cap, to_do_list, trx_file, n_frames,
     return pred_locs
 
 
-def get_trx_info(trx_file, conf, n_frames):
+def classify_list_all(model_type, conf, list):
+    # list should be of list of type [mov_ndx, frame_num, trx_ndx]
+    # all of them should be 1-indexed.
+
+    if model_type == 'openpose':
+        pred_fn, model_file = open_pose.get_pred_fn(conf)
+        close_fn = lambda : None
+    elif model_type == 'unet':
+        pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
+    elif model_type == 'leap':
+        close_fn = lambda : None
+    elif model_type == 'deeplabcut':
+        close_fn = lambda : None
+    else:
+        raise ValueError('Undefined model type')
+
+
+    local_dirs, _ = multiResData.find_local_dirs(conf)
+    lbl = h5py.File(conf.labelfile)
+    view = conf.view
+    npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
     if conf.has_trx_file:
-        T = sio.loadmat(trx_file)['trx'][0]
-        n_trx = len(T)
-        end_frames = np.array([x['endframe'][0, 0] for x in T])
-        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
+        trx_files = multiResData.get_trx_files(lbl, local_dirs)
     else:
-        T = [None, ]
-        n_trx = 1
-        end_frames = np.array([n_frames])
-        first_frames = np.array([0])
-    return T, first_frames, end_frames, n_trx
+        trx_files = [None,]*len(local_dirs)
 
+    pred_locs = np.zeros([len(list), conf.n_classes, 2])
+    pred_locs[:] = np.nan
 
-def get_trx_ids(trx_ids_in, n_trx, has_trx_file):
-    if has_trx_file:
-        if len(trx_ids_in) == 0:
-            trx_ids = np.arange(n_trx)
+    for ndx, dir_name in enumerate(local_dirs):
+
+        cur_list = [ [l[1]-1, l[2]-1] for l in list if l[0] == (ndx+1)]
+        if lbl['cropIsCropMode'].value[0,0] == 0:
+            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0].astype('int')
+            crop_loc -= 1 # from matlab to python
         else:
-            trx_ids = np.array(trx_ids_in)
+            crop_loc = None
+
+        try:
+            cap = movies.Movie(dir_name)
+        except ValueError:
+            logging.exception('MOVIE_READ: ' + local_dirs[ndx] + ' is missing')
+            exit(1)
+
+        pred_locs = classify_list(conf, pred_fn, cap, cur_list, trx_files[ndx], crop_loc)
+
+
+        cap.close()  # close the movie handles
+
+
+    lbl.close()
+    close_fn()
+    return pred_locs
+
+
+def classify_db(conf, read_fn, pred_fn, n):
+    bsize = conf.batch_size
+    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+    pred_locs = np.zeros([n, conf.n_classes, 2])
+    n_batches = int(math.ceil(float(n) / bsize))
+    labeled_locs = np.zeros([n, conf.n_classes, 2])
+    info = []
+    for cur_b in range(n_batches):
+        cur_start = cur_b * bsize
+        ppe = min(n - cur_start, bsize)
+        for ndx in range(ppe):
+            next_db = read_fn()
+            all_f[ndx,...] = next_db[0]
+            labeled_locs[cur_start + ndx, ...] = next_db[1]
+            info.append(next_db[2])
+        base_locs, hmaps = pred_fn(all_f)
+        for ndx in range(ppe):
+            pred_locs[cur_start + ndx, ...] = base_locs[ndx,...]
+
+    return pred_locs, labeled_locs, info
+
+
+def classify_db_all(model_type, conf, db_file):
+    if model_type == 'openpose':
+        tf_iterator = multiResData.tf_reader(conf, db_file, False)
+        tf_iterator.batch_size = 1
+        read_fn = tf_iterator.next
+        pred_fn, model_file = open_pose.get_pred_fn(conf)
+        pred_locs, label_locs = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+    elif model_type == 'unet':
+        tf_iterator = multiResData.tf_reader(conf, db_file, False)
+        tf_iterator.batch_size = 1
+        read_fn = tf_iterator.next
+        pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
+        pred_locs, label_locs = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+        close_fn()
+    elif model_type == 'leap':
+        pass
+    elif model_type == 'deeplabcut':
+        pass
     else:
-        trx_ids = [0]
-    return trx_ids
+        raise ValueError('Undefined model type')
+
+    return pred_locs, label_locs
 
 
 def classify_movie(conf, pred_fn,
@@ -729,27 +825,21 @@ def classify_movie(conf, pred_fn,
                             appendmat=False, truncate_existing=True)
 
     cap = movies.Movie(mov_file)
-
     sz = (cap.get_height(), cap.get_width())
     n_frames = int(cap.get_n_frames())
     T, first_frames, end_frames, n_trx = get_trx_info(trx_file, conf, n_frames)
     trx_ids = get_trx_ids(trx_ids, n_trx, conf.has_trx_file)
+    bsize = conf.batch_size
+    flipud = conf.flipud
 
-    if end_frame < 0:
-        end_frame = end_frames.max()
-    if end_frame > end_frames.max():
-        end_frame = end_frames.max()
-    if start_frame > end_frame:
-        return None
+    if end_frame < 0: end_frame = end_frames.max()
+    if end_frame > end_frames.max(): end_frame = end_frames.max()
+    if start_frame > end_frame: return None
 
     max_n_frames = end_frames.max() - first_frames.min()
     min_first_frame = first_frames.min()
     pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
     pred_locs[:] = np.nan
-
-    bsize = conf.batch_size
-    flipud = conf.flipud
-    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
 
     hmap_out_dir = os.path.splitext(out_file)[0] + '_hmap'
     if not os.path.exists(hmap_out_dir):
@@ -768,15 +858,8 @@ def classify_movie(conf, pred_fn,
     for cur_b in range(n_batches):
         cur_start = cur_b * bsize
         ppe = min(n_list - cur_start, bsize)
-        for cur_t in range(ppe):
-            cur_entry = to_do_list[cur_t + cur_start]
-            trx_ndx = cur_entry[1]
-            cur_trx = T[trx_ndx]
-            cur_f = cur_entry[0]
-
-            frame_in, cur_loc = multiResData.get_patch(
-                cap, cur_f, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud, crop_loc=crop_loc)
-            all_f[cur_t, ...] = frame_in
+        all_f = create_batch_ims(to_do_list[cur_start:(cur_start+ppe)], conf,
+                                 cap, flipud, T, crop_loc)
 
         base_locs, hmaps = pred_fn(all_f)
         base_locs = base_locs + 1  # for matlabs 1 - indexing
@@ -786,8 +869,7 @@ def classify_movie(conf, pred_fn,
             cur_trx = T[trx_ndx]
             cur_f = cur_entry[0]
             trx_fnum_start = cur_f - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz,
-                                             1)
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1)
             pred_locs[cur_f - min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
 
             if save_hmaps:
@@ -805,17 +887,7 @@ def classify_movie(conf, pred_fn,
     return pred_locs
 
 
-
-
-def classify_movie_unet(conf,**kwargs) :
-    #mov_file, trx_file, out_file, start_frame=0,
-    # end_frame=-1,skip_rate=1, trx_ids=[], name='', hmaps=False):
-
-    # classify movies using unet network.
-    # this is the function that should be changed for different networks.
-    # The main thing to do here is to define the pred_fn
-    # which takes as input a batch of images and
-    # returns the predicted locations.
+def get_unet_pred_fn(conf):
 
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
@@ -825,10 +897,11 @@ def classify_movie_unet(conf,**kwargs) :
         logging.exception(
             'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
         sys.exit(1)
+
     model_file = self.get_latest_model_file()
 
     def pred_fn(all_f):
-        # this is the function that is passed to classify_movie.
+        # this is the function that is used for classification.
         # this should take in an array B x H x W x C of images, and
         # output an array of predicted locations.
         # predicted locations should be B x N x 2
@@ -851,11 +924,28 @@ def classify_movie_unet(conf,**kwargs) :
         base_locs = base_locs * conf.unet_rescale
         return base_locs, pred
 
+    def close_fn():
+        sess.close()
+        self.close_cursors()
+
+    return pred_fn, close_fn, model_file
+
+
+def classify_movie_unet(conf,**kwargs) :
+    #mov_file, trx_file, out_file, start_frame=0,
+    # end_frame=-1,skip_rate=1, trx_ids=[], name='', hmaps=False):
+
+    # classify movies using unet network.
+    # this is the function that should be changed for different networks.
+    # The main thing to do here is to define the pred_fn
+    # which takes as input a batch of images and
+    # returns the predicted locations.
+    pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
+
     try:
         classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
     except (IOError, ValueError) as e:
-        sess.close()
-        self.close_cursors()
+        close_fn
         logging.exception('Could not track movie')
 
 
