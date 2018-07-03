@@ -25,6 +25,7 @@ import resource
 import json
 import threading
 import logging
+from six import reraise as raise_
 
 
 def conv_relu(x_in, kernel_shape, train_phase):
@@ -241,15 +242,18 @@ class PoseCommon(object):
 
         if self.for_training == 0:
             # for training
-            n_threads = 20
+            n_threads = 10
         elif self.for_training == 1:
             # for prediction
             n_threads = 0
         elif self.for_training == 2:
             # for cross validation
             n_threads = 1
+        else:
+            traceback = sys.exc_info()[2]
+            raise_(ValueError, "Inocrrect value for for_training", traceback)
 
-        for ndx in range(n_threads):
+        for _ in range(n_threads):
 
             train_t = threading.Thread(target=self.read_image_thread,
                                  args=(sess, self.DBType.Train, distort, shuffle, scale))
@@ -287,7 +291,9 @@ class PoseCommon(object):
             elif db_type == self.DBType.Train:
                 filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
             else:
-                raise IOError, 'Unspecified DB Type'
+                traceback = sys.exc_info()[2]
+                raise_(IOError, "Unspecified DB Type", traceback)
+
         else:
             filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
 
@@ -309,7 +315,7 @@ class PoseCommon(object):
             food = {pl: batch_np[name] for (name, pl) in placeholders}
 
             success = False
-            run_options = tf.RunOptions(timeout_in_ms=20000)
+            run_options = tf.RunOptions(timeout_in_ms=30000)
             try:
                 while not success:
 
@@ -321,8 +327,6 @@ class PoseCommon(object):
                             sess.run(self.val_enqueue_op, feed_dict=food,options=run_options)
                         elif db_type == self.DBType.Train:
                             sess.run(self.train_enqueue_op, feed_dict=food, options=run_options)
-                        else:
-                            raise IOError, 'Unspecified DB Type'
                         success = True
 
                     except tf.errors.DeadlineExceededError:

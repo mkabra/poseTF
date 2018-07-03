@@ -610,6 +610,80 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
         # imageio.imwrite(cur_out_png,cur_im)
 
 
+def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
+    bsize = conf.batch_size
+    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+    for cur_t in range(to_do_list):
+            cur_entry = to_do_list[cur_t]
+            trx_ndx = cur_entry[1]
+            cur_trx = trx[trx_ndx]
+            cur_f = cur_entry[0]
+
+            frame_in, cur_loc = multiResData.get_patch(
+                cap, cur_f, conf, np.zeros([conf.n_classes, 2]),
+                cur_trx=cur_trx, flipud=flipud, crop_loc=crop_loc)
+            all_f[cur_t, ...] = frame_in
+    return all_f
+
+
+def classify_list(conf, pred_fn, cap, to_do_list, trx_file, n_frames,
+                  crop_loc, flipud):
+
+    bsize = conf.batch_size
+    n_list = len(to_do_list)
+    n_batches = int(math.ceil(float(n_list) / bsize))
+    all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
+    pred_locs = np.zeros([n_list, conf.n_classes, 2])
+    pred_locs[:] = np.nan
+    trx, first_frames, end_frames, n_trx = get_trx_info(trx_file, conf, n_frames)
+    sz = (cap.get_height(), cap.get_width())
+
+    for cur_b in range(n_batches):
+        cur_start = cur_b * bsize
+        ppe = min(n_list - cur_start, bsize)
+        all_f = create_batch_ims(to_do_list[cur_start:(cur_start+ppe)], conf,
+                                 cap, flipud, trx, crop_loc)
+
+        base_locs, hmaps = pred_fn(all_f)
+        base_locs = base_locs + 1  # for matlabs 1 - indexing
+
+        for cur_t in range(ppe):
+            cur_entry = to_do_list[cur_t + cur_start]
+            trx_ndx = cur_entry[1]
+            cur_trx = trx[trx_ndx]
+            cur_f = cur_entry[0]
+            trx_fnum_start = cur_f - first_frames[trx_ndx]
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1)
+            pred_locs[cur_start + cur_t, :, :] = base_locs_orig[0, ...]
+
+    return pred_locs
+
+
+def get_trx_info(trx_file, conf, n_frames):
+    if conf.has_trx_file:
+        T = sio.loadmat(trx_file)['trx'][0]
+        n_trx = len(T)
+        end_frames = np.array([x['endframe'][0, 0] for x in T])
+        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
+    else:
+        T = [None, ]
+        n_trx = 1
+        end_frames = np.array([n_frames])
+        first_frames = np.array([0])
+    return T, first_frames, end_frames, n_trx
+
+
+def get_trx_ids(trx_ids_in, n_trx, has_trx_file):
+    if has_trx_file:
+        if len(trx_ids_in) == 0:
+            trx_ids = np.arange(n_trx)
+        else:
+            trx_ids = np.array(trx_ids_in)
+    else:
+        trx_ids = [0]
+    return trx_ids
+
+
 def classify_movie(conf, pred_fn,
                    mov_file='',
                    out_file='',
@@ -617,7 +691,7 @@ def classify_movie(conf, pred_fn,
                    start_frame=0,
                    end_frame=-1,
                    skip_rate=1,
-                   trx_ids=[],
+                   trx_ids=(),
                    model_file='',
                    name='',
                    save_hmaps=False,
@@ -658,21 +732,8 @@ def classify_movie(conf, pred_fn,
 
     sz = (cap.get_height(), cap.get_width())
     n_frames = int(cap.get_n_frames())
-    if conf.has_trx_file:
-        T = sio.loadmat(trx_file)['trx'][0]
-        n_trx = len(T)
-        end_frames = np.array([x['endframe'][0, 0] for x in T])
-        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
-        if len(trx_ids) == 0:
-            trx_ids = np.arange(n_trx)
-        else:
-            trx_ids = np.array(trx_ids)
-    else:
-        T = [None, ]
-        n_trx = 1
-        end_frames = np.array([n_frames])
-        first_frames = np.array([0])
-        trx_ids = [0]
+    T, first_frames, end_frames, n_trx = get_trx_info(trx_file, conf, n_frames)
+    trx_ids = get_trx_ids(trx_ids, n_trx, conf.has_trx_file)
 
     if end_frame < 0:
         end_frame = end_frames.max()
@@ -742,6 +803,8 @@ def classify_movie(conf, pred_fn,
     cap.close()
     tf.reset_default_graph()
     return pred_locs
+
+
 
 
 def classify_movie_unet(conf,**kwargs) :
