@@ -240,7 +240,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
         else:
             crop_loc = None
         try:
-            cap = movies.Movie(local_dirs[ndx])
+            cap = movies.Movie(dir_name)
         except ValueError:
             logging.exception('MOVIE_READ: ' + local_dirs[ndx] + ' is missing')
             exit(1)

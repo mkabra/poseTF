@@ -1,7 +1,14 @@
 
-
+import  h5py
 import APT_interface as apt
-conf = apt.create_conf('/home/mayank/work/poseTF/data/stephen/sh_trn4523_gt080618_made20180627_stripped.lbl',0,'crop')
+lbl_file = '/home/mayank/work/poseTF/data/stephen/sh_trn4523_gt080618_made20180627_stripped.lbl'
+from stephenHeadConfig import sideconf as conf
+conf.labelfile = lbl_file
+
+conf.cachedir = '/home/mayank/work/poseTF/cache/stephen'
+from poseConfig import config as args
+args.skip_db = False
+apt.train_unet(conf,args)
 ##
 import socket
 import APT_interface
