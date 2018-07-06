@@ -465,12 +465,13 @@ def trx_pts(lbl, ndx):
     # new styled sparse labeledpos
     pts = np.array(lbl['labeledpos'])
     try:
-        idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
-        val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
         sz = np.array(lbl[pts[0, ndx]]['size'])[:, 0].astype('int')
         cur_pts = np.zeros(sz).flatten()
         cur_pts[:] = np.nan
-        cur_pts[idx] = val
+        if lbl[pts[0,ndx]]['val'].value.ndim > 1:
+            idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
+            val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
+            cur_pts[idx] = val
         return cur_pts.reshape(np.flipud(sz))
     except ValueError:
         return np.array(lbl[pts[0,ndx]])
