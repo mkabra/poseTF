@@ -1265,6 +1265,7 @@ def create_imseq(ims, reverse=False,val_func=np.mean,sat_func=np.std):
     return cv2.cvtColor(out_im, cv2.COLOR_HSV2RGB)
 
 def crop_to_size(img, sz):
+    # crops image to sz.
     new_sz = img.shape[:2]
     dx = sz[1] - new_sz[1]
     dy = sz[0] - new_sz[0]
@@ -1321,3 +1322,21 @@ def json_load(filename):
     with open(filename,'r') as f:
         K = json.load(f)
     return K
+
+
+def get_last_epoch(conf):
+    train_data_file = os.path.join(
+        conf.cachedir, conf.expname + '_' + name + '_traindata')
+    with open(train_data_file + '.json', 'r') as json_file:
+        json_data = json.load(json_file)
+    return int(json_data['step'][-1])
+
+
+def get_latest_model_file_keras(conf, name):
+    last_epoch = get_last_epoch(conf)
+    save_epoch = last_epoch
+    latest_model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(save_epoch))
+    if not os.path.exists(latest_model_file):
+        save_epoch = int(np.floor(last_epoch/conf.save_step)*conf.save_step)
+        latest_model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(save_epoch))
+    return  latest_model_file

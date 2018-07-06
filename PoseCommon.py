@@ -631,13 +631,13 @@ class PoseCommon(object):
         return start_at
 
 
-    def train_step(self, step, sess, learning_rate, training_iters):
+    def train_step(self, step, sess, learning_rate, training_iters, n_steps):
         cur_step = float(step)
         # cur_lr = learning_rate * self.conf.gamma ** math.floor(old_div(ex_count, self.conf.step_size))
 
         # for most cases the learning rate should decay to 1/100 - 1/1000 by the end of the training.
 
-        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*3/ training_iters))
+        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*n_steps/ training_iters))
         self.fd[self.ph['learning_rate']] = cur_lr
         self.fd_train()
         self.update_fd(db_type=self.DBType.Train, sess=sess, distort=True)
@@ -723,7 +723,7 @@ class PoseCommon(object):
 
             if start_at < training_iters:
                 for step in range(start_at, training_iters + 1):
-                    self.train_step(step, sess, learning_rate, training_iters)
+                    self.train_step(step, sess, learning_rate, training_iters, self.conf.n_steps)
                     if step % self.conf.display_step == 0:
                         train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
                         val_loss = 0.

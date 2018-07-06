@@ -1,3 +1,32 @@
+import socket
+import APT_interface as apt
+import os
+import shutil
+import h5py
+import logging
+
+lbl_file = '/home/mayank/work/poseTF/data/alice/multitarget_bubble_expandedbehavior_20180425_local.lbl'
+
+conf = apt.create_conf(lbl_file,view=0,name='test_openpose')
+graph =  [ [1,2],[1,3],[2,5],[3,4],[1,6],[6,7],[6,8],[6,10],[8,9],[10,11],[5,12],[9,13],[6,14],[6,15],[11,16],[4,17]]
+graph = [[g1-1, g2-1] for g1, g2 in graph]
+conf.op_affinity_graph = graph
+
+from poseConfig import config as args
+# APT_interface.create_leap_db(conf,True)
+
+# conf.batch_size = 32
+# conf.rrange = 15
+# conf.dl_steps = 2500
+
+log = logging.getLogger()  # root logger
+log.setLevel(logging.INFO)
+
+args.skip_db = True
+apt.train_openpose(conf, args)
+
+
+##
 
 import  h5py
 import APT_interface as apt

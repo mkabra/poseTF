@@ -14,9 +14,11 @@ import hdf5storage
 import imageio
 import multiResData
 from multiResData import *
-#from leap.training import train_apt as train_leap_apt
-
-#import  open_pose
+import leap.training
+from leap.training import train_apt as leap_train
+import open_pose
+from deepcut.train import train as deepcut_train
+import deepcut.train
 
 def loadmat(filename):
     '''
@@ -29,7 +31,6 @@ def loadmat(filename):
     data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True, appendmat=False)
     return _check_keys(data)
 
-
 def _check_keys(dict):
     '''
     checks if entries in dictionary are mat-objects. If yes
@@ -39,7 +40,6 @@ def _check_keys(dict):
         if isinstance(dict[key], sio.matlab.mio5_params.mat_struct):
             dict[key] = _todict(dict[key])
     return dict
-
 
 def _todict(matobj):
     '''
@@ -54,20 +54,17 @@ def _todict(matobj):
             dict[strg] = elem
     return dict
 
-
 def read_entry(x):
     if type(x) is h5py._hl.dataset.Dataset:
         return x[0, 0]
     else:
         return x
 
-
 def read_string(x):
     if type(x) is h5py._hl.dataset.Dataset:
         return ''.join(chr(c) for c in x)
     else:
         return x
-
 
 def has_trx_file(x):
     if type(x) is h5py._hl.dataset.Dataset:
@@ -81,6 +78,102 @@ def has_trx_file(x):
         else:
             has_trx = True
     return has_trx
+
+def datetime2matlabdn(dt=datetime.datetime.now()):
+    mdn = dt + datetime.timedelta(days=366)
+    frac_seconds = (dt - datetime.datetime(dt.year, dt.month, dt.day, 0, 0, 0)).seconds / (24.0 * 60.0 * 60.0)
+    frac_microseconds = dt.microsecond / (24.0 * 60.0 * 60.0 * 1000000.0)
+    return mdn.toordinal() + frac_seconds + frac_microseconds
+
+def tf_serialize(data):
+    # serialize data for writing to tf records file.
+    frame_in, cur_loc, info = data
+    rows, cols, depth = frame_in.shape
+    expid, fnum, trxid = info
+    image_raw = frame_in.tostring()
+
+    example = tf.train.Example(features=tf.train.Features(feature={
+        'height': int64_feature(rows),
+        'width': int64_feature(cols),
+        'depth': int64_feature(depth),
+        'trx_ndx': int64_feature(trxid),
+        'locs': float_feature(cur_loc.flatten()),
+        'expndx': float_feature(expid),
+        'ts': float_feature(fnum),
+        'image_raw': bytes_feature(image_raw)}))
+
+    return example.SerializeToString()
+
+def create_tfrecord(conf, split=True, split_file=None):
+    # function that creates tfrecords using db_from_lbl
+    if not os.path.exists(conf.cachedir):
+        os.mkdir(conf.cachedir)
+
+    try:
+        envs = multiResData.create_envs(conf, split)
+    except IOError:
+        logging.exception('DB_WRITE: Could not write to tfrecord database')
+        exit(1)
+
+    out_fns = []
+    out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
+    out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
+    splits = db_from_lbl(conf, out_fns, split, split_file)
+    envs[0].close()
+    envs[1].close() if split else None
+    try:
+        with open(os.path.join(conf.cachedir, 'splitdata.json'), 'w') as f:
+            json.dump(splits, f)
+    except IOError:
+        logging.warning('SPLIT_WRITE: Could not output the split data information')
+
+def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid):
+    # converts locs in cropped image back to locations in original image.
+    if conf.has_trx_file:
+        hsz_p = conf.imsz[0] / 2  # half size for pred
+        base_locs_orig = np.zeros(base_locs.shape)
+        for ii in range(nvalid):
+            trx_fnum = trx_fnum_start + ii
+            x = int(round(cur_trx['x'][0, trx_fnum])) - 1
+            y = int(round(cur_trx['y'][0, trx_fnum])) - 1
+            # -1 for 1-indexing in matlab and 0-indexing in python
+            theta = cur_trx['theta'][0, trx_fnum]
+            assert conf.imsz[0] == conf.imsz[1]
+            tt = -theta - math.pi / 2
+            R = [[np.cos(tt), -np.sin(tt)], [np.sin(tt), np.cos(tt)]]
+            curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], R) + [x, y]
+            base_locs_orig[ii, ...] = curlocs
+    else:
+        orig_crop_loc = conf.cropLoc[sz]
+        base_locs_orig = base_locs.copy()
+        base_locs_orig[:, :, 0] += orig_crop_loc[1]
+        base_locs_orig[:, :, 1] += orig_crop_loc[0]
+
+    return base_locs_orig
+
+def get_matlab_ts(filename):
+    # matlab's time is different from python
+    k = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
+    return datetime2matlabdn(k)
+
+def convert_unicode(data):
+    if isinstance(data, basestring):
+        return unicode(data)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert_unicode, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert_unicode, data))
+    else:
+        return data
+
+def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
+    for bpart in range(hmaps.shape[-1]):
+        cur_out = os.path.join(hmaps_dir, 'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx + 1, frame_num + 1, bpart + 1))
+        cur_im = hmaps[:, :, bpart]
+        cur_im = ((np.clip(cur_im, -1, 1) * 128) + 128).astype('uint8')
+        imageio.imwrite(cur_out, cur_im, 'jpg', quality=75)
+        # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
+        # imageio.imwrite(cur_out_png,cur_im)
 
 
 def create_conf(lbl_file, view, name, net_type='unet'):
@@ -180,19 +273,23 @@ def create_conf(lbl_file, view, name, net_type='unet'):
         conf.rrange = bb
     except KeyError:
         pass
+    try:
+        bb = ''.join([chr(c) for c in dt_params['op_affinity_graph']]).split(',')
+        graph = []
+        for b in bb:
+            mm = re.search('(\d+)\s+(\d+)',b)
+            n1 = int(mm.groups()[0]) - 1
+            n2 = int(mm.groups()[1]) - 1
+            graph.append([n1,n2])
+        conf.op_affinity_graph = graph
+    except KeyError:
+        pass
 
     if net_type == 'openpose':
         # openpose uses its own normalization
         conf.normalize_img_mean = False
 
     return conf
-
-
-def datetime2matlabdn(dt=datetime.datetime.now()):
-    mdn = dt + datetime.timedelta(days=366)
-    frac_seconds = (dt - datetime.datetime(dt.year, dt.month, dt.day, 0, 0, 0)).seconds / (24.0 * 60.0 * 60.0)
-    frac_microseconds = dt.microsecond / (24.0 * 60.0 * 60.0 * 1000000.0)
-    return mdn.toordinal() + frac_seconds + frac_microseconds
 
 
 def db_from_lbl(conf, out_fns, split=True, split_file=None):
@@ -234,7 +331,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
-        if lbl['cropIsCropMode'].value[0,0] == 0:
+        if lbl['cropIsCropMode'].value[0,0] == 0 and not conf.has_trx_file:
             crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0].astype('int')
             crop_loc -= 1 # from matlab to python
         else:
@@ -287,50 +384,6 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     return splits
 
 
-def tf_serialize(data):
-    # serialize data for writing to tf records file.
-    frame_in, cur_loc, info = data
-    rows, cols, depth = frame_in.shape
-    expid, fnum, trxid = info
-    image_raw = frame_in.tostring()
-
-    example = tf.train.Example(features=tf.train.Features(feature={
-        'height': int64_feature(rows),
-        'width': int64_feature(cols),
-        'depth': int64_feature(depth),
-        'trx_ndx': int64_feature(trxid),
-        'locs': float_feature(cur_loc.flatten()),
-        'expndx': float_feature(expid),
-        'ts': float_feature(fnum),
-        'image_raw': bytes_feature(image_raw)}))
-
-    return example.SerializeToString()
-
-
-def create_tfrecord(conf, split=True, split_file=None):
-    # function that creates tfrecords using db_from_lbl
-    if not os.path.exists(conf.cachedir):
-        os.mkdir(conf.cachedir)
-
-    try:
-        envs = multiResData.create_envs(conf, split)
-    except IOError:
-        logging.exception('DB_WRITE: Could not write to tfrecord database')
-        exit(1)
-
-    out_fns = []
-    out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
-    out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
-    splits = db_from_lbl(conf, out_fns, split, split_file)
-    envs[0].close()
-    envs[1].close() if split else None
-    try:
-        with open(os.path.join(conf.cachedir, 'splitdata.json'), 'w') as f:
-            json.dump(splits, f)
-    except IOError:
-        logging.warning('SPLIT_WRITE: Could not output the split data information')
-
-
 def create_leap_db(conf, split=False, split_file=None):
     # function showing how to use db_from_lbl for tfrecords
     if not os.path.exists(conf.cachedir):
@@ -366,7 +419,7 @@ def create_leap_db(conf, split=False, split_file=None):
         ims = np.array([i[0] for i in cur_data])
         locs = np.array([i[1] for i in cur_data])
         info = np.array([i[2] for i in cur_data])
-        hmaps = PoseTools.create_label_images(locs, conf.imsz[:2], 1, 3)
+        hmaps = PoseTools.create_label_images(locs, conf.imsz[:2], 1, conf.label_blur_rad)
         hmaps = (hmaps + 1) / 2  # brings it back to [0,1]
 
         hf = h5py.File(out_file, 'w')
@@ -379,29 +432,69 @@ def create_leap_db(conf, split=False, split_file=None):
         hf.close()
 
 
-def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid):
-    # converts locs in cropped image back to locations in original image.
-    if conf.has_trx_file:
-        hsz_p = conf.imsz[0] / 2  # half size for pred
-        base_locs_orig = np.zeros(base_locs.shape)
-        for ii in range(nvalid):
-            trx_fnum = trx_fnum_start + ii
-            x = int(round(cur_trx['x'][0, trx_fnum])) - 1
-            y = int(round(cur_trx['y'][0, trx_fnum])) - 1
-            # -1 for 1-indexing in matlab and 0-indexing in python
-            theta = cur_trx['theta'][0, trx_fnum]
-            assert conf.imsz[0] == conf.imsz[1]
-            tt = -theta - math.pi / 2
-            R = [[np.cos(tt), -np.sin(tt)], [np.sin(tt), np.cos(tt)]]
-            curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], R) + [x, y]
-            base_locs_orig[ii, ...] = curlocs
-    else:
-        orig_crop_loc = conf.cropLoc[sz]
-        base_locs_orig = base_locs.copy()
-        base_locs_orig[:, :, 0] += orig_crop_loc[1]
-        base_locs_orig[:, :, 1] += orig_crop_loc[0]
+def create_deepcut_db(conf, split=False, split_file=None):
+    if not os.path.exists(conf.cachedir):
+        os.mkdir(conf.cachedir)
 
-    return base_locs_orig
+    def deepcut_outfn(data, outdir, count, fis, save_data):
+        # pass count as array to pass it by reference.
+        if conf.imgDim == 1:
+            im = data[0][:,:,0]
+        else:
+            im = data[0]
+        img_name = os.path.join(outdir,'img_{:06d}.png'.format(count[0]))
+        imageio.imwrite(img_name, im)
+        locs = data[1]
+        bparts = conf.n_classes
+        for b in range(bparts):
+            fis[b].write('{}\t{}\t{}\n'.format(count[0],locs[b,0],locs[b,1]))
+        mod_locs = np.insert(np.array(locs),0,range(bparts),axis=1)
+        save_data.append([img_name, im.shape, mod_locs])
+        count[0] += 1
+
+    bparts = ['part_{}'.format(i) for i in range(conf.n_classes)]
+    train_count = [0]
+    train_dir = os.path.join(conf.cachedir, 'train')
+    if not os.path.exists(train_dir):
+        os.mkdir(train_dir)
+    train_fis = [open(os.path.join(train_dir,b+'.csv'),'w') for b in bparts]
+    train_data = []
+    val_count = [0]
+    val_dir = os.path.join(conf.cachedir, 'train')
+    val_fis= [open(os.path.join(train_dir,b+'.csv'),'w') for b in bparts]
+    val_data = []
+    for ndx in range(conf.n_classes):
+        train_fis[ndx].write('\tX\tY\n')
+        val_fis[ndx].write('\tX\tY\n')
+
+    if not os.path.exists(train_dir):
+        os.mkdir(train_dir)
+    if not os.path.exists(val_dir):
+        os.mkdir(val_dir)
+
+    def train_out_fn(data):
+        deepcut_outfn(data, train_dir, train_count, train_fis, train_data)
+
+    def val_out_fn(data):
+        deepcut_outfn(data, val_dir, val_count, val_fis, val_data)
+
+    # collect the images and labels in arrays
+    out_fns = [train_out_fn, val_out_fn]
+    splits = db_from_lbl(conf, out_fns, split, split_file)
+    [f.close() for f in train_fis]
+    [f.close() for f in val_fis]
+    with open(os.path.join(conf.cachedir,'train_data.p'),'w') as f:
+        pickle.dump(train_data,f,protocol=2)
+    if split:
+        with open(os.path.join(conf.cachedir,'train_data.p'),'w') as f:
+            pickle.dump(train_data,f,protocol=2)
+
+    # save the split data
+    try:
+        with open(os.path.join(conf.cachedir, 'splitdata.json'), 'w') as f:
+            json.dump(splits, f)
+    except IOError:
+        logging.warning('SPLIT_WRITE: Could not output the split data information')
 
 
 def create_cv_split_files(conf, n_splits=3):
@@ -484,23 +577,6 @@ def create_cv_split_files(conf, n_splits=3):
             json.dump([cur_train, splits[ndx]])
 
     return all_train, splits
-
-
-def get_matlab_ts(filename):
-    # matlab's time is different from python
-    k = datetime.datetime.fromtimestamp(os.path.getmtime(filename))
-    return datetime2matlabdn(k)
-
-
-def convert_unicode(data):
-    if isinstance(data, basestring):
-        return unicode(data)
-    elif isinstance(data, collections.Mapping):
-        return dict(map(convert_unicode, data.iteritems()))
-    elif isinstance(data, collections.Iterable):
-        return type(data)(map(convert_unicode, data))
-    else:
-        return data
 
 
 def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
@@ -600,15 +676,6 @@ def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_f
     return pred_locs
 
 
-def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
-    for bpart in range(hmaps.shape[-1]):
-        cur_out = os.path.join(hmaps_dir, 'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx + 1, frame_num + 1, bpart + 1))
-        cur_im = hmaps[:, :, bpart]
-        cur_im = ((np.clip(cur_im, -1, 1) * 128) + 128).astype('uint8')
-        imageio.imwrite(cur_out, cur_im, 'jpg', quality=75)
-        # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
-        # imageio.imwrite(cur_out_png,cur_im)
-
 def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
     bsize = conf.batch_size
     all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
@@ -679,24 +746,45 @@ def classify_list(conf, pred_fn, cap, to_do_list, trx_file, crop_loc):
     return pred_locs
 
 
-def classify_list_all(model_type, conf, list):
-    # list should be of list of type [mov_ndx, frame_num, trx_ndx]
-    # all of them should be 1-indexed.
+def get_crop_loc(lbl, ndx, view, on_gt):
+    if lbl['cropProjHasCrops'].value[0, 0] == 1:
+        if on_gt:
+            crop_loc = lbl[lbl[lbl['movieFilesAllGTCropInfo'][ndx, 0]]['roi'][view, 0]].value[:, 0].astype('int')
 
+        else:
+            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx, 0]]['roi'][view, 0]].value[:, 0].astype('int')
+        crop_loc -= 1  # from matlab to python
+    else:
+        crop_loc = None
+
+    return crop_loc
+
+
+def get_pred_fn(model_type, conf):
     if model_type == 'openpose':
-        pred_fn, model_file = open_pose.get_pred_fn(conf)
-        close_fn = lambda : None
+        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf)
     elif model_type == 'unet':
         pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
     elif model_type == 'leap':
-        close_fn = lambda : None
-    elif model_type == 'deeplabcut':
-        close_fn = lambda : None
+        pred_fn, close_fn, model_file = leap.training.get_pred_fn(conf)
+    elif model_type == 'deepcut':
+        pred_fn, close_fn, model_file = deepcut.train.get_pred_fn(conf)
     else:
-        raise ValueError('Undefined model type')
+        raise ValueError('Undefined type of model')
 
+    return pred_fn, close_fn, model_file
 
-    local_dirs, _ = multiResData.find_local_dirs(conf)
+def classify_list_all(model_type, conf, list, on_gt):
+    # list should be of list of type [mov_file, frame_num, trx_ndx]
+    # all of them should be 1-indexed.
+
+    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
+
+    if on_gt:
+        local_dirs = multiResData.find_gt_dirs(conf)
+    else:
+        local_dirs, _ = multiResData.find_local_dirs(conf)
+
     lbl = h5py.File(conf.labelfile)
     view = conf.view
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
@@ -711,11 +799,7 @@ def classify_list_all(model_type, conf, list):
     for ndx, dir_name in enumerate(local_dirs):
 
         cur_list = [ [l[1]-1, l[2]-1] for l in list if l[0] == (ndx+1)]
-        if lbl['cropIsCropMode'].value[0,0] == 0:
-            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0].astype('int')
-            crop_loc -= 1 # from matlab to python
-        else:
-            crop_loc = None
+        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
 
         try:
             cap = movies.Movie(dir_name)
@@ -762,13 +846,13 @@ def classify_db_all(model_type, conf, db_file):
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
         pred_fn, model_file = open_pose.get_pred_fn(conf)
-        pred_locs, label_locs = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+        pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
     elif model_type == 'unet':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
         pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
-        pred_locs, label_locs = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+        pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
         close_fn()
     elif model_type == 'leap':
         pass
@@ -777,7 +861,44 @@ def classify_db_all(model_type, conf, db_file):
     else:
         raise ValueError('Undefined model type')
 
-    return pred_locs, label_locs
+    return pred_locs, label_locs, info
+
+
+
+def classify_gt_data(conf, model_type, out_file):
+    local_dirs, _ = multiResData.find_gt_dirs(conf)
+    lbl = h5py.File(conf.labelfile)
+    view = conf.view
+    npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
+    sel_pts = int(view * npts_per_view) + conf.selpts
+
+    cur_list = []
+    labeled_locs = []
+    for ndx, dir_name in enumerate(local_dirs):
+        cur_pts = trx_pts(lbl, ndx)
+
+        if conf.has_trx_file:
+            trx_files = multiResData.get_trx_files(lbl, local_dirs)
+            trx = sio.loadmat(trx_files[ndx])['trx'][0]
+            n_trx = len(trx)
+        else:
+            n_trx = 1
+
+        for trx_ndx in range(n_trx):
+            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
+            for f in frames:
+                cur_list.append([ndx, f, trx_ndx])
+                labeled_locs.append(cur_pts[trx_ndx, f, :, sel_pts])
+
+    pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True)
+    mat_pred_locs = pred_locs + 1
+    mat_labeled_locs = labeled_locs +1
+    mat_list = [[m+1, f+1, t+1 ] for m,f,t in cur_list]
+
+    sio.savemat(out_file,{'pred_locs':mat_pred_locs,
+                          'labeled_locs': mat_labeled_locs,
+                          'list': mat_list})
+    lbl.close()
 
 
 def classify_movie(conf, pred_fn,
@@ -931,43 +1052,14 @@ def get_unet_pred_fn(conf):
     return pred_fn, close_fn, model_file
 
 
-def classify_movie_unet(conf,**kwargs) :
-    #mov_file, trx_file, out_file, start_frame=0,
-    # end_frame=-1,skip_rate=1, trx_ids=[], name='', hmaps=False):
-
-    # classify movies using unet network.
-    # this is the function that should be changed for different networks.
-    # The main thing to do here is to define the pred_fn
-    # which takes as input a batch of images and
-    # returns the predicted locations.
-    pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
-
+def classify_movie_all(model_type, **kwargs):
+    conf = kwargs['conf']
+    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
     try:
         classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
     except (IOError, ValueError) as e:
-        close_fn
+        close_fn()
         logging.exception('Could not track movie')
-
-
-def classify_movie_op(conf, **kwargs):
-    # classify movies using unet network.
-    # this is the function that should be changed for different networks.
-    # The main thing to do here is to define the pred_fn
-    # which takes as input a batch of images and
-    # returns the predicted locations.
-
-    tf.reset_default_graph()
-    pred_fn, model_file = open_pose.get_pred_fn(conf)
-    classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
-
-
-def classify_movie_all(model_type, **kwargs):
-    if model_type == 'openpose':
-        classify_movie_op(**kwargs)
-    elif model_type == 'unet':
-        classify_movie_unet(**kwargs)
-    else:
-        raise ValueError('Undefined type of model')
 
 
 def train_unet(conf, args):
@@ -983,8 +1075,19 @@ def train_leap(conf, args):
     if not args.skip_db:
         create_leap_db(conf, False)
     db_path = [os.path.join(conf.cachedir, 'leap_train.h5')]
-    train_leap_apt(db_path, conf, run_name = args.name, net_name='stacked_hourglass')
+    leap_train(db_path, conf, run_name = args.name)
 
+
+def train_openpose(conf,args):
+    if not args.skip_db:
+        create_tfrecord(conf, False)
+    open_pose.training(conf)
+
+
+def train_deepcut(conf, args):
+    if not args.skip_db:
+        create_deepcut_db(conf, False)
+    deepcut_train(conf)
 
 
 def train(lblfile, nviews, name, args):
@@ -1006,7 +1109,11 @@ def train(lblfile, nviews, name, args):
             if type == 'unet':
                 train_unet(conf, args)
             elif type == 'openpose':
-                open_pose.training(conf)
+                train_openpose(conf,args)
+            elif type == 'leap':
+                train_leap(conf, args)
+            elif type == 'deepcut':
+                pass
         except tf.errors.InternalError as e:
             logging.exception(
                 'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
@@ -1087,7 +1194,7 @@ def parse_args(argv):
     parser.add_argument('-skip_db', dest='skip_db', help='Skip creating the data base', action='store_true')
     parser.add_argument('-out_dir', dest='out_dir', help='Directory to output log files', default=None)
     parser.add_argument('-type', dest='type', help='Network type, default is unet', default='unet',
-                        choices=['unet', 'openpose'])
+                        choices=['unet', 'openpose','deepcut','leap'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
@@ -1109,6 +1216,9 @@ def parse_args(argv):
                                  default=[])
     parser_classify.add_argument('-hmaps', dest='hmaps', help='generate heatmpas', action='store_true')
     parser_classify.add_argument('-crop_loc', dest='crop_loc', help='crop location given xlo xhi ylo yhi', nargs='*', default=None)
+
+    parser_gt = subparsers.add_parser('gt_classify', help='Classify GT labeled frames')
+    parser_gt.add_argument('-out',dest='out_file_gt',help='Mat file to save output to. _[view_num].mat will be appended',required=True)
 
     print(argv)
     args = parser.parse_args(argv)
@@ -1185,6 +1295,16 @@ def run(args):
                                crop_loc=crop_loc
                                )
 
+    elif args.sub_name == 'gt_classify':
+        if args.view is None:
+            views = range(nviews)
+        else:
+            views = [args.view]
+
+        for view_ndx, view in enumerate(views):
+            conf = create_conf(lbl_file, view, name)
+            out_file = args.out_file + '_{}.mat'.format(view)
+            classify_gt_data(args.type, conf, out_file)
 
 def main(argv):
     args = parse_args(argv)

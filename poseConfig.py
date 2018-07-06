@@ -20,129 +20,139 @@ class config(object):
     # mrfName = 'MRF'  # _identity'
 
     # ----- Network parameters
+    def __init__(self):
+        self.scale = 2
+        self.rescale = 1  # how much to downsize the base image.
+        self.numscale = 3
+        self.pool_scale = 4
+        self.pool_size = 3
+        self.pool_stride = 2
+        # # sel_sz determines the patch size used for the final decision
+        # # i.e., patch seen by the fc6 layer
+        # # ideally as large as possible but limited by
+        # # a) gpu memory size
+        # # b) overfitting due to large number of variables.
+        # dist2pos = 5
+        self.label_blur_rad = 3  # 1.5
+        # fine_label_blur_rad = 1.5
+        # dropout = 0.5 # Dropout, probability to keep units
+        # nfilt = 128
+        # nfcfilt = 512
+        # doBatchNorm = True
+        # useMRF = True
+        # useHoldout = False
 
-    scale = 2
-    rescale = 1  # how much to downsize the base image.
-    numscale = 3
-    pool_scale = 4
-    pool_size = 3
-    pool_stride = 2
-    # # sel_sz determines the patch size used for the final decision
-    # # i.e., patch seen by the fc6 layer
-    # # ideally as large as possible but limited by
-    # # a) gpu memory size
-    # # b) overfitting due to large number of variables.
-    # dist2pos = 5
-    label_blur_rad = 3  # 1.5
-    # fine_label_blur_rad = 1.5
-    # dropout = 0.5 # Dropout, probability to keep units
-    # nfilt = 128
-    # nfcfilt = 512
-    # doBatchNorm = True
-    # useMRF = True
-    # useHoldout = False
+        # ----- Fine Network parameters
 
-    # ----- Fine Network parameters
+        # fine_flt_sz = 5
+        # fine_nfilt = 48
+        # fine_sz = 48
 
-    # fine_flt_sz = 5
-    # fine_nfilt = 48
-    # fine_sz = 48
+        # ----- MRF Network Parameters
 
-    # ----- MRF Network Parameters
+        # maxDPts = 104*2
+        # mrf_psz = (maxDPts/rescale)/pool_scale
+        # Above should not be determined automatically
+        # baseIter4MRFTrain = 4000 # without batch_norm
+        # baseIter4MRFTrain = 5000  # without batch_norm
+        # baseIter4ACTrain = 5000  # without batch_norm
 
-    # maxDPts = 104*2
-    # mrf_psz = (maxDPts/rescale)/pool_scale
-    # Above should not be determined automatically
-    # baseIter4MRFTrain = 4000 # without batch_norm
-    # baseIter4MRFTrain = 5000  # without batch_norm
-    # baseIter4ACTrain = 5000  # without batch_norm
+        # ----- Learning parameters
 
-    # ----- Learning parameters
+        # base_learning_rate = 0.0003  # 0.0001 --without batch norm
+        # mrf_learning_rate = 0.00001
+        # fine_learning_rate = 0.0003
 
-    # base_learning_rate = 0.0003  # 0.0001 --without batch norm
-    # mrf_learning_rate = 0.00001
-    # fine_learning_rate = 0.0003
+        self.batch_size = 8
+        self.view = 0
+        # fine_batch_size = 8
+        # mult_fac = old_div(16, batch_size)
+        # base_training_iters = 10000 * mult_fac  # 15000
+        # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
+        # -- March 31, 2016 Mayank
 
-    batch_size = 8
-    view = 0
-    # fine_batch_size = 8
-    # mult_fac = old_div(16, batch_size)
-    # base_training_iters = 10000 * mult_fac  # 15000
-    # with rescale = 1 performance keeps improving even at around 3000 iters.. because batch size has been halved.. duh..
-    # -- March 31, 2016 Mayank
+        # with batch normalization quite good performance is achieved within 2000 iters
+        # -- March 30, 2016 Mayank
+        # when run iwth batch size of 32, best validation loss is achieved at 8000 iters
+        # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
+        # basereg_training_iters = 5000 * mult_fac
+        # fine_training_iters = 5000 * mult_fac
+        # mrf_training_iters = 3000 * mult_fac
+        self.gamma = 0.1
+        self.step_size = 100000 # not used anymore
+        self.display_step = 50
+        self.numTest = 100
+        self.n_steps = 3 # number of times the learning
+        # rate should be reduced by gamma by the end of the training.
 
-    # with batch normalization quite good performance is achieved within 2000 iters
-    # -- March 30, 2016 Mayank
-    # when run iwth batch size of 32, best validation loss is achieved at 8000 iters
-    # for FlyHeadStephenCuratedData.mat -- Feb 11, 2016 Mayank
-    # basereg_training_iters = 5000 * mult_fac
-    # fine_training_iters = 5000 * mult_fac
-    # mrf_training_iters = 3000 * mult_fac
-    gamma = 0.1
-    step_size = 100000
-    display_step = 50
-    numTest = 100
-
-    # range for contrast, brightness and rotation adjustment
-    horzFlip = False
-    vertFlip = False
-    brange = [-0.2, 0.2]
-    crange = [0.7, 1.3]
-    rrange = 30
-    trange = 10
-    scale_range = 0.1
-    imax = 255.
-    adjustContrast = False
-    clahegridsize = 20
-    normalize_img_mean = True
-    normalize_batch_mean = False
-    perturb_color = False
+        # range for contrast, brightness and rotation adjustment
+        self.horzFlip = False
+        self.vertFlip = False
+        self.brange = [-0.2, 0.2]
+        self.crange = [0.7, 1.3]
+        self.rrange = 30
+        self.trange = 10
+        self.scale_range = 0.1
+        self.imax = 255.
+        self.adjustContrast = False
+        self.clahegridsize = 20
+        self.normalize_img_mean = True
+        self.normalize_batch_mean = False
+        self.perturb_color = False
 
 
-    # ----- Data parameters
-    # l1_cropsz = 0
-    splitType = 'frame'
-    trainfilename = 'train_TF'
-    fulltrainfilename = 'fullTrain_TF'
-    valfilename = 'val_TF'
-    valdatafilename = 'valdata'
-    valratio = 0.3
-    holdoutratio = 0.8
-    max_n_animals = 1
-    flipud = False
+        # ----- Data parameters
+        # l1_cropsz = 0
+        self.splitType = 'frame'
+        self.trainfilename = 'train_TF'
+        self.fulltrainfilename = 'fullTrain_TF'
+        self.valfilename = 'val_TF'
+        self.valdatafilename = 'valdata'
+        self.valratio = 0.3
+        self.holdoutratio = 0.8
+        self.max_n_animals = 1
+        self.flipud = False
 
-    # ----- UNet params
-    unet_rescale = 1
-    unet_steps = 20000
-    unet_keep_prob = 1.0 # essentially don't use it.
-    unet_use_leaky = False #will change it to True after testing.
+        # ----- UNet params
+        self.unet_rescale = 1
+        #self.unet_steps = 20000
+        self.unet_keep_prob = 1.0 # essentially don't use it.
+        self.unet_use_leaky = False #will change it to True after testing.
 
-    # ----- MDN params
-    mdn_min_sigma = 3. # this should just be maybe twice the cell size??
-    mdn_max_sigma = 4.
-    mdn_logit_eps_training = 0.001
-    mdn_extra_layers = 1
+        # ----- MDN params
+        self.mdn_min_sigma = 3. # this should just be maybe twice the cell size??
+        self.mdn_max_sigma = 4.
+        self.mdn_logit_eps_training = 0.001
+        self.mdn_extra_layers = 1
 
-    # ----- OPEN POSE PARAMS
-    op_label_scale = 8
+        # ----- OPEN POSE PARAMS
+        self.op_label_scale = 8
 
-    # ----- Deep Lab Cut
-    dlc_train_img_dir = 'deepcut_train'
-    dlc_train_data_file = 'deepcut_data.mat'
+        # ------ Leap params
+        self.leap_net_name = "leap_cnn"
 
-    # ----- Time parameters
-    time_window_size = 1
-    do_time = False
+        # ----- Deep Lab Cut
+        self.dlc_train_img_dir = 'deepcut_train'
+        self.dlc_train_data_file = 'deepcut_data.mat'
 
-    # ------ RNN Parameters
-    rnn_before = 9
-    rnn_after = 0
+        # ----- Time parameters
+        self.time_window_size = 1
+        self.do_time = False
 
-    # ----- Save parameters
+        # ------ RNN Parameters
+        self.rnn_before = 9
+        self.rnn_after = 0
 
-    save_step = 2000
-    save_td_step = 100
-    maxckpt = 30
+        # ------------ ATTention parameters
+        self.att_hist = 128
+        self.att_layers = [1] # use layer this far from the middle (top?) layers.
+
+        # ----- Save parameters
+
+        self.save_step = 2000
+        self.save_td_step = 100
+        self.maxckpt = 30
+
     def set_exp_name(self, exp_name):
         self.expname = exp_name
         # self.baseoutname = self.expname + self.baseName
@@ -162,9 +172,6 @@ class config(object):
     def getexplist(self, L):
         return L['movieFilesAll'][self.view,:]
 
-    # ------------ ATTention parameters
-    att_hist = 128
-    att_layers = [1] # use layer this far from the middle (top?) layers.
 
 # -- alice fly --
 

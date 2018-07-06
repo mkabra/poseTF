@@ -1,4 +1,4 @@
-from nnet.pose_net import PoseNet
+from deepcut.nnet.pose_net import PoseNet
 
 
 def pose_net(cfg):

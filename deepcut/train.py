@@ -5,25 +5,27 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
 from config import load_config
-from dataset.factory import create as create_dataset
-from nnet.net_factory import pose_net
+from deepcut.nnet.net_factory import pose_net
 from nnet.pose_net import get_batch_spec
 from util.mylogging import setup_logging
-
+import urllib
 import os
 import PoseTools
 import numpy as np
 import predict
-from dataset.pose_dataset import Batch
+from pose_dataset import Batch, PoseDataset
 import json
+from easydict import EasyDict as edict
+import config
+import  tarfile
 
-name = 'deeplabcut'
+name = 'deepcut'
 
 class LearningRate(object):
     def __init__(self, cfg):
 #        self.steps = cfg.multi_step
         self.current_step = 0
-        self.n_steps = cfg.dlc_steps
+        self.n_steps = cfg.dl_steps
         self.gamma = cfg.gamma
 
     def get_lr(self, iteration):
@@ -82,6 +84,7 @@ def get_optimizer(loss_op, cfg):
 
     return learning_rate, train_op
 
+
 def save_td(cfg, train_info):
     train_data_file = os.path.join( cfg.cachedir, cfg.expname + '_' + name + '_traindata')
     json_data = {}
@@ -91,11 +94,33 @@ def save_td(cfg, train_info):
         json.dump(json_data, json_file)
 
 
-def train(cfg):
-    setup_logging()
+def set_deepcut_defaults(cfg):
+    cfg.batch_size = 1
+    cfg.display_step = 5000
+    cfg.dc_scale = 0.8
+    cfg.dl_steps = 1030000
+    cfg.save_step = 50000
 
-#    cfg = load_config()
-    dataset = create_dataset(cfg)
+def train(cfg):
+#    setup_logging()
+
+    cfg = edict(cfg.__dict__)
+    cfg = config.convert_to_deepcut(cfg)
+
+    dirname = os.path.dirname(__file__)
+    init_weights = os.path.join(dirname, 'models/resnet_v1_50.ckpt')
+
+    if not os.path.exists(init_weights):
+        # Download and save the pretrained resnet weights.
+        logging.info('Downloading pretrained resnet 50 weights ...')
+        urllib.urlretrieve('http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz', os.path.join(dirname,'models','resnet_v1_50_2016_08_28.tar.gz'))
+        tar = tarfile.open(os.path.join(dirname,'models','resnet_v1_50_2016_08_28.tar.gz'))
+        tar.extractall(path=os.path.join(dirname,'models'))
+        tar.close()
+        logging.info('Done downloading pretrained weights')
+
+    db_file_name = os.path.join(cfg.cachedir, 'train_data.p')
+    dataset = PoseDataset(cfg, db_file_name)
     train_info = {'train_dist':[],'train_loss':[],'val_dist':[],'val_loss':[],'step':[]}
 
     batch_spec = get_batch_spec(cfg)
@@ -108,17 +133,14 @@ def train(cfg):
 
     for k, t in losses.items():
         tf.summary.scalar(k, t)
-    #merged_summaries = tf.summary.merge_all()
 
     variables_to_restore = slim.get_variables_to_restore(include=["resnet_v1"])
     restorer = tf.train.Saver(variables_to_restore)
-    saver = tf.train.Saver(max_to_keep=5)
+    saver = tf.train.Saver(max_to_keep=50)
 
     sess = tf.Session()
 
     coord, thread = start_preloading(sess, enqueue_op, dataset, placeholders)
-
-#    train_writer = tf.summary.FileWriter(cfg.log_dir, sess.graph)
 
     learning_rate, train_op = get_optimizer(total_loss, cfg)
 
@@ -126,11 +148,11 @@ def train(cfg):
     sess.run(tf.local_variables_initializer())
 
     # Restore variables from disk.
-    restorer.restore(sess, cfg.init_weights)
+    restorer.restore(sess, init_weights)
 
     #max_iter = int(cfg.multi_step[-1][1])
-    max_iter = int(cfg.dlc_steps)
-    display_iters = cfg.display_steps
+    max_iter = int(cfg.dl_steps)
+    display_iters = cfg.display_step
     cum_loss = 0.0
     lr_gen = LearningRate(cfg)
 
@@ -156,7 +178,7 @@ def train(cfg):
 
             average_loss = cum_loss / display_iters
             cum_loss = 0.0
-            logging.info("iteration: {} loss: {} dist: {}  lr: {}"
+            print("iteration: {} loss: {} dist: {}  lr: {}"
                          .format(it, "{0:.4f}".format(average_loss),
                                  '{0:.2f}'.format(dd.mean()), current_lr))
             train_info['step'].append(it)
@@ -175,6 +197,27 @@ def train(cfg):
     coord.request_stop()
     coord.join([thread])
     sess.close()
+
+
+def get_pred_fn(cfg):
+
+    cfg = edict(cfg.__dict__)
+    cfg = config.convert_to_deepcut(cfg)
+
+    ckpt_file = os.path.join(cfg.cachedir,'checkpoint')
+    latest_ckpt = tf.train.get_checkpoint_state( cfg.cachedir, ckpt_file)
+
+    init_weights = latest_ckpt.model_checkpoint_path
+
+    tf.reset_default_graph()
+    sess, inputs, outputs = predict.setup_pose_prediction(cfg, init_weights)
+
+    def pred_fn(all_f):
+        cur_out = sess.run(outputs, feed_dict={inputs: all_f})
+        scmap, locref = predict.extract_cnn_output(cur_out, cfg)
+        return locref, scmap
+
+    return pred_fn, latest_ckpt.model_checkpoint_path
 
 
 if __name__ == '__main__':

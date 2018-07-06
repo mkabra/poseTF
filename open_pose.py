@@ -420,8 +420,8 @@ class DataIteratorTF(object):
         mask_sz = [int(x/self.conf.op_label_scale) for x in self.conf.imsz]
         mask_sz1 = [self.batch_size,] + mask_sz + [2*self.vec_num]
         mask_sz2 = [self.batch_size,] + mask_sz + [self.heat_num]
-        mask_im1 = np.zeros(mask_sz1)
-        mask_im2 = np.zeros(mask_sz2)
+        mask_im1 = np.ones(mask_sz1)
+        mask_im2 = np.ones(mask_sz2)
 
         ims, locs = PoseTools.preprocess_ims(ims, locs, self.conf,
                                             self.distort, self.conf.op_rescale)
@@ -454,36 +454,41 @@ class DataIteratorTF(object):
 # -- Training ---------
 #----------------------
 
-def get_last_epoch(conf):
-    train_data_file = os.path.join(
-        conf.cachedir, conf.expname + '_' + name + '_traindata')
-    json_data = {}
-    with open(train_data_file + '.json', 'r') as json_file:
-        json_data = json.load(json_file)
-    return int(json_data['step'][-1])
+def set_openpose_defaults(conf):
+    conf.label_blur_rad = 5
+    conf.rrange = 5
+    conf.display_steps = 50 # this is same as batches per epoch
+    conf.dl_steps = 600000
+    conf.batch_size = 10
+    conf.n_steps = 4.41
+    conf.gamma = 0.333
+
 
 def training(conf):
-
-    batch_size = conf.batch_size
 
     base_lr = 4e-5  # 2e-5
     momentum = 0.9
     weight_decay = 5e-4
     lr_policy = "step"
-    gamma = 0.333
-    stepsize = 68053  # 136106 #   // after each stepsize iterations update learning rate: lr=lr*gamma
-    max_iter = conf.op_steps # 600000
+    batch_size = conf.batch_size
+    gamma = conf.gamma
+    stepsize = int(float(conf.dl_steps)/conf.n_steps)
+    # stepsize = 68053  # 136106 #   // after each stepsize iterations update learning rate: lr=lr*gamma
+    iterations_per_epoch = conf.display_step
+    max_iter = conf.dl_steps/iterations_per_epoch
     restart = True
     last_epoch = 0
-    iterations_per_epoch = 1
+
+    assert conf.dl_steps % iterations_per_epoch == 0, 'For open-pose dl steps must be a multiple of display steps'
+    assert conf.save_step % iterations_per_epoch == 0, 'For open-pose save steps must be a multiple of display steps'
 
     model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{epoch:d}')
     model = get_training_model(weight_decay, br1=len(conf.op_affinity_graph) * 2, br2=conf.n_classes)
 
     # load previous weights or vgg19 if this is the first run
     from_vgg = dict()
-    for blk in range(1,4):
-        for lvl in range(1,2):
+    for blk in range(1,5):
+        for lvl in range(1,3):
             from_vgg['conv{}_{}'.format(blk,lvl)] = 'block{}_conv{}'.format(blk,lvl)
     print("Loading vgg19 weights...")
     vgg_model = VGG19(include_top=False, weights='imagenet')
@@ -495,6 +500,7 @@ def training(conf):
 
     # prepare generators
     train_di = DataIteratorTF(conf, 'train', True, True)
+    train_di2 = DataIteratorTF(conf, 'train', True, True)
     val_di = DataIteratorTF(conf, 'train', False, False)
 
     # setup lr multipliers for conv layers
@@ -526,8 +532,8 @@ def training(conf):
     def eucl_loss(x, y):
         return K.sum(K.square(x - y)) / batch_size / 2
     losses = {}
-    for stage in range(1,6):
-        for lvl in range(1,2):
+    for stage in range(1,7):
+        for lvl in range(1,3):
             losses['weight_stage{}_L{}'.format(stage,lvl)] = eucl_loss
 
     # lr decay.
@@ -551,49 +557,53 @@ def training(conf):
             self.force = False
 
         def on_epoch_end(self, epoch, logs={}):
-            if (epoch + 1) % self.config.display_step == 0 or self.force:
-                val_x, val_y = val_di.next()
-                val_out = self.model.predict(val_x)
-                val_loss = self.model.evaluate(val_x, val_y, verbose=0)
-                train_x, train_y = train_di.next()
-                train_out = self.model.predict(train_x)
-                train_loss = self.model.evaluate(train_x, train_y, verbose=0)
+            step = (epoch+1) * conf.display_step
+            val_x, val_y = self.val_di.next()
+            val_out = self.model.predict(val_x)
+            val_loss = self.model.evaluate(val_x, val_y, verbose=0)
+            train_x, train_y = self.train_di.next()
+            train_out = self.model.predict(train_x)
+            train_loss = self.model.evaluate(train_x, train_y, verbose=0)
 
-                # dist only for last layer
-                tt1 = PoseTools.get_pred_locs(val_out[-1]) - \
-                      PoseTools.get_pred_locs(val_y[-1])
-                tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
-                val_dist = np.nanmean(tt1)
-                tt1 = PoseTools.get_pred_locs(train_out[-1]) - \
-                      PoseTools.get_pred_locs(train_y[-1])
-                tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
-                train_dist = np.nanmean(tt1)
-                self.train_info['val_dist'].append(val_dist)
-                self.train_info['val_loss'].append(val_loss[0])
-                self.train_info['train_dist'].append(train_dist)
-                self.train_info['train_loss'].append(train_loss[0])
-                self.train_info['step'].append(int(epoch + 1))
+            # dist only for last layer
+            tt1 = PoseTools.get_pred_locs(val_out[-1]) - \
+                  PoseTools.get_pred_locs(val_y[-1])
+            tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
+            val_dist = np.nanmean(tt1)*self.config.op_label_scale
+            tt1 = PoseTools.get_pred_locs(train_out[-1]) - \
+                  PoseTools.get_pred_locs(train_y[-1])
+            tt1 = np.sqrt(np.sum(tt1 ** 2, 2))
+            train_dist = np.nanmean(tt1)*self.config.op_label_scale
+            self.train_info['val_dist'].append(val_dist)
+            self.train_info['val_loss'].append(val_loss[0])
+            self.train_info['train_dist'].append(train_dist)
+            self.train_info['train_loss'].append(train_loss[0])
+            self.train_info['step'].append(int(step))
 
-                p_str = ''
-                for k in self.train_info.keys():
-                    p_str += '{:s}:{:.2f} '.format(k, self.train_info[k][-1])
-                print(p_str)
+            p_str = ''
+            for k in self.train_info.keys():
+                p_str += '{:s}:{:.2f} '.format(k, self.train_info[k][-1])
+            print(p_str)
 
-            if (epoch + 1) % self.config.save_td_step == 0 or self.force:
-                train_data_file = os.path.join(
-                    self.config.cachedir, 'traindata')
-                json_data = {}
-                for x in self.train_info.keys():
-                    json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()
-                with open(train_data_file + '.json', 'w') as json_file:
-                    json.dump(json_data, json_file)
+            train_data_file = os.path.join(
+                self.config.cachedir, 'traindata')
+            json_data = {}
+            for x in self.train_info.keys():
+                json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()
+            with open(train_data_file + '.json', 'w') as json_file:
+                json.dump(json_data, json_file)
+
+            if step % conf.save_step == 0:
+                model.save(os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(step)))
+
 
     # configure callbacks
     lrate = LearningRateScheduler(step_decay)
-    checkpoint = ModelCheckpoint(model_file, monitor='loss', verbose=0, save_best_only=False,
-                                 save_weights_only=True, mode='min', period=conf.save_step)
-    obs = OutputObserver(conf, [train_di, val_di])
-    callbacks_list = [lrate, checkpoint, obs]
+    checkpoint = ModelCheckpoint(
+        model_file, monitor='loss', verbose=0, save_best_only=False,
+        save_weights_only=True, mode='min', period=conf.save_step)
+    obs = OutputObserver(conf, [train_di2, val_di])
+    callbacks_list = [lrate, obs] #checkpoint,
 
     # sgd optimizer with lr multipliers
     multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0, nesterov=False, lr_mult=lr_mult)
@@ -603,7 +613,7 @@ def training(conf):
 
     # training
     model.fit_generator(train_di,
-                        steps_per_epoch=1,
+                        steps_per_epoch=conf.display_step,
                         epochs=max_iter,
                         callbacks=callbacks_list,
                         verbose=0,
@@ -615,19 +625,12 @@ def training(conf):
 
     # force saving in case the max iter doesn't match the save step.
     model.save(os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(max_iter)))
-    obs.force = True
-    obs.on_epoch_end(max_iter - 1)
-    obs.force = False
+    obs.on_epoch_end(max_iter)
 
 
 def get_pred_fn(conf):
     model = get_testing_model(br1=len(conf.op_affinity_graph) * 2, br2=conf.n_classes)
-    last_epoch = get_last_epoch(conf)
-    save_epoch = last_epoch
-    latest_model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(save_epoch))
-    if not os.path.exists(latest_model_file):
-        save_epoch = int(np.floor(last_epoch/conf.save_step)*conf.save_step)
-        latest_model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(save_epoch))
+    latest_model_file = PoseTools.get_latest_model_file_keras(conf, name)
     print("Loading the weights from {}.. ".format(latest_model_file))
     model.load_weights(latest_model_file)
 
@@ -640,4 +643,6 @@ def get_pred_fn(conf):
         base_locs = base_locs * conf.op_rescale
         return base_locs, pred
 
-    return pred_fn, latest_model_file
+    close_fn = lambda : None
+
+    return pred_fn, close_fn, latest_model_file

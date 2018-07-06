@@ -24,7 +24,24 @@ import json
 
 def find_local_dirs(conf):
     lbl = h5py.File(conf.labelfile, 'r')
-    local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in conf.getexplist(lbl)]
+    exp_list = lbl['movieFilesAll'][conf.view,:]
+    local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in exp_list]
+    # local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in conf.getexplist(lbl)]
+    sel_dirs = [True] * len(local_dirs)
+    try:
+        for k in lbl['projMacros'].keys():
+            r_dir = u''.join(chr(c) for c in lbl['projMacros'][k])
+            local_dirs = [s.replace('${}'.format(k), r_dir) for s in local_dirs]
+    except:
+        pass
+    lbl.close()
+    return local_dirs, sel_dirs
+
+
+def find_gt_dirs(conf):
+    lbl = h5py.File(conf.labelfile, 'r')
+    exp_list = lbl['movieFilesAllGT'][conf.view,:]
+    local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in exp_list]
     sel_dirs = [True] * len(local_dirs)
     try:
         for k in lbl['projMacros'].keys():

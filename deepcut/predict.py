@@ -5,7 +5,7 @@ import tensorflow as tf
 from nnet.net_factory import pose_net
 
 
-def setup_pose_prediction(cfg):
+def setup_pose_prediction(cfg, init_weights):
     inputs = tf.placeholder(tf.float32, shape=[cfg.batch_size   , None, None, 3])
 
     net_heads = pose_net(cfg).test(inputs)
@@ -21,7 +21,7 @@ def setup_pose_prediction(cfg):
     sess.run(tf.local_variables_initializer())
 
     # Restore variables from disk.
-    restorer.restore(sess, cfg.init_weights)
+    restorer.restore(sess, init_weights)
 
     return sess, inputs, outputs
 
