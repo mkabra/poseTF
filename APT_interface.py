@@ -331,11 +331,8 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
-        if lbl['cropIsCropMode'].value[0,0] == 0 and not conf.has_trx_file:
-            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx,0]]['roi'][view,0]].value[:,0].astype('int')
-            crop_loc -= 1 # from matlab to python
-        else:
-            crop_loc = None
+        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
+
         try:
             cap = movies.Movie(dir_name)
         except ValueError:

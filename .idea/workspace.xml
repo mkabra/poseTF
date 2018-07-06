@@ -36,71 +36,91 @@
   <component name="FileEditorManager">
     <splitter split-orientation="horizontal" split-proportion="0.5008026">
       <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
-            <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="150">
-                  <caret line="10" column="45" selection-start-line="10" selection-start-column="45" selection-end-line="10" selection-end-column="45" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/multiResData.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="285">
-                  <caret line="40" column="16" selection-start-line="40" selection-start-column="16" selection-end-line="40" selection-end-column="16" />
-                  <folding>
-                    <element signature="e#0#37#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="open_pose.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/open_pose.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="446">
-                  <caret line="568" selection-start-line="568" selection-end-line="568" />
-                  <folding>
-                    <element signature="e#0#30#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="30">
-                  <caret line="2" column="9" lean-forward="true" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/APT_interface.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="180">
-                  <caret line="215" column="42" selection-start-line="215" selection-start-column="42" selection-end-line="215" selection-end-column="42" />
-                  <folding>
-                    <element signature="e#0#31#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="tensor_util.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/tensor_util.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="6120">
-                  <caret line="420" selection-start-line="420" selection-end-line="420" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
+        <splitter split-orientation="vertical" split-proportion="0.5">
+          <split-first>
+            <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+              <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
+                <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="150">
+                      <caret line="10" column="45" selection-start-line="10" selection-start-column="45" selection-end-line="10" selection-end-column="45" />
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
+                <entry file="file://$PROJECT_DIR$/multiResData.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="285">
+                      <caret line="40" column="16" selection-start-line="40" selection-start-column="16" selection-end-line="40" selection-end-column="16" />
+                      <folding>
+                        <element signature="e#0#37#0" expanded="true" />
+                      </folding>
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="open_pose.py" pinned="false" current-in-tab="false">
+                <entry file="file://$PROJECT_DIR$/open_pose.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="446">
+                      <caret line="568" selection-start-line="568" selection-end-line="568" />
+                      <folding>
+                        <element signature="e#0#30#0" expanded="true" />
+                      </folding>
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
+                <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="30">
+                      <caret line="2" column="9" lean-forward="true" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+                <entry file="file://$PROJECT_DIR$/APT_interface.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="258">
+                      <caret line="335" selection-start-line="335" selection-end-line="335" />
+                      <folding>
+                        <element signature="e#0#31#0" expanded="true" />
+                      </folding>
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+              <file leaf-file-name="tensor_util.py" pinned="false" current-in-tab="false">
+                <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/tensorflow/python/framework/tensor_util.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="6120">
+                      <caret line="420" selection-start-line="420" selection-end-line="420" />
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+            </leaf>
+          </split-first>
+          <split-second>
+            <leaf>
+              <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+                <entry file="file://$PROJECT_DIR$/APT_interface.py">
+                  <provider selected="true" editor-type-id="text-editor">
+                    <state relative-caret-position="278">
+                      <caret line="798" selection-start-line="798" selection-end-line="799" />
+                      <folding>
+                        <element signature="e#0#31#0" expanded="true" />
+                      </folding>
+                    </state>
+                  </provider>
+                </entry>
+              </file>
+            </leaf>
+          </split-second>
+        </splitter>
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
@@ -680,13 +700,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00116" summary="Movies can now be classified by loading the graph from meta file.">
-      <created>1520836349901</created>
-      <option name="number" value="00116" />
-      <option name="presentableId" value="LOCAL-00116" />
-      <option name="project" value="LOCAL" />
-      <updated>1520836349902</updated>
-    </task>
     <task id="LOCAL-00117" summary="changed misc.imresize to skimage.transform.resize as it has been deprecated.">
       <created>1520837168870</created>
       <option name="number" value="00117" />
@@ -1023,7 +1036,14 @@
       <option name="project" value="LOCAL" />
       <updated>1530866790724</updated>
     </task>
-    <option name="localTasksCounter" value="165" />
+    <task id="LOCAL-00165" summary="bug fix">
+      <created>1530866998742</created>
+      <option name="number" value="00165" />
+      <option name="presentableId" value="LOCAL-00165" />
+      <option name="project" value="LOCAL" />
+      <updated>1530866998742</updated>
+    </task>
+    <option name="localTasksCounter" value="166" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1075,9 +1095,9 @@
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
       <window_info anchor="bottom" id="Event Log" order="0" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.42752868" visible="true" weight="0.30486485" />
+      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.45881125" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
-      <window_info id="Structure" order="3" sideWeight="0.50260687" side_tool="true" weight="0.24486487" />
+      <window_info active="true" id="Structure" order="3" sideWeight="0.5411887" side_tool="true" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.32760474" />
       <window_info anchor="bottom" id="Favorites" order="5" side_tool="true" weight="0.32968834" />
       <window_info id="Debug" order="2" sideWeight="0.49739313" weight="0.30594593" />
@@ -1145,7 +1165,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Making stephen's output files group writable so that they can easily overwritten." />
     <MESSAGE value="Making sure trackStephenHead_KB.py doesn't die silently when it cannot figure out fly number" />
     <MESSAGE value="Bug fix in runTrackingStephen.py" />
     <MESSAGE value="Changes to script for running cv for stephens data. &#10;Minor bug fix to APT_interface" />
@@ -1170,7 +1189,8 @@
     <MESSAGE value="changing setting for preprocessing threads" />
     <MESSAGE value="Generic checkin" />
     <MESSAGE value="Adding deepcut and leap code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding deepcut and leap code" />
+    <MESSAGE value="bug fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="bug fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1216,17 +1236,17 @@
   <component name="debuggerHistoryManager">
     <expressions id="breakpointCondition">
       <expression>
-        <expression-string />
+        <expression-string>epoch % 20 ==0 and epoch &gt; 0</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>step == 25</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>'base/scale0/layer2/batch_norm/base/scale0/layer2/batch_norm/moments/Squeeze_1/ExponentialMovingAverage' in op.name</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -1574,8 +1594,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="215" column="42" selection-start-line="215" selection-start-column="42" selection-end-line="215" selection-end-column="42" />
+        <state relative-caret-position="258">
+          <caret line="335" selection-start-line="335" selection-end-line="335" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
