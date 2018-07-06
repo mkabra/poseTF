@@ -5,28 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/deepcut/models/download.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deepcut/pose_dataset.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/compute_errors.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/confmaps2pts.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/generate_training_set.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/guis/cluster_sample.mlapp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/guis/create_skeleton.mlapp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/guis/label_joints.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/hpc/python_gpu.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/image_augmentation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/layers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/plot_joints_single.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/predict_box.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/predict_box.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/pts2confmaps.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/test_leap.m" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/leap/viz.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -90,23 +70,20 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="465">
-                  <caret line="29" selection-start-line="29" selection-end-line="29" />
-                  <folding>
-                    <element signature="e#0#13#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="30">
+                  <caret line="2" column="9" lean-forward="true" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-225">
-                  <caret line="902" selection-start-line="902" selection-end-line="902" />
+                <state relative-caret-position="180">
+                  <caret line="215" column="42" selection-start-line="215" selection-start-column="42" selection-end-line="215" selection-end-column="42" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -365,6 +342,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -404,7 +382,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -702,13 +679,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
-    </task>
-    <task id="LOCAL-00115" summary="Movies can now be classified by loading the graph from meta file.">
-      <created>1520592756752</created>
-      <option name="number" value="00115" />
-      <option name="presentableId" value="LOCAL-00115" />
-      <option name="project" value="LOCAL" />
-      <updated>1520592756753</updated>
     </task>
     <task id="LOCAL-00116" summary="Movies can now be classified by loading the graph from meta file.">
       <created>1520836349901</created>
@@ -1046,7 +1016,14 @@
       <option name="project" value="LOCAL" />
       <updated>1530866460893</updated>
     </task>
-    <option name="localTasksCounter" value="164" />
+    <task id="LOCAL-00164" summary="Adding deepcut and leap code">
+      <created>1530866790724</created>
+      <option name="number" value="00164" />
+      <option name="presentableId" value="LOCAL-00164" />
+      <option name="project" value="LOCAL" />
+      <updated>1530866790724</updated>
+    </task>
+    <option name="localTasksCounter" value="165" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1092,6 +1069,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
@@ -1167,7 +1145,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Chaning imgdim back to 1 for Stephen so that he can run his tracking." />
     <MESSAGE value="Making stephen's output files group writable so that they can easily overwritten." />
     <MESSAGE value="Making sure trackStephenHead_KB.py doesn't die silently when it cannot figure out fly number" />
     <MESSAGE value="Bug fix in runTrackingStephen.py" />
@@ -1192,7 +1169,8 @@
     <MESSAGE value="Bug fix in cropping. matlab to python indexing again. sigh." />
     <MESSAGE value="changing setting for preprocessing threads" />
     <MESSAGE value="Generic checkin" />
-    <option name="LAST_COMMIT_MESSAGE" value="Generic checkin" />
+    <MESSAGE value="Adding deepcut and leap code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding deepcut and leap code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1238,17 +1216,17 @@
   <component name="debuggerHistoryManager">
     <expressions id="breakpointCondition">
       <expression>
-        <expression-string>epoch % 20 ==0 and epoch &gt; 0</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>step == 25</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>'base/scale0/layer2/batch_norm/base/scale0/layer2/batch_norm/moments/Squeeze_1/ExponentialMovingAverage' in op.name</expression-string>
+        <expression-string />
         <language-id>Python</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -1577,16 +1555,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-225">
-          <caret line="902" selection-start-line="902" selection-end-line="902" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/open_pose.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="446">
@@ -1599,10 +1567,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="465">
-          <caret line="29" selection-start-line="29" selection-end-line="29" />
+        <state relative-caret-position="30">
+          <caret line="2" column="9" lean-forward="true" selection-start-line="2" selection-start-column="9" selection-end-line="2" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="215" column="42" selection-start-line="215" selection-start-column="42" selection-end-line="215" selection-end-column="42" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>

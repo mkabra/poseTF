@@ -213,7 +213,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
         height = int(read_entry(dt_params['sizey']))
         conf.imsz = (height, width)
     else:
-        if H['cropIsCropMode'][0,0] == 0:
+        if H['cropProjHasCrops'][0,0] == 1:
             xlo, xhi, ylo, yhi = H[H[H['movieFilesAllCropInfo'][0,0]]['roi'][view][0]].value[:,0]
             conf.imsz = (yhi-ylo+1, xhi-xlo+1)
         else:
