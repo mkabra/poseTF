@@ -144,10 +144,10 @@ def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid,
             curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], R) + [x, y]
             base_locs_orig[ii, ...] = curlocs
     else:
-        orig_crop_loc = crop_loc
+        xlo, xhi, ylo, yhi = crop_loc
         base_locs_orig = base_locs.copy()
-        base_locs_orig[:, :, 0] += orig_crop_loc[1]
-        base_locs_orig[:, :, 1] += orig_crop_loc[0]
+        base_locs_orig[:, :, 0] += xlo
+        base_locs_orig[:, :, 1] += ylo
 
     return base_locs_orig
 
@@ -677,8 +677,8 @@ def get_pred_fn(model_type, conf):
 
     return pred_fn, close_fn, model_file
 
-def classify_list_all(model_type, conf, list, on_gt):
-    # list should be of list of type [mov_file, frame_num, trx_ndx]
+def classify_list_all(model_type, conf, in_list, on_gt):
+    # in_list should be of list of type [mov_file, frame_num, trx_ndx]
     # all of them should be 1-indexed.
 
     pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
@@ -696,12 +696,13 @@ def classify_list_all(model_type, conf, list, on_gt):
     else:
         trx_files = [None,]*len(local_dirs)
 
-    pred_locs = np.zeros([len(list), conf.n_classes, 2])
+    pred_locs = np.zeros([len(in_list), conf.n_classes, 2])
     pred_locs[:] = np.nan
 
     for ndx, dir_name in enumerate(local_dirs):
 
-        cur_list = [ [l[1]-1, l[2]-1] for l in list if l[0] == (ndx+1)]
+        cur_list = [ [l[1]-1, l[2]-1] for l in in_list if l[0] == (ndx+1)]
+        cur_idx = [i for i,l in enumerate(in_list) if l[0]==(ndx+1)]
         crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
 
         try:
@@ -710,11 +711,10 @@ def classify_list_all(model_type, conf, list, on_gt):
             logging.exception('MOVIE_READ: ' + local_dirs[ndx] + ' is missing')
             exit(1)
 
-        pred_locs = classify_list(conf, pred_fn, cap, cur_list, trx_files[ndx], crop_loc)
-
+        cur_pred_locs = classify_list(conf, pred_fn, cap, cur_list, trx_files[ndx], crop_loc)
+        pred_locs[cur_idx,...]= cur_pred_locs
 
         cap.close()  # close the movie handles
-
 
     lbl.close()
     close_fn()
@@ -781,7 +781,7 @@ def classify_gt_data(conf, model_type, out_file):
 
     cur_list = []
     labeled_locs = []
-    for ndx, dir_name in enumerate(local_dirs):
+    for ndx, dir_name in enumerate(local_dirs[:10]):
         cur_pts = trx_pts(lbl, ndx)
 
         if not conf.has_trx_file:
@@ -797,18 +797,20 @@ def classify_gt_data(conf, model_type, out_file):
         for trx_ndx in range(n_trx):
             frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
             for f in frames:
-                cur_list.append([ndx, f, trx_ndx])
+                cur_list.append([ndx+1, f+1, trx_ndx+1])
                 labeled_locs.append(cur_pts[trx_ndx, f, :, sel_pts])
 
     pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True)
     mat_pred_locs = pred_locs + 1
     mat_labeled_locs = np.array(labeled_locs) +1
-    mat_list = [[m+1, f+1, t+1 ] for m,f,t in cur_list]
+    mat_list = cur_list
+#    mat_list = [[m+1, f+1, t+1 ] for m,f,t in cur_list]
 
     sio.savemat(out_file,{'pred_locs':mat_pred_locs,
                           'labeled_locs': mat_labeled_locs,
                           'list': mat_list})
     lbl.close()
+    return pred_locs, labeled_locs, cur_list
 
 
 def classify_movie(conf, pred_fn,
