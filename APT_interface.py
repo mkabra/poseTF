@@ -127,7 +127,7 @@ def create_tfrecord(conf, split=True, split_file=None):
     except IOError:
         logging.warning('SPLIT_WRITE: Could not output the split data information')
 
-def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid):
+def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid, crop_loc):
     # converts locs in cropped image back to locations in original image.
     if conf.has_trx_file:
         hsz_p = conf.imsz[0] / 2  # half size for pred
@@ -144,7 +144,7 @@ def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid)
             curlocs = np.dot(base_locs[ii, :, :] - [hsz_p, hsz_p], R) + [x, y]
             base_locs_orig[ii, ...] = curlocs
     else:
-        orig_crop_loc = conf.cropLoc[sz]
+        orig_crop_loc = crop_loc
         base_locs_orig = base_locs.copy()
         base_locs_orig[:, :, 0] += orig_crop_loc[1]
         base_locs_orig[:, :, 1] += orig_crop_loc[0]
@@ -582,7 +582,7 @@ def create_cv_split_files(conf, n_splits=3):
 def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
     bsize = conf.batch_size
     all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
-    for cur_t in range(to_do_list):
+    for cur_t in range(len(to_do_list)):
             cur_entry = to_do_list[cur_t]
             trx_ndx = cur_entry[1]
             cur_trx = trx[trx_ndx]
@@ -643,7 +643,7 @@ def classify_list(conf, pred_fn, cap, to_do_list, trx_file, crop_loc):
             cur_trx = trx[trx_ndx]
             cur_f = cur_entry[0]
             trx_fnum_start = cur_f - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1)
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1, crop_loc)
             pred_locs[cur_start + cur_t, :, :] = base_locs_orig[0, ...]
 
     return pred_locs
@@ -652,10 +652,10 @@ def classify_list(conf, pred_fn, cap, to_do_list, trx_file, crop_loc):
 def get_crop_loc(lbl, ndx, view, on_gt):
     if lbl['cropProjHasCrops'].value[0, 0] == 1:
         if on_gt:
-            crop_loc = lbl[lbl[lbl['movieFilesAllGTCropInfo'][ndx, 0]]['roi'][view, 0]].value[:, 0].astype('int')
+            crop_loc = lbl[lbl[lbl['movieFilesAllGTCropInfo'][0,ndx]]['roi'][view, 0]].value[:, 0].astype('int')
 
         else:
-            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][ndx, 0]]['roi'][view, 0]].value[:, 0].astype('int')
+            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][0,ndx]]['roi'][view, 0]].value[:, 0].astype('int')
         crop_loc -= 1  # from matlab to python
     else:
         crop_loc = None
@@ -802,7 +802,7 @@ def classify_gt_data(conf, model_type, out_file):
 
     pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True)
     mat_pred_locs = pred_locs + 1
-    mat_labeled_locs = labeled_locs +1
+    mat_labeled_locs = np.array(labeled_locs) +1
     mat_list = [[m+1, f+1, t+1 ] for m,f,t in cur_list]
 
     sio.savemat(out_file,{'pred_locs':mat_pred_locs,
@@ -900,7 +900,7 @@ def classify_movie(conf, pred_fn,
             cur_trx = T[trx_ndx]
             cur_f = cur_entry[0]
             trx_fnum_start = cur_f - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1)
+            base_locs_orig = convert_to_orig(base_locs[cur_t:cur_t + 1, ...], conf, cur_trx, trx_fnum_start, all_f, sz, 1, crop_loc)
             pred_locs[cur_f - min_first_frame, trx_ndx, :, :] = base_locs_orig[0, ...]
 
             if save_hmaps:
