@@ -472,9 +472,10 @@ def trx_pts(lbl, ndx):
             idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
             val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
             cur_pts[idx] = val
-        return cur_pts.reshape(np.flipud(sz))
+        cur_pts = cur_pts.reshape(np.flipud(sz))
     except ValueError:
-        return np.array(lbl[pts[0,ndx]])
+        cur_pts = np.array(lbl[pts[0,ndx]])
+    return cur_pts
 
 
 def get_cur_env(envs, split, conf, info, mov_split, trx_split, predefined=None):

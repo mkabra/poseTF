@@ -784,6 +784,9 @@ def classify_gt_data(conf, model_type, out_file):
     for ndx, dir_name in enumerate(local_dirs):
         cur_pts = trx_pts(lbl, ndx)
 
+        if not conf.has_trx_file:
+            cur_pts = cur_pts[np.newaxis, ...]
+
         if conf.has_trx_file:
             trx_files = multiResData.get_trx_files(lbl, local_dirs)
             trx = sio.loadmat(trx_files[ndx])['trx'][0]
