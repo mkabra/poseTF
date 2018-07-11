@@ -215,7 +215,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     else:
         if H['cropProjHasCrops'][0,0] == 1:
             xlo, xhi, ylo, yhi = H[H[H['movieFilesAllCropInfo'][0,0]]['roi'][view][0]].value[:,0]
-            conf.imsz = (yhi-ylo+1, xhi-xlo+1)
+            conf.imsz = (int(yhi-ylo+1), int(xhi-xlo+1))
         else:
             vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
             vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
