@@ -684,7 +684,7 @@ def classify_list_all(model_type, conf, list, on_gt):
     pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
 
     if on_gt:
-        local_dirs = multiResData.find_gt_dirs(conf)
+        local_dirs, _ = multiResData.find_gt_dirs(conf)
     else:
         local_dirs, _ = multiResData.find_local_dirs(conf)
 
