@@ -782,7 +782,7 @@ def classify_gt_data(conf, model_type, out_file):
     cur_list = []
     labeled_locs = []
     for ndx, dir_name in enumerate(local_dirs[:10]):
-        cur_pts = trx_pts(lbl, ndx)
+        cur_pts = trx_pts(lbl, ndx, on_gt=True)
 
         if not conf.has_trx_file:
             cur_pts = cur_pts[np.newaxis, ...]
