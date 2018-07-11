@@ -4,6 +4,38 @@ import os
 import shutil
 import h5py
 import logging
+reload(apt)
+
+lbl_file = '/home/mayank/work/poseTF/data/alice/multitarget_bubble_expandedbehavior_20180425_local.lbl'
+
+split_file = '/home/mayank/work/poseTF/cache/apt_interface/multitarget_bubble_view0/test_leap/splitdata.json'
+
+log = logging.getLogger()  # root logger
+log.setLevel(logging.ERROR)
+
+import deepcut.train
+conf = apt.create_conf(lbl_file,0,'test_deepcut')
+conf.splitType = 'predefined'
+# apt.create_deepcut_db(conf, True, split_file=split_file)
+from poseConfig import config as args
+args.skip_db = True
+apt.train_deepcut(conf,args)
+
+##
+import  tensorflow as tf
+tf.reset_default_graph
+conf.batch_size = 1
+pred_fn, model_file = deepcut.train.get_pred_fn(conf)
+rfn, n= deepcut.train.get_read_fn(conf,'/home/mayank/work/poseTF/cache/apt_interface/multitarget_bubble_view0/test_deepcut/val_data.p')
+A = apt.classify_db(conf, rfn, pred_fn, 1000)
+
+##
+import socket
+import APT_interface as apt
+import os
+import shutil
+import h5py
+import logging
 
 lbl_file = '/home/mayank/work/poseTF/data/alice/multitarget_bubble_expandedbehavior_20180425_local.lbl'
 

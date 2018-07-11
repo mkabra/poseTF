@@ -433,7 +433,7 @@ def create_envs(conf, split, db_type=None):
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
-            train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename_rnn)
+            train_filename = os.path.join(conf.cachedir, conf.trainfilename_rnn)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
         return env, val_env
@@ -444,7 +444,7 @@ def create_envs(conf, split, db_type=None):
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
-            train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename + '_' + db_type)
+            train_filename = os.path.join(conf.cachedir, conf.trainfilename + '_' + db_type)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
         return env, val_env
@@ -455,7 +455,7 @@ def create_envs(conf, split, db_type=None):
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = tf.python_io.TFRecordWriter(val_filename + '.tfrecords')
         else:
-            train_filename = os.path.join(conf.cachedir, conf.fulltrainfilename)
+            train_filename = os.path.join(conf.cachedir, conf.trainfilename)
             env = tf.python_io.TFRecordWriter(train_filename + '.tfrecords')
             val_env = None
         return env, val_env

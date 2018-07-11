@@ -268,17 +268,57 @@ def set_leap_defaults(conf):
     conf.batch_size = 50
 
 
-def train_apt(data_path, conf, run_name, upsampling_layers=False):
+def get_read_fn(conf, data_path):
+
+    batch_size = 1
+    rotate_angle = 0
+    net_name = conf.leap_net_name
+    box_dset="box"
+    confmap_dset="confmaps"
+    filters=64
+
+    box, confmap = load_dataset(data_path, X_dset=box_dset, Y_dset=confmap_dset,permute=range(4))
+
+    # Pull out metadata
+    img_size = box.shape[1:]
+    num_output_channels = confmap.shape[-1]
+
+    # Create network
+    model = create_model(net_name, img_size, num_output_channels, filters=filters, amsgrad=False, upsampling_layers=False, summary=False)
+    if model == None:
+        print("Could not find model:", net_name)
+        return
+
+    input_layers = model.input_names
+    output_layers = model.output_names
+    if len(input_layers) > 1 or len(output_layers) > 1:
+        datagen = MultiInputOutputPairedImageAugmenter(input_layers, output_layers, box, confmap, batch_size=batch_size, shuffle=False, theta=(-rotate_angle, rotate_angle))
+    else:
+        datagen = PairedImageAugmenter(box, confmap, batch_size=batch_size, shuffle=False, theta=(-rotate_angle, rotate_angle))
+
+    cur_ex = [0]
+    def read_fn():
+        im, hmap = datagen[cur_ex[0]]
+        cur_ex[0] += 1
+        locs = PoseTools.get_pred_locs(hmap)
+        info = [0,0,0]
+        return im, locs, info
+
+    n_db = box.shape[0]
+
+    return read_fn, n_db
+
+
+def train_apt(conf, upsampling_layers=False):
 
     """
     Trains the network and saves the intermediate results to an output directory.
 
-    :param data_path: Path to an HDF5 file with box and confmaps datasets
     :param conf: config
-    :param run_name: Name of the training run. If not specified, will be formatted according to other parameters.
     :param upsampling_layers: Use simple bilinear upsampling layers as opposed to learned transposed convolutions
     """
 
+    data_path = [os.path.join(conf.cachedir, 'leap_train.h5')]
     batch_size = conf.batch_size
     rotate_angle = conf.rrange
     assert conf.dl_steps % conf.display_step ==0, 'For leap, number of training iterations must be divisible by display step'
@@ -320,7 +360,7 @@ def train_apt(data_path, conf, run_name, upsampling_layers=False):
         print("Could not find model:", net_name)
         return
 
-    model_file = os.path.join(conf.cachedir, conf.expname + '_' + run_name + '-{epoch:d}')
+    model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{epoch:d}')
     # Initialize run
     run_path = base_output_path
     savemat(os.path.join(base_output_path, "training_info.mat"),
@@ -339,12 +379,13 @@ def train_apt(data_path, conf, run_name, upsampling_layers=False):
     # Data generators/augmentation
     input_layers = model.input_names
     output_layers = model.output_names
+    srange = [1 - conf.scale_range, 1 + conf.scale_range]
     if len(input_layers) > 1 or len(output_layers) > 1:
-        train_datagen = MultiInputOutputPairedImageAugmenter(input_layers, output_layers, box, confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle))
-        val_datagen = MultiInputOutputPairedImageAugmenter(input_layers, output_layers, val_box, val_confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle))
+        train_datagen = MultiInputOutputPairedImageAugmenter(input_layers, output_layers, box, confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle), scale=srange)
+        val_datagen = MultiInputOutputPairedImageAugmenter(input_layers, output_layers, val_box, val_confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle), scale=srange)
     else:
-        train_datagen = PairedImageAugmenter(box, confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle))
-        val_datagen = PairedImageAugmenter(val_box, val_confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle))
+        train_datagen = PairedImageAugmenter(box, confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle), scale=srange)
+        val_datagen = PairedImageAugmenter(val_box, val_confmap, batch_size=batch_size, shuffle=True, theta=(-rotate_angle, rotate_angle), scale=srange)
 
     base_lr = 4e-5  # 2e-5
     momentum = 0.9
@@ -417,8 +458,8 @@ def train_apt(data_path, conf, run_name, upsampling_layers=False):
                 p_str += '{:s}:{:.2f} '.format(k, self.train_info[k][-1])
             print(p_str)
 
-            train_data_file = os.path.join(
-                self.config.cachedir, 'traindata')
+            train_data_file = os.path.join( self.config.cachedir, self.config.expname + '_' + name + '_traindata')
+
             json_data = {}
             for x in self.train_info.keys():
                 json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()
@@ -438,8 +479,8 @@ def train_apt(data_path, conf, run_name, upsampling_layers=False):
             initial_epoch=epoch0,
             epochs=epochs,
             verbose=0,
-    #         use_multiprocessing=True,
-    #         workers=8,
+            use_multiprocessing=True,
+            workers=4,
             steps_per_epoch=batches_per_epoch,
             max_queue_size=512,
             shuffle=False,
@@ -463,15 +504,15 @@ def train_apt(data_path, conf, run_name, upsampling_layers=False):
 
 
 def get_pred_fn(conf):
+
     latest_model_file = PoseTools.get_latest_model_file_keras(conf,name)
     model = keras.models.load_model(latest_model_file)
 
     def pred_fn(all_f):
-        xs, _ = PoseTools.preprocess_ims(
-            all_f, in_locs=np.zeros([conf.batch_size, conf.n_classes, 2]), conf=conf,
-            distort=False, scale=conf.op_rescale)
-        pred = model.predict(xs)[-1]
+        pred = model.predict(all_f,batch_size = conf.batch_size)
+        pred = np.stack(pred)
         base_locs = PoseTools.get_pred_locs(pred)
+
         base_locs = base_locs * conf.op_rescale
         return base_locs, pred
 

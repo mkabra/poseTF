@@ -101,6 +101,24 @@ def set_deepcut_defaults(cfg):
     cfg.dl_steps = 1030000
     cfg.save_step = 50000
 
+def get_read_fn(cfg, data_path):
+    cfg = edict(cfg.__dict__)
+    cfg = config.convert_to_deepcut(cfg)
+    cfg.shuffle = False
+    dataset = PoseDataset(cfg, data_path)
+    n = dataset.num_images
+    def read_fn():
+        batch_np = dataset.next_batch()
+        loc_in = batch_np[Batch.locs]
+        ims = batch_np[Batch.inputs]
+        if cfg.imgDim == 1:
+            ims = ims[:,:,:,0:1]
+        info = [0, 0, 0]
+        return ims, loc_in, info
+
+    return read_fn, n
+
+
 def train(cfg):
 #    setup_logging()
 
@@ -175,7 +193,7 @@ def train(cfg):
             loc_pred = predict.argmax_pose_predict(scmap, locref, cfg.stride)
             loc_in = batch_out[Batch.locs]
             dd = np.sqrt(np.sum(np.square(loc_pred[:,:,:2]-loc_in),axis=-1))
-
+            dd = dd*cfg.dlc_rescale
             average_loss = cum_loss / display_iters
             cum_loss = 0.0
             print("iteration: {} loss: {} dist: {}  lr: {}"
@@ -204,7 +222,7 @@ def get_pred_fn(cfg):
     cfg = edict(cfg.__dict__)
     cfg = config.convert_to_deepcut(cfg)
 
-    ckpt_file = os.path.join(cfg.cachedir,'checkpoint')
+    ckpt_file = os.path.join(cfg.cachedir,cfg.expname + '_' + name + '_ckpt')
     latest_ckpt = tf.train.get_checkpoint_state( cfg.cachedir, ckpt_file)
 
     init_weights = latest_ckpt.model_checkpoint_path
@@ -213,9 +231,15 @@ def get_pred_fn(cfg):
     sess, inputs, outputs = predict.setup_pose_prediction(cfg, init_weights)
 
     def pred_fn(all_f):
-        cur_out = sess.run(outputs, feed_dict={inputs: all_f})
+        if cfg.imgDim == 1:
+            cur_im = np.tile(all_f,[1,1,1,3])
+        else:
+            cur_im = all_f
+        cur_out = sess.run(outputs, feed_dict={inputs: cur_im})
         scmap, locref = predict.extract_cnn_output(cur_out, cfg)
-        return locref, scmap
+        pose = predict.argmax_pose_predict(scmap, locref, cfg.stride)
+        pose = pose[:,:,:2]*cfg.dlc_rescale
+        return pose, scmap
 
     return pred_fn, latest_ckpt.model_checkpoint_path
 

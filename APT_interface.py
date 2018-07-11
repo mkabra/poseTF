@@ -228,6 +228,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     conf.unet_rescale = float(read_entry(dt_params['scale']))
     conf.op_rescale = float(read_entry(dt_params['scale']))
     conf.dlc_rescale = float(read_entry(dt_params['scale']))
+    conf.leap_rescale = float(read_entry(dt_params['scale']))
     conf.adjustContrast = int(read_entry(dt_params['adjustContrast'])) > 0.5
     conf.normalize_img_mean = int(read_entry(dt_params['normalize'])) > 0.5
     # conf.imgDim = int(read_entry(dt_params['NChannels']))
@@ -319,7 +320,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     predefined = None
     if conf.splitType is 'predefined':
         assert split_file is not None, 'File for defining splits is not given'
-        predefined = json.load(split_file)
+        predefined = PoseTools.json_load(split_file)
     elif conf.splitType is 'movie':
         nexps = len(local_dirs)
         mov_split = sample(list(range(nexps)), int(nexps * conf.valratio))
@@ -331,7 +332,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx)
-        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
+        crop_loc = get_crop_loc(lbl, ndx, view, on_gt=False)
 
         try:
             cap = movies.Movie(dir_name)
@@ -457,8 +458,10 @@ def create_deepcut_db(conf, split=False, split_file=None):
     train_fis = [open(os.path.join(train_dir,b+'.csv'),'w') for b in bparts]
     train_data = []
     val_count = [0]
-    val_dir = os.path.join(conf.cachedir, 'train')
-    val_fis= [open(os.path.join(train_dir,b+'.csv'),'w') for b in bparts]
+    val_dir = os.path.join(conf.cachedir, 'val')
+    if not os.path.exists(val_dir):
+        os.mkdir(val_dir)
+    val_fis= [open(os.path.join(val_dir,b+'.csv'),'w') for b in bparts]
     val_data = []
     for ndx in range(conf.n_classes):
         train_fis[ndx].write('\tX\tY\n')
@@ -483,7 +486,7 @@ def create_deepcut_db(conf, split=False, split_file=None):
     with open(os.path.join(conf.cachedir,'train_data.p'),'w') as f:
         pickle.dump(train_data,f,protocol=2)
     if split:
-        with open(os.path.join(conf.cachedir,'train_data.p'),'w') as f:
+        with open(os.path.join(conf.cachedir,'val_data.p'),'w') as f:
             pickle.dump(train_data,f,protocol=2)
 
     # save the split data
@@ -574,103 +577,6 @@ def create_cv_split_files(conf, n_splits=3):
             json.dump([cur_train, splits[ndx]])
 
     return all_train, splits
-
-
-def classify_movie_old(conf, pred_fn, mov_file, out_file, trx_file=None, start_frame=0, end_frame=-1, skip_rate=1):
-    def write_trk(pred_locs_in, n_done):
-        pred_locs = pred_locs_in.copy()
-        pred_locs = pred_locs.transpose([2, 3, 0, 1])
-        tgt = np.arange(pred_locs.shape[-1]) + 1
-        if not conf.has_trx_file:
-            pred_locs = pred_locs[..., 0]
-        ts_shape = pred_locs.shape[0:1] + pred_locs.shape[2:]
-        ts = np.ones(ts_shape) * datetime2matlabdn()
-        tag = np.zeros(ts.shape).astype('bool')
-        tracked_shape = pred_locs.shape[2:]
-        tracked = np.zeros(tracked_shape)
-        tracked[:n_done, :] = 1
-        hdf5storage.savemat(out_file,
-                            {'pTrk': pred_locs, 'pTrkTS': ts, 'expname': mov_file, 'pTrkiTgt': tgt,
-                             'pTrkTag': tag, 'pTrkFrm': tracked}, appendmat=False, truncate_existing=True)
-
-    cap = movies.Movie(mov_file)
-    sz = (cap.get_height(), cap.get_width())
-    n_frames = int(cap.get_n_frames())
-    if conf.has_trx_file:
-        try:
-            T = sio.loadmat(trx_file)['trx'][0]
-        except ValueError:
-            raise IOError('Trx file {} is not a mat file'.format(trx_file))
-        n_trx = len(T)
-        end_frames = np.array([x['endframe'][0, 0] for x in T])
-        first_frames = np.array([x['firstframe'][0, 0] for x in T]) - 1  # for converting from 1 indexing to 0 indexing
-    else:
-        T = [None, ]
-        n_trx = 1
-        end_frames = np.array([n_frames])
-        first_frames = np.array([0])
-
-    if end_frame < 0:
-        end_frame = end_frames.max()
-    if end_frame > end_frames.max():
-        end_frame = end_frames.max()
-    if start_frame > end_frame:
-        return None
-
-    max_n_frames = end_frame - start_frame
-    pred_locs = np.zeros([max_n_frames, n_trx, conf.n_classes, 2])
-    pred_locs[:] = np.nan
-
-    bsize = conf.batch_size
-    flipud = conf.flipud
-
-    for trx_ndx in range(n_trx):
-        cur_trx = T[trx_ndx]
-        # pre allocate results
-        if first_frames[trx_ndx] > start_frame:
-            cur_start = first_frames[trx_ndx]
-        else:
-            cur_start = start_frame
-
-        if end_frames[trx_ndx] < end_frame:
-            cur_end = end_frames[trx_ndx]
-        else:
-            cur_end = end_frame
-
-        n_frames = cur_end - cur_start
-        n_batches = int(math.ceil(float(n_frames) / bsize))
-        all_f = np.zeros((bsize,) + conf.imsz + (conf.imgDim,))
-
-        for curl in range(n_batches):
-            ndx_start = curl * bsize + cur_start
-            ndx_end = min(n_frames, (curl + 1) * bsize) + cur_start
-            ppe = min(ndx_end - ndx_start, bsize)
-
-            for ii in range(ppe):
-                fnum = ndx_start + ii
-                frame_in, cur_loc = multiResData.get_patch(
-                    cap, fnum, conf, np.zeros([conf.n_classes, 2]), cur_trx=cur_trx, flipud=flipud)
-                all_f[ii, ...] = frame_in
-
-            base_locs = pred_fn(all_f)
-
-            out_start = ndx_start - start_frame
-            out_end = ndx_end - start_frame
-            trx_fnum_start = ndx_start - first_frames[trx_ndx]
-            base_locs_orig = convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, ppe)
-            pred_locs[out_start:out_end, trx_ndx, :, :] = base_locs_orig[:ppe, ...]
-            if curl % 20 == 19:
-                sys.stdout.write('.')
-            if curl % 400 == 19:
-                sys.stdout.write('\n')
-                write_trk(pred_locs, ndx_end - start_frame)
-
-        sys.stdout.write('\n')
-
-    write_trk(pred_locs, end_frame - start_frame)
-    cap.close()
-    tf.reset_default_graph()
-    return pred_locs
 
 
 def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
@@ -852,9 +758,13 @@ def classify_db_all(model_type, conf, db_file):
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
         close_fn()
     elif model_type == 'leap':
-        pass
+        leap_gen, n = leap.training.get_read_fn(conf, db_file)
+        pred_fn = leap.training.get_pred_fn(conf)
+        pred_locs, label_locs, info = classify_db(conf, leap_gen, pred_fn, n)
     elif model_type == 'deeplabcut':
-        pass
+        read_fn, n = deepcut.train.get_read_fn(conf, db_file)
+        pred_fn = deepcut.train.get_pred_fn(conf)
+        pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, n)
     else:
         raise ValueError('Undefined model type')
 
@@ -1071,8 +981,7 @@ def train_unet(conf, args):
 def train_leap(conf, args):
     if not args.skip_db:
         create_leap_db(conf, False)
-    db_path = [os.path.join(conf.cachedir, 'leap_train.h5')]
-    leap_train(db_path, conf, run_name = args.name)
+    leap_train(conf, run_name = args.name)
 
 
 def train_openpose(conf,args):

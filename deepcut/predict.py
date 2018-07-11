@@ -28,10 +28,13 @@ def setup_pose_prediction(cfg, init_weights):
 
 def extract_cnn_output(outputs_np, cfg):
     scmap = outputs_np[0]
-    scmap = np.squeeze(scmap)
     locref = None
     if cfg.location_refinement:
-        locref = np.squeeze(outputs_np[1])
+        # locref = np.squeeze(outputs_np[1])
+        #  MK: edit on July 9 2018.
+        # The squeeze fails if batch size is 1.
+        # it anyway seems redundant.
+        locref = outputs_np[1]
         shape = locref.shape
         locref = np.reshape(locref, (shape[0], shape[1], shape[2],-1, 2))
         locref *= cfg.locref_stdev

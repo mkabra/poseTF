@@ -295,7 +295,7 @@ class PoseCommon(object):
                 raise_(IOError, "Unspecified DB Type", traceback)
 
         else:
-            filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+            filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
 
         cur_db = multiResData.tf_reader(self.conf, filename, shuffle)
         placeholders = self.q_placeholders

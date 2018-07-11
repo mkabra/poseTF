@@ -353,7 +353,7 @@ class DataIteratorTF(object):
         if db_type == 'val':
             filename = os.path.join(self.conf.cachedir, self.conf.valfilename) + '.tfrecords'
         elif db_type == 'train':
-            filename = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename) + '.tfrecords'
+            filename = os.path.join(self.conf.cachedir, self.conf.trainfilename) + '.tfrecords'
         else:
             raise IOError, 'Unspecified DB Type'
         self.file = filename
@@ -585,8 +585,8 @@ def training(conf):
                 p_str += '{:s}:{:.2f} '.format(k, self.train_info[k][-1])
             print(p_str)
 
-            train_data_file = os.path.join(
-                self.config.cachedir, 'traindata')
+            train_data_file = os.path.join( self.config.cachedir, self.config.expname + '_' + name + '_traindata')
+
             json_data = {}
             for x in self.train_info.keys():
                 json_data[x] = np.array(self.train_info[x]).astype(np.float64).tolist()
@@ -619,7 +619,8 @@ def training(conf):
                         verbose=0,
                         # validation_data=val_di,
                         # validation_steps=val_samples // batch_size,
-                        use_multiprocessing=False,
+                        use_multiprocessing=True,
+                        workers=4,
                         initial_epoch=last_epoch
                         )
 

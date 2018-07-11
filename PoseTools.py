@@ -1324,7 +1324,7 @@ def json_load(filename):
     return K
 
 
-def get_last_epoch(conf):
+def get_last_epoch(conf, name):
     train_data_file = os.path.join(
         conf.cachedir, conf.expname + '_' + name + '_traindata')
     with open(train_data_file + '.json', 'r') as json_file:
@@ -1333,7 +1333,7 @@ def get_last_epoch(conf):
 
 
 def get_latest_model_file_keras(conf, name):
-    last_epoch = get_last_epoch(conf)
+    last_epoch = get_last_epoch(conf, name)
     save_epoch = last_epoch
     latest_model_file = os.path.join(conf.cachedir, conf.expname + '_' + name + '-{}'.format(save_epoch))
     if not os.path.exists(latest_model_file):
