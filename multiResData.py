@@ -461,9 +461,12 @@ def create_envs(conf, split, db_type=None):
         return env, val_env
 
 
-def trx_pts(lbl, ndx):
+def trx_pts(lbl, ndx, on_gt = False):
     # new styled sparse labeledpos
-    pts = np.array(lbl['labeledpos'])
+    if on_gt:
+        pts = np.array(lbl['labeledposGT'])
+    else:
+        pts = np.array(lbl['labeledpos'])
     try:
         sz = np.array(lbl[pts[0, ndx]]['size'])[:, 0].astype('int')
         cur_pts = np.zeros(sz).flatten()
