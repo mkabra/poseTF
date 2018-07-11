@@ -219,7 +219,7 @@ def create_conf(lbl_file, view, name, net_type='unet'):
         else:
             vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
             vid_nc = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nc']))
-            conf.imsz = (vid_nc, vid_nr)
+            conf.imsz = (vid_nr, vid_nc)
     # crop_locX = int(read_entry(dt_params['CropX_view{}'.format(view + 1)]))
     # crop_locY = int(read_entry(dt_params['CropY_view{}'.format(view + 1)]))
     # conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
@@ -338,7 +338,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
             cap = movies.Movie(dir_name)
         except ValueError:
             logging.exception('MOVIE_READ: ' + local_dirs[ndx] + ' is missing')
-            exit(1)
+            sys.exit(1)
 
         if conf.has_trx_file:
             trx_files = multiResData.get_trx_files(lbl, local_dirs)
