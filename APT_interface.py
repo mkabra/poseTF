@@ -802,7 +802,7 @@ def classify_gt_data(conf, model_type, out_file):
 
     pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True)
     mat_pred_locs = pred_locs + 1
-    mat_labeled_locs = labeled_locs +1
+    mat_labeled_locs = np.array(labeled_locs) +1
     mat_list = [[m+1, f+1, t+1 ] for m,f,t in cur_list]
 
     sio.savemat(out_file,{'pred_locs':mat_pred_locs,
