@@ -672,7 +672,7 @@ def get_pred_fn(model_type, conf, model_file=None):
         pred_fn, close_fn, model_file = get_unet_pred_fn(conf, model_file)
     elif model_type == 'leap':
         pred_fn, close_fn, model_file = leap.training.get_pred_fn(conf, model_file)
-    elif model_type == 'deepcut':
+    elif model_type == 'deeplabcut':
         pred_fn, close_fn, model_file = deepcut.train.get_pred_fn(conf, model_file)
     else:
         raise ValueError('Undefined type of model')
@@ -801,7 +801,7 @@ def check_train_db(model_type, conf, out_file):
         raise ValueError('Undefined model type')
 
     n_out = 50
-    samples = np.linspace(0,n,n_out).astype('int')
+    samples = np.linspace(0,n,n_out-1).astype('int')
     all_f = np.zeros((n_out,) + conf.imsz + (conf.imgDim,))
     labeled_locs = np.zeros([n_out, conf.n_classes, 2])
     count = 0
@@ -1072,7 +1072,7 @@ def train(lblfile, nviews, name, args):
                 if args.use_defaults:
                     leap.training.set_leap_defaults(conf)
                 train_leap(conf, args)
-            elif type == 'deepcut':
+            elif type == 'deeplabcut':
                 if args.use_defaults:
                     deepcut.train.set_deepcut_defaults(conf)
                 deepcut_train(conf)
@@ -1155,7 +1155,7 @@ def parse_args(argv):
     parser.add_argument('-cache', dest='cache', help='Override cachedir in lbl file', default=None)
     parser.add_argument('-out_dir', dest='out_dir', help='Directory to output log files', default=None)
     parser.add_argument('-type', dest='type', help='Network type, default is unet', default='unet',
-                        choices=['unet', 'openpose','deepcut','leap'])
+                        choices=['unet', 'openpose','deeplabcut','leap'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
