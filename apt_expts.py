@@ -38,7 +38,7 @@ def check_db(curm, conf):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    if F['ims'].max < 2:
+    if F['ims'].max() < 2:
         F['ims'] = F['ims']*255
 
     for ndx in range(F['ims'].shape[0]):
