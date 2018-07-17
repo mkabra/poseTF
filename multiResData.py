@@ -340,7 +340,7 @@ def create_tf_record_from_lbl(conf, split=True, split_file=None):
 
     if conf.splitType is 'predefined':
         assert split_file is not None, 'File for defining splits is not given'
-        predefined = json.load(split_file)
+        predefined = PoseTools.json_load(split_file)
     else:
         predefined = None
 
@@ -1100,6 +1100,6 @@ class tf_reader(object):
         locs = np.stack(all_locs)
         info = np.stack(all_info)
 
-        return {'orig_images':ims, 'orig_locs':locs, 'info':info, 'extra_info':np.zeros([self.batch_size,1])}
-
+        # return {'orig_images':ims, 'orig_locs':locs, 'info':info, 'extra_info':np.zeros([self.batch_size,1])}
+        return ims, locs, info
 

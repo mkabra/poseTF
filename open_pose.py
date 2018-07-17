@@ -641,7 +641,7 @@ def get_pred_fn(conf):
             distort=False, scale=conf.op_rescale)
         pred = model.predict(xs)[-1]
         base_locs = PoseTools.get_pred_locs(pred)
-        base_locs = base_locs * conf.op_rescale
+        base_locs = base_locs * conf.op_rescale * conf.op_label_scale
         return base_locs, pred
 
     close_fn = lambda : None
