@@ -104,7 +104,9 @@ def set_deepcut_defaults(cfg):
 def get_read_fn(cfg, data_path):
     cfg = edict(cfg.__dict__)
     cfg = config.convert_to_deepcut(cfg)
+    cfg.batch_size = 1
     cfg.shuffle = False
+
     dataset = PoseDataset(cfg, data_path)
     n = dataset.num_images
     def read_fn():
