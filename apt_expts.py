@@ -9,6 +9,7 @@ import h5py
 import subprocess
 import yaml
 import pickle
+import time
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -30,6 +31,7 @@ def create_deepcut_cfg(conf):
 
 
 def check_db(curm, conf):
+    time.sleep(1)
     check_file = os.path.join(conf.cachedir, 'test_train_db.p')
     apt.check_train_db(curm, conf, check_file)
     with open(check_file, 'r') as f:
