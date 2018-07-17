@@ -14,20 +14,21 @@ log = logging.getLogger()  # root logger
 log.setLevel(logging.ERROR)
 
 import deepcut.train
-conf = apt.create_conf(lbl_file,0,'test_deepcut')
+conf = apt.create_conf(lbl_file,0,'test_openpose_delete')
 conf.splitType = 'predefined'
-# apt.create_deepcut_db(conf, True, split_file=split_file)
+apt.create_tfrecord(conf, True, split_file=split_file)
 from poseConfig import config as args
 args.skip_db = True
-apt.train_deepcut(conf,args)
+apt.train_openpose(conf,args)
 
 ##
+import deepcut.train
 import  tensorflow as tf
 tf.reset_default_graph
 conf.batch_size = 1
 pred_fn, model_file = deepcut.train.get_pred_fn(conf)
 rfn, n= deepcut.train.get_read_fn(conf,'/home/mayank/work/poseTF/cache/apt_interface/multitarget_bubble_view0/test_deepcut/val_data.p')
-A = apt.classify_db(conf, rfn, pred_fn, 1000)
+A = apt.classify_db(conf, rfn, pred_fn, n)
 
 ##
 import socket

@@ -487,7 +487,7 @@ def create_deepcut_db(conf, split=False, split_file=None):
         pickle.dump(train_data,f,protocol=2)
     if split:
         with open(os.path.join(conf.cachedir,'val_data.p'),'w') as f:
-            pickle.dump(train_data,f,protocol=2)
+            pickle.dump(val_data,f,protocol=2)
 
     # save the split data
     try:
@@ -553,9 +553,8 @@ def create_cv_split_files(conf, n_splits=3):
                     cur_fold = np.random.choice(valid_folds)
                     splits[cur_fold].extend(mov_info[ndx][mndx:mndx + 1])
                     per_fold[cur_fold] += 1
-
-            else:
-                raise ValueError('splitType has to be either movie trx or frames')
+        else:
+            raise ValueError('splitType has to be either movie trx or frames')
 
         imbalance = (per_fold.max() - per_fold.min()) > float(lbls_per_fold) / 3
         if not imbalance:
@@ -567,16 +566,19 @@ def create_cv_split_files(conf, n_splits=3):
         return None
 
     all_train = []
+    split_files = []
     for ndx in range(n_splits):
         cur_train = []
         for idx, cur_split in enumerate(splits):
             if idx is not ndx:
                 cur_train.extend(cur_split)
         all_train.append(cur_train)
-        with open(os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)), 'w'):
+        cur_split_file = os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx))
+        split_files.append(cur_split_file)
+        with open(cur_split_file, 'w'):
             json.dump([cur_train, splits[ndx]])
 
-    return all_train, splits
+    return all_train, splits, split_files
 
 
 def create_batch_ims(to_do_list, conf, cap, flipud, trx, crop_loc):
@@ -748,7 +750,7 @@ def classify_db_all(model_type, conf, db_file):
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
-        pred_fn, model_file = open_pose.get_pred_fn(conf)
+        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
     elif model_type == 'unet':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
@@ -1020,11 +1022,17 @@ def train(lblfile, nviews, name, args):
             if type == 'unet':
                 train_unet(conf, args)
             elif type == 'openpose':
+                if args.use_defaults:
+                    open_pose.set_openpose_defaults(conf)
                 train_openpose(conf,args)
             elif type == 'leap':
+                if args.use_defaults:
+                    leap.training.set_leap_defaults(conf)
                 train_leap(conf, args)
             elif type == 'deepcut':
-                pass
+                if args.use_defaults:
+                    deepcut.train.set_deepcut_defaults(conf)
+                deepcut_train(conf)
         except tf.errors.InternalError as e:
             logging.exception(
                 'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
@@ -1109,6 +1117,7 @@ def parse_args(argv):
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
+    parser_train.add_argument('-use_defaults',dest='use_defaults',action='store_true', help='Use default settings of openpose, deeplabcut or leap')
     # parser_train.add_argument('-cache',dest='cache_dir',
     #                           help='cache dir for training')
 
