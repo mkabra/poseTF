@@ -783,7 +783,7 @@ def classify_gt_data(conf, model_type, out_file, model_file):
 
     cur_list = []
     labeled_locs = []
-    for ndx, dir_name in enumerate(local_dirs[:10]):
+    for ndx, dir_name in enumerate(local_dirs):
         cur_pts = trx_pts(lbl, ndx, on_gt=True)
 
         if not conf.has_trx_file:
@@ -797,7 +797,7 @@ def classify_gt_data(conf, model_type, out_file, model_file):
             n_trx = 1
 
         for trx_ndx in range(n_trx):
-            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
+            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx,on_gt=True)
             for f in frames:
                 cur_list.append([ndx+1, f+1, trx_ndx+1])
                 labeled_locs.append(cur_pts[trx_ndx, f, :, sel_pts])

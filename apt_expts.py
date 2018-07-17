@@ -16,7 +16,8 @@ unet_dir = '/groups/branson/home/kabram/PycharmProjects/poseTF'
 deepcut_default_cfg = '/groups/branson/bransonlab/mayank/PoseTF/cache/apt_interface/multitarget_bubble_view0/test_deepcut/pose_cfg.yaml'
 
 def create_deepcut_cfg(conf):
-    default_cfg = yaml.load(deepcut_default_cfg)
+    with open(deepcut_default_cfg,'r') as f:
+        default_cfg = yaml.load(f)
     default_cfg['dataset'] = os.path.join(conf.cachedir, 'train_data.p')
     default_cfg['all_joints'] = [[i] for i in range(conf.n_classes)]
     default_cfg['all_joints_names'] = ['part_{}'.format(i) for i in range(conf.n_classes)]
@@ -26,14 +27,17 @@ def create_deepcut_cfg(conf):
 def create_db(args):
     H = h5py.File(args.lbl_file,'r')
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
+    all_nets = args.nets
 
     for view in range(nviews):
         conf = apt.create_conf(args.lbl_file, view, args.name)
-        for curm in methods:
+        for curm in all_nets:
 
             if args.split_type is None:
 
                 conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                if not os.path.exists(conf.cachedir):
+                    os.makedirs(conf.cachedir)
                 if curm == 'unet' or curm == 'openpose':
                     apt.create_tfrecord(conf, False)
                 elif curm == 'leap':
@@ -41,6 +45,8 @@ def create_db(args):
                 elif curm == 'deepcut':
                     apt.create_deepcut_db(conf, False)
                     create_deepcut_cfg(conf)
+                else:
+                    raise ValueError('Undefined net type: {}'.format(curm))
 
             else:
 
@@ -59,6 +65,8 @@ def create_db(args):
                     elif curm == 'deepcut':
                         apt.create_deepcut_db(conf, True, split_file)
                         create_deepcut_cfg(conf)
+                    else:
+                        raise ValueError('Undefined net type: {}'.format(curm))
 
         base_dir = os.path.join(out_dir, args.name, 'common')
         their_dir = os.path.join(out_dir, args.name, 'theirs')
@@ -75,10 +83,11 @@ def create_db(args):
 def train_theirs(args):
     H = h5py.File(args.lbl_file,'r')
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
+    all_nets = args.nets
 
     for view in range(nviews):
         conf = apt.create_conf(args.lbl_file, view, args.name)
-        for curm in methods:
+        for curm in all_nets:
 
             if args.split_type is None:
 
@@ -106,6 +115,8 @@ def train_theirs(args):
                     f.write('cd {}\n'.format(cachedir))
                     cmd = os.path.join(deepcut_dir,'pose-tensorflow','train.py')
                     f.write('python {}'.format(cmd))
+                else:
+                    raise ValueError('Undefined net type: {}'.format(curm))
 
                 f.close()
                 os.chmod(singularity_script, 0755)
@@ -130,19 +141,23 @@ def train_theirs(args):
                         apt.create_leap_db(conf, True, split_file)
                     elif curm == 'deepcut':
                         apt.create_deepcut_db(conf, True, split_file)
+                    else:
+                        raise ValueError('Undefined net type: {}'.format(curm))
 
 
 def train_ours(args):
     H = h5py.File(args.lbl_file,'r')
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
+    dir_name = 'ours_default'
 
-    if args.whose == 'ours':
-        dir_name = 'ours'
+    if len(args.nets) == 0:
+        all_nets = methods
     else:
-        dir_name = 'ours_default'
+        all_nets = args.nets
+
     for view in range(nviews):
         conf = apt.create_conf(args.lbl_file, view, args.name)
-        for curm in methods:
+        for curm in all_nets:
 
             if args.split_type is None:
 
@@ -188,8 +203,6 @@ def train_ours(args):
                     print('Submitted job: {}'.format(cmd))
 
 
-
-
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('-type', dest='type', help='Create DB or train',
@@ -202,8 +215,11 @@ def main(argv):
                         help='Type of split for CV. If not defined not CV is done', default=None)
     parser.add_argument('-whose', dest='whose',
                         help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
-
+    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deepcut and leap. If not specified run on all nets',
+            default=[], nargs='*')
     args = parser.parse_args(argv)
+    if len(args.nets) == 0:
+        args.nets = methods
     if args.type == 'create_db':
         create_db(args)
     elif args.type == 'train':
