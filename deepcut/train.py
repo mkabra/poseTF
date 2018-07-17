@@ -217,7 +217,7 @@ def train(cfg):
     sess.close()
 
 
-def get_pred_fn(cfg, model_file):
+def get_pred_fn(cfg, model_file=None):
 
     cfg = edict(cfg.__dict__)
     cfg = config.convert_to_deepcut(cfg)
@@ -243,7 +243,7 @@ def get_pred_fn(cfg, model_file):
         pose = pose[:,:,:2]*cfg.dlc_rescale
         return pose, scmap
 
-    return pred_fn, latest_ckpt.model_checkpoint_path
+    return pred_fn, model_file
 
 
 if __name__ == '__main__':

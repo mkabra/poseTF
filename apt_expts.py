@@ -1,3 +1,6 @@
+import  matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import argparse
 import sys
 import os
@@ -5,6 +8,7 @@ import APT_interface as apt
 import h5py
 import subprocess
 import yaml
+import pickle
 
 methods = ['unet','leap','deepcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -23,6 +27,27 @@ def create_deepcut_cfg(conf):
     default_cfg['all_joints_names'] = ['part_{}'.format(i) for i in range(conf.n_classes)]
     with open(os.path.join(conf.cachedir, 'pose_cfg.yaml'), 'w') as f:
         yaml.dump(default_cfg, f)
+
+
+def check_db(curm, conf):
+    check_file = os.path.join(conf.cachedir, 'test_train_db.p')
+    apt.check_train_db(curm, conf, check_file)
+    with open(check_file, 'r') as f:
+        F = pickle.load(f)
+    out_dir = os.path.join(conf.cachedir, 'train_check')
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    for ndx in range(F['ims'].shape[0]):
+        plt.close('all')
+        f = plt.figure()
+        if F['ims'].shape[-1] == 1:
+            plt.imshow(F['ims'][ndx,:,:,0].astype('uint8'),'gray')
+        else:
+            plt.imshow(F['ims'][ndx,:,:,:].astype('uint8'))
+        plt.scatter(F['locs'][ndx,:,0],F['locs'][ndx,:,1])
+        plt.savefig(os.path.join(out_dir,'train_{}.jpg'.format(ndx)))
+
 
 def create_db(args):
     H = h5py.File(args.lbl_file,'r')
@@ -48,6 +73,7 @@ def create_db(args):
                 else:
                     raise ValueError('Undefined net type: {}'.format(curm))
 
+                check_db(curm, conf)
             else:
 
                 conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
@@ -67,6 +93,7 @@ def create_db(args):
                         create_deepcut_cfg(conf)
                     else:
                         raise ValueError('Undefined net type: {}'.format(curm))
+                    check_db(curm, conf)
 
         base_dir = os.path.join(out_dir, args.name, 'common')
         their_dir = os.path.join(out_dir, args.name, 'theirs')

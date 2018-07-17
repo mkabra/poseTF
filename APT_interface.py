@@ -752,6 +752,7 @@ def classify_db_all(model_type, conf, db_file):
         read_fn = tf_iterator.next
         pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+        close_fn()
     elif model_type == 'unet':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
@@ -761,17 +762,56 @@ def classify_db_all(model_type, conf, db_file):
         close_fn()
     elif model_type == 'leap':
         leap_gen, n = leap.training.get_read_fn(conf, db_file)
-        pred_fn = leap.training.get_pred_fn(conf)
+        pred_fn, latest_model_file = leap.training.get_pred_fn(conf)
         pred_locs, label_locs, info = classify_db(conf, leap_gen, pred_fn, n)
     elif model_type == 'deeplabcut':
         read_fn, n = deepcut.train.get_read_fn(conf, db_file)
-        pred_fn = deepcut.train.get_pred_fn(conf)
+        pred_fn, latest_model_file = deepcut.train.get_pred_fn(conf)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, n)
     else:
         raise ValueError('Undefined model type')
 
     return pred_locs, label_locs, info
 
+
+def check_train_db(model_type, conf, out_file):
+    if model_type == 'openpose':
+        db_file = os.path.join(conf.cachedir, conf.trainfilename) + '.tfrecords'
+        tf_iterator = multiResData.tf_reader(conf, db_file, False)
+        tf_iterator.batch_size = 1
+        read_fn = tf_iterator.next
+        n = tf_iterator.N
+    elif model_type == 'unet':
+        db_file = os.path.join(conf.cachedir, conf.trainfilename) + '.tfrecords'
+        tf_iterator = multiResData.tf_reader(conf, db_file, False)
+        tf_iterator.batch_size = 1
+        read_fn = tf_iterator.next
+        n = tf_iterator.N
+    elif model_type == 'leap':
+        db_file = [os.path.join(conf.cachedir, 'leap_train.h5')]
+        read_fn, n = leap.training.get_read_fn(conf, db_file)
+    elif model_type == 'deeplabcut':
+        db_file = os.path.join(conf.cachedir, 'train_data.p')
+        read_fn, n = deepcut.train.get_read_fn(conf, db_file)
+    else:
+        raise ValueError('Undefined model type')
+
+    n_out = 50
+    samples = np.linspace(0,n,n_out).astype('int')
+    all_f = np.zeros((n_out,) + conf.imsz + (conf.imgDim,))
+    labeled_locs = np.zeros([n_out, conf.n_classes, 2])
+    count = 0
+    info = []
+    for cur_b in range(n):
+        next_db = read_fn()
+        if cur_b in samples:
+            all_f[count,...] = next_db[0]
+            labeled_locs[count, ...] = next_db[1]
+            info.append(next_db[2])
+            count += 1
+
+    with open(out_file,'w') as f:
+        pickle.dump({'ims':all_f, 'locs': labeled_locs, 'info':np.array(info)},f,protocol=2)
 
 
 def classify_gt_data(conf, model_type, out_file, model_file):
@@ -922,7 +962,7 @@ def classify_movie(conf, pred_fn,
     return pred_locs
 
 
-def get_unet_pred_fn(conf, model_file):
+def get_unet_pred_fn(conf, model_file=None):
 
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
@@ -987,7 +1027,7 @@ def train_unet(conf, args):
 def train_leap(conf, args):
     if not args.skip_db:
         create_leap_db(conf, False)
-    leap_train(conf, run_name = args.name)
+    leap_train(conf)
 
 
 def train_openpose(conf,args):

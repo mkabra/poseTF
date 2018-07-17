@@ -4,11 +4,10 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Adding the ability to run any model file on gt">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseCommon.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseUNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/deepcut/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepcut/train.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/open_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/open_pose.py" afterDir="false" />
@@ -45,7 +44,7 @@
           <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state>
+                <state relative-caret-position="15">
                   <caret line="13" column="20" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
                 </state>
               </provider>
@@ -66,8 +65,8 @@
           <file leaf-file-name="open_pose.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/open_pose.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="567">
-                  <caret line="633" column="26" lean-forward="true" selection-start-line="633" selection-start-column="26" selection-end-line="633" selection-end-column="26" />
+                <state relative-caret-position="477">
+                  <caret line="631" column="4" selection-start-line="631" selection-start-column="4" selection-end-line="631" selection-end-column="4" />
                   <folding>
                     <element signature="e#0#30#0" expanded="true" />
                     <element signature="e#899#3612#0" />
@@ -80,8 +79,8 @@
           <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="90">
-                  <caret line="16" column="33" selection-start-line="16" selection-start-column="33" selection-end-line="16" selection-end-column="33" />
+                <state relative-caret-position="75">
+                  <caret line="15" column="20" lean-forward="true" selection-start-line="15" selection-start-column="20" selection-end-line="15" selection-end-column="20" />
                   <folding>
                     <element signature="e#0#13#0" expanded="true" />
                   </folding>
@@ -92,11 +91,26 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="258">
-                  <caret line="667" column="4" selection-start-line="667" selection-start-column="4" selection-end-line="667" selection-end-column="4" />
+                <state relative-caret-position="521">
+                  <caret line="797" lean-forward="true" selection-start-line="797" selection-end-line="797" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#38311#38416#0" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="training.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/leap/training.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="995">
+                  <caret line="505" column="4" selection-start-line="505" selection-start-column="4" selection-end-line="505" selection-end-column="4" />
+                  <folding>
+                    <element signature="e#0#18#0" expanded="true" />
+                    <element signature="e#630#958#0" />
+                    <element signature="e#1032#1897#0" />
+                    <element signature="e#3583#11340#0" />
                   </folding>
                 </state>
               </provider>
@@ -109,7 +123,7 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state>
+                <state relative-caret-position="780">
                   <caret line="1179" column="27" selection-start-line="1179" selection-start-column="27" selection-end-line="1179" selection-end-column="27" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -155,8 +169,8 @@
           <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="78">
-                  <caret line="763" column="27" lean-forward="true" selection-start-line="763" selection-start-column="27" selection-end-line="763" selection-end-column="27" />
+                <state relative-caret-position="123">
+                  <caret line="766" column="18" lean-forward="true" selection-start-line="766" selection-start-column="18" selection-end-line="766" selection-end-column="18" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -164,26 +178,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="runSingularity.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/runSingularity.py">
+          <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="585">
-                  <caret line="34" selection-start-line="34" selection-end-line="34" />
-                  <folding>
-                    <element signature="e#0#10#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="setup_apt_expts.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/setup_apt_expts.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="330">
-                  <caret line="21" column="38" selection-start-line="21" selection-start-column="38" selection-end-line="21" selection-end-column="38" />
-                  <folding>
-                    <element signature="e#0#15#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="600">
+                  <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
                 </state>
               </provider>
             </entry>
@@ -272,7 +271,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/script_edit_graph.py" />
         <option value="$PROJECT_DIR$/ScriptGTSplits_20180425.py" />
         <option value="$PROJECT_DIR$/DebugUNetAtt.py" />
         <option value="$PROJECT_DIR$/PoseUNetAttention.py" />
@@ -317,12 +315,13 @@
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/debug_apt_interface.py" />
         <option value="$PROJECT_DIR$/setup_apt_expts.py" />
+        <option value="$PROJECT_DIR$/PoseCommon.py" />
+        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/deepcut/train.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
-        <option value="$PROJECT_DIR$/PoseCommon.py" />
-        <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
+        <option value="$PROJECT_DIR$/apt_expts.py" />
       </list>
     </option>
   </component>
@@ -365,6 +364,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -376,7 +376,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -674,13 +673,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
-    </task>
-    <task id="LOCAL-00125" summary="Working version APT_interface that is more object oriented.">
-      <created>1526501289653</created>
-      <option name="number" value="00125" />
-      <option name="presentableId" value="LOCAL-00125" />
-      <option name="project" value="LOCAL" />
-      <updated>1526501289654</updated>
     </task>
     <task id="LOCAL-00126" summary="Working version APT_interface that is more object oriented.">
       <created>1526582880809</created>
@@ -1018,7 +1010,14 @@
       <option name="project" value="LOCAL" />
       <updated>1531802472641</updated>
     </task>
-    <option name="localTasksCounter" value="174" />
+    <task id="LOCAL-00174" summary="Adding the ability to run any model file on gt">
+      <created>1531806883589</created>
+      <option name="number" value="00174" />
+      <option name="presentableId" value="LOCAL-00174" />
+      <option name="project" value="LOCAL" />
+      <updated>1531806883589</updated>
+    </task>
+    <option name="localTasksCounter" value="175" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1063,7 +1062,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
+    <frame x="-1872" y="-11" width="1873" height="1092" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
@@ -1139,7 +1139,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="removed checking for uint8 in preprocess im. Need to put in a different place" />
     <MESSAGE value="Making number of training iters independent of batch size. Apparently the number of iterations shouldn't change if the batch size is changed." />
     <MESSAGE value="Adding net as a option for running stephen's tracking" />
     <MESSAGE value="APT_interface now logs error to file!" />
@@ -1164,7 +1163,8 @@
     <MESSAGE value="updates for cross-validation" />
     <MESSAGE value="bug fixes for gt" />
     <MESSAGE value="Script to run experiments" />
-    <option name="LAST_COMMIT_MESSAGE" value="Script to run experiments" />
+    <MESSAGE value="Adding the ability to run any model file on gt" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding the ability to run any model file on gt" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1226,13 +1226,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/DebugUNetAtt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="8" column="20" selection-start-line="8" selection-start-column="20" selection-end-line="8" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="578">
@@ -1438,27 +1431,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="1179" column="27" selection-start-line="1179" selection-start-column="27" selection-end-line="1179" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#71#86#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/myutils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="795">
-          <caret line="76" column="35" selection-start-line="76" selection-start-column="35" selection-end-line="76" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/deepcut/predict.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
@@ -1483,62 +1455,43 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+    <entry file="file://$PROJECT_DIR$/setup_apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="13" column="20" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/deepcut/train.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="229" column="33" selection-start-line="229" selection-start-column="33" selection-end-line="229" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="16" column="33" selection-start-line="16" selection-start-column="33" selection-end-line="16" selection-end-column="33" />
+        <state relative-caret-position="330">
+          <caret line="21" column="38" selection-start-line="21" selection-start-column="38" selection-end-line="21" selection-end-column="38" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/training.py">
+    <entry file="file://$PROJECT_DIR$/runSingularity.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="552">
-          <caret line="510" column="38" selection-start-line="510" selection-start-column="38" selection-end-line="510" selection-end-column="38" />
+        <state relative-caret-position="165">
+          <caret line="9" column="117" lean-forward="true" selection-start-line="9" selection-start-column="117" selection-end-line="9" selection-end-column="117" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
-            <element signature="e#630#958#0" />
-            <element signature="e#1032#1897#0" />
-            <element signature="e#3583#11340#0" />
+            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/open_pose.py">
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="567">
-          <caret line="633" column="26" lean-forward="true" selection-start-line="633" selection-start-column="26" selection-end-line="633" selection-end-column="26" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
-            <element signature="e#899#3612#0" />
-            <element signature="e#899#1428#1" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="667" column="4" selection-start-line="667" selection-start-column="4" selection-end-line="667" selection-end-column="4" />
+        <state relative-caret-position="780">
+          <caret line="1179" column="27" selection-start-line="1179" selection-start-column="27" selection-end-line="1179" selection-end-column="27" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#38311#38416#0" />
+            <element signature="e#71#86#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/myutils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="795">
+          <caret line="76" column="35" selection-start-line="76" selection-start-column="35" selection-end-line="76" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1562,31 +1515,78 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="78">
-          <caret line="763" column="27" lean-forward="true" selection-start-line="763" selection-start-column="27" selection-end-line="763" selection-end-column="27" />
+        <state relative-caret-position="123">
+          <caret line="766" column="18" lean-forward="true" selection-start-line="766" selection-start-column="18" selection-end-line="766" selection-end-column="18" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/runSingularity.py">
+    <entry file="file://$PROJECT_DIR$/deepcut/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="34" selection-start-line="34" selection-end-line="34" />
+        <state relative-caret-position="379">
+          <caret line="219" column="4" selection-start-line="219" selection-start-column="4" selection-end-line="219" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="13" column="20" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/open_pose.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="477">
+          <caret line="631" column="4" selection-start-line="631" selection-start-column="4" selection-end-line="631" selection-end-column="4" />
           <folding>
-            <element signature="e#0#10#0" expanded="true" />
+            <element signature="e#0#30#0" expanded="true" />
+            <element signature="e#899#3612#0" />
+            <element signature="e#899#1428#1" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup_apt_expts.py">
+    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="21" column="38" selection-start-line="21" selection-start-column="38" selection-end-line="21" selection-end-column="38" />
+        <state relative-caret-position="75">
+          <caret line="15" column="20" lean-forward="true" selection-start-line="15" selection-start-column="20" selection-end-line="15" selection-end-column="20" />
           <folding>
-            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/leap/training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="995">
+          <caret line="505" column="4" selection-start-line="505" selection-start-column="4" selection-end-line="505" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#630#958#0" />
+            <element signature="e#1032#1897#0" />
+            <element signature="e#3583#11340#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="521">
+          <caret line="797" lean-forward="true" selection-start-line="797" selection-end-line="797" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#38311#38416#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
         </state>
       </provider>
     </entry>
