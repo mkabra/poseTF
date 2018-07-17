@@ -759,24 +759,24 @@ class PoseCommon(object):
         return sess
 
 
-    def init_net_meta(self, train_type):
+    def init_net_meta(self, train_type, model_file):
         print('--- Loading the model using the saved graph ---')
         sess = tf.Session()
         self.train_type = train_type
         try:
           # self.open_dbs()
 #            self.create_ph_fd()
-            self.restore_meta(self.name, sess)
+            latest_model_file = self.restore_meta(self.name, sess, model_file)
             self.open_db_meta()
             self.create_cursors(sess,distort=False, shuffle=False)
         except tf.errors.NotFoundError:
             pass
 
-        return sess
+        return sess, latest_model_file
 
 
 
-    def restore_meta(self, name, sess):
+    def restore_meta(self, name, sess, model_file=None):
         if self.dep_nets:
             if type(self.dep_nets) is list:
                 for dd in self.dep_nets:
@@ -784,10 +784,16 @@ class PoseCommon(object):
             else:
                 self.dep_nets.restore_meta(name + '_' + self.dep_nets.name, sess)
 
-        ckpt_file = os.path.join( self.conf.cachedir, self.conf.expname + '_' + name + '_ckpt')
-        latest_ckpt = tf.train.get_checkpoint_state( self.conf.cachedir, ckpt_file)
-        saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
-        saver.restore(sess, latest_ckpt.model_checkpoint_path)
+        if model_file is None:
+            ckpt_file = os.path.join( self.conf.cachedir, self.conf.expname + '_' + name + '_ckpt')
+            latest_ckpt = tf.train.get_checkpoint_state( self.conf.cachedir, ckpt_file)
+            saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
+            latest_model_file =latest_ckpt.model_checkpoint_path
+        else:
+            latest_model_file = model_file
+
+        saver.restore(sess, latest_model_file)
+        return latest_model_file
 
 
     def classify_val(self,train_type=0, at_step=-1):

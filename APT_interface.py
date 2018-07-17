@@ -665,25 +665,25 @@ def get_crop_loc(lbl, ndx, view, on_gt):
     return crop_loc
 
 
-def get_pred_fn(model_type, conf):
+def get_pred_fn(model_type, conf, model_file=None):
     if model_type == 'openpose':
-        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf)
+        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf, model_file)
     elif model_type == 'unet':
-        pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
+        pred_fn, close_fn, model_file = get_unet_pred_fn(conf, model_file)
     elif model_type == 'leap':
-        pred_fn, close_fn, model_file = leap.training.get_pred_fn(conf)
+        pred_fn, close_fn, model_file = leap.training.get_pred_fn(conf, model_file)
     elif model_type == 'deepcut':
-        pred_fn, close_fn, model_file = deepcut.train.get_pred_fn(conf)
+        pred_fn, close_fn, model_file = deepcut.train.get_pred_fn(conf, model_file)
     else:
         raise ValueError('Undefined type of model')
 
     return pred_fn, close_fn, model_file
 
-def classify_list_all(model_type, conf, in_list, on_gt):
+def classify_list_all(model_type, conf, in_list, on_gt, model_file):
     # in_list should be of list of type [mov_file, frame_num, trx_ndx]
     # all of them should be 1-indexed.
 
-    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
+    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf, model_file)
 
     if on_gt:
         local_dirs, _ = multiResData.find_gt_dirs(conf)
@@ -774,7 +774,7 @@ def classify_db_all(model_type, conf, db_file):
 
 
 
-def classify_gt_data(conf, model_type, out_file):
+def classify_gt_data(conf, model_type, out_file, model_file):
     local_dirs, _ = multiResData.find_gt_dirs(conf)
     lbl = h5py.File(conf.labelfile)
     view = conf.view
@@ -802,7 +802,7 @@ def classify_gt_data(conf, model_type, out_file):
                 cur_list.append([ndx+1, f+1, trx_ndx+1])
                 labeled_locs.append(cur_pts[trx_ndx, f, :, sel_pts])
 
-    pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True)
+    pred_locs = classify_list_all(model_type, conf, cur_list, on_gt=True, model_file=model_file)
     mat_pred_locs = pred_locs + 1
     mat_labeled_locs = np.array(labeled_locs) +1
     mat_list = cur_list
@@ -922,18 +922,16 @@ def classify_movie(conf, pred_fn,
     return pred_locs
 
 
-def get_unet_pred_fn(conf):
+def get_unet_pred_fn(conf, model_file):
 
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
     try:
-        sess = self.init_net_meta(1)
+        sess, latest_model_file = self.init_net_meta(1, model_file)
     except tf.errors.InternalError:
         logging.exception(
             'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
         sys.exit(1)
-
-    model_file = self.get_latest_model_file()
 
     def pred_fn(all_f):
         # this is the function that is used for classification.
@@ -963,12 +961,13 @@ def get_unet_pred_fn(conf):
         sess.close()
         self.close_cursors()
 
-    return pred_fn, close_fn, model_file
+    return pred_fn, close_fn, latest_model_file
 
 
 def classify_movie_all(model_type, **kwargs):
     conf = kwargs['conf']
-    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf)
+    model_file = kwargs['model_file']
+    pred_fn, close_fn, model_file = get_pred_fn(model_type, conf, model_file)
     try:
         classify_movie(conf, pred_fn, model_file=model_file, **kwargs)
     except (IOError, ValueError) as e:
@@ -1107,16 +1106,16 @@ def parse_args(argv):
     parser.add_argument("lbl_file",
                         help="path to lbl file")
     parser.add_argument('-name', dest='name', help='Name for the run. Default - pose_unet', default='pose_unet')
-    parser.add_argument('-view', dest='view', help='Run only for this view. If not specified, run for all views',
-                        default=None, type=int)
+    parser.add_argument('-view', dest='view', help='Run only for this view. If not specified, run for all views', default=None, type=int)
+    parser.add_argument('-model_file', dest='model_file', help='Use this model file for prediction instead of the latest model file', default=None)
     parser.add_argument('-cache', dest='cache', help='Override cachedir in lbl file', default=None)
-    parser.add_argument('-skip_db', dest='skip_db', help='Skip creating the data base', action='store_true')
     parser.add_argument('-out_dir', dest='out_dir', help='Directory to output log files', default=None)
     parser.add_argument('-type', dest='type', help='Network type, default is unet', default='unet',
                         choices=['unet', 'openpose','deepcut','leap'])
     subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
+    parser_train.add_argument('-skip_db', dest='skip_db', help='Skip creating the data base', action='store_true')
     parser_train.add_argument('-use_defaults',dest='use_defaults',action='store_true', help='Use default settings of openpose, deeplabcut or leap')
     # parser_train.add_argument('-cache',dest='cache_dir',
     #                           help='cache dir for training')
@@ -1212,7 +1211,8 @@ def run(args):
                                trx_ids=args.trx_ids,
                                name=name,
                                save_hmaps=args.hmaps,
-                               crop_loc=crop_loc
+                               crop_loc=crop_loc,
+                               model_file=args.model_file
                                )
 
     elif args.sub_name == 'gt_classify':
@@ -1224,7 +1224,7 @@ def run(args):
         for view_ndx, view in enumerate(views):
             conf = create_conf(lbl_file, view, name)
             out_file = args.out_file + '_{}.mat'.format(view)
-            classify_gt_data(args.type, conf, out_file)
+            classify_gt_data(args.type, conf, out_file, model_file=args.model_file)
 
 def main(argv):
     args = parse_args(argv)

@@ -349,9 +349,9 @@ class PoseUNet(PoseCommon.PoseCommon):
                                        train_type, restore)
 
 
-    def init_net_meta(self, train_type=0):
+    def init_net_meta(self, train_type=0, model_file=None):
 
-        sess = PoseCommon.PoseCommon.init_net_meta(self, train_type)
+        sess, latest_model_file = PoseCommon.PoseCommon.init_net_meta(self, train_type, model_file)
         graph = tf.get_default_graph()
 
         # try:
@@ -372,7 +372,7 @@ class PoseUNet(PoseCommon.PoseCommon):
             pred = graph.get_tensor_by_name('pose_unet/add:0')
         self.pred = pred
 #        self.create_fd()
-        return sess
+        return sess, latest_model_file
 
 
     def train_unet(self, restore, train_type=0):

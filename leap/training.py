@@ -503,9 +503,12 @@ def train_apt(conf, upsampling_layers=False):
     obs.on_epoch_end(epochs)
 
 
-def get_pred_fn(conf):
+def get_pred_fn(conf, model_file):
 
-    latest_model_file = PoseTools.get_latest_model_file_keras(conf,name)
+    if model_file is None:
+        latest_model_file = PoseTools.get_latest_model_file_keras(conf,name)
+    else:
+        latest_model_file = model_file
     model = keras.models.load_model(latest_model_file)
 
     def pred_fn(all_f):

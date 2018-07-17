@@ -629,9 +629,12 @@ def training(conf):
     obs.on_epoch_end(max_iter)
 
 
-def get_pred_fn(conf):
+def get_pred_fn(conf, model_file):
     model = get_testing_model(br1=len(conf.op_affinity_graph) * 2, br2=conf.n_classes)
-    latest_model_file = PoseTools.get_latest_model_file_keras(conf, name)
+    if model_file is None:
+        latest_model_file = PoseTools.get_latest_model_file_keras(conf, name)
+    else:
+        latest_model_file = model_file
     print("Loading the weights from {}.. ".format(latest_model_file))
     model.load_weights(latest_model_file)
 

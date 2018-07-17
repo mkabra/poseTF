@@ -217,15 +217,17 @@ def train(cfg):
     sess.close()
 
 
-def get_pred_fn(cfg):
+def get_pred_fn(cfg, model_file):
 
     cfg = edict(cfg.__dict__)
     cfg = config.convert_to_deepcut(cfg)
 
-    ckpt_file = os.path.join(cfg.cachedir,cfg.expname + '_' + name + '_ckpt')
-    latest_ckpt = tf.train.get_checkpoint_state( cfg.cachedir, ckpt_file)
-
-    init_weights = latest_ckpt.model_checkpoint_path
+    if model_file is None:
+        ckpt_file = os.path.join(cfg.cachedir,cfg.expname + '_' + name + '_ckpt')
+        latest_ckpt = tf.train.get_checkpoint_state( cfg.cachedir, ckpt_file)
+        init_weights = latest_ckpt.model_checkpoint_path
+    else:
+        init_weights = model_file
 
     tf.reset_default_graph()
     sess, inputs, outputs = predict.setup_pose_prediction(cfg, init_weights)
