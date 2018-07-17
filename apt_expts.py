@@ -10,7 +10,7 @@ import subprocess
 import yaml
 import pickle
 
-methods = ['unet','leap','deepcut','openpose']
+methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
 nsplits = 3
 openpose_dir = '/groups/branson/bransonlab/mayank/apt_expts/open_pose'
@@ -37,6 +37,9 @@ def check_db(curm, conf):
     out_dir = os.path.join(conf.cachedir, 'train_check')
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
+
+    if F['ims'].max < 2:
+        F['ims'] = F['ims']*255
 
     for ndx in range(F['ims'].shape[0]):
         plt.close('all')
@@ -242,7 +245,7 @@ def main(argv):
                         help='Type of split for CV. If not defined not CV is done', default=None)
     parser.add_argument('-whose', dest='whose',
                         help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
-    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deepcut and leap. If not specified run on all nets',
+    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets',
             default=[], nargs='*')
     args = parser.parse_args(argv)
     if len(args.nets) == 0:
