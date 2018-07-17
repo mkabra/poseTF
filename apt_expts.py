@@ -72,7 +72,7 @@ def create_db(args):
                     apt.create_tfrecord(conf, False)
                 elif curm == 'leap':
                     apt.create_leap_db(conf, False)
-                elif curm == 'deepcut':
+                elif curm == 'deeplabcut':
                     apt.create_deepcut_db(conf, False)
                     create_deepcut_cfg(conf)
                 else:
@@ -93,7 +93,7 @@ def create_db(args):
                         apt.create_tfrecord(conf, True, split_file)
                     elif curm == 'leap':
                         apt.create_leap_db(conf, True, split_file)
-                    elif curm == 'deepcut':
+                    elif curm == 'deeplabcut':
                         apt.create_deepcut_db(conf, True, split_file)
                         create_deepcut_cfg(conf)
                     else:
@@ -143,7 +143,7 @@ def train_theirs(args):
                     f.write('cd {}\n'.format(leap_dir))
                     cmd = 'training_MK.py {}'.format(cachedir)
                     f.write('python {}'.format(cmd))
-                elif curm == 'deepcut':
+                elif curm == 'deeplabcut':
                     f.write('cd {}\n'.format(cachedir))
                     cmd = os.path.join(deepcut_dir,'pose-tensorflow','train.py')
                     f.write('python {}'.format(cmd))
@@ -171,7 +171,7 @@ def train_theirs(args):
                         apt.create_tfrecord(conf, True, split_file)
                     elif curm == 'leap':
                         apt.create_leap_db(conf, True, split_file)
-                    elif curm == 'deepcut':
+                    elif curm == 'deeplabcut':
                         apt.create_deepcut_db(conf, True, split_file)
                     else:
                         raise ValueError('Undefined net type: {}'.format(curm))

@@ -176,8 +176,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="405">
-                  <caret line="40" column="21" selection-start-line="40" selection-start-column="21" selection-end-line="40" selection-end-column="21" />
+                <state relative-caret-position="44">
+                  <caret line="160" lean-forward="true" selection-start-line="160" selection-end-line="160" />
                 </state>
               </provider>
             </entry>
@@ -254,6 +254,7 @@
       <replace>keepdims</replace>
       <replace>logging.exception</replace>
       <replace>deeplabcut</replace>
+      <replace>'deeplabcut'</replace>
     </replaceStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$</dir>
@@ -670,13 +671,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00130" summary="Adding option to runTrackingStephen to accept directory name as input">
-      <created>1527179972525</created>
-      <option name="number" value="00130" />
-      <option name="presentableId" value="LOCAL-00130" />
-      <option name="project" value="LOCAL" />
-      <updated>1527179972525</updated>
-    </task>
     <task id="LOCAL-00131" summary="Chaning imgdim back to 1 for Stephen so that he can run his tracking.">
       <created>1527184150987</created>
       <option name="number" value="00131" />
@@ -1013,7 +1007,14 @@
       <option name="project" value="LOCAL" />
       <updated>1531815292301</updated>
     </task>
-    <option name="localTasksCounter" value="179" />
+    <task id="LOCAL-00179" summary="Adding the ability to test the db created in apt_expts">
+      <created>1531815808057</created>
+      <option name="number" value="00179" />
+      <option name="presentableId" value="LOCAL-00179" />
+      <option name="project" value="LOCAL" />
+      <updated>1531815808057</updated>
+    </task>
+    <option name="localTasksCounter" value="180" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1580,8 +1581,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="40" column="21" selection-start-line="40" selection-start-column="21" selection-end-line="40" selection-end-column="21" />
+        <state relative-caret-position="44">
+          <caret line="160" lean-forward="true" selection-start-line="160" selection-end-line="160" />
         </state>
       </provider>
     </entry>
