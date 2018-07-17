@@ -801,7 +801,7 @@ def check_train_db(model_type, conf, out_file):
         raise ValueError('Undefined model type')
 
     n_out = 50
-    samples = np.linspace(0,n,n_out-1).astype('int')
+    samples = np.linspace(0,n-1,n_out).astype('int')
     all_f = np.zeros((n_out,) + conf.imsz + (conf.imgDim,))
     labeled_locs = np.zeros([n_out, conf.n_classes, 2])
     count = 0

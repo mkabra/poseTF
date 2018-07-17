@@ -124,8 +124,8 @@ def train_theirs(args):
             if args.split_type is None:
 
                 cachedir = os.path.join(out_dir,args.name,'theirs','{}_view_{}'.format(curm,view),'full')
-                singularity_script = os.path.join(conf.cachedir,'singularity.sh')
-                singularity_logfile = os.path.join(conf.cachedir,'singularity.log')
+                singularity_script = os.path.join(cachedir,'singularity.sh')
+                singularity_logfile = os.path.join(cachedir,'singularity.log')
                 f = open(singularity_script, 'w')
                 f.write('#!/bin/bash\n')
                 f.write('. /opt/venv/bin/activate\n')
@@ -159,22 +159,41 @@ def train_theirs(args):
 
             else:
 
-                conf.cachedir = os.path.join(out_dir,args.name,'theirs','{}_view_{}'.format(curm,view))
-                conf.splitType = args.split_type
-                train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
-
                 for cur_split in range(nsplits):
-                    conf.cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
-                    conf.splitType = 'predefined'
-                    split_file = split_files[cur_split]
-                    if curm == 'unet' or curm == 'openpose':
-                        apt.create_tfrecord(conf, True, split_file)
+                    cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
+                    singularity_script = os.path.join(cachedir, 'singularity.sh')
+                    singularity_logfile = os.path.join(cachedir, 'singularity.log')
+                    f = open(singularity_script, 'w')
+                    f.write('#!/bin/bash\n')
+                    f.write('. /opt/venv/bin/activate\n')
+
+                    args.skip_db = True
+                    if curm == 'unet':
+                        f.write('cd {}\n'.format(unet_dir))
+                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet -train '.format(args.lbl_file, view,
+                                                                                                 cachedir)
+                        f.write('python {}'.format(cmd))
+                    elif curm == 'openpose':
+                        f.write('cd {}\n'.format(openpose_dir))
+                        cmd = 'train_pose.py {} {}'.format(args.lbl_file, cachedir)
+                        f.write('python {}'.format(cmd))
                     elif curm == 'leap':
-                        apt.create_leap_db(conf, True, split_file)
+                        f.write('cd {}\n'.format(leap_dir))
+                        cmd = 'training_MK.py {}'.format(cachedir)
+                        f.write('python {}'.format(cmd))
                     elif curm == 'deeplabcut':
-                        apt.create_deepcut_db(conf, True, split_file)
+                        f.write('cd {}\n'.format(cachedir))
+                        cmd = os.path.join(deepcut_dir, 'pose-tensorflow', 'train.py')
+                        f.write('python {}'.format(cmd))
                     else:
                         raise ValueError('Undefined net type: {}'.format(curm))
+
+                    f.close()
+                    os.chmod(singularity_script, 0755)
+                    cmd = '''ssh 10.36.11.34 '. /misc/lsf/conf/profile.lsf; bsub -oo {}  -n4 -gpu "num=1" -q gpu_any "singularity exec --nv /misc/local/singularity/branson_v2.simg {}"' '''.format(
+                        singularity_logfile, singularity_script)  # -n4 because we use 4 preprocessing threads
+                    subprocess.call(cmd, shell=True)
+                    print('Submitted job: {}'.format(cmd))
 
 
 def train_ours(args):
@@ -194,8 +213,8 @@ def train_ours(args):
             if args.split_type is None:
 
                 cachedir = os.path.join(out_dir,args.name,dir_name,'{}_view_{}'.format(curm,view),'full')
-                singularity_script = os.path.join(conf.cachedir,'singularity.sh')
-                singularity_logfile = os.path.join(conf.cachedir,'singularity.log')
+                singularity_script = os.path.join(cachedir,'singularity.sh')
+                singularity_logfile = os.path.join(cachedir,'singularity.log')
                 f = open(singularity_script, 'w')
                 f.write('#!/bin/bash\n')
                 f.write('. /opt/venv/bin/activate\n')
@@ -206,7 +225,7 @@ def train_ours(args):
                     cmd += ' -use_defaults'
                 f.write('python {}'.format(cmd))
                 f.close()
-                os.chmod(singularity_script, 0755)
+                os.chmod(singularity_script, 0o755)
                 cmd = '''ssh 10.36.11.34 '. /misc/lsf/conf/profile.lsf; bsub -oo {}  -n4 -gpu "num=1" -q gpu_any "singularity exec --nv /misc/local/singularity/branson_v2.simg {}"' '''.format(
                     singularity_logfile, singularity_script)  # -n4 because we use 4 preprocessing threads
                 subprocess.call(cmd, shell=True)
@@ -215,9 +234,9 @@ def train_ours(args):
             else:
 
                 for cur_split in range(nsplits):
-                    conf.cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
-                    singularity_script = os.path.join(conf.cachedir,'singularity.sh')
-                    singularity_logfile = os.path.join(conf.cachedir,'singularity.log')
+                    cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
+                    singularity_script = os.path.join(cachedir,'singularity.sh')
+                    singularity_logfile = os.path.join(cachedir,'singularity.log')
                     f = open(singularity_script, 'w')
                     f.write('#!/bin/bash\n')
                     f.write('. /opt/venv/bin/activate\n')
@@ -228,7 +247,7 @@ def train_ours(args):
                         cmd += ' -use_defaults'
                     f.write('python {}'.format(cmd))
                     f.close()
-                    os.chmod(singularity_script, 0755)
+                    os.chmod(singularity_script, 0o755)
                     cmd = '''ssh 10.36.11.34 '. /misc/lsf/conf/profile.lsf; bsub -oo {}  -n4 -gpu "num=1" -q gpu_any "singularity exec --nv /misc/local/singularity/branson_v2.simg {}"' '''.format(
                         singularity_logfile, singularity_script)  # -n4 because we use 4 preprocessing threads
                     subprocess.call(cmd, shell=True)

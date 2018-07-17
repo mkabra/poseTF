@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deepcut/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepcut/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -84,11 +85,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="train.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="train.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/deepcut/train.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="424">
-                  <caret line="106" column="22" selection-start-line="106" selection-start-column="22" selection-end-line="106" selection-end-column="22" />
+                <state relative-caret-position="649">
+                  <caret line="121" lean-forward="true" selection-start-line="121" selection-end-line="121" />
                 </state>
               </provider>
             </entry>
@@ -114,11 +115,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="663">
-                  <caret line="798" column="40" selection-start-line="798" selection-start-column="40" selection-end-line="798" selection-end-column="40" />
+                <state relative-caret-position="468">
+                  <caret line="803" column="37" selection-start-line="803" selection-start-column="37" selection-end-line="803" selection-end-column="37" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#38311#38416#0" />
@@ -207,8 +208,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="191">
-                  <caret line="164" lean-forward="true" selection-start-line="164" selection-end-line="164" />
+                <state relative-caret-position="536">
+                  <caret line="244" column="97" lean-forward="true" selection-start-line="244" selection-start-column="97" selection-end-line="244" selection-end-column="97" />
                 </state>
               </provider>
             </entry>
@@ -347,9 +348,9 @@
         <option value="$PROJECT_DIR$/PoseUNet.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
+        <option value="$PROJECT_DIR$/deepcut/train.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
         <option value="$PROJECT_DIR$/apt_expts.py" />
-        <option value="$PROJECT_DIR$/deepcut/train.py" />
       </list>
     </option>
   </component>
@@ -702,13 +703,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00132" summary="Chaning imgdim back to 1 for Stephen so that he can run his tracking.">
-      <created>1527256620645</created>
-      <option name="number" value="00132" />
-      <option name="presentableId" value="LOCAL-00132" />
-      <option name="project" value="LOCAL" />
-      <updated>1527256620645</updated>
-    </task>
     <task id="LOCAL-00133" summary="Making stephen's output files group writable so that they can easily overwritten.">
       <created>1527268670346</created>
       <option name="number" value="00133" />
@@ -1045,7 +1039,14 @@
       <option name="project" value="LOCAL" />
       <updated>1531816615250</updated>
     </task>
-    <option name="localTasksCounter" value="181" />
+    <task id="LOCAL-00181" summary="Adding the ability to test the db created in apt_expts">
+      <created>1531817173797</created>
+      <option name="number" value="00181" />
+      <option name="presentableId" value="LOCAL-00181" />
+      <option name="project" value="LOCAL" />
+      <updated>1531817173797</updated>
+    </task>
+    <option name="localTasksCounter" value="182" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1579,24 +1580,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="164" lean-forward="true" selection-start-line="164" selection-end-line="164" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="798" column="40" selection-start-line="798" selection-start-column="40" selection-end-line="798" selection-end-column="40" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#38311#38416#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/deepcut/config.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="439">
@@ -1616,8 +1599,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/deepcut/train.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="424">
-          <caret line="106" column="22" selection-start-line="106" selection-start-column="22" selection-end-line="106" selection-end-column="22" />
+        <state relative-caret-position="649">
+          <caret line="121" lean-forward="true" selection-start-line="121" selection-end-line="121" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="468">
+          <caret line="803" column="37" selection-start-line="803" selection-start-column="37" selection-end-line="803" selection-end-column="37" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#38311#38416#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="536">
+          <caret line="244" column="97" lean-forward="true" selection-start-line="244" selection-start-column="97" selection-end-line="244" selection-end-column="97" />
         </state>
       </provider>
     </entry>
