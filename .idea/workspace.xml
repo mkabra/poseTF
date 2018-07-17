@@ -4,13 +4,9 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Adding the ability to run any model file on gt">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deepcut/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepcut/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/open_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/open_pose.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -91,8 +87,8 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="521">
-                  <caret line="797" lean-forward="true" selection-start-line="797" selection-end-line="797" />
+                <state relative-caret-position="446">
+                  <caret line="798" selection-start-line="798" selection-end-line="798" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#38311#38416#0" />
@@ -181,8 +177,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="600">
-                  <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
+                <state relative-caret-position="240">
+                  <caret line="41" column="24" lean-forward="true" selection-start-line="41" selection-start-column="24" selection-end-line="41" selection-end-column="24" />
                 </state>
               </provider>
             </entry>
@@ -320,8 +316,8 @@
         <option value="$PROJECT_DIR$/deepcut/train.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
-        <option value="$PROJECT_DIR$/APT_interface.py" />
         <option value="$PROJECT_DIR$/apt_expts.py" />
+        <option value="$PROJECT_DIR$/APT_interface.py" />
       </list>
     </option>
   </component>
@@ -674,13 +670,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00126" summary="Working version APT_interface that is more object oriented.">
-      <created>1526582880809</created>
-      <option name="number" value="00126" />
-      <option name="presentableId" value="LOCAL-00126" />
-      <option name="project" value="LOCAL" />
-      <updated>1526582880809</updated>
-    </task>
     <task id="LOCAL-00127" summary="Working version APT_interface that is more object oriented.">
       <created>1526582983877</created>
       <option name="number" value="00127" />
@@ -1017,7 +1006,14 @@
       <option name="project" value="LOCAL" />
       <updated>1531806883589</updated>
     </task>
-    <option name="localTasksCounter" value="175" />
+    <task id="LOCAL-00175" summary="Adding the ability to test the db created in apt_expts">
+      <created>1531811435423</created>
+      <option name="number" value="00175" />
+      <option name="presentableId" value="LOCAL-00175" />
+      <option name="project" value="LOCAL" />
+      <updated>1531811435423</updated>
+    </task>
+    <option name="localTasksCounter" value="176" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1062,7 +1058,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1872" y="-11" width="1873" height="1092" extended-state="6" />
+    <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
@@ -1139,7 +1135,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Making number of training iters independent of batch size. Apparently the number of iterations shouldn't change if the batch size is changed." />
     <MESSAGE value="Adding net as a option for running stephen's tracking" />
     <MESSAGE value="APT_interface now logs error to file!" />
     <MESSAGE value="Error catching in APT_interface and target specific trk files in classify_movie" />
@@ -1164,7 +1159,8 @@
     <MESSAGE value="bug fixes for gt" />
     <MESSAGE value="Script to run experiments" />
     <MESSAGE value="Adding the ability to run any model file on gt" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding the ability to run any model file on gt" />
+    <MESSAGE value="Adding the ability to test the db created in apt_expts" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding the ability to test the db created in apt_expts" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1572,21 +1568,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="41" column="24" lean-forward="true" selection-start-line="41" selection-start-column="24" selection-end-line="41" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="521">
-          <caret line="797" lean-forward="true" selection-start-line="797" selection-end-line="797" />
+        <state relative-caret-position="446">
+          <caret line="798" selection-start-line="798" selection-end-line="798" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#38311#38416#0" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="600">
-          <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
         </state>
       </provider>
     </entry>

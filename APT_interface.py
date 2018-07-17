@@ -777,21 +777,25 @@ def classify_db_all(model_type, conf, db_file):
 def check_train_db(model_type, conf, out_file):
     if model_type == 'openpose':
         db_file = os.path.join(conf.cachedir, conf.trainfilename) + '.tfrecords'
+        print('Checking db from {}'.format(db_file))
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
         n = tf_iterator.N
     elif model_type == 'unet':
         db_file = os.path.join(conf.cachedir, conf.trainfilename) + '.tfrecords'
+        print('Checking db from {}'.format(db_file))
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
         n = tf_iterator.N
     elif model_type == 'leap':
         db_file = [os.path.join(conf.cachedir, 'leap_train.h5')]
+        print('Checking db from {}'.format(db_file))
         read_fn, n = leap.training.get_read_fn(conf, db_file)
     elif model_type == 'deeplabcut':
         db_file = os.path.join(conf.cachedir, 'train_data.p')
+        print('Checking db from {}'.format(db_file))
         read_fn, n = deepcut.train.get_read_fn(conf, db_file)
     else:
         raise ValueError('Undefined model type')
