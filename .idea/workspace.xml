@@ -87,8 +87,8 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="446">
-                  <caret line="798" selection-start-line="798" selection-end-line="798" />
+                <state relative-caret-position="573">
+                  <caret line="792" column="18" lean-forward="true" selection-start-line="792" selection-start-column="18" selection-end-line="792" selection-end-column="18" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                     <element signature="e#38311#38416#0" />
@@ -177,8 +177,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="240">
-                  <caret line="41" column="24" lean-forward="true" selection-start-line="41" selection-start-column="24" selection-end-line="41" selection-end-column="24" />
+                <state relative-caret-position="435">
+                  <caret line="68" column="51" lean-forward="true" selection-start-line="68" selection-start-column="51" selection-end-line="68" selection-end-column="51" />
                 </state>
               </provider>
             </entry>
@@ -670,13 +670,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00127" summary="Working version APT_interface that is more object oriented.">
-      <created>1526582983877</created>
-      <option name="number" value="00127" />
-      <option name="presentableId" value="LOCAL-00127" />
-      <option name="project" value="LOCAL" />
-      <updated>1526582983877</updated>
-    </task>
     <task id="LOCAL-00128" summary="Changed how movies are classified in APT_interface. Added code to create CV json files.">
       <created>1527015025735</created>
       <option name="number" value="00128" />
@@ -1013,7 +1006,14 @@
       <option name="project" value="LOCAL" />
       <updated>1531811435423</updated>
     </task>
-    <option name="localTasksCounter" value="176" />
+    <task id="LOCAL-00176" summary="Adding the ability to test the db created in apt_expts">
+      <created>1531812272700</created>
+      <option name="number" value="00176" />
+      <option name="presentableId" value="LOCAL-00176" />
+      <option name="project" value="LOCAL" />
+      <updated>1531812272701</updated>
+    </task>
+    <option name="localTasksCounter" value="177" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1066,9 +1066,9 @@
       <window_info anchor="bottom" id="Event Log" order="0" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Find" order="3" weight="0.32846716" />
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.58289886" visible="true" weight="0.30486485" />
+      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.58289886" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
-      <window_info id="Structure" order="3" sideWeight="0.41710114" side_tool="true" visible="true" weight="0.30486485" />
+      <window_info active="true" id="Structure" order="3" sideWeight="0.41710114" side_tool="true" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.32760474" />
       <window_info anchor="bottom" id="Favorites" order="5" side_tool="true" weight="0.32968834" />
       <window_info id="Debug" order="2" sideWeight="0.76642334" weight="0.30594593" />
@@ -1570,15 +1570,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="41" column="24" lean-forward="true" selection-start-line="41" selection-start-column="24" selection-end-line="41" selection-end-column="24" />
+        <state relative-caret-position="435">
+          <caret line="68" column="51" lean-forward="true" selection-start-line="68" selection-start-column="51" selection-end-line="68" selection-end-column="51" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="446">
-          <caret line="798" selection-start-line="798" selection-end-line="798" />
+        <state relative-caret-position="573">
+          <caret line="792" column="18" lean-forward="true" selection-start-line="792" selection-start-column="18" selection-end-line="792" selection-end-column="18" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#38311#38416#0" />

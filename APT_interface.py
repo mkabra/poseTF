@@ -790,7 +790,7 @@ def check_train_db(model_type, conf, out_file):
         read_fn = tf_iterator.next
         n = tf_iterator.N
     elif model_type == 'leap':
-        db_file = [os.path.join(conf.cachedir, 'leap_train.h5')]
+        db_file = os.path.join(conf.cachedir, 'leap_train.h5')
         print('Checking db from {}'.format(db_file))
         read_fn, n = leap.training.get_read_fn(conf, db_file)
     elif model_type == 'deeplabcut':
