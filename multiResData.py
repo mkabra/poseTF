@@ -477,7 +477,7 @@ def trx_pts(lbl, ndx, on_gt = False):
             cur_pts[idx] = val
         cur_pts = cur_pts.reshape(np.flipud(sz))
     except ValueError:
-        cur_pts = np.array(lbl[pts[0,ndx]])
+        cur_pts = np.array(lbl[pts[0,ndx]]) - 1
     return cur_pts
 
 
@@ -589,7 +589,7 @@ def get_patch_trx(cap, cur_trx, fnum, conf, locs, offset=0, stationary=True,flip
         rpatch = rpatch[:,extra:-extra,...]
         lr[:,0] -= extra
 
-    rpath = rpatch[:,:,:conf.imgDim]
+    rpatch = rpatch[:,:,:conf.imgDim]
     return rpatch, lr
 
 

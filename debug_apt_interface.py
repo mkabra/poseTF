@@ -1,3 +1,19 @@
+import APT_interface as apt
+import os
+import h5py
+import logging
+reload(apt)
+
+lbl_file = '/home/mayank/work/poseTF/data/stephen/sh_cacheddata_20180717T095200.lbl'
+
+log = logging.getLogger()  # root logger
+log.setLevel(logging.ERROR)
+
+cmd = '-view 1 -name sh_cache -cache /home/mayank/work/poseTF/cache/stephen/cache_test {} train -use_cache'.format(lbl_file)
+
+apt.main(cmd.split())
+
+##
 import socket
 import APT_interface as apt
 import os

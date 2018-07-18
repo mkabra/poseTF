@@ -60,12 +60,12 @@ def create_db(args):
     all_nets = args.nets
 
     for view in range(nviews):
-        conf = apt.create_conf(args.lbl_file, view, args.name)
         for curm in all_nets:
 
             if args.split_type is None:
 
-                conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
                 if not os.path.exists(conf.cachedir):
                     os.makedirs(conf.cachedir)
                 if curm == 'unet' or curm == 'openpose':
@@ -81,7 +81,8 @@ def create_db(args):
                 check_db(curm, conf)
             else:
 
-                conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
+                cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
+                conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
                 conf.splitType = args.split_type
                 train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
 
@@ -118,7 +119,6 @@ def train_theirs(args):
     all_nets = args.nets
 
     for view in range(nviews):
-        conf = apt.create_conf(args.lbl_file, view, args.name)
         for curm in all_nets:
 
             if args.split_type is None:
@@ -207,7 +207,6 @@ def train_ours(args):
         all_nets = args.nets
 
     for view in range(nviews):
-        conf = apt.create_conf(args.lbl_file, view, args.name)
         for curm in all_nets:
 
             if args.split_type is None:
@@ -220,7 +219,7 @@ def train_ours(args):
                 f.write('. /opt/venv/bin/activate\n')
 
                 f.write('cd {}\n'.format(unet_dir))
-                cmd = 'APT_interface.py {} -view {} -cache {} -type {} -train '.format(args.lbl_file, view, cachedir, curm)
+                cmd = 'APT_interface.py -view {} -cache {} -type {} {} -train '.format(view, cachedir, curm, args.lbl_file)
                 if args.whose == 'ours_default':
                     cmd += ' -use_defaults'
                 f.write('python {}'.format(cmd))
@@ -242,7 +241,7 @@ def train_ours(args):
                     f.write('. /opt/venv/bin/activate\n')
 
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py {} -view {} -cache {} -type {} -train '.format(args.lbl_file, view, cachedir, curm)
+                    cmd = 'APT_interface.py -view {} -cache {} -type {} {} -train '.format(view, cachedir, curm, args.lbl_file)
                     if args.whose == 'ours_default':
                         cmd += ' -use_defaults'
                     f.write('python {}'.format(cmd))

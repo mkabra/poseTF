@@ -104,7 +104,7 @@ def tf_serialize(data):
 
     return example.SerializeToString()
 
-def create_tfrecord(conf, split=True, split_file=None):
+def create_tfrecord(conf, split=True, split_file=None, use_cache=False):
     # function that creates tfrecords using db_from_lbl
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
@@ -118,7 +118,10 @@ def create_tfrecord(conf, split=True, split_file=None):
     out_fns = []
     out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
     out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
-    splits = db_from_lbl(conf, out_fns, split, split_file)
+    if use_cache:
+        splits = db_from_cached_lbl(conf,out_fns, split, split_file)
+    else:
+        splits = db_from_lbl(conf, out_fns, split, split_file)
     envs[0].close()
     envs[1].close() if split else None
     try:
@@ -176,7 +179,7 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
         # imageio.imwrite(cur_out_png,cur_im)
 
 
-def create_conf(lbl_file, view, name, net_type='unet'):
+def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
     try:
         try:
             H = loadmat(lbl_file)
@@ -200,7 +203,11 @@ def create_conf(lbl_file, view, name, net_type='unet'):
             dt_params_ndx = ndx
 
     dt_params = H[H['trackerData'][dt_params_ndx][0]]['sPrm']
-    conf.cachedir = os.path.join(read_string(dt_params['CacheDir']), proj_name, name)
+    if cache_dir is None:
+        conf.cachedir = os.path.join(read_string(dt_params['CacheDir']), proj_name, name)
+    else:
+        conf.cachedir = cache_dir
+
     if not os.path.exists(os.path.split(conf.cachedir)[0]):
         os.mkdir(os.path.split(conf.cachedir)[0])
     # conf.cachedir = os.path.join(localSetup.bdir, 'cache', proj_name)
@@ -233,13 +240,17 @@ def create_conf(lbl_file, view, name, net_type='unet'):
     conf.normalize_img_mean = int(read_entry(dt_params['normalize'])) > 0.5
     # conf.imgDim = int(read_entry(dt_params['NChannels']))
     ex_mov = multiResData.find_local_dirs(conf)[0][0]
-    cap = movies.Movie(ex_mov, interactive=False)
-    ex_frame = cap.get_frame(0)
-    if np.ndim(ex_frame) > 2:
-        conf.imgDim = ex_frame[0].shape[2]
+
+    if 'NumChans' in H['cfg'].keys():
+        conf.imgDim = read_entry(H['cfg']['NumChans'])
     else:
-        conf.imgDim = 1
-    cap.close()
+        cap = movies.Movie(ex_mov, interactive=False)
+        ex_frame = cap.get_frame(0)
+        if np.ndim(ex_frame) > 2:
+            conf.imgDim = ex_frame[0].shape[2]
+        else:
+            conf.imgDim = 1
+        cap.close()
     try:
         conf.flipud = int(read_entry(dt_params['flipud'])) > 0.5
     except KeyError:
@@ -382,7 +393,123 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     return splits
 
 
-def create_leap_db(conf, split=False, split_file=None):
+def db_from_cached_lbl(conf, out_fns, split=True, split_file=None):
+    # outputs is a list of functions. The first element writes
+    # to the training dataset while the second one write to the validation
+    # dataset. If split is False, second element is not used and all data is
+    # outputted to training dataset
+    # the function will be give a list with:
+    # 0: img,
+    # 1: locations as a numpy array.
+    # 2: information list [expid, frame number, trxid]
+    # the function returns a list of [expid, frame_number and trxid] showing
+    #  how the data was split between the two datasets.
+
+    local_dirs, _ = multiResData.find_local_dirs(conf)
+    lbl = h5py.File(conf.labelfile)
+    view = conf.view
+    flipud = conf.flipud
+    npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
+    sel_pts = int(view * npts_per_view) + conf.selpts
+
+    splits = [[], []]
+    count = 0
+    val_count = 0
+
+    mov_split = None
+    predefined = None
+    if conf.splitType is 'predefined':
+        assert split_file is not None, 'File for defining splits is not given'
+        predefined = PoseTools.json_load(split_file)
+    elif conf.splitType is 'movie':
+        nexps = len(local_dirs)
+        mov_split = sample(list(range(nexps)), int(nexps * conf.valratio))
+        predefined = None
+    elif conf.splitType is 'trx':
+        assert conf.has_trx_file, 'Train/Validation was selected to be trx but the project has no trx files'
+
+    m_ndx = lbl['preProcData_MD_mov'].value[0,:].astype('int')
+    t_ndx = lbl['preProcData_MD_iTgt'].value[0,:].astype('int') - 1
+    f_ndx = lbl['preProcData_MD_frm'].value[0,:].astype('int') - 1
+
+    if conf.has_trx_file:
+        trx_files = multiResData.get_trx_files(lbl, local_dirs)
+
+    prev_trx_mov = -1
+    psz = max(conf.imsz)
+
+    for ndx in range(lbl['preProcData_I'].shape[1]):
+        if m_ndx[ndx] < 0: continue
+        mndx = m_ndx[ndx] - 1
+        cur_pts = trx_pts(lbl, mndx, on_gt=False)
+        if cur_pts.ndim == 3:
+            cur_pts = cur_pts[np.newaxis,...]
+        crop_loc = get_crop_loc(lbl, mndx, view, on_gt=False)
+        cur_locs = cur_pts[t_ndx[ndx], f_ndx[ndx], :, sel_pts].copy()
+        cur_frame = lbl[lbl['preProcData_I'][conf.view,ndx]].value.copy()
+        cur_frame = cur_frame.T
+
+        if cur_frame.ndim == 2:
+            cur_frame = cur_frame[...,np.newaxis]
+
+        if conf.has_trx_file:
+
+            # dont load trx file if the current movie is same as previous.
+            # and trx split wont work well if the frames for the same animal are not contiguous
+            if prev_trx_mov == mndx:
+                cur_trx = trx[t_ndx[ndx]]
+            else:
+                trx = sio.loadmat(trx_files[mndx])['trx'][0]
+                cur_trx = trx[t_ndx[ndx]]
+                prev_trx_mov = mndx
+                n_trx = len(trx)
+                trx_split = np.random.random(n_trx) < conf.valratio
+
+            x, y, theta = read_trx(cur_trx, f_ndx[ndx])
+            ll = cur_locs.copy()
+            ll = ll - [x, y]
+            rot = [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+            lr = np.dot(ll, rot) + [psz / 2, psz / 2]
+            if conf.imsz[0] < conf.imsz[1]:
+                extra = (psz-conf.imsz[0])/2
+                lr[:,1] -= extra
+            elif conf.imsz[1] < conf.imsz[0]:
+                extra = (psz-conf.imsz[1])/2
+                lr[:,0] -= extra
+            cur_locs = lr
+
+        else:
+            trx_split = None
+            n_trx = 1
+            if crop_loc is not None:
+                xlo, xhi, ylo, yhi = crop_loc
+            else:
+                xlo = 0; ylo = 0
+
+            cur_locs[:, 0] = cur_locs[:, 0] - xlo  # ugh, the nasty x-y business.
+            cur_locs[:, 1] = cur_locs[:, 1] - ylo
+            # -1 because matlab is 1-indexed
+
+        info = [mndx, f_ndx[ndx], t_ndx[ndx]]
+
+        cur_out = multiResData.get_cur_env(out_fns, split, conf, info,
+                                           mov_split, trx_split=trx_split, predefined=predefined)
+
+        cur_out([cur_frame, cur_locs, info])
+
+        if cur_out is out_fns[1] and split:
+            val_count += 1
+            splits[1].append(info)
+        else:
+            count += 1
+            splits[0].append(info)
+
+    print('%d,%d number of pos examples added to the db and valdb' % (count, val_count))
+    lbl.close()
+    return splits
+
+
+def create_leap_db(conf, split=False, split_file=None, use_cache=False):
     # function showing how to use db_from_lbl for tfrecords
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
@@ -394,7 +521,10 @@ def create_leap_db(conf, split=False, split_file=None):
     out_fns = []
     out_fns.append(lambda data: train_data.append(data))
     out_fns.append(lambda data: val_data.append(data))
-    splits = db_from_lbl(conf, out_fns, split, split_file)
+    if use_cache:
+        splits = db_from_cached_lbl(conf, out_fns, split, split_file)
+    else:
+        splits = db_from_lbl(conf, out_fns, split, split_file)
 
     # save the split data
     try:
@@ -430,7 +560,7 @@ def create_leap_db(conf, split=False, split_file=None):
         hf.close()
 
 
-def create_deepcut_db(conf, split=False, split_file=None):
+def create_deepcut_db(conf, split=False, split_file=None, use_cache=False):
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
 
@@ -480,7 +610,10 @@ def create_deepcut_db(conf, split=False, split_file=None):
 
     # collect the images and labels in arrays
     out_fns = [train_out_fn, val_out_fn]
-    splits = db_from_lbl(conf, out_fns, split, split_file)
+    if use_cache:
+        splits = db_from_cached_lbl(conf, out_fns, split, split_file)
+    else:
+        splits = db_from_lbl(conf, out_fns, split, split_file)
     [f.close() for f in train_fis]
     [f.close() for f in val_fis]
     with open(os.path.join(conf.cachedir,'train_data.p'),'w') as f:
@@ -1021,7 +1154,7 @@ def classify_movie_all(model_type, **kwargs):
 
 def train_unet(conf, args):
     if not args.skip_db:
-        create_tfrecord(conf, False)
+        create_tfrecord(conf, False, use_cache=args.use_cache)
     tf.reset_default_graph()
     self = PoseUNet.PoseUNet(conf)
     self.train_data_name = 'traindata'
@@ -1030,19 +1163,19 @@ def train_unet(conf, args):
 
 def train_leap(conf, args):
     if not args.skip_db:
-        create_leap_db(conf, False)
+        create_leap_db(conf, False, use_cache=args.use_cache)
     leap_train(conf)
 
 
 def train_openpose(conf,args):
     if not args.skip_db:
-        create_tfrecord(conf, False)
+        create_tfrecord(conf, False, use_cache=args.use_cache)
     open_pose.training(conf)
 
 
 def train_deepcut(conf, args):
     if not args.skip_db:
-        create_deepcut_db(conf, False)
+        create_deepcut_db(conf, False, use_cache=args.use_cache)
     deepcut_train(conf)
 
 
@@ -1055,7 +1188,7 @@ def train(lblfile, nviews, name, args):
         views = [view]
 
     for cur_view in views:
-        conf = create_conf(lblfile, cur_view, name)
+        conf = create_conf(lblfile, cur_view, name, cache_dir=args.cache)
         if args.cache is not None:
             conf.cachedir = args.cache
 
@@ -1156,11 +1289,12 @@ def parse_args(argv):
     parser.add_argument('-out_dir', dest='out_dir', help='Directory to output log files', default=None)
     parser.add_argument('-type', dest='type', help='Network type, default is unet', default='unet',
                         choices=['unet', 'openpose','deeplabcut','leap'])
-    subparsers = parser.add_subparsers(help='train or track', dest='sub_name')
+    subparsers = parser.add_subparsers(help='train or track or gt_classify', dest='sub_name')
 
     parser_train = subparsers.add_parser('train', help='Train the detector')
     parser_train.add_argument('-skip_db', dest='skip_db', help='Skip creating the data base', action='store_true')
     parser_train.add_argument('-use_defaults',dest='use_defaults',action='store_true', help='Use default settings of openpose, deeplabcut or leap')
+    parser_train.add_argument('-use_cache',dest='use_cache',action='store_true', help='Use cached images in the label file to generate the training data.')
     # parser_train.add_argument('-cache',dest='cache_dir',
     #                           help='cache dir for training')
 
@@ -1236,7 +1370,7 @@ def run(args):
             views = [args.view]
 
         for view_ndx, view in enumerate(views):
-            conf = create_conf(lbl_file, view, name)
+            conf = create_conf(lbl_file, view, name, cache_dir=args.cache)
             if args.cache is not None:
                 conf.cachedir = args.cache
             if args.crop_loc is not None:
@@ -1266,7 +1400,7 @@ def run(args):
             views = [args.view]
 
         for view_ndx, view in enumerate(views):
-            conf = create_conf(lbl_file, view, name)
+            conf = create_conf(lbl_file, view, name, cache_dir=args.cache)
             out_file = args.out_file + '_{}.mat'.format(view)
             classify_gt_data(args.type, conf, out_file, model_file=args.model_file)
 
