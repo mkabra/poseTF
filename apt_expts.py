@@ -270,8 +270,9 @@ def main(argv):
                         help='Type of split for CV. If not defined not CV is done', default=None)
     parser.add_argument('-whose', dest='whose',
                         help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
-    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets',
-    parser.add_argument('-only_check_db', dest='check_only', help='Only check the db and do not regenerate them', action='store_true' )
+    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')
+    parser.add_argument('-only_check_db', dest='only_check', help='Only check the db and do not regenerate them', action='store_true' )
+
     args = parser.parse_args(argv)
     log = logging.getLogger()  # root logger
     log.setLevel(logging.ERROR)
