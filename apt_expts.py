@@ -62,11 +62,11 @@ def create_db(args):
 
     for curm in all_nets:
         for view in range(nviews):
-            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
-                conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
                 if not args.only_check:
                     if not os.path.exists(conf.cachedir):
                         os.makedirs(conf.cachedir)
@@ -123,7 +123,6 @@ def train_theirs(args):
 
     for curm in all_nets:
         for view in range(nviews):
-            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
@@ -213,7 +212,6 @@ def train_ours(args):
 
     for curm in all_nets:
         for view in range(nviews):
-            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
