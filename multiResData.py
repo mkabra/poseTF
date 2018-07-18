@@ -1100,6 +1100,6 @@ class tf_reader(object):
         locs = np.stack(all_locs)
         info = np.stack(all_info)
 
-        # return {'orig_images':ims, 'orig_locs':locs, 'info':info, 'extra_info':np.zeros([self.batch_size,1])}
-        return ims, locs, info
+#        return {'orig_images':ims, 'orig_locs':locs, 'info':info, 'extra_info':np.zeros([self.batch_size,1])}
+        return ims, locs, info, np.zeros([self.batch_size,1])
 

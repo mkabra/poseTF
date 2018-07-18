@@ -81,7 +81,7 @@ class config(object):
         self.gamma = 0.1
         self.step_size = 100000 # not used anymore
         self.display_step = 50
-        self.numTest = 100
+        self.numTest = 8
         self.n_steps = 3 # number of times the learning
         # rate should be reduced by gamma by the end of the training.
 
