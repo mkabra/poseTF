@@ -301,8 +301,13 @@ class PoseCommon(object):
         placeholders = self.q_placeholders
 
         print('Starting preloading thread of type ... {}'.format(db_type))
+        batch_np = {}
         while not self.coord.should_stop():
-            batch_np = cur_db.next()
+            batch_in = cur_db.next()
+            batch_np['orig_images'] = batch_in[0]
+            batch_np['orig_locs'] = batch_in[1]
+            batch_np['info'] = batch_in[2]
+            batch_np['extra_info'] = batch_in[3]
             xs, locs = PoseTools.preprocess_ims(batch_np['orig_images'], batch_np['orig_locs'], self.conf,
                                                 distort, scale)
 

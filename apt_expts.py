@@ -10,11 +10,12 @@ import subprocess
 import yaml
 import pickle
 import time
+import logging
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
 nsplits = 3
-openpose_dir = '/groups/branson/bransonlab/mayank/apt_expts/open_pose'
+openpose_dir = '/groups/branson/bransonlab/mayank/apt_expts/open_pose/training'
 deepcut_dir = '/groups/branson/bransonlab/mayank/apt_expts/deepcut'
 leap_dir = '/groups/branson/bransonlab/mayank/apt_expts/leap'
 unet_dir = '/groups/branson/home/kabram/PycharmProjects/poseTF'
@@ -59,24 +60,25 @@ def create_db(args):
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
     all_nets = args.nets
 
-    for view in range(nviews):
-        for curm in all_nets:
+    for curm in all_nets:
+        for view in range(nviews):
+            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
-                cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
-                conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
-                if not os.path.exists(conf.cachedir):
-                    os.makedirs(conf.cachedir)
-                if curm == 'unet' or curm == 'openpose':
-                    apt.create_tfrecord(conf, False)
-                elif curm == 'leap':
-                    apt.create_leap_db(conf, False)
-                elif curm == 'deeplabcut':
-                    apt.create_deepcut_db(conf, False)
-                    create_deepcut_cfg(conf)
-                else:
-                    raise ValueError('Undefined net type: {}'.format(curm))
+                conf.cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'full')
+                if not args.only_check:
+                    if not os.path.exists(conf.cachedir):
+                        os.makedirs(conf.cachedir)
+                    if curm == 'unet' or curm == 'openpose':
+                        apt.create_tfrecord(conf, False)
+                    elif curm == 'leap':
+                        apt.create_leap_db(conf, False)
+                    elif curm == 'deeplabcut':
+                        apt.create_deepcut_db(conf, False)
+                        create_deepcut_cfg(conf)
+                    else:
+                        raise ValueError('Undefined net type: {}'.format(curm))
 
                 check_db(curm, conf)
             else:
@@ -90,15 +92,16 @@ def create_db(args):
                     conf.cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
                     conf.splitType = 'predefined'
                     split_file = split_files[cur_split]
-                    if curm == 'unet' or curm == 'openpose':
-                        apt.create_tfrecord(conf, True, split_file)
-                    elif curm == 'leap':
-                        apt.create_leap_db(conf, True, split_file)
-                    elif curm == 'deeplabcut':
-                        apt.create_deepcut_db(conf, True, split_file)
-                        create_deepcut_cfg(conf)
-                    else:
-                        raise ValueError('Undefined net type: {}'.format(curm))
+                    if not args.only_check:
+                        if curm == 'unet' or curm == 'openpose':
+                            apt.create_tfrecord(conf, True, split_file)
+                        elif curm == 'leap':
+                            apt.create_leap_db(conf, True, split_file)
+                        elif curm == 'deeplabcut':
+                            apt.create_deepcut_db(conf, True, split_file)
+                            create_deepcut_cfg(conf)
+                        else:
+                            raise ValueError('Undefined net type: {}'.format(curm))
                     check_db(curm, conf)
 
         base_dir = os.path.join(out_dir, args.name, 'common')
@@ -118,8 +121,9 @@ def train_theirs(args):
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
     all_nets = args.nets
 
-    for view in range(nviews):
-        for curm in all_nets:
+    for curm in all_nets:
+        for view in range(nviews):
+            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
@@ -130,10 +134,9 @@ def train_theirs(args):
                 f.write('#!/bin/bash\n')
                 f.write('. /opt/venv/bin/activate\n')
 
-                args.skip_db = True
                 if curm == 'unet':
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py {} -view {} -cache {} -type unet -train '.format(args.lbl_file, view, cachedir)
+                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view, cachedir, args.lbl_file)
                     f.write('python {}'.format(cmd))
                 elif curm == 'openpose':
                     f.write('cd {}\n'.format(openpose_dir))
@@ -141,7 +144,8 @@ def train_theirs(args):
                     f.write('python {}'.format(cmd))
                 elif curm == 'leap':
                     f.write('cd {}\n'.format(leap_dir))
-                    cmd = 'training_MK.py {}'.format(cachedir)
+                    data_path = os.path.join(cachedir,'leap_train.h5')
+                    cmd = 'leap/training_MK.py {}'.format(data_path)
                     f.write('python {}'.format(cmd))
                 elif curm == 'deeplabcut':
                     f.write('cd {}\n'.format(cachedir))
@@ -170,7 +174,7 @@ def train_theirs(args):
                     args.skip_db = True
                     if curm == 'unet':
                         f.write('cd {}\n'.format(unet_dir))
-                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet -train '.format(args.lbl_file, view,
+                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet train -skip_db'.format(args.lbl_file, view,
                                                                                                  cachedir)
                         f.write('python {}'.format(cmd))
                     elif curm == 'openpose':
@@ -179,7 +183,8 @@ def train_theirs(args):
                         f.write('python {}'.format(cmd))
                     elif curm == 'leap':
                         f.write('cd {}\n'.format(leap_dir))
-                        cmd = 'training_MK.py {}'.format(cachedir)
+                        data_path = os.path.join(cachedir,'leap_train.h5')
+                        cmd = 'leap/training_MK.py {}'.format(data_path)
                         f.write('python {}'.format(cmd))
                     elif curm == 'deeplabcut':
                         f.write('cd {}\n'.format(cachedir))
@@ -206,8 +211,9 @@ def train_ours(args):
     else:
         all_nets = args.nets
 
-    for view in range(nviews):
-        for curm in all_nets:
+    for curm in all_nets:
+        for view in range(nviews):
+            conf = apt.create_conf(args.lbl_file, view, args.name)
 
             if args.split_type is None:
 
@@ -219,7 +225,7 @@ def train_ours(args):
                 f.write('. /opt/venv/bin/activate\n')
 
                 f.write('cd {}\n'.format(unet_dir))
-                cmd = 'APT_interface.py -view {} -cache {} -type {} {} -train '.format(view, cachedir, curm, args.lbl_file)
+                cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view, cachedir, curm)
                 if args.whose == 'ours_default':
                     cmd += ' -use_defaults'
                 f.write('python {}'.format(cmd))
@@ -241,7 +247,7 @@ def train_ours(args):
                     f.write('. /opt/venv/bin/activate\n')
 
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py -view {} -cache {} -type {} {} -train '.format(view, cachedir, curm, args.lbl_file)
+                    cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view, cachedir, curm)
                     if args.whose == 'ours_default':
                         cmd += ' -use_defaults'
                     f.write('python {}'.format(cmd))
@@ -265,9 +271,13 @@ def main(argv):
                         help='Type of split for CV. If not defined not CV is done', default=None)
     parser.add_argument('-whose', dest='whose',
                         help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
-    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets',
-            default=[], nargs='*')
+    parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')
+    parser.add_argument('-only_check_db', dest='only_check', help='Only check the db and do not regenerate them', action='store_true' )
+
     args = parser.parse_args(argv)
+    log = logging.getLogger()  # root logger
+    log.setLevel(logging.ERROR)
+
     if len(args.nets) == 0:
         args.nets = methods
     if args.type == 'create_db':

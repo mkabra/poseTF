@@ -194,7 +194,7 @@ class PoseDataset:
         dx = sz[1] - new_sz[1]
         dy = sz[0] - new_sz[0]
         out_img = np.zeros(sz).astype(img.dtype)
-        if dx < 0:
+        if dx < 0 or dy< 0:
             hdx = -int(dx/2)
             hdy = -int(dy/2)
             out_img[:,:,...] = img[hdy:(sz[0]+hdy),hdx:(sz[1]+hdx),...]
