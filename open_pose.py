@@ -326,6 +326,8 @@ def create_affinity_labels(locs, imsz, graph):
             zz = np.unique(zz,axis=1)
             # zz now has all the unique pixels that are along the line with thickness 1.
             for x,y in zz.T:
+                if x >= out.shape[2] or y>= out.shape[1]:
+                    continue
                 out[cur,int(y),int(x),ndx*2] = (end_x-start_x)/ll
                 out[cur,int(y),int(x),ndx*2+1] = (end_y-start_y)/ll
 
@@ -370,6 +372,7 @@ class DataIteratorTF(object):
         if self.iterator:
             self.iterator.close()
         self.iterator = tf.python_io.tf_record_iterator(self.file)
+        print('========= Resetting ==========')
 
 
     def read_next(self):

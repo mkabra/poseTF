@@ -76,5 +76,10 @@ def preprocess(X, permute=(0,3,2,1)):
     # Normalize
     if X.dtype == "uint8":
         X = X.astype("float32") / 255
-    
-    return X
+
+    newY = int(np.ceil(float(X.shape[1])/32)*32)
+    newX = int(np.ceil(float(X.shape[2])/32)*32)
+    X1 = np.zeros([X.shape[0],newY,newX,X.shape[3]]).astype('float32')
+    X1[:,:X.shape[1],:X.shape[2],:] = X
+                
+    return X1

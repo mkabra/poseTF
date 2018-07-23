@@ -136,11 +136,11 @@ def train_theirs(args):
 
                 if curm == 'unet':
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view +1, cachedir, args.lbl_file)
+                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view+1, cachedir, args.lbl_file)
                     f.write('python {}'.format(cmd))
                 elif curm == 'openpose':
                     f.write('cd {}\n'.format(openpose_dir))
-                    cmd = 'train_pose.py {} {}'.format(args.lbl_file, cachedir)
+                    cmd = 'train_pose.py {} {} {}'.format(args.lbl_file, cachedir, view)
                     f.write('python {}'.format(cmd))
                 elif curm == 'leap':
                     f.write('cd {}\n'.format(leap_dir))
@@ -179,7 +179,7 @@ def train_theirs(args):
                         f.write('python {}'.format(cmd))
                     elif curm == 'openpose':
                         f.write('cd {}\n'.format(openpose_dir))
-                        cmd = 'train_pose.py {} {}'.format(args.lbl_file, cachedir)
+                        cmd = 'train_pose.py {} {} {}'.format(args.lbl_file, cachedir, view)
                         f.write('python {}'.format(cmd))
                     elif curm == 'leap':
                         f.write('cd {}\n'.format(leap_dir))
