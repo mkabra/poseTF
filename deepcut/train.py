@@ -210,7 +210,7 @@ def train(cfg):
         if it % cfg.save_td_step == 0:
             save_td(cfg, train_info)
         # Save snapshot
-        if (it % cfg.save_step == 0 and it != 0) or it == max_iter:
+        if (it % cfg.save_step == 0 ) or it == max_iter:
             saver.save(sess, model_name, global_step=it,
                        latest_filename=os.path.basename(ckpt_file))
 
@@ -245,7 +245,10 @@ def get_pred_fn(cfg, model_file=None):
         pose = pose[:,:,:2]*cfg.dlc_rescale
         return pose, scmap
 
-    return pred_fn, model_file
+    def close_fn():
+        sess.close()
+
+    return pred_fn, close_fn, model_file
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ import yaml
 import pickle
 import time
 import logging
+import glob
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -135,7 +136,7 @@ def train_theirs(args):
 
                 if curm == 'unet':
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view, cachedir, args.lbl_file)
+                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view +1, cachedir, args.lbl_file)
                     f.write('python {}'.format(cmd))
                 elif curm == 'openpose':
                     f.write('cd {}\n'.format(openpose_dir))
@@ -173,7 +174,7 @@ def train_theirs(args):
                     args.skip_db = True
                     if curm == 'unet':
                         f.write('cd {}\n'.format(unet_dir))
-                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet train -skip_db'.format(args.lbl_file, view,
+                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet train -skip_db'.format(args.lbl_file, view+1,
                                                                                                  cachedir)
                         f.write('python {}'.format(cmd))
                     elif curm == 'openpose':
@@ -223,7 +224,7 @@ def train_ours(args):
                 f.write('. /opt/venv/bin/activate\n')
 
                 f.write('cd {}\n'.format(unet_dir))
-                cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view, cachedir, curm)
+                cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
                 if args.whose == 'ours_default':
                     cmd += ' -use_defaults'
                 f.write('python {}'.format(cmd))
@@ -245,7 +246,7 @@ def train_ours(args):
                     f.write('. /opt/venv/bin/activate\n')
 
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view, cachedir, curm)
+                    cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
                     if args.whose == 'ours_default':
                         cmd += ' -use_defaults'
                     f.write('python {}'.format(cmd))
@@ -255,6 +256,76 @@ def train_ours(args):
                         singularity_logfile, singularity_script)  # -n4 because we use 4 preprocessing threads
                     subprocess.call(cmd, shell=True)
                     print('Submitted job: {}'.format(cmd))
+
+
+def compute_peformance(args):
+    H = h5py.File(args.lbl_file,'r')
+    nviews = int(apt.read_entry(H['cfg']['NumViews']))
+    dir_name = args.whose
+
+    if len(args.nets) == 0:
+        all_nets = methods
+    else:
+        all_nets = args.nets
+
+    all_preds = {}
+    for curm in all_nets:
+        all_preds[curm] = []
+        for view in range(nviews):
+            cur_out = []
+            if args.split_type is None:
+                cachedir = os.path.join(out_dir,args.name,dir_name,'{}_view_{}'.format(curm,view),'full')
+                conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
+                model_files, ts = get_model_files(conf, cachedir, curm)
+                for m in model_files:
+                    out_file = m + '.gt_data'
+                    pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
+                    cur_out.append([pred, label, gt_list, m, out_file, view, 0])
+
+            else:
+
+                for cur_split in range(nsplits):
+                    cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
+                    conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
+                    model_files, ts = get_model_files(conf, cachedir, curm)
+                    for m in model_files:
+                        out_file = m + '.gt_data'
+                        pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
+                        cur_out.append([pred, label, gt_list, m, out_file, view, cur_split])
+
+            all_preds[curm].append(cur_out)
+
+    with open(os.path.join(out_dir,args.name,dir_name,'gt_results.p','w')) as f:
+        pickle.dump(all_preds,f)
+
+def get_model_files(conf, cache_dir, method):
+    if method == 'unet':
+        files = glob.glob(os.path.join(cache_dir,"{}_pose_unet-[0-9]*.index").format(conf.name,conf.view))
+        files.sort(key=os.path.getmtime)
+        ts = [os.path.getmtime(f) for f in files]
+        files = [os.path.splitext(f)[0] for f in files]
+
+    elif method == 'deeplabcut':
+        files = glob.glob(os.path.join(cache_dir, "snapshot-[0-9]*.index"))
+        files.sort(key=os.path.getmtime)
+        ts = [os.path.getmtime(f) for f in files]
+        files = [os.path.splitext(f)[0] for f in files]
+
+    elif method == 'leap':
+        files = glob.glob(os.path.join(cache_dir, "weights-[0-9]*.h5"))
+        files.sort(key=os.path.getmtime)
+        ts = [os.path.getmtime(f) for f in files]
+
+    elif method == 'openpose':
+        files = glob.glob(os.path.join(cache_dir, "weights.[0-9]*.h5"))
+        files.sort(key=os.path.getmtime)
+        ts = [os.path.getmtime(f) for f in files]
+
+    init_t = ts[0]
+    ts = [t-init_t for t in ts]
+    return files, ts
+
+
 
 
 def main(argv):

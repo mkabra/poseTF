@@ -519,7 +519,9 @@ def get_pred_fn(conf, model_file=None):
         base_locs = base_locs * conf.op_rescale
         return base_locs, pred
 
-    return pred_fn, latest_model_file
+    close_fn = lambda : None
+
+    return pred_fn, close_fn, latest_model_file
 
 if __name__ == "__main__":
     # Turn interactive plotting off
