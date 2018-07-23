@@ -258,6 +258,7 @@ def train_ours(args):
                     print('Submitted job: {}'.format(cmd))
 
 
+
 def compute_peformance(args):
     H = h5py.File(args.lbl_file,'r')
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
