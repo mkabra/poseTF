@@ -332,7 +332,7 @@ def get_model_files(conf, cache_dir, method):
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('-type', dest='type', help='Create DB or train',
-                        required=True, choices=['train','create_db'])
+                        required=True, choices=['train','create_db','performance'])
     parser.add_argument("-lbl_file",
                         help="path to lbl file", required=True)
     parser.add_argument('-name', dest='name', help='Name for the setup',
@@ -357,6 +357,8 @@ def main(argv):
             train_theirs(args)
         else:
             train_ours(args)
+    elif args.type == 'performance':
+        compute_peformance(args)
 
 
 if __name__ == "__main__":

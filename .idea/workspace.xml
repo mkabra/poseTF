@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -61,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="378">
-                  <caret line="282" column="53" lean-forward="true" selection-start-line="282" selection-start-column="53" selection-end-line="282" selection-end-column="53" />
+                <state relative-caret-position="791">
+                  <caret line="360" column="31" selection-start-line="360" selection-start-column="31" selection-end-line="360" selection-end-column="31" />
                 </state>
               </provider>
             </entry>
@@ -285,8 +285,8 @@
         <option value="$PROJECT_DIR$/deepcut/nnet/net_factory.py" />
         <option value="$PROJECT_DIR$/deepcut/default_config.py" />
         <option value="$PROJECT_DIR$/deepcut/train.py" />
-        <option value="$PROJECT_DIR$/apt_expts.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
+        <option value="$PROJECT_DIR$/apt_expts.py" />
       </list>
     </option>
   </component>
@@ -644,13 +644,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00138" summary="Changes to script for running cv for stephens data. &#10;Minor bug fix to APT_interface">
-      <created>1527709900577</created>
-      <option name="number" value="00138" />
-      <option name="presentableId" value="LOCAL-00138" />
-      <option name="project" value="LOCAL" />
-      <updated>1527709900578</updated>
-    </task>
     <task id="LOCAL-00139" summary="Generic checkin">
       <created>1527857746181</created>
       <option name="number" value="00139" />
@@ -987,7 +980,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532341705695</updated>
     </task>
-    <option name="localTasksCounter" value="187" />
+    <task id="LOCAL-00187" summary="Modified apt predict code so that input sizes are a multiple of 32">
+      <created>1532342940618</created>
+      <option name="number" value="00187" />
+      <option name="presentableId" value="LOCAL-00187" />
+      <option name="project" value="LOCAL" />
+      <updated>1532342940618</updated>
+    </task>
+    <option name="localTasksCounter" value="188" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1109,7 +1109,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Error catching in APT_interface and target specific trk files in classify_movie" />
     <MESSAGE value="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages." />
     <MESSAGE value="Minor bug fix. And output CV results to a json file." />
     <MESSAGE value="Fixed training with fullTrainDatafile." />
@@ -1134,7 +1133,8 @@
     <MESSAGE value="Adding the ability to test the db created in apt_expts" />
     <MESSAGE value="Creating training dataset from cached images in lbl file." />
     <MESSAGE value="Adding gt_computation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding gt_computation" />
+    <MESSAGE value="Modified apt predict code so that input sizes are a multiple of 32" />
+    <option name="LAST_COMMIT_MESSAGE" value="Modified apt predict code so that input sizes are a multiple of 32" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1515,13 +1515,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="282" column="53" lean-forward="true" selection-start-line="282" selection-start-column="53" selection-end-line="282" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="513">
@@ -1536,6 +1529,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="687">
           <caret line="523" lean-forward="true" selection-start-line="523" selection-end-line="523" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="791">
+          <caret line="360" column="31" selection-start-line="360" selection-start-column="31" selection-end-line="360" selection-end-column="31" />
         </state>
       </provider>
     </entry>
