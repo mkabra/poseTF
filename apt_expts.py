@@ -12,6 +12,7 @@ import pickle
 import time
 import logging
 import glob
+import scipy.io as sio
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -280,7 +281,13 @@ def compute_peformance(args):
                 model_files, ts = get_model_files(conf, cachedir, curm)
                 for m in model_files:
                     out_file = m + '.gt_data'
-                    pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
+                    if os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
+                        H = sio.loadmat(out_file)
+                        pred = H['pred_locs'] - 1
+                        label = H['labeled_locs'] - 1
+                        gt_list = H['list']
+                    else:
+                        pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
                     cur_out.append([pred, label, gt_list, m, out_file, view, 0])
 
             else:

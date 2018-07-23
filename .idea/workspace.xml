@@ -61,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="791">
-                  <caret line="360" column="31" selection-start-line="360" selection-start-column="31" selection-end-line="360" selection-end-column="31" />
+                <state relative-caret-position="210">
+                  <caret line="14" column="22" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
                 </state>
               </provider>
             </entry>
@@ -84,11 +84,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="training.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="training.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/leap/training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="687">
-                  <caret line="523" lean-forward="true" selection-start-line="523" selection-end-line="523" />
+                <state relative-caret-position="162">
+                  <caret line="497" column="24" selection-start-line="497" selection-start-column="24" selection-end-line="497" selection-end-column="24" />
                 </state>
               </provider>
             </entry>
@@ -138,11 +138,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="513">
-                  <caret line="981" column="25" lean-forward="true" selection-start-line="981" selection-start-column="25" selection-end-line="981" selection-end-column="25" />
+                <state relative-caret-position="663">
+                  <caret line="990" selection-start-line="987" selection-end-line="990" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -644,13 +644,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00139" summary="Generic checkin">
-      <created>1527857746181</created>
-      <option name="number" value="00139" />
-      <option name="presentableId" value="LOCAL-00139" />
-      <option name="project" value="LOCAL" />
-      <updated>1527857746181</updated>
-    </task>
     <task id="LOCAL-00140" summary="Generic checkin">
       <created>1527858384201</created>
       <option name="number" value="00140" />
@@ -987,7 +980,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532342940618</updated>
     </task>
-    <option name="localTasksCounter" value="188" />
+    <task id="LOCAL-00188" summary="minor edit">
+      <created>1532343049887</created>
+      <option name="number" value="00188" />
+      <option name="presentableId" value="LOCAL-00188" />
+      <option name="project" value="LOCAL" />
+      <updated>1532343049887</updated>
+    </task>
+    <option name="localTasksCounter" value="189" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1039,7 +1039,7 @@
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
       <window_info anchor="bottom" id="Event Log" order="0" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.57977057" visible="true" weight="0.30486485" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.57977057" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
       <window_info id="Structure" order="3" sideWeight="0.4202294" side_tool="true" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.3274244" />
@@ -1109,7 +1109,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages." />
     <MESSAGE value="Minor bug fix. And output CV results to a json file." />
     <MESSAGE value="Fixed training with fullTrainDatafile." />
     <MESSAGE value="Bug fixes. Added timeout in preloading threads so that they die earlier when the training/validation ends." />
@@ -1134,7 +1133,8 @@
     <MESSAGE value="Creating training dataset from cached images in lbl file." />
     <MESSAGE value="Adding gt_computation" />
     <MESSAGE value="Modified apt predict code so that input sizes are a multiple of 32" />
-    <option name="LAST_COMMIT_MESSAGE" value="Modified apt predict code so that input sizes are a multiple of 32" />
+    <MESSAGE value="minor edit" />
+    <option name="LAST_COMMIT_MESSAGE" value="minor edit" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1460,20 +1460,35 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="881">
-          <caret line="479" column="44" selection-start-line="479" selection-start-column="44" selection-end-line="479" selection-end-column="44" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/deepcut/train.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="379">
           <caret line="212" column="36" selection-start-line="212" selection-start-column="36" selection-end-line="212" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="780">
+          <caret line="1179" column="27" selection-start-line="1179" selection-start-column="27" selection-end-line="1179" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#71#86#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/leap/training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="497" column="24" selection-start-line="497" selection-start-column="24" selection-end-line="497" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="27" column="8" selection-start-line="27" selection-start-column="8" selection-end-line="27" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -1487,20 +1502,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="27" column="8" selection-start-line="27" selection-start-column="8" selection-end-line="27" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="780">
-          <caret line="1179" column="27" selection-start-line="1179" selection-start-column="27" selection-end-line="1179" selection-end-column="27" />
+        <state relative-caret-position="881">
+          <caret line="479" column="44" selection-start-line="479" selection-start-column="44" selection-end-line="479" selection-end-column="44" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#71#86#0" />
+            <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1517,25 +1524,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="513">
-          <caret line="981" column="25" lean-forward="true" selection-start-line="981" selection-start-column="25" selection-end-line="981" selection-end-column="25" />
+        <state relative-caret-position="663">
+          <caret line="990" selection-start-line="987" selection-end-line="990" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/training.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="687">
-          <caret line="523" lean-forward="true" selection-start-line="523" selection-end-line="523" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="791">
-          <caret line="360" column="31" selection-start-line="360" selection-start-column="31" selection-end-line="360" selection-end-column="31" />
+        <state relative-caret-position="210">
+          <caret line="14" column="22" selection-start-line="14" selection-start-column="22" selection-end-line="14" selection-end-column="22" />
         </state>
       </provider>
     </entry>
