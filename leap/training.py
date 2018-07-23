@@ -512,8 +512,14 @@ def get_pred_fn(conf, model_file=None):
     model = keras.models.load_model(latest_model_file)
 
     def pred_fn(all_f):
-        pred = model.predict(all_f,batch_size = conf.batch_size)
+        newY = int(np.ceil(float(all_f.shape[1]) / 32) * 32)
+        newX = int(np.ceil(float(all_f.shape[2]) / 32) * 32)
+        X1 = np.zeros([all_f.shape[0], newY, newX, all_f.shape[3]]).astype('float32')
+        X1[:, :all_f.shape[1], :all_f.shape[2], :] = all_f
+
+        pred = model.predict(X1,batch_size = conf.batch_size)
         pred = np.stack(pred)
+        pred = pred[:,:all_f.shape[1],:all_f.shape[2],:]
         base_locs = PoseTools.get_pred_locs(pred)
 
         base_locs = base_locs * conf.op_rescale

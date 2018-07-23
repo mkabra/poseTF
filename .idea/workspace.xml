@@ -4,11 +4,8 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="Adding gt_computation">
+    <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deepcut/default_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepcut/default_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deepcut/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/deepcut/train.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -64,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="303">
-                  <caret line="297" column="74" selection-start-line="297" selection-start-column="74" selection-end-line="297" selection-end-column="74" />
+                <state relative-caret-position="378">
+                  <caret line="282" column="53" lean-forward="true" selection-start-line="282" selection-start-column="53" selection-end-line="282" selection-end-column="53" />
                 </state>
               </provider>
             </entry>
@@ -87,11 +84,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="training.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="training.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/leap/training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="585">
-                  <caret line="383" column="108" selection-start-line="383" selection-start-column="108" selection-end-line="383" selection-end-column="108" />
+                <state relative-caret-position="687">
+                  <caret line="523" lean-forward="true" selection-start-line="523" selection-end-line="523" />
                 </state>
               </provider>
             </entry>
@@ -141,11 +138,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="168">
-                  <caret line="953" column="4" selection-start-line="953" selection-start-column="4" selection-end-line="953" selection-end-column="4" />
+                <state relative-caret-position="513">
+                  <caret line="981" column="25" lean-forward="true" selection-start-line="981" selection-start-column="25" selection-end-line="981" selection-end-column="25" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -287,9 +284,9 @@
         <option value="$PROJECT_DIR$/debug_apt_interface.py" />
         <option value="$PROJECT_DIR$/deepcut/nnet/net_factory.py" />
         <option value="$PROJECT_DIR$/deepcut/default_config.py" />
-        <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/deepcut/train.py" />
         <option value="$PROJECT_DIR$/apt_expts.py" />
+        <option value="$PROJECT_DIR$/leap/training.py" />
       </list>
     </option>
   </component>
@@ -647,20 +644,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00136" summary="Bug fix in runTrackingStephen.py">
-      <created>1527614331279</created>
-      <option name="number" value="00136" />
-      <option name="presentableId" value="LOCAL-00136" />
-      <option name="project" value="LOCAL" />
-      <updated>1527614331279</updated>
-    </task>
-    <task id="LOCAL-00137" summary="Bug fix in runTrackingStephen.py">
-      <created>1527615382175</created>
-      <option name="number" value="00137" />
-      <option name="presentableId" value="LOCAL-00137" />
-      <option name="project" value="LOCAL" />
-      <updated>1527615382175</updated>
-    </task>
     <task id="LOCAL-00138" summary="Changes to script for running cv for stephens data. &#10;Minor bug fix to APT_interface">
       <created>1527709900577</created>
       <option name="number" value="00138" />
@@ -990,7 +973,21 @@
       <option name="project" value="LOCAL" />
       <updated>1531919951128</updated>
     </task>
-    <option name="localTasksCounter" value="185" />
+    <task id="LOCAL-00185" summary="Adding gt_computation">
+      <created>1532341512927</created>
+      <option name="number" value="00185" />
+      <option name="presentableId" value="LOCAL-00185" />
+      <option name="project" value="LOCAL" />
+      <updated>1532341512929</updated>
+    </task>
+    <task id="LOCAL-00186" summary="Adding gt_computation">
+      <created>1532341705694</created>
+      <option name="number" value="00186" />
+      <option name="presentableId" value="LOCAL-00186" />
+      <option name="project" value="LOCAL" />
+      <updated>1532341705695</updated>
+    </task>
+    <option name="localTasksCounter" value="187" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1044,7 +1041,7 @@
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
       <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.57977057" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
-      <window_info active="true" id="Structure" order="3" sideWeight="0.4202294" side_tool="true" visible="true" weight="0.30486485" />
+      <window_info id="Structure" order="3" sideWeight="0.4202294" side_tool="true" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.3274244" />
       <window_info anchor="bottom" id="Favorites" order="5" side_tool="true" weight="0.32968834" />
       <window_info id="Debug" order="2" sideWeight="0.76642334" weight="0.30594593" />
@@ -1112,7 +1109,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="APT_interface now logs error to file!" />
     <MESSAGE value="Error catching in APT_interface and target specific trk files in classify_movie" />
     <MESSAGE value="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages." />
     <MESSAGE value="Minor bug fix. And output CV results to a json file." />
@@ -1137,7 +1133,8 @@
     <MESSAGE value="Adding the ability to run any model file on gt" />
     <MESSAGE value="Adding the ability to test the db created in apt_expts" />
     <MESSAGE value="Creating training dataset from cached images in lbl file." />
-    <option name="LAST_COMMIT_MESSAGE" value="Creating training dataset from cached images in lbl file." />
+    <MESSAGE value="Adding gt_computation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding gt_computation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1497,13 +1494,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/training.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="383" column="108" selection-start-line="383" selection-start-column="108" selection-end-line="383" selection-end-column="108" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="780">
@@ -1525,20 +1515,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="282" column="53" lean-forward="true" selection-start-line="282" selection-start-column="53" selection-end-line="282" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="953" column="4" selection-start-line="953" selection-start-column="4" selection-end-line="953" selection-end-column="4" />
+        <state relative-caret-position="513">
+          <caret line="981" column="25" lean-forward="true" selection-start-line="981" selection-start-column="25" selection-end-line="981" selection-end-column="25" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+    <entry file="file://$PROJECT_DIR$/leap/training.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="297" column="74" selection-start-line="297" selection-start-column="74" selection-end-line="297" selection-end-column="74" />
+        <state relative-caret-position="687">
+          <caret line="523" lean-forward="true" selection-start-line="523" selection-end-line="523" />
         </state>
       </provider>
     </entry>
