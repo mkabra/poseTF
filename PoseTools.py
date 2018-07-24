@@ -135,9 +135,17 @@ def adjust_contrast(in_img, conf):
             clipLimit=2.0,
             tileGridSize=(conf.clahegridsize, conf.clahegridsize))
         simg = np.zeros(in_img.shape)
-        assert in_img.shape[3] == 1, 'cant adjust contrast on color images'
-        for ndx in range(in_img.shape[0]):
-            simg[ndx, :, :, 0] = clahe.apply(in_img[ndx,:,:,0 ].astype('uint8')).astype('float')
+        if in_img.shape[3] == 1:
+            for ndx in range(in_img.shape[0]):
+                simg[ndx, :, :, 0] = clahe.apply(in_img[ndx,:,:,0 ].astype('uint8')).astype('float')
+        else:
+            for ndx in range(in_img.shape[0]):
+                lab = cv2.cvtColor(in_img[ndx,...], cv2.COLOR_RGB2LAB)
+                lab_planes = cv2.split(lab)
+                lab_planes[0] = clahe.apply(lab_planes[0])
+                lab = cv2.merge(lab_planes)
+                rgb = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+                simg[ndx,...] = rgb
         return simg
     else:
         return in_img

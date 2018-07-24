@@ -277,6 +277,7 @@ def compute_peformance(args):
         db_file = os.path.join(out_dir,args.name, args.gt_name) + '_view{}.tfrecords'.format(view)
         print('Creating GT DB file {}'.format(db_file))
         conf = apt.create_conf(args.lbl_file, view, name='a', net_type=all_nets[0], cache_dir=os.path.join(out_dir,args.name,dir_name))
+        conf.label_file = args.gt_lbl
         if not (os.path.exists(db_file) and args.skip_gt_db):
             apt.create_tfrecord(conf, split=False, on_gt=True, db_files=(db_file,))
 
@@ -290,7 +291,7 @@ def compute_peformance(args):
                 conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                 model_files, ts = get_model_files(conf, cachedir, curm)
                 for m in model_files:
-                    out_file = m + '_' + args.gt_name + '.gt'
+                    out_file = m + '_' + args.gt_name 
                     load = False
                     if os.path.exists(out_file + '.mat') and os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
                         load = True
@@ -371,6 +372,8 @@ def main(argv):
                         required=True, choices=['train','create_db','performance'])
     parser.add_argument("-lbl_file",
                         help="path to lbl file", required=True)
+    parser.add_argument("-gt_lbl",
+                        help="label file with GT data", default=None)
     parser.add_argument('-name', dest='name', help='Name for the setup',
                         required=True)
     parser.add_argument('-split_type', dest='split_type',
@@ -383,6 +386,8 @@ def main(argv):
     parser.add_argument('-skip_gt_db', dest='skip_gt_db', help='Skip GT DB if it exists', action='store_true')
 
     args = parser.parse_args(argv)
+    if args.gt_lbl is None:
+        args.gt_lbl = args.lbl_file
     log = logging.getLogger()  # root logger
     log.setLevel(logging.ERROR)
 
