@@ -334,7 +334,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
     assert not (on_gt and split), 'Cannot split gt data'
 
     local_dirs, _ = multiResData.find_local_dirs(conf, on_gt)
-    lbl = h5py.File(conf.labelfile)
+    lbl = h5py.File(conf.labelfile,'r')
     view = conf.view
     flipud = conf.flipud
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
@@ -425,7 +425,7 @@ def db_from_cached_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
     assert not (on_gt and split), 'Cannot split gt data'
 
     local_dirs, _ = multiResData.find_local_dirs(conf, on_gt)
-    lbl = h5py.File(conf.labelfile)
+    lbl = h5py.File(conf.labelfile,'r')
     view = conf.view
     flipud = conf.flipud
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
@@ -655,7 +655,7 @@ def create_deepcut_db(conf, split=False, split_file=None, use_cache=False):
 def create_cv_split_files(conf, n_splits=3):
     # creates json files for the xv splits
     local_dirs, _ = multiResData.find_local_dirs(conf)
-    lbl = h5py.File(conf.labelfile)
+    lbl = h5py.File(conf.labelfile,'r')
 
     mov_info = []
     trx_info = []
@@ -845,7 +845,7 @@ def classify_list_all(model_type, conf, in_list, on_gt, model_file):
     else:
         local_dirs, _ = multiResData.find_local_dirs(conf)
 
-    lbl = h5py.File(conf.labelfile)
+    lbl = h5py.File(conf.labelfile,'r')
     view = conf.view
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
     if conf.has_trx_file:
@@ -975,7 +975,7 @@ def check_train_db(model_type, conf, out_file):
 
 def classify_gt_data(conf, model_type, out_file, model_file):
     local_dirs, _ = multiResData.find_gt_dirs(conf)
-    lbl = h5py.File(conf.labelfile)
+    lbl = h5py.File(conf.labelfile,'r')
     view = conf.view
     npts_per_view = np.array(lbl['cfg']['NumLabelPoints'])[0, 0]
     sel_pts = int(view * npts_per_view) + conf.selpts
@@ -1359,7 +1359,7 @@ def run(args):
             H = loadmat(lbl_file)
         except NotImplementedError:
             print('Label file is in v7.3 format. Loading using h5py')
-            H = h5py.File(lbl_file)
+            H = h5py.File(lbl_file,'r')
     except TypeError as e:
         logging.exception('LBL_READ: Could not read the lbl file {}'.format(lbl_file))
         exit(1)
