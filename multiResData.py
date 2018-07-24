@@ -22,9 +22,12 @@ import movies
 import json
 
 
-def find_local_dirs(conf):
+def find_local_dirs(conf, on_gt=False):
     lbl = h5py.File(conf.labelfile, 'r')
-    exp_list = lbl['movieFilesAll'][conf.view,:]
+    if on_gt:
+        exp_list = lbl['movieFilesAllGT'][conf.view,:]
+    else:
+        exp_list = lbl['movieFilesAll'][conf.view,:]
     local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in exp_list]
     # local_dirs = [u''.join(chr(c) for c in lbl[jj]) for jj in conf.getexplist(lbl)]
     sel_dirs = [True] * len(local_dirs)
@@ -53,8 +56,11 @@ def find_gt_dirs(conf):
     return local_dirs, sel_dirs
 
 
-def get_trx_files(lbl, local_dirs):
-    trx_files = [u''.join(chr(c) for c in lbl[jj]) for jj in lbl['trxFilesAll'][0]]
+def get_trx_files(lbl, local_dirs, on_gt=False):
+    if on_gt:
+        trx_files = [u''.join(chr(c) for c in lbl[jj]) for jj in lbl['trxFilesAllGT'][0]]
+    else:
+        trx_files = [u''.join(chr(c) for c in lbl[jj]) for jj in lbl['trxFilesAll'][0]]
     movdir = [os.path.dirname(a) for a in local_dirs]
     trx_files = [s.replace('$movdir', m) for (s, m) in zip(trx_files, movdir)]
     try:

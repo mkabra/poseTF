@@ -104,24 +104,37 @@ def tf_serialize(data):
 
     return example.SerializeToString()
 
-def create_tfrecord(conf, split=True, split_file=None, use_cache=False):
+def create_tfrecord(conf, split=True, split_file=None, use_cache=False, on_gt=False, db_files=()):
     # function that creates tfrecords using db_from_lbl
     if not os.path.exists(conf.cachedir):
         os.mkdir(conf.cachedir)
 
-    try:
-        envs = multiResData.create_envs(conf, split)
-    except IOError:
-        logging.exception('DB_WRITE: Could not write to tfrecord database')
-        exit(1)
+    if on_gt:
+        train_filename = db_files[0]
+        env = tf.python_io.TFRecordWriter(train_filename)
+        val_env = None
+        envs = [env, val_env]
+    elif len(db_files)>1:
+        train_filename = db_files[0]
+        env = tf.python_io.TFRecordWriter(train_filename)
+        val_filename = db_files[1]
+        val_env = tf.python_io.TFRecordWriter(val_filename)
+        envs = [env, val_env]
+    else:
+        try:
+            envs = multiResData.create_envs(conf, split)
+        except IOError:
+            logging.exception('DB_WRITE: Could not write to tfrecord database')
+            exit(1)
 
     out_fns = []
     out_fns.append(lambda data: envs[0].write(tf_serialize(data)))
     out_fns.append(lambda data: envs[1].write(tf_serialize(data)))
     if use_cache:
-        splits = db_from_cached_lbl(conf,out_fns, split, split_file)
+        splits = db_from_cached_lbl(conf,out_fns, split, split_file, on_gt)
     else:
-        splits = db_from_lbl(conf, out_fns, split, split_file)
+        splits = db_from_lbl(conf, out_fns, split, split_file, on_gt)
+
     envs[0].close()
     envs[1].close() if split else None
     try:
@@ -129,6 +142,8 @@ def create_tfrecord(conf, split=True, split_file=None, use_cache=False):
             json.dump(splits, f)
     except IOError:
         logging.warning('SPLIT_WRITE: Could not output the split data information')
+
+
 
 def convert_to_orig(base_locs, conf, cur_trx, trx_fnum_start, all_f, sz, nvalid, crop_loc):
     # converts locs in cropped image back to locations in original image.
@@ -304,7 +319,7 @@ def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
     return conf
 
 
-def db_from_lbl(conf, out_fns, split=True, split_file=None):
+def db_from_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
     # outputs is a list of functions. The first element writes
     # to the training dataset while the second one write to the validation
     # dataset. If split is False, second element is not used and all data is
@@ -316,7 +331,9 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     # the function returns a list of [expid, frame_number and trxid] showing
     #  how the data was split between the two datasets.
 
-    local_dirs, _ = multiResData.find_local_dirs(conf)
+    assert not (on_gt and split), 'Cannot split gt data'
+
+    local_dirs, _ = multiResData.find_local_dirs(conf, on_gt)
     lbl = h5py.File(conf.labelfile)
     view = conf.view
     flipud = conf.flipud
@@ -342,8 +359,8 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     for ndx, dir_name in enumerate(local_dirs):
 
         exp_name = conf.getexpname(dir_name)
-        cur_pts = trx_pts(lbl, ndx)
-        crop_loc = get_crop_loc(lbl, ndx, view, on_gt=False)
+        cur_pts = trx_pts(lbl, ndx, on_gt)
+        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
 
         try:
             cap = movies.Movie(dir_name)
@@ -352,7 +369,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
             sys.exit(1)
 
         if conf.has_trx_file:
-            trx_files = multiResData.get_trx_files(lbl, local_dirs)
+            trx_files = multiResData.get_trx_files(lbl, local_dirs, on_gt)
             trx = sio.loadmat(trx_files[ndx])['trx'][0]
             n_trx = len(trx)
             trx_split = np.random.random(n_trx) < conf.valratio
@@ -364,7 +381,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
 
         for trx_ndx in range(n_trx):
 
-            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
+            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx, on_gt)
             cur_trx = trx[trx_ndx]
             for fnum in frames:
                 if not check_fnum(fnum, cap, exp_name, ndx):
@@ -393,7 +410,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None):
     return splits
 
 
-def db_from_cached_lbl(conf, out_fns, split=True, split_file=None):
+def db_from_cached_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
     # outputs is a list of functions. The first element writes
     # to the training dataset while the second one write to the validation
     # dataset. If split is False, second element is not used and all data is
@@ -405,7 +422,9 @@ def db_from_cached_lbl(conf, out_fns, split=True, split_file=None):
     # the function returns a list of [expid, frame_number and trxid] showing
     #  how the data was split between the two datasets.
 
-    local_dirs, _ = multiResData.find_local_dirs(conf)
+    assert not (on_gt and split), 'Cannot split gt data'
+
+    local_dirs, _ = multiResData.find_local_dirs(conf, on_gt)
     lbl = h5py.File(conf.labelfile)
     view = conf.view
     flipud = conf.flipud
@@ -432,8 +451,11 @@ def db_from_cached_lbl(conf, out_fns, split=True, split_file=None):
     t_ndx = lbl['preProcData_MD_iTgt'].value[0,:].astype('int') - 1
     f_ndx = lbl['preProcData_MD_frm'].value[0,:].astype('int') - 1
 
+    if on_gt:
+        m_ndx = -m_ndx
+
     if conf.has_trx_file:
-        trx_files = multiResData.get_trx_files(lbl, local_dirs)
+        trx_files = multiResData.get_trx_files(lbl, local_dirs, on_gt)
 
     prev_trx_mov = -1
     psz = max(conf.imsz)
@@ -441,10 +463,10 @@ def db_from_cached_lbl(conf, out_fns, split=True, split_file=None):
     for ndx in range(lbl['preProcData_I'].shape[1]):
         if m_ndx[ndx] < 0: continue
         mndx = m_ndx[ndx] - 1
-        cur_pts = trx_pts(lbl, mndx, on_gt=False)
+        cur_pts = trx_pts(lbl, mndx, on_gt)
         if cur_pts.ndim == 3:
             cur_pts = cur_pts[np.newaxis,...]
-        crop_loc = get_crop_loc(lbl, mndx, view, on_gt=False)
+        crop_loc = get_crop_loc(lbl, mndx, view, on_gt)
         cur_locs = cur_pts[t_ndx[ndx], f_ndx[ndx], :, sel_pts].copy()
         cur_frame = lbl[lbl['preProcData_I'][conf.view,ndx]].value.copy()
         cur_frame = cur_frame.T
@@ -878,28 +900,28 @@ def classify_db(conf, read_fn, pred_fn, n):
     return pred_locs, labeled_locs, info
 
 
-def classify_db_all(model_type, conf, db_file):
+def classify_db_all(model_type, conf, db_file, model_file=None):
     if model_type == 'openpose':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
-        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf)
+        pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf, model_file)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
         close_fn()
     elif model_type == 'unet':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
         tf_iterator.batch_size = 1
         read_fn = tf_iterator.next
-        pred_fn, close_fn, model_file = get_unet_pred_fn(conf)
+        pred_fn, close_fn, model_file = get_unet_pred_fn(conf, model_file)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, tf_iterator.N)
         close_fn()
     elif model_type == 'leap':
         leap_gen, n = leap.training.get_read_fn(conf, db_file)
-        pred_fn, latest_model_file = leap.training.get_pred_fn(conf)
+        pred_fn, latest_model_file = leap.training.get_pred_fn(conf, model_file)
         pred_locs, label_locs, info = classify_db(conf, leap_gen, pred_fn, n)
     elif model_type == 'deeplabcut':
         read_fn, n = deepcut.train.get_read_fn(conf, db_file)
-        pred_fn, latest_model_file = deepcut.train.get_pred_fn(conf)
+        pred_fn, latest_model_file = deepcut.train.get_pred_fn(conf, model_file)
         pred_locs, label_locs, info = classify_db(conf, read_fn, pred_fn, n)
     else:
         raise ValueError('Undefined model type')
