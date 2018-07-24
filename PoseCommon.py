@@ -795,7 +795,9 @@ class PoseCommon(object):
             saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
             latest_model_file =latest_ckpt.model_checkpoint_path
         else:
+            saver = tf.train.import_meta_graph(model_file + '.meta')
             latest_model_file = model_file
+
 
         saver.restore(sess, latest_model_file)
         return latest_model_file
