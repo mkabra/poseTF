@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/APT_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/multiResData.py" beforeDir="false" afterPath="$PROJECT_DIR$/multiResData.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -63,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="476">
-                  <caret line="299" lean-forward="true" selection-start-line="299" selection-end-line="299" />
+                <state relative-caret-position="206">
+                  <caret line="289" column="41" selection-start-line="289" selection-start-column="41" selection-end-line="289" selection-end-column="41" />
                 </state>
               </provider>
             </entry>
@@ -646,13 +644,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00141" summary="removed checking for uint8 in preprocess im. Need to put in a different place">
-      <created>1527867190573</created>
-      <option name="number" value="00141" />
-      <option name="presentableId" value="LOCAL-00141" />
-      <option name="project" value="LOCAL" />
-      <updated>1527867190573</updated>
-    </task>
     <task id="LOCAL-00142" summary="Making number of training iters independent of batch size. Apparently the number of iterations shouldn't change if the batch size is changed.">
       <created>1527878386925</created>
       <option name="number" value="00142" />
@@ -989,7 +980,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532344916210</updated>
     </task>
-    <option name="localTasksCounter" value="190" />
+    <task id="LOCAL-00190" summary="To compute GT results used DB.">
+      <created>1532419277032</created>
+      <option name="number" value="00190" />
+      <option name="presentableId" value="LOCAL-00190" />
+      <option name="project" value="LOCAL" />
+      <updated>1532419277033</updated>
+    </task>
+    <option name="localTasksCounter" value="191" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1111,7 +1109,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed training with fullTrainDatafile." />
     <MESSAGE value="Bug fixes. Added timeout in preloading threads so that they die earlier when the training/validation ends." />
     <MESSAGE value="Fixed off by one error in APT tracking." />
     <MESSAGE value="view for APT_interface is now 1 indexed." />
@@ -1136,7 +1133,8 @@
     <MESSAGE value="Modified apt predict code so that input sizes are a multiple of 32" />
     <MESSAGE value="minor edit" />
     <MESSAGE value="For GT computation used cached results if they are new." />
-    <option name="LAST_COMMIT_MESSAGE" value="For GT computation used cached results if they are new." />
+    <MESSAGE value="To compute GT results used DB." />
+    <option name="LAST_COMMIT_MESSAGE" value="To compute GT results used DB." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1530,8 +1528,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="476">
-          <caret line="299" lean-forward="true" selection-start-line="299" selection-end-line="299" />
+        <state relative-caret-position="206">
+          <caret line="289" column="41" selection-start-line="289" selection-start-column="41" selection-end-line="289" selection-end-column="41" />
         </state>
       </provider>
     </entry>

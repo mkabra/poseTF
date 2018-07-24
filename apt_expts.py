@@ -273,8 +273,8 @@ def compute_peformance(args):
     all_preds = {}
 
     for view in range(nviews):
-        db_file = os.path.join(out_dir,args.name, args.gt_db_name) + '_view{}.tfrecords'.format(view)
-        conf = apt.create_conf(args.lbl_file, view, name='a', net_type=curm[0], cache_dir=os.path.join(out_dir,args.name,dir_name))
+        db_file = os.path.join(out_dir,args.name, args.gt_name) + '_view{}.tfrecords'.format(view)
+        conf = apt.create_conf(args.lbl_file, view, name='a', net_type=all_nets[0], cache_dir=os.path.join(out_dir,args.name,dir_name))
         apt.create_tfrecord(conf, split=False, on_gt=True, db_files=(db_file))
 
     for curm in all_nets:
@@ -287,7 +287,7 @@ def compute_peformance(args):
                 conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                 model_files, ts = get_model_files(conf, cachedir, curm)
                 for m in model_files:
-                    out_file = m + '.gt_data'
+                    out_file = m + '_' + args.gt_name + '.gt'
                     if os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
                         H = sio.loadmat(out_file)
                         pred = H['pred_locs'] - 1
@@ -364,7 +364,7 @@ def main(argv):
                         help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
     parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')
     parser.add_argument('-only_check_db', dest='only_check', help='Only check the db and do not regenerate them', action='store_true' )
-    parser.add_argument('-gt_db_name', dest='gt_db_name', help='DB name for GT data', default='gt_data')
+    parser.add_argument('-gt_name', dest='gt_name', help='Name for GT data', default='gt')
 
     args = parser.parse_args(argv)
     log = logging.getLogger()  # root logger
