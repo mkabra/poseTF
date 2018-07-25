@@ -622,8 +622,8 @@ def training(conf):
                         verbose=0,
                         # validation_data=val_di,
                         # validation_steps=val_samples // batch_size,
-                        use_multiprocessing=True,
-                        workers=4,
+#                        use_multiprocessing=True,
+#                        workers=4,
                         initial_epoch=last_epoch
                         )
 
