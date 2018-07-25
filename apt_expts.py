@@ -305,7 +305,7 @@ def compute_peformance(args):
                     else:
                         # pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
                         tf_iterator = multiResData.tf_reader(conf, db_file, False)
-                        tf_iterator.batch_size = 1
+
                         read_fn = tf_iterator.next
                         pred_fn, close_fn, _ = apt.get_pred_fn(curm, conf, m)
                         pred, label, gt_list = apt.classify_db(conf, read_fn, pred_fn, tf_iterator.N)
