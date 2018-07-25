@@ -1,3 +1,24 @@
+
+model_file = '/home/mayank/Dropbox (HHMI)/temp/alice/leap/final_model.h5'
+lbl_file = '/home/mayank/work/poseTF/data/leap/leap_data.lbl'
+cache_dir = '/home/mayank/work/poseTF/cache/leap_db'
+
+import sys
+import socket
+import  numpy as np
+import os
+
+import APT_interface as apt
+view = 0
+conf = apt.create_conf(lbl_file,0,'leap_db','leap',cache_dir)
+apt.create_leap_db(conf, False)
+
+data_path = os.path.join(cache_dir, 'leap_train.h5')
+cmd = 'python leap/training_MK.py {}'.format(data_path)
+print('RUN: {}'.format(cmd))
+
+
+##
 import APT_interface as apt
 import os
 import h5py
