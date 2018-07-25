@@ -13,6 +13,7 @@ import time
 import logging
 import glob
 import scipy.io as sio
+import multiResData
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -296,7 +297,12 @@ def compute_peformance(args):
                         gt_list = H['list'] - 1
                     else:
                         # pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
-                        pred, label, gt_list = apt.classify_db_all(curm, conf, db_file, m)
+                        tf_iterator = multiResData.tf_reader(conf, db_file, False)
+                        tf_iterator.batch_size = 1
+                        read_fn = tf_iterator.next
+                        pred_fn, close_fn, _ = apt.get_pred_fn(curm, conf, m)
+                        pred, label, gt_list = apt.classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+                        close_fn()
                     cur_out.append([pred, label, gt_list, m, out_file, view, 0])
 
             else:
