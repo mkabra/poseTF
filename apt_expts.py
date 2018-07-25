@@ -14,6 +14,7 @@ import logging
 import glob
 import scipy.io as sio
 import multiResData
+import numpy as np
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -275,22 +276,28 @@ def compute_peformance(args):
 
     for view in range(nviews):
         db_file = os.path.join(out_dir,args.name, args.gt_name) + '_view{}.tfrecords'.format(view)
+        print('Creating GT DB file {}'.format(db_file))
         conf = apt.create_conf(args.lbl_file, view, name='a', net_type=all_nets[0], cache_dir=os.path.join(out_dir,args.name,dir_name))
         conf.label_file = args.gt_lbl
-        apt.create_tfrecord(conf, split=False, on_gt=True, db_files=(db_file))
+        if not (os.path.exists(db_file) and args.skip_gt_db):
+            apt.create_tfrecord(conf, split=False, on_gt=True, db_files=(db_file,))
 
     for curm in all_nets:
         all_preds[curm] = []
         for view in range(nviews):
             cur_out = []
-            db_file = os.path.join(out_dir, args.name, args.gt_db_name) + '_view{}.tfrecords'.format(view)
+            db_file = os.path.join(out_dir, args.name, args.gt_name) + '_view{}.tfrecords'.format(view)
             if args.split_type is None:
                 cachedir = os.path.join(out_dir,args.name,dir_name,'{}_view_{}'.format(curm,view),'full')
                 conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                 model_files, ts = get_model_files(conf, cachedir, curm)
                 for m in model_files:
                     out_file = m + '_' + args.gt_name
-                    if os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
+                    load = False
+                    if os.path.exists(out_file + '.mat') and os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
+                        load = True
+
+                    if load:
                         H = sio.loadmat(out_file)
                         pred = H['pred_locs'] - 1
                         label = H['labeled_locs'] - 1
@@ -303,6 +310,14 @@ def compute_peformance(args):
                         pred_fn, close_fn, _ = apt.get_pred_fn(curm, conf, m)
                         pred, label, gt_list = apt.classify_db(conf, read_fn, pred_fn, tf_iterator.N)
                         close_fn()
+                        mat_pred_locs = pred+ 1
+                        mat_labeled_locs = np.array(label) +1
+                        mat_list = gt_list
+
+                        sio.savemat(out_file,{'pred_locs':mat_pred_locs,
+                          'labeled_locs': mat_labeled_locs,
+                          'list': mat_list})
+
                     cur_out.append([pred, label, gt_list, m, out_file, view, 0])
 
             else:
@@ -324,7 +339,7 @@ def compute_peformance(args):
 
             all_preds[curm].append(cur_out)
 
-    with open(os.path.join(out_dir,args.name,dir_name,'gt_results.p','w')) as f:
+    with open(os.path.join(out_dir,args.name,dir_name,args.gt_name + '_results.p','w')) as f:
         pickle.dump(all_preds,f)
 
 def get_model_files(conf, cache_dir, method):
@@ -374,6 +389,7 @@ def main(argv):
     parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')
     parser.add_argument('-only_check_db', dest='only_check', help='Only check the db and do not regenerate them', action='store_true' )
     parser.add_argument('-gt_name', dest='gt_name', help='Name for GT data', default='gt')
+    parser.add_argument('-skip_gt_db', dest='skip_gt_db', help='Skip GT DB if it exists', action='store_true')
 
     args = parser.parse_args(argv)
     if args.gt_lbl is None:
