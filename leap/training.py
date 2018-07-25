@@ -517,12 +517,12 @@ def get_pred_fn(conf, model_file=None):
         X1 = np.zeros([all_f.shape[0], newY, newX, all_f.shape[3]]).astype('float32')
         X1[:, :all_f.shape[1], :all_f.shape[2], :] = all_f
 
-        pred = model.predict(X1,batch_size = conf.batch_size)
+        X1 = X1.astype("float32") / 255
+        pred = model.predict(X1,batch_size = X1.shape[0])
         pred = np.stack(pred)
         pred = pred[:,:all_f.shape[1],:all_f.shape[2],:]
         base_locs = PoseTools.get_pred_locs(pred)
-
-        base_locs = base_locs * conf.op_rescale
+        base_locs = base_locs * conf.leap_rescale
         return base_locs, pred
 
     close_fn = lambda : None

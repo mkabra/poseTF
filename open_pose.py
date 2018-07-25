@@ -642,6 +642,8 @@ def get_pred_fn(conf, model_file=None):
     model.load_weights(latest_model_file)
 
     def pred_fn(all_f):
+        if all_f.shape[3] == 1:
+            all_f = np.tile(all_f,[1,1,1,3])
         xs, _ = PoseTools.preprocess_ims(
             all_f, in_locs=np.zeros([conf.batch_size, conf.n_classes, 2]), conf=conf,
             distort=False, scale=conf.op_rescale)
