@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/open_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/open_pose.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -62,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="495">
-                  <caret line="309" column="55" selection-start-line="309" selection-start-column="55" selection-end-line="309" selection-end-column="55" />
+                <state relative-caret-position="480">
+                  <caret line="308" selection-start-line="308" selection-end-line="308" />
                 </state>
               </provider>
             </entry>
@@ -309,9 +308,9 @@
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
         <option value="$PROJECT_DIR$/debug_apt_interface.py" />
-        <option value="$PROJECT_DIR$/apt_expts.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
+        <option value="$PROJECT_DIR$/apt_expts.py" />
       </list>
     </option>
   </component>
@@ -669,13 +668,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00147" summary="Minor bug fix. And output CV results to a json file.">
-      <created>1529590046226</created>
-      <option name="number" value="00147" />
-      <option name="presentableId" value="LOCAL-00147" />
-      <option name="project" value="LOCAL" />
-      <updated>1529590046226</updated>
-    </task>
     <task id="LOCAL-00148" summary="Fixed training with fullTrainDatafile.">
       <created>1529591937173</created>
       <option name="number" value="00148" />
@@ -1012,7 +1004,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532509767050</updated>
     </task>
-    <option name="localTasksCounter" value="196" />
+    <task id="LOCAL-00196" summary="Closing keras sessions in pred_fn">
+      <created>1532510118463</created>
+      <option name="number" value="00196" />
+      <option name="presentableId" value="LOCAL-00196" />
+      <option name="project" value="LOCAL" />
+      <updated>1532510118463</updated>
+    </task>
+    <option name="localTasksCounter" value="197" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1134,7 +1133,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Not all arguments are always visible. sigh." />
     <MESSAGE value="Fixed indexing for start frame and end frame in APT_interface" />
     <MESSAGE value="Script to convert felipe's data into tfrecords format to test out open-pose" />
     <MESSAGE value="Integrating Leap" />
@@ -1159,7 +1157,8 @@
     <MESSAGE value="apt_expts now uses tf record iterator for all models for computing gt performance" />
     <MESSAGE value="Pred function converts gray scale images to color for openpose" />
     <MESSAGE value="Batch size isn't 1 for classifying db" />
-    <option name="LAST_COMMIT_MESSAGE" value="Batch size isn't 1 for classifying db" />
+    <MESSAGE value="Closing keras sessions in pred_fn" />
+    <option name="LAST_COMMIT_MESSAGE" value="Closing keras sessions in pred_fn" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1521,13 +1520,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="495">
-          <caret line="309" column="55" selection-start-line="309" selection-start-column="55" selection-end-line="309" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="333">
@@ -1566,6 +1558,13 @@
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="308" selection-start-line="308" selection-end-line="308" />
         </state>
       </provider>
     </entry>
