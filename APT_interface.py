@@ -900,6 +900,7 @@ def classify_db(conf, read_fn, pred_fn, n):
     return pred_locs, labeled_locs, info
 
 
+
 def classify_db_all(model_type, conf, db_file, model_file=None):
     if model_type == 'openpose':
         tf_iterator = multiResData.tf_reader(conf, db_file, False)
