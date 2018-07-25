@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/open_pose.py" beforeDir="false" afterPath="$PROJECT_DIR$/open_pose.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -61,8 +62,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="480">
-                  <caret line="308" selection-start-line="308" selection-end-line="308" />
+                <state relative-caret-position="495">
+                  <caret line="309" column="55" selection-start-line="309" selection-start-column="55" selection-end-line="309" selection-end-column="55" />
                 </state>
               </provider>
             </entry>
@@ -84,11 +85,14 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="training.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="training.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/leap/training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="71">
-                  <caret line="490" column="24" selection-start-line="490" selection-start-column="24" selection-end-line="490" selection-end-column="24" />
+                <state relative-caret-position="656">
+                  <caret line="528" column="30" lean-forward="true" selection-start-line="528" selection-start-column="30" selection-end-line="528" selection-end-column="30" />
+                  <folding>
+                    <element signature="e#0#18#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -147,11 +151,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="303">
-                  <caret line="880" column="4" selection-start-line="880" selection-start-column="4" selection-end-line="880" selection-end-column="4" />
+                <state relative-caret-position="333">
+                  <caret line="824" column="54" lean-forward="true" selection-start-line="824" selection-start-column="54" selection-end-line="824" selection-end-column="54" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -162,8 +166,11 @@
           <file leaf-file-name="open_pose.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/open_pose.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="642">
-                  <caret line="645" column="44" lean-forward="true" selection-start-line="645" selection-start-column="44" selection-end-line="645" selection-end-column="44" />
+                <state relative-caret-position="762">
+                  <caret line="655" column="30" selection-start-line="655" selection-start-column="30" selection-end-line="655" selection-end-column="30" />
+                  <folding>
+                    <element signature="e#0#30#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -301,10 +308,10 @@
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
-        <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/debug_apt_interface.py" />
-        <option value="$PROJECT_DIR$/open_pose.py" />
         <option value="$PROJECT_DIR$/apt_expts.py" />
+        <option value="$PROJECT_DIR$/open_pose.py" />
+        <option value="$PROJECT_DIR$/leap/training.py" />
       </list>
     </option>
   </component>
@@ -662,13 +669,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00146" summary="Introduced queueing to make training faster. Also changed the UNet model to start fewer filters in earlier stages.">
-      <created>1529588346067</created>
-      <option name="number" value="00146" />
-      <option name="presentableId" value="LOCAL-00146" />
-      <option name="project" value="LOCAL" />
-      <updated>1529588346067</updated>
-    </task>
     <task id="LOCAL-00147" summary="Minor bug fix. And output CV results to a json file.">
       <created>1529590046226</created>
       <option name="number" value="00147" />
@@ -1005,7 +1005,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532509622948</updated>
     </task>
-    <option name="localTasksCounter" value="195" />
+    <task id="LOCAL-00195" summary="Batch size isn't 1 for classifying db">
+      <created>1532509767049</created>
+      <option name="number" value="00195" />
+      <option name="presentableId" value="LOCAL-00195" />
+      <option name="project" value="LOCAL" />
+      <updated>1532509767050</updated>
+    </task>
+    <option name="localTasksCounter" value="196" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1127,7 +1134,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="view for APT_interface is now 1 indexed." />
     <MESSAGE value="Not all arguments are always visible. sigh." />
     <MESSAGE value="Fixed indexing for start frame and end frame in APT_interface" />
     <MESSAGE value="Script to convert felipe's data into tfrecords format to test out open-pose" />
@@ -1152,7 +1158,8 @@
     <MESSAGE value="To compute GT results used DB." />
     <MESSAGE value="apt_expts now uses tf record iterator for all models for computing gt performance" />
     <MESSAGE value="Pred function converts gray scale images to color for openpose" />
-    <option name="LAST_COMMIT_MESSAGE" value="Pred function converts gray scale images to color for openpose" />
+    <MESSAGE value="Batch size isn't 1 for classifying db" />
+    <option name="LAST_COMMIT_MESSAGE" value="Batch size isn't 1 for classifying db" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1487,24 +1494,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/training.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="71">
-          <caret line="490" column="24" selection-start-line="490" selection-start-column="24" selection-end-line="490" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="513">
-          <caret line="144" selection-start-line="144" selection-end-line="144" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#71#86#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/IPython/core/history.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="146">
@@ -1532,27 +1521,51 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/open_pose.py">
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="642">
-          <caret line="645" column="44" lean-forward="true" selection-start-line="645" selection-start-column="44" selection-end-line="645" selection-end-column="44" />
+        <state relative-caret-position="495">
+          <caret line="309" column="55" selection-start-line="309" selection-start-column="55" selection-end-line="309" selection-end-column="55" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="880" column="4" selection-start-line="880" selection-start-column="4" selection-end-line="880" selection-end-column="4" />
+        <state relative-caret-position="333">
+          <caret line="824" column="54" lean-forward="true" selection-start-line="824" selection-start-column="54" selection-end-line="824" selection-end-column="54" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+    <entry file="file://$PROJECT_DIR$/open_pose.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="308" selection-start-line="308" selection-end-line="308" />
+        <state relative-caret-position="762">
+          <caret line="655" column="30" selection-start-line="655" selection-start-column="30" selection-end-line="655" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="513">
+          <caret line="144" selection-start-line="144" selection-end-line="144" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#71#86#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/leap/training.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="656">
+          <caret line="528" column="30" lean-forward="true" selection-start-line="528" selection-start-column="30" selection-end-line="528" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

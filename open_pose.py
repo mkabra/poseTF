@@ -23,6 +23,7 @@ import os
 import  numpy as np
 import json
 import tensorflow as tf
+import keras.backend as K
 
 
 name = 'open_pose'
@@ -652,6 +653,6 @@ def get_pred_fn(conf, model_file=None):
         base_locs = base_locs * conf.op_rescale * conf.op_label_scale
         return base_locs, pred
 
-    close_fn = lambda : None
+    close_fn = K.clear_session
 
     return pred_fn, close_fn, latest_model_file

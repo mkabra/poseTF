@@ -18,6 +18,7 @@ from leap import models
 from leap.image_augmentation import PairedImageAugmenter, MultiInputOutputPairedImageAugmenter
 #from leap.viz import show_pred, show_confmap_grid, plot_history
 from leap.utils import load_dataset
+from keras import backend as K
 
 
 name = 'leap'
@@ -525,7 +526,7 @@ def get_pred_fn(conf, model_file=None):
         base_locs = base_locs * conf.leap_rescale
         return base_locs, pred
 
-    close_fn = lambda : None
+    close_fn = K.clear_session
 
     return pred_fn, close_fn, latest_model_file
 
