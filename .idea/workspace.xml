@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/debug_apt_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_apt_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/leap/training.py" beforeDir="false" afterPath="$PROJECT_DIR$/leap/training.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -40,29 +41,26 @@
           <file leaf-file-name="scratch.py" pinned="false" current-in-tab="false">
             <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state>
+                <state relative-caret-position="1035">
                   <caret line="69" column="22" selection-start-line="69" selection-start-column="22" selection-end-line="69" selection-end-column="22" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="315">
-                  <caret line="21" selection-start-line="21" selection-end-line="21" />
-                  <folding>
-                    <element signature="e#191#201#0" expanded="true" />
-                  </folding>
+                <state relative-caret-position="120">
+                  <caret line="7" selection-start-line="7" selection-end-line="7" />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="480">
-                  <caret line="308" selection-start-line="308" selection-end-line="308" />
+                <state relative-caret-position="4440">
+                  <caret line="296" column="118" selection-start-line="296" selection-start-column="118" selection-end-line="296" selection-end-column="118" />
                 </state>
               </provider>
             </entry>
@@ -74,7 +72,7 @@
           <file leaf-file-name="PoseTools.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseTools.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="513">
+                <state relative-caret-position="1635">
                   <caret line="144" selection-start-line="144" selection-end-line="144" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -84,11 +82,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="training.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="training.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/leap/training.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="656">
-                  <caret line="528" column="30" lean-forward="true" selection-start-line="528" selection-start-column="30" selection-end-line="528" selection-end-column="30" />
+                <state relative-caret-position="4920">
+                  <caret line="348" column="109" selection-start-line="348" selection-start-column="109" selection-end-line="348" selection-end-column="109" />
                   <folding>
                     <element signature="e#0#18#0" expanded="true" />
                   </folding>
@@ -99,7 +97,7 @@
           <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/leap/utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="258">
+                <state relative-caret-position="645">
                   <caret line="47" column="4" selection-start-line="47" selection-start-column="4" selection-end-line="47" selection-end-column="4" />
                 </state>
               </provider>
@@ -117,7 +115,7 @@
           <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="454">
+                <state relative-caret-position="2145">
                   <caret line="155" column="8" selection-start-line="155" selection-start-column="8" selection-end-line="155" selection-end-column="8" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -126,11 +124,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/multiResData.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="303">
-                  <caret line="323" selection-start-line="323" selection-end-line="323" />
+                  <caret line="469" column="4" selection-start-line="469" selection-start-column="4" selection-end-line="469" selection-end-column="4" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -141,7 +139,7 @@
           <file leaf-file-name="PoseCommon.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseCommon.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="48">
+                <state relative-caret-position="5865">
                   <caret line="418" column="18" selection-start-line="418" selection-start-column="18" selection-end-line="418" selection-end-column="18" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -153,22 +151,10 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="333">
-                  <caret line="824" column="54" lean-forward="true" selection-start-line="824" selection-start-column="54" selection-end-line="824" selection-end-column="54" />
+                <state relative-caret-position="5445">
+                  <caret line="383" column="36" selection-start-line="383" selection-start-column="36" selection-end-line="383" selection-end-column="36" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="open_pose.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/open_pose.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="762">
-                  <caret line="655" column="30" selection-start-line="655" selection-start-column="30" selection-end-line="655" selection-end-column="30" />
-                  <folding>
-                    <element signature="e#0#30#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -307,10 +293,10 @@
         <option value="$PROJECT_DIR$/multiResData.py" />
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
-        <option value="$PROJECT_DIR$/debug_apt_interface.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
-        <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/apt_expts.py" />
+        <option value="$PROJECT_DIR$/leap/training.py" />
+        <option value="$PROJECT_DIR$/debug_apt_interface.py" />
       </list>
     </option>
   </component>
@@ -321,10 +307,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="48" />
-    <option name="y" value="-11" />
-    <option name="width" value="1873" />
-    <option name="height" value="1092" />
+    <option name="x" value="49" />
+    <option name="y" value="-4" />
+    <option name="width" value="1871" />
+    <option name="height" value="1084" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -668,13 +654,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00148" summary="Fixed training with fullTrainDatafile.">
-      <created>1529591937173</created>
-      <option name="number" value="00148" />
-      <option name="presentableId" value="LOCAL-00148" />
-      <option name="project" value="LOCAL" />
-      <updated>1529591937173</updated>
-    </task>
     <task id="LOCAL-00149" summary="Fixed training with fullTrainDatafile.">
       <created>1529600164670</created>
       <option name="number" value="00149" />
@@ -1011,7 +990,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532510118463</updated>
     </task>
-    <option name="localTasksCounter" value="197" />
+    <task id="LOCAL-00197" summary="reverts">
+      <created>1532510214434</created>
+      <option name="number" value="00197" />
+      <option name="presentableId" value="LOCAL-00197" />
+      <option name="project" value="LOCAL" />
+      <updated>1532510214434</updated>
+    </task>
+    <option name="localTasksCounter" value="198" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1056,7 +1042,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="48" y="-11" width="1873" height="1092" extended-state="6" />
+    <frame x="-1871" y="-4" width="1871" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
@@ -1065,10 +1051,10 @@
       <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
       <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.5776851" visible="true" weight="0.30486485" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
-      <window_info id="Structure" order="3" sideWeight="0.2346194" side_tool="true" weight="0.30594593" />
+      <window_info id="Structure" order="3" sideWeight="0.23566215" side_tool="true" weight="0.30594593" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.3274244" />
       <window_info anchor="bottom" id="Favorites" order="5" side_tool="true" weight="0.32968834" />
-      <window_info id="Debug" order="2" sideWeight="0.7653806" weight="0.30594593" />
+      <window_info id="Debug" order="2" sideWeight="0.76433784" weight="0.30594593" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24931657" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -1082,27 +1068,27 @@
       <window_info anchor="bottom" id="Find" order="3" weight="0.32846716" />
     </layout>
     <layout-to-restore>
+      <window_info anchor="bottom" id="Find" order="3" weight="0.32846716" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24931657" />
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="1" weight="0.32638165" />
+      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" />
       <window_info id="Structure" order="3" sideWeight="0.5703858" weight="0.25567567" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="7" weight="0.32949933" />
-      <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
       <window_info anchor="bottom" id="Inspection Results" order="10" weight="0.32869378" />
-      <window_info anchor="bottom" id="Message" order="2" />
+      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.4296142" weight="0.30486485" />
       <window_info active="true" id="Debug" order="2" sideWeight="0.49863315" visible="true" weight="0.35135135" />
       <window_info anchor="right" x="344" y="449" width="1940" height="943" id="Documentation" order="4" type="FLOATING" />
       <window_info anchor="right" id="Database" order="5" />
       <window_info anchor="bottom" id="Terminal" order="4" weight="0.32760474" />
       <window_info anchor="bottom" id="Event Log" order="0" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Inspection" order="9" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="8" weight="0.25" />
+      <window_info anchor="bottom" id="Version Control" order="6" sideWeight="0.4948059" weight="0.3253389" />
+      <window_info anchor="bottom" id="Message" order="2" />
       <window_info anchor="bottom" id="Favorites" order="5" side_tool="true" weight="0.32968834" />
-      <window_info anchor="bottom" id="Find" order="3" weight="0.32846716" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.4296142" weight="0.30486485" />
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1133,7 +1119,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed indexing for start frame and end frame in APT_interface" />
     <MESSAGE value="Script to convert felipe's data into tfrecords format to test out open-pose" />
     <MESSAGE value="Integrating Leap" />
     <MESSAGE value="Using newer cropping where cropping location is specified for each video" />
@@ -1158,7 +1143,8 @@
     <MESSAGE value="Pred function converts gray scale images to color for openpose" />
     <MESSAGE value="Batch size isn't 1 for classifying db" />
     <MESSAGE value="Closing keras sessions in pred_fn" />
-    <option name="LAST_COMMIT_MESSAGE" value="Closing keras sessions in pred_fn" />
+    <MESSAGE value="reverts" />
+    <option name="LAST_COMMIT_MESSAGE" value="reverts" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1175,13 +1161,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/debug_apt_interface.py</url>
-          <line>70</line>
+          <line>76</line>
           <option name="timeStamp" value="572" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/APT_interface.py</url>
           <line>384</line>
-          <option name="timeStamp" value="578" />
+          <option name="timeStamp" value="582" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/multiResData.py</url>
+          <line>322</line>
+          <option name="timeStamp" value="584" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-defaults>
@@ -1202,7 +1193,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="582" />
+      <option name="time" value="585" />
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
@@ -1412,7 +1403,7 @@
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
+        <state relative-caret-position="1035">
           <caret line="69" column="22" selection-start-line="69" selection-start-column="22" selection-end-line="69" selection-end-column="22" />
         </state>
       </provider>
@@ -1459,6 +1450,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/IPython/core/history.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="146">
+          <caret line="834" selection-start-line="834" selection-end-line="834" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4440">
+          <caret line="296" column="118" selection-start-line="296" selection-start-column="118" selection-end-line="296" selection-end-column="118" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/leap/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="645">
+          <caret line="47" column="4" selection-start-line="47" selection-start-column="4" selection-end-line="47" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
@@ -1468,7 +1480,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/poseConfig.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="454">
+        <state relative-caret-position="2145">
           <caret line="155" column="8" selection-start-line="155" selection-start-column="8" selection-end-line="155" selection-end-column="8" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -1478,7 +1490,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseCommon.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="48">
+        <state relative-caret-position="5865">
           <caret line="418" column="18" selection-start-line="418" selection-start-column="18" selection-end-line="418" selection-end-column="18" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -1486,63 +1498,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/utils.py">
+    <entry file="file://$PROJECT_DIR$/leap/training.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="258">
-          <caret line="47" column="4" selection-start-line="47" selection-start-column="4" selection-end-line="47" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../python2_venv/newNumpy/local/lib/python2.7/site-packages/IPython/core/history.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="834" selection-start-line="834" selection-end-line="834" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="21" selection-start-line="21" selection-end-line="21" />
+        <state relative-caret-position="4920">
+          <caret line="348" column="109" selection-start-line="348" selection-start-column="109" selection-end-line="348" selection-end-column="109" />
           <folding>
-            <element signature="e#191#201#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="323" selection-start-line="323" selection-end-line="323" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="333">
-          <caret line="824" column="54" lean-forward="true" selection-start-line="824" selection-start-column="54" selection-end-line="824" selection-end-column="54" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/open_pose.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="762">
-          <caret line="655" column="30" selection-start-line="655" selection-start-column="30" selection-end-line="655" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
+            <element signature="e#0#18#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="513">
+        <state relative-caret-position="1635">
           <caret line="144" selection-start-line="144" selection-end-line="144" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
@@ -1551,20 +1519,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/leap/training.py">
+    <entry file="file://$PROJECT_DIR$/open_pose.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="656">
-          <caret line="528" column="30" lean-forward="true" selection-start-line="528" selection-start-column="30" selection-end-line="528" selection-end-column="30" />
+        <state relative-caret-position="776">
+          <caret line="655" column="30" selection-start-line="655" selection-start-column="30" selection-end-line="655" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5445">
+          <caret line="383" column="36" selection-start-line="383" selection-start-column="36" selection-end-line="383" selection-end-column="36" />
           <folding>
-            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="308" selection-start-line="308" selection-end-line="308" />
+        <state relative-caret-position="303">
+          <caret line="469" column="4" selection-start-line="469" selection-start-column="4" selection-end-line="469" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
         </state>
       </provider>
     </entry>

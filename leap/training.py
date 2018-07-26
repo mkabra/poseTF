@@ -366,7 +366,7 @@ def train_apt(conf, upsampling_layers=False):
     run_path = base_output_path
     savemat(os.path.join(base_output_path, "training_info.mat"),
             {"data_path": data_path,
-             "base_output_path": base_output_path, "run_name": run_name,
+             "base_output_path": base_output_path, #"run_name": run_name,
              "net_name": net_name, "box_dset": box_dset, "confmap_dset": confmap_dset, "filters": filters, "rotate_angle": rotate_angle,
              "epochs": epochs, "batch_size": batch_size, "batches_per_epoch": batches_per_epoch,
              "val_batches_per_epoch": val_batches_per_epoch,"reduce_lr_factor": reduce_lr_factor,

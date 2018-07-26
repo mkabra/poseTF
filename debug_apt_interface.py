@@ -1,4 +1,10 @@
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+args = '-name leap_default -view 0 -cache cache/leap_compare -type leap data/leap/leap_data.lbl train -use_defaults -skip_db'.split()
+import APT_interface as apt
+apt.main(args)
 
+##
 model_file = '/home/mayank/Dropbox (HHMI)/temp/alice/leap/final_model.h5'
 lbl_file = '/home/mayank/work/poseTF/data/leap/leap_data.lbl'
 cache_dir = '/home/mayank/work/poseTF/cache/leap_db'
