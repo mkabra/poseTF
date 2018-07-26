@@ -31,6 +31,7 @@ def create_deepcut_cfg(conf):
     default_cfg['dataset'] = os.path.join(conf.cachedir, 'train_data.p')
     default_cfg['all_joints'] = [[i] for i in range(conf.n_classes)]
     default_cfg['all_joints_names'] = ['part_{}'.format(i) for i in range(conf.n_classes)]
+    default_cfg['num_joints'] = conf.n_classes
     with open(os.path.join(conf.cachedir, 'pose_cfg.yaml'), 'w') as f:
         yaml.dump(default_cfg, f)
 
@@ -294,7 +295,11 @@ def compute_peformance(args):
                 for m in model_files:
                     out_file = m + '_' + args.gt_name
                     load = False
-                    if os.path.exists(out_file + '.mat') and os.path.getmtime(out_file + '.mat')> os.path.getmtime(m):
+                    if curm == 'unet' or curm == 'deeplabcut':
+                        mm = m + '.index'
+                    else:
+                        mm = m
+                    if os.path.exists(out_file + '.mat') and os.path.getmtime(out_file + '.mat')> os.path.getmtime(mm):
                         load = True
 
                     if load:
@@ -340,7 +345,7 @@ def compute_peformance(args):
 
             all_preds[curm].append(cur_out)
 
-    with open(os.path.join(out_dir,args.name,dir_name,args.gt_name + '_results.p','w')) as f:
+    with open(os.path.join(out_dir,args.name,dir_name,args.gt_name + '_results.p'),'w') as f:
         pickle.dump(all_preds,f)
 
 def get_model_files(conf, cache_dir, method):
