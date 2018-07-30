@@ -1,3 +1,99 @@
+from poseConfig import aliceConfig as conf
+conf.trange = 15
+conf.cachedir += '_dataset'
+conf.mdn_groups = [[i,] for i in range(conf.n_classes)]
+import PoseUMDN_dataset
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_groups')
+self.train_umdn(False)
+
+##
+import PoseUNet_dataset
+from poseConfig import aliceConfig as conf
+conf.cachedir += '_dataset'
+reload(PoseUNet_dataset)
+self = PoseUNet_dataset.PoseUNet(conf)
+A = self.classify_val(at_step=20000)
+
+##
+
+import PoseUNet_dataset
+reload(PoseUNet_dataset)
+from PoseUNet_dataset import PoseUNet
+from poseConfig import aliceConfig as conf
+import  tensorflow as tf
+conf.cachedir += '_dataset'
+self = PoseUNet(conf,name='pose_unet_residual')
+conf.unet_steps = 20000
+self.train_unet(False)
+tf.reset_default_graph()
+A = self.classify_val(at_step=20000)
+
+##
+import tensorflow as tf
+from poseConfig import aliceConfig as conf
+import PoseTools
+
+db_file = '/home/mayank/Dropbox (HHMI)/temp/alice/full_train_TF.tfrecords'
+
+def _parse_function(serialized_example):
+    features = tf.parse_single_example(
+        serialized_example,
+        features={'height': tf.FixedLenFeature([], dtype=tf.int64),
+                  'width': tf.FixedLenFeature([], dtype=tf.int64),
+                  'depth': tf.FixedLenFeature([], dtype=tf.int64),
+                  'trx_ndx': tf.FixedLenFeature([], dtype=tf.int64, default_value=0),
+                  'locs': tf.FixedLenFeature(shape=[conf.n_classes, 2], dtype=tf.float32),
+                  'expndx': tf.FixedLenFeature([], dtype=tf.float32),
+                  'ts': tf.FixedLenFeature([], dtype=tf.float32),
+                  'image_raw': tf.FixedLenFeature([], dtype=tf.string)
+                  })
+    image = tf.decode_raw(features['image_raw'], tf.uint8)
+    trx_ndx = tf.cast(features['trx_ndx'], tf.int64)
+    image = tf.reshape(image, conf.imsz + (conf.imgDim,))
+
+    locs = tf.cast(features['locs'], tf.float64)
+    exp_ndx = tf.cast(features['expndx'], tf.float64)
+    ts = tf.cast(features['ts'], tf.float64)  # tf.constant([0]); #
+    info = tf.stack([exp_ndx, ts, tf.cast(trx_ndx,tf.float64)])
+    return image, locs, info
+
+dataset = tf.data.TFRecordDataset(db_file)
+dataset = dataset.map(_parse_function)
+#
+
+extra = []
+def preproc_func(ims_in, locs_in, info_in, extra):
+    ims = ims_in
+    locs = locs_in
+    ims, locs = PoseTools.preprocess_ims(ims, locs, conf, True, conf.unet_rescale)
+    return ims, locs, info_in
+
+tpre= lambda ims, locs, info: preproc_func(ims,locs,info,extra)
+
+py_map = lambda ims, locs, info: tuple(tf.py_func(
+    tpre, [ims, locs, info], [tf.float64, tf.float64, tf.float64]))
+
+
+dataset = dataset.shuffle(buffer_size=100)
+dataset = dataset.batch(8)
+dataset = dataset.map(py_map)
+dataset = dataset.repeat()
+
+##
+iterator = dataset.make_one_shot_iterator()
+next_element = iterator.get_next()
+
+sess = tf.InteractiveSession()
+
+ff = sess.run(next_element)
+
+##
+aa =tf.placeholder(tf.bool)
+im = tf.cond(aa,lambda:tf.identity(next_element[0]),lambda:tf.identity(next_element[0]))
+kk = sess.run(im, feed_dict={aa:False})
+
+##
+
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 args = '-name leap_default -view 0 -cache cache/leap_compare -type leap data/leap/leap_data.lbl train -use_defaults -skip_db'.split()
