@@ -1,9 +1,10 @@
 from poseConfig import aliceConfig as conf
-conf.trange = 15
+conf.trange = 5
 conf.cachedir += '_dataset'
-conf.mdn_groups = [[i,] for i in range(conf.n_classes)]
+conf.mdn_use_joint_loss = True
+#conf.mdn_groups = [[i,] for i in range(conf.n_classes)]
 import PoseUMDN_dataset
-self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_groups')
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_joint')
 self.train_umdn(False)
 
 ##
