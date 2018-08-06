@@ -140,7 +140,7 @@ def train_theirs(args):
 
                 if curm == 'unet':
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py -view {} -cache {} -type unet {} train -skip_db'.format(view+1, cachedir, args.lbl_file)
+                    cmd = 'APT_interface_mdn.py -view {} -cache {} -type unet {} train -skip_db'.format(view+1, cachedir, args.lbl_file)
                     f.write('python {}'.format(cmd))
                 elif curm == 'openpose':
                     f.write('cd {}\n'.format(openpose_dir))
@@ -178,7 +178,7 @@ def train_theirs(args):
                     args.skip_db = True
                     if curm == 'unet':
                         f.write('cd {}\n'.format(unet_dir))
-                        cmd = 'APT_interface.py {} -view {} -cache {} -type unet train -skip_db'.format(args.lbl_file, view+1,
+                        cmd = 'APT_interface_mdn.py {} -view {} -cache {} -type unet train -skip_db'.format(args.lbl_file, view+1,
                                                                                                  cachedir)
                         f.write('python {}'.format(cmd))
                     elif curm == 'openpose':
@@ -228,7 +228,7 @@ def train_ours(args):
                 f.write('. /opt/venv/bin/activate\n')
 
                 f.write('cd {}\n'.format(unet_dir))
-                cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
+                cmd = 'APT_interface_mdn.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
                 if args.whose == 'ours_default':
                     cmd += ' -use_defaults'
                 f.write('python {}'.format(cmd))
@@ -250,7 +250,7 @@ def train_ours(args):
                     f.write('. /opt/venv/bin/activate\n')
 
                     f.write('cd {}\n'.format(unet_dir))
-                    cmd = 'APT_interface.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
+                    cmd = 'APT_interface_mdn.py {} -view {} -cache {} -type {} train -skip_db'.format(args.lbl_file, view+1, cachedir, curm)
                     if args.whose == 'ours_default':
                         cmd += ' -use_defaults'
                     f.write('python {}'.format(cmd))

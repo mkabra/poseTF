@@ -1168,10 +1168,12 @@ def get_unet_pred_fn(conf, model_file=None):
         self.fd[self.ph['learning_rate']] = 0
         # self.fd[self.ph['keep_prob']] = 1.
         try:
-            pred_means, pred_std, pred_weights = sess.run(self.pred, self.fd)
+            pred = sess.run(self.pred, self.fd)
         except tf.errors.ResourceExhaustedError:
             logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
             exit(1)
+
+        pred_means, pred_std, pred_weights = pred
         #base_locs = PoseTools.get_pred_locs(pred)
         base_locs = np.zeros([pred_means.shape[0],self.conf.n_classes,2])
         for ndx in range(pred_means.shape[0]):

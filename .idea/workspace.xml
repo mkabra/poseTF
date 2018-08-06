@@ -5,16 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/APT_interface_mdn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DebugUNetAtt.py" beforeDir="false" afterPath="$PROJECT_DIR$/DebugUNetAtt.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseCommon_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon_dataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseUMDN_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUMDN_dataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PoseUNet_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUNet_dataset.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_apt_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_apt_interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/multiResData.py" beforeDir="false" afterPath="$PROJECT_DIR$/multiResData.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/poseConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/poseConfig.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/APT_interface_mdn.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface_mdn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -66,11 +59,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="4365">
-                  <caret line="291" column="46" selection-start-line="291" selection-start-column="46" selection-end-line="291" selection-end-column="46" />
+                <state relative-caret-position="194">
+                  <caret line="246" column="81" lean-forward="true" selection-start-line="246" selection-start-column="81" selection-end-line="246" selection-end-column="81" />
                 </state>
               </provider>
             </entry>
@@ -96,11 +89,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="PoseUMDN_dataset.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="PoseUMDN_dataset.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUMDN_dataset.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="330">
-                  <caret line="780" column="46" selection-start-line="780" selection-start-column="12" selection-end-line="780" selection-end-column="46" />
+                <state relative-caret-position="45">
+                  <caret line="762" column="13" selection-start-line="762" selection-start-column="13" selection-end-line="762" selection-end-column="13" />
                   <folding>
                     <element signature="e#0#39#0" expanded="true" />
                   </folding>
@@ -152,8 +145,8 @@
           <file leaf-file-name="APT_interface_mdn.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="708">
-                  <caret line="1182" lean-forward="true" selection-start-line="1182" selection-end-line="1182" />
+                <state relative-caret-position="303">
+                  <caret line="1206" column="4" selection-start-line="1206" selection-start-column="4" selection-end-line="1206" selection-end-column="4" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -210,7 +203,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>step</find>
       <find>no</find>
       <find>logging.error</find>
       <find>phase_train</find>
@@ -240,9 +232,9 @@
       <find>batch_norm</find>
       <find>renorm=True</find>
       <find>renorm</find>
+      <find>APT_interface.py</find>
     </findStrings>
     <replaceStrings>
-      <replace>conf[view]</replace>
       <replace>conf</replace>
       <replace>vloss</replace>
       <replace>range(</replace>
@@ -257,7 +249,7 @@
       <replace>felipe</replace>
       <replace>felipeConfigMulti</replace>
       <replace>train_</replace>
-      <replace>in range(group_sz)</replace>
+      <replace />
       <replace>skimage.transform.resize</replace>
       <replace>unet</replace>
       <replace>[</replace>
@@ -272,6 +264,7 @@
       <replace>tf.float32</replace>
       <replace>dep_net</replace>
       <replace>renorm=renorm</replace>
+      <replace>APT_interface_mdn.py</replace>
     </replaceStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$</dir>
@@ -323,7 +316,6 @@
         <option value="$PROJECT_DIR$/deepcut/default_config.py" />
         <option value="$PROJECT_DIR$/deepcut/train.py" />
         <option value="$PROJECT_DIR$/open_pose.py" />
-        <option value="$PROJECT_DIR$/apt_expts.py" />
         <option value="$PROJECT_DIR$/leap/training.py" />
         <option value="$PROJECT_DIR$/cross_prediction.py" />
         <option value="$PROJECT_DIR$/APT_interface.py" />
@@ -336,6 +328,7 @@
         <option value="$PROJECT_DIR$/PoseCommon_dataset.py" />
         <option value="$PROJECT_DIR$/PoseUMDN_dataset.py" />
         <option value="$PROJECT_DIR$/APT_interface_mdn.py" />
+        <option value="$PROJECT_DIR$/apt_expts.py" />
       </list>
     </option>
   </component>
@@ -703,13 +696,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00152" summary="view for APT_interface is now 1 indexed.">
-      <created>1529615122006</created>
-      <option name="number" value="00152" />
-      <option name="presentableId" value="LOCAL-00152" />
-      <option name="project" value="LOCAL" />
-      <updated>1529615122006</updated>
-    </task>
     <task id="LOCAL-00153" summary="Not all arguments are always visible. sigh.">
       <created>1529616115544</created>
       <option name="number" value="00153" />
@@ -1046,7 +1032,14 @@
       <option name="project" value="LOCAL" />
       <updated>1532944776014</updated>
     </task>
-    <option name="localTasksCounter" value="201" />
+    <task id="LOCAL-00201" summary="APT with MDN">
+      <created>1533543943475</created>
+      <option name="number" value="00201" />
+      <option name="presentableId" value="LOCAL-00201" />
+      <option name="project" value="LOCAL" />
+      <updated>1533543943476</updated>
+    </task>
+    <option name="localTasksCounter" value="202" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1098,9 +1091,9 @@
       <window_info anchor="bottom" id="TODO" order="5" weight="0.32846716" />
       <window_info anchor="bottom" id="Event Log" order="1" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Version Control" order="11" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.7017727" visible="true" weight="0.30810812" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.7017727" visible="true" weight="0.30810812" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="2" weight="0.32638165" />
-      <window_info active="true" id="Structure" order="3" sideWeight="0.2982273" side_tool="true" visible="true" weight="0.30810812" />
+      <window_info id="Structure" order="3" sideWeight="0.2982273" side_tool="true" weight="0.30810812" />
       <window_info anchor="bottom" id="Terminal" order="6" weight="1.0" />
       <window_info anchor="bottom" id="Favorites" order="7" side_tool="true" weight="0.32968834" />
       <window_info id="Debug" order="2" sideWeight="0.7632951" weight="0.3054054" />
@@ -1170,7 +1163,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Bug fix in cropping. x-y to images sucks." />
     <MESSAGE value="Bug fix in cropping. matlab to python indexing again. sigh." />
     <MESSAGE value="changing setting for preprocessing threads" />
     <MESSAGE value="Generic checkin" />
@@ -1195,7 +1187,8 @@
     <MESSAGE value="local fixes" />
     <MESSAGE value="Adding code that uses tf datasets instead of queues. Life is better now :)" />
     <MESSAGE value="Joint training of Unet and MDN" />
-    <option name="LAST_COMMIT_MESSAGE" value="Joint training of Unet and MDN" />
+    <MESSAGE value="APT with MDN" />
+    <option name="LAST_COMMIT_MESSAGE" value="APT with MDN" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1532,13 +1525,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4365">
-          <caret line="291" column="46" selection-start-line="291" selection-start-column="46" selection-end-line="291" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5055">
@@ -1616,8 +1602,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN_dataset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="780" column="46" selection-start-line="780" selection-start-column="12" selection-end-line="780" selection-end-column="46" />
+        <state relative-caret-position="45">
+          <caret line="762" column="13" selection-start-line="762" selection-start-column="13" selection-end-line="762" selection-end-column="13" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />
           </folding>
@@ -1626,11 +1612,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="708">
-          <caret line="1182" lean-forward="true" selection-start-line="1182" selection-end-line="1182" />
+        <state relative-caret-position="303">
+          <caret line="1206" column="4" selection-start-line="1206" selection-start-column="4" selection-end-line="1206" selection-end-column="4" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="194">
+          <caret line="246" column="81" lean-forward="true" selection-start-line="246" selection-start-column="81" selection-end-line="246" selection-end-column="81" />
         </state>
       </provider>
     </entry>
