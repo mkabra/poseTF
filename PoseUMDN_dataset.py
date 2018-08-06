@@ -111,6 +111,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         if 'mdn_cross_pred' in self.conf.__dict__.keys():
             do_cross_pred = self.conf.mdn_cross_pred
+            print('Doing cross prediction for MDN')
         else:
             do_cross_pred = False
         # MDN downsample.
