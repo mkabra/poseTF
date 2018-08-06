@@ -1023,8 +1023,8 @@ def read_and_decode_without_session(filename, conf, indices=(0,)):
         height = int(example.features.feature['height'].int64_list.value[0])
         width = int(example.features.feature['width'].int64_list.value[0])
         depth = int(example.features.feature['depth'].int64_list.value[0])
-        expid = int(example.features.feature['expndx'].float_list.value[0]),
-        t = int(example.features.feature['ts'].float_list.value[0]),
+        expid = int(example.features.feature['expndx'].float_list.value[0])
+        t = int(example.features.feature['ts'].float_list.value[0])
         img_string = example.features.feature['image_raw'].bytes_list.value[0]
         img_1d = np.fromstring(img_string, dtype=np.uint8)
         reconstructed_img = img_1d.reshape((height, width, depth))

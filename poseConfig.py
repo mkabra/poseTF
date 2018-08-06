@@ -83,6 +83,7 @@ class config(object):
         self.display_step = 50
         self.numTest = 8
         self.n_steps = 3 # number of times the learning
+        self.dl_steps = 20000 # number of training iters
         # rate should be reduced by gamma by the end of the training.
 
         # range for contrast, brightness and rotation adjustment

@@ -77,7 +77,7 @@ def scale_images(img, locs, scale, conf):
         else:
             simg[ndx, :, :, :] = transform.resize(img[ndx, :, :, :], simg.shape[1:3], preserve_range= True)
     new_locs = locs.copy()
-    new_locs = locs/scale
+    new_locs = new_locs/scale
     return simg, new_locs
 
 

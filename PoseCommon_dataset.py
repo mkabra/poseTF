@@ -16,25 +16,27 @@ import sys
 import math
 from past.utils import old_div
 from tensorflow.contrib.layers import batch_norm
-# from batch_norm import batch_norm_mine as batch_norm
+# from batch_norm import batch_norm_mine_old as batch_norm
 from matplotlib import pyplot as plt
 import copy
 import cv2
 import gc
 import resource
 import json
+import math
 import threading
 import logging
 from six import reraise as raise_
 
 
+renorm = False
 def conv_relu(x_in, kernel_shape, train_phase):
     weights = tf.get_variable("weights", kernel_shape,
                               initializer=tf.contrib.layers.xavier_initializer())
     biases = tf.get_variable("biases", kernel_shape[-1],
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
-    conv = batch_norm(conv, train_phase)
+    conv = batch_norm(conv, is_training=train_phase, renorm=renorm)
     return tf.nn.relu(conv + biases)
 
 
@@ -46,7 +48,7 @@ def conv_relu3(x_in, n_filt, train_phase, keep_prob=None,use_leaky=False):
     biases = tf.get_variable("biases", kernel_shape[-1],
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
-    conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    conv = batch_norm(conv, decay=0.99, is_training=train_phase, renorm=renorm)
 
     if keep_prob is not None:
         conv = tf.nn.dropout(conv, keep_prob)
@@ -67,7 +69,7 @@ def conv_shortcut(x_in, n_filt, train_phase, keep_prob=None,use_leaky=False):
         biases = tf.get_variable("biases", kernel_shape[-1],
                                  initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
-    conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    conv = batch_norm(conv, decay=0.99, is_training=train_phase, renorm=renorm)
 
     return conv
 
@@ -83,7 +85,7 @@ def conv_relu3_noscaling(x_in, n_filt, train_phase):
     biases = tf.get_variable("biases", kernel_shape[-1],
                              initializer=tf.constant_initializer(0.))
     conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
-    conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    conv = batch_norm(conv, decay=0.99, is_training=train_phase, renorm=renorm)
     return tf.nn.relu(conv + biases)
 
 
@@ -157,6 +159,8 @@ class PoseCommon(object):
         self.q_fns = []
         self.for_training = 0
         self.train_data_name = None
+        self.td_fields = ['dist','loss']
+        self.input_dtypes = [tf.float32, tf.float32, tf.float32, tf.float32]
 
 
     def get_latest_model_file(self):
@@ -198,40 +202,15 @@ class PoseCommon(object):
             dep_net.create_saver()
 
 
-    def restore(self, sess, do_restore, at_step=-1):
+    def restore(self, sess, model_file=None):
         saver = self.saver
-        name = self.net_name
-        out_file = saver['out_file'].replace('\\', '/')
-        latest_ckpt = tf.train.get_checkpoint_state(
-            self.conf.cachedir, self.ckpt_file)
-        if not latest_ckpt or not do_restore:
-            start_at = 0
-            sess.run(tf.variables_initializer( PoseTools.get_vars(name)),
-                feed_dict=self.fd)
-            print("Not loading {:s} variables. Initializing them".format(name))
-
-            for dep_net in self.dep_nets:
-                dep_net.restore(sess, do_restore=True)
-
+        if model_file is not None:
+            saver['saver'].restore(sess, model_file)
         else:
-            if at_step < 0:
-                saver['saver'].restore(sess, latest_ckpt.model_checkpoint_path)
-                match_obj = re.match(out_file + '-(\d*)', latest_ckpt.model_checkpoint_path)
-                start_at = int(match_obj.group(1)) + 1
-            else:
-                aa = latest_ckpt.all_model_checkpoint_paths
-                model_file = ''
-                for a in aa:
-                    match_obj = re.match(out_file + '-(\d*)', a)
-                    step = int(match_obj.group(1))
-                    if step >= at_step:
-                        model_file = a
-                        break
-                saver['saver'].restore(sess, model_file)
-                match_obj = re.match(out_file + '-(\d*)', model_file)
-                start_at = int(match_obj.group(1)) + 1
-
-        return start_at
+            grr = os.path.split(self.ckpt_file) # angry that get_checkpoint_state doesnt accept complete path to ckpt file. Damn idiots!
+            latest_ckpt = tf.train.get_checkpoint_state(grr[0],grr[1])
+            latest_model_file = latest_ckpt.model_checkpoint_path
+            saver['saver'].restore(sess, latest_model_file)
 
 
     def save(self, sess, step):
@@ -242,9 +221,9 @@ class PoseCommon(object):
         print('Saved state to %s-%d' % (out_file, step))
 
 
-    def init_td(self, td_fields):
+    def init_td(self):
         ex_td_fields = ['step']
-        for t_f in td_fields:
+        for t_f in self.td_fields:
             ex_td_fields.append('train_' + t_f)
             ex_td_fields.append('val_' + t_f)
         train_info = {}
@@ -372,33 +351,70 @@ class PoseCommon(object):
             self.inputs.append(tf.cond(self.ph['is_train'], lambda: tf.identity(train_next[ndx]), lambda: tf.identity(val_next[ndx])))
 
 
-    def init_net(self):
+    def create_input_ph(self):
+        # when we want to manually feed in data
+        self.inputs = []
+        for cur_d in self.input_dtypes:
+            self.inputs.append(tf.placeholder(cur_d,None))
+
+
+    def setup_train(self):
         self.create_ph_fd()
         self.create_datasets()
 
+    def setup_pred(self):
+        self.create_ph_fd()
+        self.create_input_ph()
 
-    def init_and_restore(self, sess, restore, td_fields, at_step=-1):
-        #self.create_cursors(sess,distort,shuffle)
-        #self.update_fd(db_type=self.DBType.Train, sess=sess, distort=True)
-        start_at = self.restore(sess, restore, at_step)
+    def initialize_net(self, sess):
+        name = self.net_name
+        sess.run(tf.variables_initializer(PoseTools.get_vars(name)),
+                 feed_dict=self.fd)
+        print("Not loading {:s} variables. Initializing them".format(name))
+        self.init_td()
+        for dep_net in self.dep_nets:
+            dep_net.initialize_net(sess)
         initialize_remaining_vars(sess)
-
-        try:
-            self.init_td(td_fields) if start_at is 0 else self.restore_td()
-        except AttributeError: # If the conf file has been modified
-            print('----------------')
-            print("Couldn't load train data because the conf has changed!")
-            print('----------------')
-            self.init_td(td_fields)
-
-        return start_at
 
 
     def train_step(self, step, sess, learning_rate, training_iters, n_steps):
         cur_step = float(step)
 
-        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*n_steps/ training_iters))
-        self.fd[self.ph['learning_rate']] = cur_lr
+#        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*n_steps/ training_iters))
+#        self.fd[self.ph['learning_rate']] = cur_lr
+
+        # cosine decay restarts
+        t_mul = 2.0
+        m_mul = 1.0
+        alpha = 0.0
+        first_decay_steps = int(math.ceil(float(training_iters)/3))
+        # with 3, we decay the learning rate twice.
+        completed_fraction = step / first_decay_steps
+
+        def compute_step(completed_fraction, geometric=False):
+            if geometric:
+                i_restart = math.floor(
+                    math.log(1.0 - completed_fraction * (1.0 - t_mul)) /
+                    math.log(t_mul))
+
+                sum_r = (1.0 - t_mul ** i_restart) / (1.0 - t_mul)
+                completed_fraction = (completed_fraction - sum_r) / t_mul ** i_restart
+            else:
+                i_restart = math.floor(completed_fraction)
+                completed_fraction = completed_fraction - i_restart
+            return i_restart, completed_fraction
+
+        if t_mul == 1.0:
+            i_restart, completed_fraction = compute_step(completed_fraction, geometric=False)
+        else:
+            i_restart, completed_fraction = compute_step(completed_fraction, geometric=True)
+
+        m_fac = m_mul ** i_restart
+        cosine_decayed = 0.5 * m_fac * (
+                1.0 + math.cos(math.pi * completed_fraction))
+        decayed = (1 - alpha) * cosine_decayed + alpha
+        self.fd[self.ph['learning_rate']] = learning_rate* decayed
+
         self.fd_train()
         run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
         sess.run(self.opt, self.fd,options=run_options)
@@ -435,92 +451,91 @@ class PoseCommon(object):
         return cur_loss, cur_dist
 
 
-    def train(self, restore, create_network,
-              training_iters, loss, learning_rate,
-              td_fields=('loss', 'dist')):
+    def train(self, create_network,
+              loss, learning_rate):
 
-        self.init_net()
+        self.setup_train()
         self.pred = create_network()
         self.cost = loss(self.inputs, self.pred)
         self.create_optimizer()
         self.create_saver()
+        training_iters = self.conf.dl_steps
         num_val_rep = self.conf.numTest / self.conf.batch_size + 1
 
         with tf.Session() as sess:
-            start_at = self.init_and_restore( sess, restore, td_fields)
+            self.initialize_net(sess)
+            #self.restore_pretrained(sess,'/home/mayank/work/poseTF/cache/stephen_dataset/head_pose_umdn_joint-20000')
+            #initialize_remaining_vars(sess)
+            #self.init_td()
 
-            if start_at < training_iters:
-                for step in range(start_at, training_iters + 1):
-                    self.train_step(step, sess, learning_rate, training_iters, self.conf.n_steps)
-                    if step % self.conf.display_step == 0:
-                        train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
-                        val_loss = 0.
-                        val_dist = 0.
-                        for _ in range(num_val_rep):
-                           cur_loss, cur_dist = self.compute_train_data(sess, self.DBType.Val)
-                           val_loss += cur_loss
-                           val_dist += cur_dist
-                        val_loss = val_loss / num_val_rep
-                        val_dist = val_dist / num_val_rep
-                        cur_dict = {'step': step,
-                                   'train_loss': train_loss, 'val_loss': val_loss,
-                                   'train_dist': train_dist, 'val_dist': val_dist}
-                        self.update_td(cur_dict)
-                    if step % self.conf.save_step == 0:
-                        self.save(sess, step)
-                    if step % self.conf.save_td_step == 0:
-                        self.save_td()
-                print("Optimization Finished!")
-                self.save(sess, training_iters)
-                self.save_td()
-#            self.close_cursors()
+            for step in range(0, training_iters + 1):
+                self.train_step(step, sess, learning_rate, training_iters, self.conf.n_steps)
+                if step % self.conf.display_step == 0:
+                    train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
+                    val_loss = 0.
+                    val_dist = 0.
+                    for _ in range(num_val_rep):
+                       cur_loss, cur_dist = self.compute_train_data(sess, self.DBType.Val)
+                       val_loss += cur_loss
+                       val_dist += cur_dist
+                    val_loss = val_loss / num_val_rep
+                    val_dist = val_dist / num_val_rep
+                    cur_dict = {'step': step,
+                               'train_loss': train_loss, 'val_loss': val_loss,
+                               'train_dist': train_dist, 'val_dist': val_dist}
+                    self.update_td(cur_dict)
+                if step % self.conf.save_step == 0:
+                    self.save(sess, step)
+                if step % self.conf.save_td_step == 0:
+                    self.save_td()
+            print("Optimization Finished!")
+            self.save(sess, training_iters)
+            self.save_td()
 
 
-    def restore_net_common(self, create_network_fn, restore=True):
+
+    def restore_net_common(self, create_network_fn, model_file=None):
         print('--- Loading the model by reconstructing the graph ---')
-        self.init_net()
+        self.setup_pred()
         self.pred = create_network_fn()
         self.create_saver()
-        self.joint = True
-        sess = tf.InteractiveSession()
-        start_at = self.init_and_restore(sess, restore, ['loss', 'dist'])
+        sess = tf.Session()
+        self.restore(sess, model_file)
+        initialize_remaining_vars(sess)
+
+        try:
+            self.restore_td()
+        except AttributeError:  # If the conf file has been modified
+            print("Couldn't load train data because the conf has changed!")
+            self.init_td()
+
+        for i in self.inputs:
+            self.fd[i] = np.zeros(i.get_shape().as_list())
+
         return sess
 
 
-    def restore_meta_common(self, train_type, model_file):
+    def restore_meta_common(self, model_file):
         print('--- Loading the model using the saved graph ---')
+        self.create_ph_fd()
         sess = tf.Session()
-        self.train_type = train_type
         try:
-          # self.open_dbs()
-#            self.create_ph_fd()
             latest_model_file = self.restore_meta(self.name, sess, model_file)
-            self.open_db_meta()
-            self.create_cursors(sess,distort=False, shuffle=False)
         except tf.errors.NotFoundError:
             pass
 
         return sess, latest_model_file
 
 
-
     def restore_meta(self, name, sess, model_file=None):
-        if self.dep_nets:
-            if type(self.dep_nets) is list:
-                for dd in self.dep_nets:
-                    dd.restore_meta(name + '_' + dd.name, sess)
-            else:
-                self.dep_nets.restore_meta(name + '_' + self.dep_nets.name, sess)
-
         if model_file is None:
-            ckpt_file = os.path.join( self.conf.cachedir, self.conf.expname + '_' + name + '_ckpt')
-            latest_ckpt = tf.train.get_checkpoint_state( self.conf.cachedir, ckpt_file)
+            ckpt_file = self.ckpt_file
+            latest_ckpt = tf.train.get_checkpoint_state(ckpt_file)
             saver = tf.train.import_meta_graph(latest_ckpt.model_checkpoint_path+'.meta')
             latest_model_file =latest_ckpt.model_checkpoint_path
         else:
             saver = tf.train.import_meta_graph(model_file + '.meta')
             latest_model_file = model_file
-
 
         saver.restore(sess, latest_model_file)
         return latest_model_file

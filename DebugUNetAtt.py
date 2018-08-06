@@ -72,7 +72,7 @@ exp_id = exp_id[0]
 t = t[0]
 trx_ndx = trx_ndx[0]
 #
-sess = self.dep_nets.init_net(0,True)
+sess = self.dep_nets.setup_net(0, True)
 unet = self.dep_nets
 
 is_val, local_dirs, _ = load_val_data(conf)

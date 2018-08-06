@@ -1,11 +1,45 @@
 from poseConfig import aliceConfig as conf
+import tensorflow as tf
+import multiResData
 conf.trange = 5
 conf.cachedir += '_dataset'
-conf.mdn_use_joint_loss = True
-#conf.mdn_groups = [[i,] for i in range(conf.n_classes)]
 import PoseUMDN_dataset
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_cosine')
+self.train_umdn(False)
+tf.reset_default_graph()
+V = self.classify_val()
+np.percentile(V[0],[90,95,98,99],axis=0)
+
+
+##
+
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+from poseConfig import aliceConfig as conf
+import tensorflow as tf
+import multiResData
+conf.trange = 15
+conf.cachedir += '_dataset'
+conf.batch_size = 16
+import PoseUMDN_dataset
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_bsz16')
+V = self.classify_val()
+np.percentile(V[0],[90,95,98,99],axis=0)
+
+
+##
+
+import PoseUMDN_dataset
+from stephenHeadConfig import conf as conf
+conf.rescale = 2
+conf.n_steps = 3
+conf.cachedir = '/home/mayank/work/poseTF/cache/stephen_dataset'
 self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_joint')
 self.train_umdn(False)
+
+
+
+##
 
 ##
 import PoseUNet_dataset
@@ -14,6 +48,82 @@ conf.cachedir += '_dataset'
 reload(PoseUNet_dataset)
 self = PoseUNet_dataset.PoseUNet(conf)
 A = self.classify_val(at_step=20000)
+
+## create deeplabcut db for alice
+
+import  os
+import imageio
+from poseConfig import aliceConfig as conf
+import  multiResData
+conf.cachedir += '/deeplabcut'
+
+def deepcut_outfn(data, outdir, count, fis, save_data):
+    # pass count as array to pass it by reference.
+    if conf.imgDim == 1:
+        im = data[0][:, :, 0]
+    else:
+        im = data[0]
+    img_name = os.path.join(outdir, 'img_{:06d}.png'.format(count[0]))
+    imageio.imwrite(img_name, im)
+    locs = data[1]
+    bparts = conf.n_classes
+    for b in range(bparts):
+        fis[b].write('{}\t{}\t{}\n'.format(count[0], locs[b, 0], locs[b, 1]))
+    mod_locs = np.insert(np.array(locs), 0, range(bparts), axis=1)
+    save_data.append([img_name, im.shape, mod_locs])
+    count[0] += 1
+
+
+bparts = ['part_{}'.format(i) for i in range(conf.n_classes)]
+train_count = [0]
+train_dir = os.path.join(conf.cachedir, 'train')
+if not os.path.exists(train_dir):
+    os.mkdir(train_dir)
+train_fis = [open(os.path.join(train_dir, b + '.csv'), 'w') for b in bparts]
+train_data = []
+val_count = [0]
+val_dir = os.path.join(conf.cachedir, 'val')
+if not os.path.exists(val_dir):
+    os.mkdir(val_dir)
+val_fis = [open(os.path.join(val_dir, b + '.csv'), 'w') for b in bparts]
+val_data = []
+for ndx in range(conf.n_classes):
+    train_fis[ndx].write('\tX\tY\n')
+    val_fis[ndx].write('\tX\tY\n')
+
+if not os.path.exists(train_dir):
+    os.mkdir(train_dir)
+if not os.path.exists(val_dir):
+    os.mkdir(val_dir)
+
+def train_out_fn(data):
+    deepcut_outfn(data, train_dir, train_count, train_fis, train_data)
+
+def val_out_fn(data):
+    deepcut_outfn(data, val_dir, val_count, val_fis, val_data)
+
+
+# collect the images and labels in arrays
+out_fns = [train_out_fn, val_out_fn]
+in_db_file_train = '/home/mayank/work/poseTF/cache/alice/train_TF.tfrecords'
+in_db_file_val = '/home/mayank/work/poseTF/cache/alice/val_TF.tfrecords'
+
+T = multiResData.read_and_decode_without_session(in_db_file_train,conf,())
+V = multiResData.read_and_decode_without_session(in_db_file_val,conf,())
+
+for ndx in range(len(T[0])):
+    train_out_fn([T[0][ndx], T[1][ndx], T[2][ndx]])
+
+for ndx in range(len(V[0])):
+    val_out_fn([V[0][ndx], V[1][ndx], V[2][ndx]])
+
+[f.close() for f in train_fis]
+[f.close() for f in val_fis]
+import pickle
+with open(os.path.join(conf.cachedir, 'train_data.p'), 'w') as f:
+    pickle.dump(train_data, f, protocol=2)
+with open(os.path.join(conf.cachedir, 'val_data.p'), 'w') as f:
+    pickle.dump(val_data, f, protocol=2)
 
 ##
 

@@ -17,6 +17,10 @@ from matplotlib import cm
 import movies
 import multiResData
 from scipy import io as sio
+import tensorflow.contrib.framework as tfr
+
+
+renorm = False
 
 def softmax(x,axis=0):
     """Compute softmax values for each sets of scores in x."""
@@ -55,14 +59,18 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.net_type = net_type
         self.net_name = 'pose_umdn'
         self.i_locs = None
+        self.input_dtypes = [tf.float32, tf.float32, tf.float32, tf.float32]
 
         def train_pp(ims,locs,info):
             return train_preproc_func(ims,locs,info, conf)
         def val_pp(ims,locs,info):
             return val_preproc_func(ims,locs,info, conf)
 
-        self.train_py_map = lambda ims, locs, info: tuple(tf.py_func( train_pp, [ims, locs, info], [tf.float32, tf.float32, tf.float32, tf.float32]))
-        self.val_py_map = lambda ims, locs, info: tuple(tf.py_func( val_pp, [ims, locs, info], [tf.float32, tf.float32, tf.float32, tf.float32]))
+        self.train_py_map = lambda ims, locs, info: tuple(tf.py_func( train_pp, [ims, locs, info], self.input_dtypes))
+        self.val_py_map = lambda ims, locs, info: tuple(tf.py_func( val_pp, [ims, locs, info], self.input_dtypes))
+
+        if 'mdn_groups' not in self.conf.__dict__:
+            self.conf.mdn_groups = [range(self.conf.n_classes)]
 
 
     def create_network(self):
@@ -83,13 +91,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def create_network1(self, X):
 
-        n_conv = 3
+        n_conv = 2
         conv = PoseCommon.conv_relu3
         layers = []
         mdn_prev = None
         n_out = self.conf.n_classes
         k = 2
         extra_layers = self.conf.mdn_extra_layers
+        # extra_layers = 1
 
         dep_net = self.dep_nets[0]
         n_layers_u = len(dep_net.up_layers) + extra_layers
@@ -135,7 +144,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                                          initializer=tf.constant_initializer(0.))
                 cur_conv = tf.nn.conv2d(
                     X, weights,strides=[1, 2, 2, 1], padding='SAME')
-                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
+                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'],renorm=renorm)
                 X = tf.nn.relu(cur_conv + biases)
             mdn_prev = X
             self.mdn_layers2.append(X)
@@ -152,7 +161,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 conv_l = tf.nn.conv2d(X, weights,
                                     strides=[1, 1, 1, 1], padding='SAME')
                 conv_l = batch_norm(conv_l, decay=0.99,
-                                  is_training=self.ph['phase_train'])
+                                  is_training=self.ph['phase_train'],renorm=renorm)
             mdn_l = tf.nn.relu(conv_l + biases)
 
             weights_locs = tf.get_variable("weights_locs", [1, 1, n_filt, 2 * k * n_out],
@@ -232,7 +241,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 conv = tf.nn.conv2d(X, weights,
                                     strides=[1, 1, 1, 1], padding='SAME')
                 conv = batch_norm(conv, decay=0.99,
-                                  is_training=self.ph['phase_train'])
+                                  is_training=self.ph['phase_train'],renorm=renorm)
             mdn_l = tf.nn.relu(conv + biases)
 
             weights_scales = tf.get_variable("weights_scales", [1, 1, n_filt, k * n_out],
@@ -262,7 +271,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 conv = tf.nn.conv2d(X, weights,
                                     strides=[1, 1, 1, 1], padding='SAME')
                 conv = batch_norm(conv, decay=0.99,
-                                  is_training=self.ph['phase_train'])
+                                  is_training=self.ph['phase_train'],renorm=renorm)
             mdn_l = tf.nn.relu(conv + biases)
 
             weights_logits = tf.get_variable("weights_logits", [1, 1, n_filt, k * n_groups],
@@ -323,7 +332,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 biases = tf.get_variable("biases", kernel_shape[-1],
                                          initializer=tf.constant_initializer(0.))
                 cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
-                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
+                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'], renorm=renorm)
                 X = tf.nn.relu(cur_conv + biases)
             mdn_prev = X
 
@@ -342,7 +351,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 biases = tf.get_variable("biases", kernel_shape[-1],
                                          initializer=tf.constant_initializer(0.))
                 cur_conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
-                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'])
+                cur_conv = batch_norm(cur_conv, decay=0.99, is_training=self.ph['phase_train'], renorm=renorm)
                 X = tf.nn.relu(cur_conv + biases)
 
         X_sz = min(X.get_shape().as_list()[1:3])
@@ -364,15 +373,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 X = tf.contrib.layers.flatten(X_conv)
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'], 'renorm':renorm})
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train','renorm':renorm]})
 
             with tf.variable_scope('layer_locs'):
                 mdn_l = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
 
             locs = tf.contrib.layers.fully_connected(
                 mdn_l, k_fc*n_out*2, activation_fn=None)
@@ -426,15 +435,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 X = tf.contrib.layers.flatten(X_conv)
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
 
             with tf.variable_scope('layer_scales'):
                 mdn_s = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
 
             o_scales = tf.contrib.layers.fully_connected(
                 mdn_s, k_fc * n_out, activation_fn = None)
@@ -482,15 +491,15 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 X = tf.contrib.layers.flatten(X_conv)
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
                 X = tf.contrib.layers.fully_connected(
                     X, n_filt * 4, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
 
             with tf.variable_scope('layer_logits'):
                 mdn_w = tf.contrib.layers.fully_connected(
                     X, n_filt * 2, normalizer_fn=batch_norm,
-                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train']})
+                    normalizer_params={'decay': 0.99, 'is_training': self.ph['phase_train'],'renorm':renorm})
 
             logits = tf.contrib.layers.fully_connected(
                 mdn_w, k_fc*n_groups, activation_fn=None)
@@ -517,6 +526,34 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         return [locs,scales,logits]
 
+
+    def restore_pretrained(self, sess, model_file):
+        rem_locs = tf.global_variables(self.net_name + '/locs')
+        rem_locs += tf.global_variables(self.net_name + '/scales')
+        rem_locs += tf.global_variables(self.net_name + '/logits')
+        rem_locs += tf.global_variables(self.dep_nets[0].net_name + '/out')
+
+        var_list = self.get_var_list()
+        pre_list = tfr.list_variables(model_file)
+        pre_list_names = [p[0] for p in pre_list]
+        pre_list_shapes = [p[1] for p in pre_list]
+        common_vars = []
+        for i in var_list:
+            if not i.name[:-2] in pre_list_names:
+                continue
+            ndx = pre_list_names.index(i.name[:-2])
+            if pre_list_shapes[ndx] == i.shape.as_list():
+                common_vars.append(i)
+
+        c_names = [c.name for c in common_vars]
+        r_names = [v.name for v in var_list if v not in common_vars]
+        print("-- Loading from pretrained --")
+        print('\n'.join(c_names))
+        print("-- Not Loading from pretrained --")
+        print('\n'.join(r_names))
+        # common_vars = [i for i in common_vars if i not in rem_locs]
+        pretrained_saver = tf.train.Saver(var_list=common_vars)
+        pretrained_saver.restore(sess, model_file)
 
     def my_loss(self, X, y):
 
@@ -605,8 +642,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     # dd1 -- to every label is there a close by prediction.
                     # dd2 -- to every prediction is there a close by labels.
                     # or dd1 is fn and dd2 is fp.
-                    val_dist[ndx,:, g] = dd1
-                    pred_dist[ndx,sel_ex, g] = dd2
+                    val_dist[ndx,:, g] = dd1 * self.conf.rescale
+                    pred_dist[ndx,sel_ex, g] = dd2 * self.conf.rescale
         val_dist[locs[..., 0] < -5000] = np.nan
         pred_mean = np.nanmean(pred_dist)
         label_mean = np.nanmean(val_dist)
@@ -624,45 +661,36 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return cur_loss, cur_dist
 
 
-    def train_umdn(self, restore, joint=True):
+    def train_umdn(self):
 
-        self.joint = joint
-        # self.net_type = net_type
-        # if joint:
-        #     training_iters = 40000
-        # else:
-        training_iters = 20000
-
+        self.joint = True
         def loss(inputs, pred):
             mdn_loss = self.my_loss(pred, inputs[1])
-            if 'mdn_use_joint_loss' in self.conf.__dict__.keys():
-                if self.conf.mdn_use_joint_loss:
-                    print('Doing joint training of unet and mdn')
-                    unet_pred = self.dep_nets[0].pred
-                    unet_loss = tf.nn.l2_loss(inputs[-1]-unet_pred)
-                    unet_pred_shape = np.array(unet_pred.get_shape().as_list()[1:3]).astype('float32')
-                    unet_loss_factor = 10
-                    unet_loss_normalized = unet_loss_factor * unet_loss / unet_pred_shape[0]/ unet_pred_shape[1]
-                    # unet_loss / unet_pred_shape[0]/ unet_pred_shape[1] is generally around 0.02 while mdn_loss is around 0.4. unet_loss_factor of 10 gives unet_loss half the weight.
-                    mdn_loss += unet_loss_normalized
+            # if 'mdn_use_joint_loss' in self.conf.__dict__.keys():
+            #     if self.conf.mdn_use_joint_loss:
+            #         print('Doing joint training of unet and mdn')
+            unet_pred = self.dep_nets[0].pred
+            unet_loss = tf.nn.l2_loss(inputs[-1]-unet_pred)
+            unet_pred_shape = np.array(unet_pred.get_shape().as_list()[1:3]).astype('float32')
+            unet_loss_factor = 10
+            unet_loss_normalized = unet_loss_factor * unet_loss / unet_pred_shape[0]/ unet_pred_shape[1]
+            # unet_loss / unet_pred_shape[0]/ unet_pred_shape[1] is generally around 0.02 while mdn_loss is around 0.4. unet_loss_factor of 10 gives unet_loss half the weight.
+            mdn_loss += unet_loss_normalized
 
             return mdn_loss
 
         super(self.__class__, self).train(
-            restore=restore,
             create_network=self.create_network,
-            training_iters=training_iters,
             loss=loss,
-            learning_rate=0.0001,
-            td_fields=('loss','dist'))
+            learning_rate=0.0001)
 
 
-    def restore_net(self,train_type=0, restore= True):
-        return self.restore_net_common(self.create_network, restore)
+    def restore_net(self, model_file=None):
+        return self.restore_net_common(self.create_network, model_file)
 
 
-    def init_net_meta(self, train_type):
-        sess = PoseCommon.PoseCommon.init_net_meta(self,train_type)
+    def restore_net_meta(self):
+        sess = PoseCommon.restore_meta_common(self)
 
         graph = tf.get_default_graph()
         try:
@@ -696,88 +724,118 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return sess
 
 
-    def classify_val(self, train_type=0, at_step=-1, onTrain = False):
-        if train_type is 0:
-            if not onTrain:
-                val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
-            else:
-                val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
+    def classify_val(self, model_file=None, onTrain = False):
+        if not onTrain:
+            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
         else:
-            val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+            val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
+
         num_val = 0
         for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
-        self.init_net()
+        print('--- Loading the model by reconstructing the graph ---')
+        self.setup_train()
         self.pred = self.create_network()
-        saver = self.create_saver()
+        self.create_saver()
+        sess = tf.Session()
+        self.restore(sess, model_file)
+        PoseCommon.initialize_remaining_vars(sess)
+
+        try:
+            self.restore_td()
+        except AttributeError:  # If the conf file has been modified
+            print("Couldn't load train data because the conf has changed!")
+            self.init_td()
+
         p_m, p_s, p_w = self.pred
         conf = self.conf
         osz = self.conf.imsz
-        self.joint = True
+        #       self.joint = True
 
         if self.net_type is 'conv':
             extra_layers = self.conf.mdn_extra_layers
             n_layers_u = len(self.dep_nets[0].up_layers) + extra_layers
-            locs_offset = float(2**n_layers_u)
+            locs_offset = float(2 ** n_layers_u)
         elif self.net_type is 'fixed':
-            locs_offset = np.mean(self.conf.imsz)/2
+            locs_offset = np.mean(self.conf.imsz) / 2
         else:
             raise Exception('Unknown net type')
         p_m *= locs_offset
 
-        with tf.Session() as sess:
-            start_at = self.init_and_restore(sess, True, ['loss', 'dist'], at_step)
+        val_dist = []
+        val_ims = []
+        val_preds = []
+        val_predlocs = []
+        val_locs = []
+        val_means = []
+        val_std = []
+        val_wts = []
+        val_u_preds = []
+        val_u_predlocs =[]
+        for step in range(num_val/self.conf.batch_size):
+            if onTrain:
+                self.fd_train()
+            else:
+                self.fd_val()
+            pred_means, pred_std, pred_weights, cur_input, u_pred = sess.run(
+                [p_m, p_s, p_w, self.inputs, self.dep_nets[0].pred], self.fd)
+            val_means.append(pred_means)
+            val_std.append(pred_std)
+            val_wts.append(pred_weights)
+            pred_weights = softmax(pred_weights,axis=1)
+            mdn_pred_out = np.zeros([self.conf.batch_size, osz[0], osz[1], conf.n_classes])
 
-            val_dist = []
-            val_ims = []
-            val_preds = []
-            val_predlocs = []
-            val_locs = []
-            val_means = []
-            val_std = []
-            val_wts = []
-            for step in range(num_val/self.conf.batch_size):
-                if onTrain:
-                    self.fd_train()
-                else:
-                    self.fd_val()
-                pred_means, pred_std, pred_weights, cur_input = sess.run(
-                    [p_m, p_s, p_w, self.inputs], self.fd)
-                val_means.append(pred_means)
-                val_std.append(pred_std)
-                val_wts.append(pred_weights)
-                pred_weights = softmax(pred_weights,axis=1)
-                mdn_pred_out = np.zeros([self.conf.batch_size, osz[0], osz[1], conf.n_classes])
-                for sel in range(conf.batch_size):
-                    for cls in range(conf.n_classes):
-                        for ndx in range(pred_means.shape[1]):
-                            cur_gr = [l.count(cls) for l in self.conf.mdn_groups].index(1)
-                            if pred_weights[sel, ndx, cur_gr] < (0.02/self.conf.max_n_animals):
-                                continue
-                            cur_locs = np.round(pred_means[sel:sel + 1, ndx:ndx + 1, cls, :]).astype('int')
-                            # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
-                            cur_scale = pred_std[sel, ndx, cls].astype('int')
-                            curl = (PoseTools.create_label_images(cur_locs, osz, 1, cur_scale) + 1) / 2
-                            mdn_pred_out[sel, :, :, cls] += pred_weights[sel, ndx, cur_gr] * curl[0, ..., 0]
+            locs = cur_input[1]
+            cur_dist = np.zeros([conf.batch_size,conf.n_classes])
+            for ndx in range(pred_means.shape[0]):
+                for gdx, gr in enumerate(self.conf.mdn_groups):
+                    for g in gr:
+                        sel_ex = np.argmax(pred_weights[ndx,:,gdx])
+                        mm = pred_means[ndx, sel_ex, g, :]
+                        ll = locs[ndx,g,:]
+                        jj =  mm-ll
+                        # jj has distance between all labels and
+                        # all predictions with wts > 0.
+                        dd1 = np.sqrt(np.sum(jj ** 2, axis=-1))
+                        cur_dist[ndx, g] = dd1 * self.conf.rescale
+                        cur_predlocs = mm
 
-                locs = cur_input[1]
-                if locs.ndim == 3:
-                    cur_predlocs = PoseTools.get_pred_locs(mdn_pred_out)
-                    cur_dist = np.sqrt(np.sum(
-                        (cur_predlocs - locs/self.conf.unet_rescale) ** 2, 2))
-                else:
-                    cur_predlocs = PoseTools.get_pred_locs_multi(
-                        mdn_pred_out,self.conf.max_n_animals,
-                        self.conf.label_blur_rad * 7)
-                    curl = locs.copy()/self.conf.unet_rescale
-                    jj = cur_predlocs[:,:,np.newaxis,:,:] - curl[:,np.newaxis,...]
-                    cur_dist = np.sqrt(np.sum(jj**2,axis=-1)).min(axis=1)
-                val_dist.append(cur_dist)
-                val_ims.append(self.xs)
-                val_locs.append(self.locs)
-                val_preds.append(mdn_pred_out)
-                val_predlocs.append(cur_predlocs)
+            val_u_preds.append(u_pred)
+            u_predlocs = PoseTools.get_pred_locs(u_pred)
+            val_u_predlocs.append(u_predlocs)
+
+            # for sel in range(conf.batch_size):
+            #     for cls in range(conf.n_classes):
+                    # for ndx in range(pred_means.shape[1]):
+                    #     cur_gr = [l.count(cls) for l in self.conf.mdn_groups].index(1)
+                    #     if pred_weights[sel, ndx, cur_gr] < (0.02/self.conf.max_n_animals):
+                    #         continue
+                    #     cur_locs = np.round(pred_means[sel:sel + 1, ndx:ndx + 1, cls, :]).astype('int')
+                    #     # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
+                    #     cur_scale = pred_std[sel, ndx, cls].astype('int')
+                    #     curl = (PoseTools.create_label_images(cur_locs, osz, 1, cur_scale) + 1) / 2
+                    #     mdn_pred_out[sel, :, :, cls] += pred_weights[sel, ndx, cur_gr] * curl[0, ..., 0]
+
+            # locs = cur_input[1]
+            # if locs.ndim == 3:
+            #     cur_predlocs = PoseTools.get_pred_locs(mdn_pred_out)
+            #     cur_dist = np.sqrt(np.sum(
+            #         (cur_predlocs - locs/self.conf.unet_rescale) ** 2, 2))
+            # else:
+            #     cur_predlocs = PoseTools.get_pred_locs_multi(
+            #         mdn_pred_out,self.conf.max_n_animals,
+            #         self.conf.label_blur_rad * 7)
+            #     curl = locs.copy()/self.conf.unet_rescale
+            #     jj = cur_predlocs[:,:,np.newaxis,:,:] - curl[:,np.newaxis,...]
+            #     cur_dist = np.sqrt(np.sum(jj**2,axis=-1)).min(axis=1)
+            val_dist.append(cur_dist)
+            val_ims.append(cur_input[0])
+            val_locs.append(cur_input[1])
+            val_preds.append(mdn_pred_out)
+            val_predlocs.append(cur_predlocs)
+
+        sess.close()
 
         def val_reshape(in_a):
             in_a = np.array(in_a)
@@ -790,10 +848,12 @@ class PoseUMDN(PoseCommon.PoseCommon):
         val_means = val_reshape(val_means)
         val_std = val_reshape(val_std)
         val_wts = val_reshape(val_wts)
+        val_u_predlocs = val_reshape(val_u_predlocs)
+        val_u_preds = val_reshape(val_u_preds)
         tf.reset_default_graph()
 
         return val_dist, val_ims, val_preds, val_predlocs, val_locs,\
-               [val_means,val_std,val_wts]
+               [val_means,val_std,val_wts], [val_u_predlocs, val_u_preds]
 
     def classify_movie(self, movie_name, sess, max_frames=-1, start_at=0,flipud=False):
         # maxframes if specificied reads that many frames
@@ -966,7 +1026,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1,flipud=False,trace=True):
         conf = self.conf
-        sess = self.init_net(0,True)
+        sess = self.setup_net(0, True)
         predLocs = self.classify_movie(movie_name,sess,max_frames=max_frames,flipud=flipud)
         tdir = tempfile.mkdtemp()
 
@@ -1030,7 +1090,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
     def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False,trace=True):
         conf = self.conf
-        sess = self.init_net(0,True)
+        sess = self.setup_net(0, True)
         predLocs = self.classify_movie_trx(movie_name, trx, sess, max_frames=max_frames,flipud=flipud, start_at=start_at)
         tdir = tempfile.mkdtemp()
 

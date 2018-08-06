@@ -61,8 +61,8 @@ class PoseUNet(PoseCommon):
     def create_network(self ):
         im, locs, info, hmap = self.inputs
         conf = self.conf
-        im.set_shape([conf.batch_size, conf.imsz[0],conf.imsz[1], conf.imgDim])
-        hmap.set_shape([conf.batch_size, conf.imsz[0], conf.imsz[1],conf.n_classes])
+        im.set_shape([conf.batch_size, conf.imsz[0]/conf.rescale,conf.imsz[1]/conf.rescale, conf.imgDim])
+        hmap.set_shape([conf.batch_size, conf.imsz[0]/conf.rescale, conf.imsz[1]/conf.rescale,conf.n_classes])
         locs.set_shape([conf.batch_size, conf.n_classes,2])
         info.set_shape([conf.batch_size,3])
 
@@ -70,11 +70,15 @@ class PoseUNet(PoseCommon):
             return self.create_network1()
 
     def create_network1(self):
+
         m_sz = min(self.conf.imsz)/self.conf.unet_rescale
         max_layers = int(math.ceil(math.log(m_sz,2)))-1
         sel_sz = self.conf.sel_sz
         n_layers = int(math.ceil(math.log(sel_sz,2)))+2
         n_layers = min(max_layers,n_layers) - 2
+
+        # n_layers = 6
+
         n_conv = self.n_conv
         conv = lambda a, b: conv_relu3(
             a,b,self.ph['phase_train'], keep_prob=None,
@@ -91,6 +95,8 @@ class PoseUNet(PoseCommon):
         n_filt = 128
         n_filt_base = 32
         max_filt = 512
+        # n_filt_base = 16
+        # max_filt = 256
 
         for ndx in range(n_layers):
             n_filt = min(max_filt, n_filt_base * (2** ndx))
@@ -206,7 +212,7 @@ class PoseUNet(PoseCommon):
         else:
 
             #self.init_train(train_type)
-            self.init_net()
+            self.setup_net()
             self.pred = self.create_network()
             self.create_saver()
             sess = tf.Session()
@@ -449,7 +455,7 @@ class PoseUNet(PoseCommon):
 
     def create_pred_movie(self, movie_name, out_movie, max_frames=-1, flipud=False, trace=True):
         conf = self.conf
-        sess = self.init_net(0,True)
+        sess = self.setup_net(0, True)
         predLocs, pred_scores, pred_max_scores = self.classify_movie(movie_name, sess, end_frame=max_frames, flipud=flipud)
         tdir = tempfile.mkdtemp()
 
@@ -519,7 +525,7 @@ class PoseUNet(PoseCommon):
 
     def create_pred_movie_trx(self, movie_name, out_movie, trx, fly_num, max_frames=-1, start_at=0, flipud=False, trace=True):
         conf = self.conf
-        sess = self.init_net(0,True)
+        sess = self.setup_net(0, True)
         predLocs = self.classify_movie_trx(movie_name, trx, sess, end_frame=max_frames, flipud=flipud, start_frame=start_at)
         tdir = tempfile.mkdtemp()
 
