@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import argparse
 import sys
 import os
-import APT_interface as apt
+import APT_interface_mdn as apt
 import h5py
 import subprocess
 import yaml
