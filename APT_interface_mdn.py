@@ -199,7 +199,7 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
     for bpart in range(hmaps.shape[-1]):
         cur_out = os.path.join(hmaps_dir, 'hmap_trx_{}_t_{}_part_{}.jpg'.format(trx_ndx + 1, frame_num + 1, bpart + 1))
         cur_im = hmaps[:, :, bpart]
-        cur_im = ((np.clip(cur_im, -1, 1) * 128) + 128).astype('uint8')
+        cur_im = ((np.clip(cur_im, -1, 1) * 128) + 127).astype('uint8')
         imageio.imwrite(cur_out, cur_im, 'jpg', quality=75)
         # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
         # imageio.imwrite(cur_out_png,cur_im)
@@ -1143,70 +1143,13 @@ def get_unet_pred_fn(conf, model_file=None):
     tf.reset_default_graph()
     #    self = PoseUNet.PoseUNet(conf)
     self = PoseUMDN(conf)
-    try:
-        #        sess, latest_model_file = self.init_net_meta(1, model_file)
-        sess, latest_model_file = self.restore_net(model_file)
-    except tf.errors.InternalError:
-        logging.exception(
-            'Could not create a tf session. Probably because the CUDA_VISIBLE_DEVICES is not set properly')
-        sys.exit(1)
-
-    def pred_fn(all_f):
-        # this is the function that is used for classification.
-        # this should take in an array B x H x W x C of images, and
-        # output an array of predicted locations.
-        # predicted locations should be B x N x 2
-        # PoseTools.get_pred_locs can be used to convert heatmaps into locations.
-
-        bsize = conf.batch_size
-        xs, _ = PoseTools.preprocess_ims(
-            all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]), conf=self.conf,
-            distort=False, scale=self.conf.unet_rescale)
-
-        self.fd[self.inputs[0]] = xs
-        self.fd[self.ph['phase_train']] = False
-        self.fd[self.ph['learning_rate']] = 0
-        # self.fd[self.ph['keep_prob']] = 1.
-        try:
-            pred = sess.run(self.pred, self.fd)
-        except tf.errors.ResourceExhaustedError:
-            logging.exception('Out of GPU Memory. Either reduce the batch size or increase unet_rescale')
-            exit(1)
-
-        pred_means, pred_std, pred_weights = pred
-        if self.net_type is 'conv':
-            extra_layers = self.conf.mdn_extra_layers
-            n_layers_u = len(self.dep_nets[0].up_layers) + extra_layers
-            locs_offset = float(2 ** n_layers_u)
-        elif self.net_type is 'fixed':
-            locs_offset = np.mean(self.conf.imsz) / 2
-        else:
-            raise Exception('Unknown net type')
-        pred_means *= locs_offset
-
-
-        #base_locs = PoseTools.get_pred_locs(pred)
-        base_locs = np.zeros([pred_means.shape[0],self.conf.n_classes,2])
-        for ndx in range(pred_means.shape[0]):
-            for gdx, gr in enumerate(self.conf.mdn_groups):
-                for g in gr:
-                    sel_ex = np.argmax(pred_weights[ndx, :, gdx])
-                    mm = pred_means[ndx, sel_ex, g, :]
-                    base_locs[ndx, g] = mm
-
-        base_locs = base_locs * conf.unet_rescale
-        return base_locs, pred
-
-    def close_fn():
-        sess.close()
-#        self.close_cursors()
-
-    return pred_fn, close_fn, latest_model_file
+    return self.get_pred_fn(model_file)
 
 
 def classify_movie_all(model_type, **kwargs):
     conf = kwargs['conf']
     model_file = kwargs['model_file']
+    del kwargs['model_file'], kwargs['conf']
     pred_fn, close_fn, model_file = get_pred_fn(model_type, conf, model_file)
     try:
         classify_movie(conf, pred_fn, model_file=model_file, **kwargs)

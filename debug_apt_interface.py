@@ -1,11 +1,19 @@
+args =  '-name a -model_file cache/alice_dataset/aliceFly_pose_umdn_cosine-20000 -cache cache/alice_dataset -type unet data/alice/multitarget_bubble_expandedbehavior_20180425_local.lbl track -mov /home/mayank/work/FlySpaceTime/test_umdn_classification/movie.ufmf -trx /home/mayank/work/FlySpaceTime/test_umdn_classification/registered_trx.mat -start_frame 5000 -end_frame 5500 -out /home/mayank/work/FlySpaceTime/test_umdn_classification/umdn_out.trk -hmaps '
+args = args.split()
+import APT_interface_mdn as apt
+apt.main(args)
+
+
+##
+
 from poseConfig import aliceConfig as conf
 import tensorflow as tf
 import multiResData
 conf.trange = 5
 conf.cachedir += '_dataset'
 import PoseUMDN_dataset
-self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_cosine')
-self.train_umdn(False)
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_cosine_l2')
+self.train_umdn()
 tf.reset_default_graph()
 V = self.classify_val()
 np.percentile(V[0],[90,95,98,99],axis=0)

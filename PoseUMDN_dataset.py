@@ -605,6 +605,45 @@ class PoseUMDN(PoseCommon.PoseCommon):
         return tf.reduce_sum(cur_loss)
 
 
+    def l2_loss(self, X, y):
+
+        dep_net = self.dep_nets[0]
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(dep_net.up_layers) + extra_layers
+            locs_offset = float(2**n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz)/2
+        else:
+            raise Exception('Unknown net type')
+
+        mdn_locs, mdn_scales, mdn_logits = X
+        cur_comp = []
+        ll = tf.nn.softmax(mdn_logits, axis=1)
+
+        n_preds = mdn_locs.get_shape().as_list()[1]
+        # All gaussians in the mixture have some weight so that all the mixtures try to predict correctly.
+        logit_eps = self.conf.mdn_logit_eps_training
+        ll = tf.cond(self.ph['phase_train'], lambda: ll + logit_eps, lambda: tf.identity(ll))
+        ll = ll / tf.reduce_sum(ll, axis=1, keepdims=True)
+        for cls in range(self.conf.n_classes):
+            pp = y[:, cls:cls + 1, :]/locs_offset
+            kk = tf.sqrt(tf.reduce_sum(tf.square(pp - mdn_locs[:, :, cls, :]), axis=2))
+            # tf.div is actual correct implementation of gaussian distance.
+            # but we run into numerical issues. Since the scales are withing
+            # the same range, I'm just ignoring them for now.
+            # dd = tf.div(tf.exp(-kk / (cur_scales ** 2) / 2), 2 * np.pi * (cur_scales ** 2))
+            cur_comp.append(kk)
+
+        cur_loss = 0
+        for ndx,gr in enumerate(self.conf.mdn_groups):
+            sel_comp = [cur_comp[i] for i in gr]
+            sel_comp = tf.stack(sel_comp, 1)
+            pp = ll[:,:, ndx] * tf.reduce_sum(sel_comp, axis=1)
+            cur_loss += pp
+
+        return tf.reduce_sum(cur_loss)
+
     def compute_dist(self, preds, locs):
 
         dep_net = self.dep_nets[0]
@@ -667,7 +706,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         self.joint = True
         def loss(inputs, pred):
-            mdn_loss = self.my_loss(pred, inputs[1])
+            mdn_loss = self.l2_loss(pred, inputs[1])
+            # mdn_loss = self.my_loss(pred, inputs[1])
             # if 'mdn_use_joint_loss' in self.conf.__dict__.keys():
             #     if self.conf.mdn_use_joint_loss:
             #         print('Doing joint training of unet and mdn')
@@ -725,6 +765,75 @@ class PoseUMDN(PoseCommon.PoseCommon):
         self.create_fd()
         return sess
 
+
+    def get_pred_fn(self, model_file=None):
+        sess, latest_model_file = self.restore_net(model_file)
+
+        conf = self.conf
+
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets[0].up_layers) + extra_layers
+            locs_offset = float(2 ** n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz) / 2
+        else:
+            raise Exception('Unknown net type')
+
+        def pred_fn(all_f):
+            # this is the function that is used for classification.
+            # this should take in an array B x H x W x C of images, and
+            # output an array of predicted locations.
+            # predicted locations should be B x N x 2
+            # PoseTools.get_pred_locs can be used to convert heatmaps into locations.
+
+            bsize = conf.batch_size
+            xs, _ = PoseTools.preprocess_ims(
+                all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]), conf=self.conf,
+                distort=False, scale=self.conf.unet_rescale)
+
+            self.fd[self.inputs[0]] = xs
+            self.fd[self.ph['phase_train']] = False
+            self.fd[self.ph['learning_rate']] = 0
+            # self.fd[self.ph['keep_prob']] = 1.
+            pred, cur_input = sess.run([self.pred, self.inputs], self.fd)
+
+            pred_means, pred_std, pred_weights = pred
+            pred_means *= locs_offset
+            pred_weights = softmax(pred_weights,axis=1)
+
+            osz = [int(i/conf.unet_rescale) for i in self.conf.imsz]
+            mdn_pred_out = np.zeros([bsize, osz[0], osz[1], conf.n_classes])
+
+            for sel in range(bsize):
+                for cls in range(conf.n_classes):
+                    for ndx in range(pred_means.shape[1]):
+                        cur_gr = [l.count(cls) for l in self.conf.mdn_groups].index(1)
+                        if pred_weights[sel, ndx, cur_gr] < (0.02 / self.conf.max_n_animals):
+                            continue
+                        cur_locs = np.round(pred_means[sel:sel + 1, ndx:ndx + 1, cls, :]).astype('int')
+                        # cur_scale = pred_std[sel, ndx, cls, :].mean().astype('int')
+                        cur_scale = pred_std[sel, ndx, cls].astype('int')
+                        curl = (PoseTools.create_label_images(cur_locs, osz, 1, cur_scale) + 1) / 2
+                        mdn_pred_out[sel, :, :, cls] += pred_weights[sel, ndx, cur_gr] * curl[0, ..., 0]
+
+            base_locs = PoseTools.get_pred_locs(mdn_pred_out)
+            # base_locs = np.zeros([pred_means.shape[0],self.conf.n_classes,2])
+            # for ndx in range(pred_means.shape[0]):
+            #     for gdx, gr in enumerate(self.conf.mdn_groups):
+            #         for g in gr:
+            #             sel_ex = np.argmax(pred_weights[ndx, :, gdx])
+            #             mm = pred_means[ndx, sel_ex, g, :]
+            #             base_locs[ndx, g] = mm
+            #
+            # base_locs = base_locs * conf.unet_rescale
+
+            return base_locs, mdn_pred_out
+
+        def close_fn():
+            sess.close()
+
+        return pred_fn, close_fn, latest_model_file
 
     def classify_val(self, model_file=None, onTrain = False):
         if not onTrain:
