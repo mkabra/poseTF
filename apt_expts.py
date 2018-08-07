@@ -350,7 +350,8 @@ def compute_peformance(args):
 
 def get_model_files(conf, cache_dir, method):
     if method == 'unet':
-        files = glob.glob(os.path.join(cache_dir,"{}_pose_unet-[0-9]*.index").format(conf.expname,conf.view))
+#files = glob.glob(os.path.join(cache_dir,"{}_pose_unet-[0-9]*.index").format(conf.expname,conf.view))
+        files = glob.glob(os.path.join(cache_dir,"{}_pose_umdn-[0-9]*.index").format(conf.expname,conf.view))
         files.sort(key=os.path.getmtime)
         ts = [os.path.getmtime(f) for f in files]
         files = [os.path.splitext(f)[0] for f in files]

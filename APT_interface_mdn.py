@@ -1163,7 +1163,7 @@ def get_unet_pred_fn(conf, model_file=None):
             all_f, in_locs=np.zeros([bsize, self.conf.n_classes, 2]), conf=self.conf,
             distort=False, scale=self.conf.unet_rescale)
 
-        self.fd[self.ph['x']] = xs
+        self.fd[self.inputs[0]] = xs
         self.fd[self.ph['phase_train']] = False
         self.fd[self.ph['learning_rate']] = 0
         # self.fd[self.ph['keep_prob']] = 1.
@@ -1174,6 +1174,17 @@ def get_unet_pred_fn(conf, model_file=None):
             exit(1)
 
         pred_means, pred_std, pred_weights = pred
+        if self.net_type is 'conv':
+            extra_layers = self.conf.mdn_extra_layers
+            n_layers_u = len(self.dep_nets[0].up_layers) + extra_layers
+            locs_offset = float(2 ** n_layers_u)
+        elif self.net_type is 'fixed':
+            locs_offset = np.mean(self.conf.imsz) / 2
+        else:
+            raise Exception('Unknown net type')
+        pred_means *= locs_offset
+
+
         #base_locs = PoseTools.get_pred_locs(pred)
         base_locs = np.zeros([pred_means.shape[0],self.conf.n_classes,2])
         for ndx in range(pred_means.shape[0]):
@@ -1188,7 +1199,7 @@ def get_unet_pred_fn(conf, model_file=None):
 
     def close_fn():
         sess.close()
-        self.close_cursors()
+#        self.close_cursors()
 
     return pred_fn, close_fn, latest_model_file
 

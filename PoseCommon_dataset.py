@@ -205,12 +205,14 @@ class PoseCommon(object):
     def restore(self, sess, model_file=None):
         saver = self.saver
         if model_file is not None:
+            latest_model_file = model_file
             saver['saver'].restore(sess, model_file)
         else:
             grr = os.path.split(self.ckpt_file) # angry that get_checkpoint_state doesnt accept complete path to ckpt file. Damn idiots!
             latest_ckpt = tf.train.get_checkpoint_state(grr[0],grr[1])
             latest_model_file = latest_ckpt.model_checkpoint_path
             saver['saver'].restore(sess, latest_model_file)
+        return latest_model_file       
 
 
     def save(self, sess, step):
@@ -500,7 +502,7 @@ class PoseCommon(object):
         self.pred = create_network_fn()
         self.create_saver()
         sess = tf.Session()
-        self.restore(sess, model_file)
+        latest_model_file = self.restore(sess, model_file)
         initialize_remaining_vars(sess)
 
         try:
@@ -512,7 +514,7 @@ class PoseCommon(object):
         for i in self.inputs:
             self.fd[i] = np.zeros(i.get_shape().as_list())
 
-        return sess
+        return sess, latest_model_file
 
 
     def restore_meta_common(self, model_file):
