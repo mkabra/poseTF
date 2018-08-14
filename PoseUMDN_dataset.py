@@ -706,11 +706,8 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         self.joint = True
         def loss(inputs, pred):
-            mdn_loss = self.l2_loss(pred, inputs[1])
-            # mdn_loss = self.my_loss(pred, inputs[1])
-            # if 'mdn_use_joint_loss' in self.conf.__dict__.keys():
-            #     if self.conf.mdn_use_joint_loss:
-            #         print('Doing joint training of unet and mdn')
+            # mdn_loss = self.l2_loss(pred, inputs[1])
+            mdn_loss = self.my_loss(pred, inputs[1])
             unet_pred = self.dep_nets[0].pred
             unet_loss = tf.nn.l2_loss(inputs[-1]-unet_pred)
             unet_pred_shape = np.array(unet_pred.get_shape().as_list()[1:3]).astype('float32')

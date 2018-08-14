@@ -7,8 +7,11 @@
     <list default="true" id="246839a5-f858-49eb-9ddb-099c468dd174" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/APT_interface_mdn.py" beforeDir="false" afterPath="$PROJECT_DIR$/APT_interface_mdn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PoseCommon_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseCommon_dataset.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PoseUMDN_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/PoseUMDN_dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/apt_expts.py" beforeDir="false" afterPath="$PROJECT_DIR$/apt_expts.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/debug_apt_interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/debug_apt_interface.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/poseConfig.py" beforeDir="false" afterPath="$PROJECT_DIR$/poseConfig.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -42,7 +45,7 @@
           <file leaf-file-name="PoseUNet_dataset.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUNet_dataset.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="15">
+                <state relative-caret-position="105">
                   <caret line="30" selection-start-line="30" selection-end-line="30" />
                   <folding>
                     <element signature="e#0#116#0" expanded="true" />
@@ -63,8 +66,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="3555">
-                  <caret line="237" column="88" selection-start-line="237" selection-start-column="88" selection-end-line="237" selection-end-column="88" />
+                <state relative-caret-position="2205">
+                  <caret line="147" column="19" selection-start-line="147" selection-start-column="19" selection-end-line="147" selection-end-column="19" />
                 </state>
               </provider>
             </entry>
@@ -81,8 +84,17 @@
           <file leaf-file-name="debug_apt_interface.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="300">
-                  <caret line="16" column="24" lean-forward="true" selection-start-line="16" selection-start-column="24" selection-end-line="16" selection-end-column="24" />
+                <state relative-caret-position="525">
+                  <caret line="28" selection-start-line="28" selection-end-line="28" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="base.py" pinned="false" current-in-tab="false">
+            <entry file="file:///usr/local/lib/python2.7/dist-packages/h5py/_hl/base.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="146">
+                  <caret line="118" column="24" lean-forward="true" selection-start-line="118" selection-start-column="24" selection-end-line="118" selection-end-column="24" />
                 </state>
               </provider>
             </entry>
@@ -107,8 +119,8 @@
           <file leaf-file-name="poseConfig.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/poseConfig.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="840">
-                  <caret line="68" column="37" selection-start-line="68" selection-start-column="37" selection-end-line="68" selection-end-column="37" />
+                <state relative-caret-position="315">
+                  <caret line="84" selection-start-line="84" selection-end-line="84" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -119,7 +131,7 @@
           <file leaf-file-name="APT_interface.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="16395">
+                <state relative-caret-position="881">
                   <caret line="1113" column="33" selection-start-line="1113" selection-start-column="33" selection-end-line="1113" selection-end-column="33" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
@@ -128,11 +140,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="APT_interface_mdn.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="APT_interface_mdn.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="393">
-                  <caret line="202" selection-start-line="202" selection-end-line="202" />
+                <state relative-caret-position="123">
+                  <caret line="239" column="36" selection-start-line="239" selection-start-column="36" selection-end-line="239" selection-end-column="36" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -140,23 +152,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="cross_prediction.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/cross_prediction.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="540">
-                  <caret line="41" column="23" selection-start-line="41" selection-start-column="23" selection-end-line="41" selection-end-column="23" />
-                  <folding>
-                    <element signature="e#0#42#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="PoseCommon_dataset.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="PoseCommon_dataset.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/PoseCommon_dataset.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="180">
-                  <caret line="217" column="17" lean-forward="true" selection-start-line="217" selection-start-column="17" selection-end-line="217" selection-end-column="17" />
+                <state relative-caret-position="510">
+                  <caret line="473" column="74" selection-start-line="473" selection-start-column="74" selection-end-line="473" selection-end-column="74" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -167,8 +167,8 @@
           <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/multiResData.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="14940">
-                  <caret line="1017" column="33" selection-start-line="1017" selection-start-column="33" selection-end-line="1017" selection-end-column="33" />
+                <state relative-caret-position="198">
+                  <caret line="316" column="24" selection-start-line="316" selection-start-column="24" selection-end-line="316" selection-end-column="24" />
                   <folding>
                     <element signature="e#0#37#0" expanded="true" />
                   </folding>
@@ -179,8 +179,8 @@
           <file leaf-file-name="PoseUMDN_dataset.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/PoseUMDN_dataset.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="314">
-                  <caret line="817" selection-start-line="817" selection-end-line="817" />
+                <state relative-caret-position="206">
+                  <caret line="701" column="33" lean-forward="true" selection-start-line="701" selection-start-column="33" selection-end-line="701" selection-end-column="33" />
                   <folding>
                     <element signature="e#0#39#0" expanded="true" />
                   </folding>
@@ -321,12 +321,12 @@
         <option value="$PROJECT_DIR$/PoseTools.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
         <option value="$PROJECT_DIR$/PoseUNet_dataset.py" />
+        <option value="$PROJECT_DIR$/PoseUMDN_dataset.py" />
+        <option value="$PROJECT_DIR$/apt_expts.py" />
+        <option value="$PROJECT_DIR$/APT_interface_mdn.py" />
         <option value="$PROJECT_DIR$/poseConfig.py" />
         <option value="$PROJECT_DIR$/PoseCommon_dataset.py" />
-        <option value="$PROJECT_DIR$/apt_expts.py" />
-        <option value="$PROJECT_DIR$/PoseUMDN_dataset.py" />
         <option value="$PROJECT_DIR$/debug_apt_interface.py" />
-        <option value="$PROJECT_DIR$/APT_interface_mdn.py" />
       </list>
     </option>
   </component>
@@ -368,35 +368,7 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="poseTF" type="b2602c69:ProjectViewProjectNode" />
-              <item name="poseTF" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="poseTF" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-            </path>
-            <path>
-              <item name="poseTF" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="&lt; Python 2.7.6 virtualenv at ~/work/python2_venv/newNumpy &gt;" type="70bed36:NamedLibraryElementNode" />
-            </path>
-            <path>
-              <item name="poseTF" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="&lt; Python 2.7.6 virtualenv at ~/work/python2_venv/newNumpy &gt;" type="70bed36:NamedLibraryElementNode" />
-              <item name="poseTF" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///groups/branson/home/kabram/PycharmProjects/poseTF/PoseUNet.py" />
@@ -426,119 +398,6 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
-  </component>
-  <component name="RestoreUpdateTree" date="Moments ago" ActionInfo="_Update">
-    <UpdatedFiles>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Updated from server" />
-        <option name="myStatusName" value="Changed on server" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="CHANGED_ON_SERVER" />
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Updated" />
-          <option name="myStatusName" value="Changed" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="UPDATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/APT_interface_mdn.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/PoseCommon_dataset.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/PoseUMDN_dataset.py</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/apt_expts.py</PATH>
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Created" />
-          <option name="myStatusName" value="Created" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="CREATED" />
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Deleted" />
-          <option name="myStatusName" value="Deleted" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="true" />
-          <option name="myId" value="REMOVED_FROM_REPOSITORY" />
-        </FILE-GROUP>
-        <FILE-GROUP>
-          <option name="myUpdateName" value="Restored" />
-          <option name="myStatusName" value="Will be restored" />
-          <option name="mySupportsDeletion" value="false" />
-          <option name="myCanBeAbsent" value="false" />
-          <option name="myId" value="RESTORED" />
-        </FILE-GROUP>
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Modified" />
-        <option name="myStatusName" value="Modified" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MODIFIED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Skipped" />
-        <option name="myStatusName" value="Skipped" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="SKIPPED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with conflicts" />
-        <option name="myStatusName" value="Will be merged with conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_CONFLICTS" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with tree conflicts" />
-        <option name="myStatusName" value="Merged with tree conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_TREE_CONFLICT" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged with property conflicts" />
-        <option name="myStatusName" value="Will be merged with property conflicts" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED_WITH_PROPERTY_CONFLICT" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Merged" />
-        <option name="myStatusName" value="Will be merged" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="MERGED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Not in repository" />
-        <option name="myStatusName" value="Not in repository" />
-        <option name="mySupportsDeletion" value="true" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="UNKNOWN" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Locally added" />
-        <option name="myStatusName" value="Locally added" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="LOCALLY_ADDED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Locally removed" />
-        <option name="myStatusName" value="Locally removed" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="LOCALLY_REMOVED" />
-      </FILE-GROUP>
-      <FILE-GROUP>
-        <option name="myUpdateName" value="Switched" />
-        <option name="myStatusName" value="Switched" />
-        <option name="mySupportsDeletion" value="false" />
-        <option name="myCanBeAbsent" value="false" />
-        <option name="myId" value="SWITCHED" />
-      </FILE-GROUP>
-    </UpdatedFiles>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -806,13 +665,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
-    </task>
-    <task id="LOCAL-00154" summary="Fixed indexing for start frame and end frame in APT_interface">
-      <created>1529617362667</created>
-      <option name="number" value="00154" />
-      <option name="presentableId" value="LOCAL-00154" />
-      <option name="project" value="LOCAL" />
-      <updated>1529617362667</updated>
     </task>
     <task id="LOCAL-00155" summary="Script to convert felipe's data into tfrecords format to test out open-pose">
       <created>1530008695017</created>
@@ -1150,7 +1002,14 @@
       <option name="project" value="LOCAL" />
       <updated>1533554023338</updated>
     </task>
-    <option name="localTasksCounter" value="203" />
+    <task id="LOCAL-00203" summary="heatmaps with MDN">
+      <created>1533643494247</created>
+      <option name="number" value="00203" />
+      <option name="presentableId" value="LOCAL-00203" />
+      <option name="project" value="LOCAL" />
+      <updated>1533643494248</updated>
+    </task>
+    <option name="localTasksCounter" value="204" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1195,18 +1054,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="49" y="-4" width="1871" height="1084" extended-state="6" />
+    <frame x="-1872" y="-11" width="1873" height="1092" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" x="815" y="755" width="866" height="503" id="Project" internal_type="SLIDING" order="0" sideWeight="0.27652735" type="SLIDING" weight="0.13187702" />
       <window_info anchor="bottom" id="TODO" order="5" weight="0.32846716" />
       <window_info anchor="bottom" id="Event Log" order="1" sideWeight="0.50519407" side_tool="true" weight="0.3274244" />
       <window_info anchor="bottom" id="Version Control" order="11" sideWeight="0.4948059" weight="0.3253389" />
-      <window_info x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.7017727" weight="0.30810812" />
+      <window_info active="true" x="607" y="755" width="1716" height="344" id="Python Console" order="1" sideWeight="0.6996872" visible="true" weight="0.30810812" />
       <window_info anchor="bottom" auto_hide="true" id="Run" order="2" weight="0.32638165" />
-      <window_info id="Structure" order="3" sideWeight="0.2982273" side_tool="true" weight="0.30810812" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="6" visible="true" weight="0.52971846" />
+      <window_info id="Structure" order="3" sideWeight="0.30031282" side_tool="true" weight="0.30810812" />
+      <window_info anchor="bottom" id="Terminal" order="6" weight="0.52971846" />
       <window_info anchor="bottom" id="Favorites" order="7" side_tool="true" weight="0.32968834" />
-      <window_info id="Debug" order="2" sideWeight="0.7632951" weight="0.3054054" />
+      <window_info id="Debug" order="2" sideWeight="0.76225233" weight="0.3054054" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.24931657" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -1273,7 +1133,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="changing setting for preprocessing threads" />
     <MESSAGE value="Generic checkin" />
     <MESSAGE value="Adding deepcut and leap code" />
     <MESSAGE value="bug fix" />
@@ -1298,7 +1157,8 @@
     <MESSAGE value="Joint training of Unet and MDN" />
     <MESSAGE value="APT with MDN" />
     <MESSAGE value="apt expts with mdn" />
-    <option name="LAST_COMMIT_MESSAGE" value="apt expts with mdn" />
+    <MESSAGE value="heatmaps with MDN" />
+    <option name="LAST_COMMIT_MESSAGE" value="heatmaps with MDN" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1315,23 +1175,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/debug_apt_interface.py</url>
-          <line>291</line>
+          <line>297</line>
           <option name="timeStamp" value="572" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/APT_interface.py</url>
           <line>383</line>
           <option name="timeStamp" value="582" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/multiResData.py</url>
-          <line>322</line>
-          <option name="timeStamp" value="584" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/APT_interface_mdn.py</url>
-          <line>202</line>
-          <option name="timeStamp" value="623" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-defaults>
@@ -1375,7 +1225,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/deepcut/dataset/pose_dataset.py" />
     <entry file="file://$PROJECT_DIR$/deepcut/dataset/factory.py" />
     <entry file="file://$PROJECT_DIR$/deepcut/factory.py" />
     <entry file="file://$PROJECT_DIR$/deepcut/DebugMerging.py">
@@ -1623,32 +1472,43 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="840">
-          <caret line="68" column="37" selection-start-line="68" selection-start-column="37" selection-end-line="68" selection-end-column="37" />
+        <state relative-caret-position="360">
+          <caret line="24" selection-start-line="24" selection-end-line="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseUNet_dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="30" selection-start-line="30" selection-end-line="30" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#0#116#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+    <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16395">
-          <caret line="1113" column="33" selection-start-line="1113" selection-start-column="33" selection-end-line="1113" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="2205">
+          <caret line="147" column="19" selection-start-line="147" selection-start-column="19" selection-end-line="147" selection-end-column="19" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
+    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="14940">
-          <caret line="1017" column="33" selection-start-line="1017" selection-start-column="33" selection-end-line="1017" selection-end-column="33" />
+        <state relative-caret-position="5055">
+          <caret line="360" column="26" selection-start-line="360" selection-start-column="26" selection-end-line="360" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cross_prediction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="41" column="23" selection-start-line="41" selection-start-column="23" selection-end-line="41" selection-end-column="23" />
           <folding>
-            <element signature="e#0#37#0" expanded="true" />
+            <element signature="e#0#42#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1664,71 +1524,67 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cross_prediction.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="41" column="23" selection-start-line="41" selection-start-column="23" selection-end-line="41" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#42#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5055">
-          <caret line="360" column="26" selection-start-line="360" selection-start-column="26" selection-end-line="360" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/apt_expts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3555">
-          <caret line="237" column="88" selection-start-line="237" selection-start-column="88" selection-end-line="237" selection-end-column="88" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="24" selection-start-line="24" selection-end-line="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseUNet_dataset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="30" selection-start-line="30" selection-end-line="30" />
-          <folding>
-            <element signature="e#0#116#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon_dataset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="217" column="17" lean-forward="true" selection-start-line="217" selection-start-column="17" selection-end-line="217" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseUMDN_dataset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="314">
-          <caret line="817" selection-start-line="817" selection-end-line="817" />
+        <state relative-caret-position="206">
+          <caret line="701" column="33" lean-forward="true" selection-start-line="701" selection-start-column="33" selection-end-line="701" selection-end-column="33" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="316" column="24" selection-start-line="316" selection-start-column="24" selection-end-line="316" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/lib/python2.7/dist-packages/h5py/_hl/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="146">
+          <caret line="118" column="24" lean-forward="true" selection-start-line="118" selection-start-column="24" selection-end-line="118" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/poseConfig.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="84" selection-start-line="84" selection-end-line="84" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="881">
+          <caret line="1113" column="33" selection-start-line="1113" selection-start-column="33" selection-end-line="1113" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="393">
-          <caret line="202" selection-start-line="202" selection-end-line="202" />
+        <state relative-caret-position="123">
+          <caret line="239" column="36" selection-start-line="239" selection-start-column="36" selection-end-line="239" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PoseCommon_dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="473" column="74" selection-start-line="473" selection-start-column="74" selection-end-line="473" selection-end-column="74" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
@@ -1737,8 +1593,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="16" column="24" lean-forward="true" selection-start-line="16" selection-start-column="24" selection-end-line="16" selection-end-column="24" />
+        <state relative-caret-position="525">
+          <caret line="28" selection-start-line="28" selection-end-line="28" />
         </state>
       </provider>
     </entry>
