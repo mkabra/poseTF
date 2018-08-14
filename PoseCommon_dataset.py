@@ -379,7 +379,7 @@ class PoseCommon(object):
         initialize_remaining_vars(sess)
 
 
-    def train_step(self, step, sess, learning_rate, training_iters, n_steps):
+    def train_step(self, step, sess, learning_rate, training_iters):
         cur_step = float(step)
 
 #        cur_lr = learning_rate * (self.conf.gamma ** (cur_step*n_steps/ training_iters))
@@ -389,8 +389,8 @@ class PoseCommon(object):
         t_mul = 2.0
         m_mul = 1.0
         alpha = 0.0
-        first_decay_steps = int(math.ceil(float(training_iters)/3))
-        # with 3, we decay the learning rate twice.
+        n_steps = (t_mul)**self.conf.cos_steps - 1
+        first_decay_steps = int(math.ceil(float(training_iters)/n_steps))+1
         completed_fraction = step / first_decay_steps
 
         def compute_step(completed_fraction, geometric=False):
@@ -471,7 +471,7 @@ class PoseCommon(object):
             #self.init_td()
 
             for step in range(0, training_iters + 1):
-                self.train_step(step, sess, learning_rate, training_iters, self.conf.n_steps)
+                self.train_step(step, sess, learning_rate, training_iters)
                 if step % self.conf.display_step == 0:
                     train_loss, train_dist = self.compute_train_data(sess, self.DBType.Train)
                     val_loss = 0.

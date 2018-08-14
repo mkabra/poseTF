@@ -15,6 +15,8 @@ import glob
 import scipy.io as sio
 import multiResData
 import numpy as np
+import random
+import json
 
 methods = ['unet','leap','deeplabcut','openpose']
 out_dir = '/groups/branson/bransonlab/mayank/apt_expts/'
@@ -25,6 +27,8 @@ leap_dir = '/groups/branson/bransonlab/mayank/apt_expts/leap'
 unet_dir = '/groups/branson/home/kabram/PycharmProjects/poseTF'
 deepcut_default_cfg = '/groups/branson/bransonlab/mayank/PoseTF/cache/apt_interface/multitarget_bubble_view0/test_deepcut/pose_cfg.yaml'
 
+prog_thresholds = [10,100,10]
+
 def create_deepcut_cfg(conf):
     with open(deepcut_default_cfg,'r') as f:
         default_cfg = yaml.load(f)
@@ -34,6 +38,59 @@ def create_deepcut_cfg(conf):
     default_cfg['num_joints'] = conf.n_classes
     with open(os.path.join(conf.cachedir, 'pose_cfg.yaml'), 'w') as f:
         yaml.dump(default_cfg, f)
+
+
+def get_label_ts(lbl, ndx, trx_ndx, frames):
+    pts = np.array(lbl['labeledposTS'])
+    sz = np.array(lbl[pts[0, ndx]]['size'])[:, 0].astype('int')
+    cur_pts = np.zeros(sz).flatten()
+    cur_pts[:] = np.nan
+    if lbl[pts[0, ndx]]['val'].value.ndim > 1:
+        idx = np.array(lbl[pts[0, ndx]]['idx'])[0, :].astype('int') - 1
+        val = np.array(lbl[pts[0, ndx]]['val'])[0, :] - 1
+        cur_pts[idx] = val
+    cur_pts = cur_pts.reshape(np.flipud(sz))
+    if cur_pts.ndim == 4:
+        ts = cur_pts[trx_ndx, frames, :, :]
+    else:
+        ts = cur_pts[frames, :, :]
+
+    return ts
+
+
+def get_increasing_splits(conf, split_type='random'):
+    # creates json files for the xv splits
+    local_dirs, _ = multiResData.find_local_dirs(conf)
+    lbl = h5py.File(conf.labelfile, 'r')
+
+    info = []
+    n_labeled_frames = 0
+    for ndx, dir_name in enumerate(local_dirs):
+        if conf.has_trx_file:
+            trx_files = multiResData.get_trx_files(lbl, local_dirs)
+            trx = sio.loadmat(trx_files[ndx])['trx'][0]
+            n_trx = len(trx)
+        else:
+            n_trx = 1
+
+        for trx_ndx in range(n_trx):
+            frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
+            ts = get_label_ts(lbl,ndx,trx_ndx,frames)
+            mm = [ndx] * frames.size
+            tt = [trx_ndx] * frames.size
+            cur_trx_info = list(zip(mm, tt, frames.tolist(),ts.tolist()))
+            info.extend(cur_trx_info)
+            n_labeled_frames += frames.size
+    lbl.close()
+
+    if split_type == 'time':
+        info = sorted(info, key=lambda x: x[3])
+    elif split_type == 'random':
+        info = random.shuffle(info)
+    else:
+        raise ValueError('Incorrect split type for prog')
+
+    return info
 
 
 def check_db(curm, conf):
@@ -86,6 +143,32 @@ def create_db(args):
                         raise ValueError('Undefined net type: {}'.format(curm))
 
                 check_db(curm, conf)
+            elif args.split_type.startswith('prog'):
+                split_type = args.split_type[5:]
+                all_info = get_increasing_splits(conf, split_type)
+
+                for cur_tr in prog_thresholds:
+                    cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view),'{}'.format(cur_tr))
+                    conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
+                    split_ndx = round(len(all_info)/cur_tr)
+                    cur_train = all_info[:split_ndx]
+                    cur_val = all_info[split_ndx:]
+                    split_file = os.path.join(cachedir,'splitdata.json')
+                    with open(split_file,'w') as f:
+                        json.dump([cur_train,cur_val],f)
+                    if not args.only_check:
+                        if curm == 'unet' or curm == 'openpose':
+                            apt.create_tfrecord(conf, True, split_file)
+                        elif curm == 'leap':
+                            apt.create_leap_db(conf, True, split_file)
+                        elif curm == 'deeplabcut':
+                            apt.create_deepcut_db(conf, True, split_file)
+                            create_deepcut_cfg(conf)
+                        else:
+                            raise ValueError('Undefined net type: {}'.format(curm))
+                    check_db(curm, conf)
+
+
             else:
 
                 cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
