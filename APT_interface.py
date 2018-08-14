@@ -193,7 +193,6 @@ def write_hmaps(hmaps, hmaps_dir, trx_ndx, frame_num):
         # cur_out_png = os.path.join(hmaps_dir,'hmap_trx_{}_t_{}_part_{}.png'.format(trx_ndx+1,frame_num+1,bpart+1))
         # imageio.imwrite(cur_out_png,cur_im)
 
-
 def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
     try:
         try:
@@ -236,7 +235,7 @@ def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
         conf.imsz = (height, width)
     else:
         if H['cropProjHasCrops'][0,0] == 1:
-            xlo, xhi, ylo, yhi = H[H[H['movieFilesAllCropInfo'][0,0]]['roi'][view][0]].value[:,0]
+            xlo, xhi, ylo, yhi = PoseTools.get_crop_loc(H,0,view)
             conf.imsz = (int(yhi-ylo+1), int(xhi-xlo+1))
         else:
             vid_nr = int(read_entry(H[H['movieInfoAll'][0, 0]]['info']['nr']))
@@ -360,7 +359,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
 
         exp_name = conf.getexpname(dir_name)
         cur_pts = trx_pts(lbl, ndx, on_gt)
-        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
+        crop_loc = PoseTools.get_crop_loc(lbl, ndx, view, on_gt)
 
         try:
             cap = movies.Movie(dir_name)
@@ -466,7 +465,7 @@ def db_from_cached_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
         cur_pts = trx_pts(lbl, mndx, on_gt)
         if cur_pts.ndim == 3:
             cur_pts = cur_pts[np.newaxis,...]
-        crop_loc = get_crop_loc(lbl, mndx, view, on_gt)
+        crop_loc = PoseTools.get_crop_loc(lbl, mndx, view, on_gt)
         cur_locs = cur_pts[t_ndx[ndx], f_ndx[ndx], :, sel_pts].copy()
         cur_frame = lbl[lbl['preProcData_I'][conf.view,ndx]].value.copy()
         cur_frame = cur_frame.T
@@ -806,20 +805,6 @@ def classify_list(conf, pred_fn, cap, to_do_list, trx_file, crop_loc):
     return pred_locs
 
 
-def get_crop_loc(lbl, ndx, view, on_gt):
-    if lbl['cropProjHasCrops'].value[0, 0] == 1:
-        if on_gt:
-            crop_loc = lbl[lbl[lbl['movieFilesAllGTCropInfo'][0,ndx]]['roi'][view, 0]].value[:, 0].astype('int')
-
-        else:
-            crop_loc = lbl[lbl[lbl['movieFilesAllCropInfo'][0,ndx]]['roi'][view, 0]].value[:, 0].astype('int')
-        crop_loc -= 1  # from matlab to python
-    else:
-        crop_loc = None
-
-    return crop_loc
-
-
 def get_pred_fn(model_type, conf, model_file=None):
     if model_type == 'openpose':
         pred_fn, close_fn, model_file = open_pose.get_pred_fn(conf, model_file)
@@ -860,7 +845,7 @@ def classify_list_all(model_type, conf, in_list, on_gt, model_file):
 
         cur_list = [ [l[1]-1, l[2]-1] for l in in_list if l[0] == (ndx+1)]
         cur_idx = [i for i,l in enumerate(in_list) if l[0]==(ndx+1)]
-        crop_loc = get_crop_loc(lbl, ndx, view, on_gt)
+        crop_loc = PoseTools.get_crop_loc(lbl, ndx, view, on_gt)
 
         try:
             cap = movies.Movie(dir_name)

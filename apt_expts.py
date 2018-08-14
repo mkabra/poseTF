@@ -393,7 +393,6 @@ def compute_peformance(args):
                     else:
                         # pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
                         tf_iterator = multiResData.tf_reader(conf, db_file, False)
-
                         tf_iterator.batch_size = 1
                         read_fn = tf_iterator.next
                         pred_fn, close_fn, _ = apt.get_pred_fn(curm, conf, m)
@@ -415,21 +414,44 @@ def compute_peformance(args):
                     cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
                     conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                     model_files, ts = get_model_files(conf, cachedir, curm)
+                    db_file = os.path.join(cachedir,'val_TF.tfrecords')
                     for m in model_files:
                         out_file = m + '.gt_data'
-                        if os.path.getmtime(out_file + '.mat') > os.path.getmtime(m):
+                        load = False
+                        if curm == 'unet' or curm == 'deeplabcut':
+                            mm = m + '.index'
+                        else:
+                            mm = m
+                        if os.path.exists(out_file + '.mat') and os.path.getmtime(out_file + '.mat') > os.path.getmtime(mm):
+                            load = True
+
+                        if load:
                             H = sio.loadmat(out_file)
                             pred = H['pred_locs'] - 1
                             label = H['labeled_locs'] - 1
                             gt_list = H['list'] - 1
                         else:
-                            pred, label, gt_list = apt.classify_gt_data(conf, curm, out_file, m)
+                            tf_iterator = multiResData.tf_reader(conf, db_file, False)
+                            tf_iterator.batch_size = 1
+                            read_fn = tf_iterator.next
+                            pred_fn, close_fn, _ = apt.get_pred_fn(curm, conf, m)
+                            pred, label, gt_list = apt.classify_db(conf, read_fn, pred_fn, tf_iterator.N)
+                            close_fn()
+                            mat_pred_locs = pred + 1
+                            mat_labeled_locs = np.array(label) + 1
+                            mat_list = gt_list
+
+                            sio.savemat(out_file, {'pred_locs': mat_pred_locs,
+                                                   'labeled_locs': mat_labeled_locs,
+                                                   'list': mat_list})
+
                         cur_out.append([pred, label, gt_list, m, out_file, view, cur_split])
 
             all_preds[curm].append(cur_out)
 
     with open(os.path.join(out_dir,args.name,dir_name,args.gt_name + '_results.p'),'w') as f:
         pickle.dump(all_preds,f)
+
 
 def get_model_files(conf, cache_dir, method):
     if method == 'unet':
