@@ -360,10 +360,10 @@ def compute_peformance(args):
 
     for view in range(nviews):
         db_file = os.path.join(out_dir,args.name, args.gt_name) + '_view{}.tfrecords'.format(view)
-        print('Creating GT DB file {}'.format(db_file))
         conf = apt.create_conf(args.lbl_file, view, name='a', net_type=all_nets[0], cache_dir=os.path.join(out_dir,args.name,dir_name))
-        conf.label_file = args.gt_lbl
+        conf.labelfile = args.gt_lbl
         if not (os.path.exists(db_file) and args.skip_gt_db):
+            print('Creating GT DB file {}'.format(db_file))
             apt.create_tfrecord(conf, split=False, on_gt=True, db_files=(db_file,))
 
     for curm in all_nets:
@@ -497,7 +497,7 @@ def main(argv):
     parser.add_argument('-split_type', dest='split_type',
                         help='Type of split for CV. If not defined not CV is done', default=None)
     parser.add_argument('-whose', dest='whose',
-                        help='Use their or our code', default=None, choices=['theirs','ours','our_default'])
+                        help='Use their or our code', required=True, choices=['theirs','ours','our_default'])
     parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')
     parser.add_argument('-only_check_db', dest='only_check', help='Only check the db and do not regenerate them', action='store_true' )
     parser.add_argument('-gt_name', dest='gt_name', help='Name for GT data', default='gt')
