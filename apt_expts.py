@@ -180,7 +180,7 @@ def create_db(args):
                 if not args.skip_split:
                     train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
                 else:
-                    split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in nsplits]
+                    split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in range(nsplits)]
 
                 for cur_split in range(nsplits):
                     conf.cachedir = os.path.join(out_dir, args.name, 'common', '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
