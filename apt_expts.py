@@ -380,7 +380,7 @@ def compute_peformance(args):
                 cachedir = os.path.join(out_dir,args.name,dir_name,'{}_view_{}'.format(curm,view),'full')
                 conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                 model_files, ts = get_model_files(conf, cachedir, curm)
-                for m in model_files:
+                for mndx, m in enumerate(model_files):
                     out_file = m + '_' + args.gt_name
                     load = False
                     if curm == 'unet' or curm == 'deeplabcut':
@@ -411,7 +411,7 @@ def compute_peformance(args):
                           'labeled_locs': mat_labeled_locs,
                           'list': mat_list})
 
-                    cur_out.append([pred, label, gt_list, m, out_file, view, 0])
+                    cur_out.append([pred, label, gt_list, m, out_file, view, 0,ts[mndx]])
 
             else:
 
@@ -420,7 +420,7 @@ def compute_peformance(args):
                     conf = apt.create_conf(args.lbl_file, view, name='a',net_type=curm, cache_dir=cachedir)
                     model_files, ts = get_model_files(conf, cachedir, curm)
                     db_file = os.path.join(cachedir,'val_TF.tfrecords')
-                    for m in model_files:
+                    for mndx, m in enumerate(model_files):
                         out_file = m + '.gt_data'
                         load = False
                         if curm == 'unet' or curm == 'deeplabcut':
@@ -450,7 +450,7 @@ def compute_peformance(args):
                                                    'labeled_locs': mat_labeled_locs,
                                                    'list': mat_list})
 
-                        cur_out.append([pred, label, gt_list, m, out_file, view, cur_split])
+                        cur_out.append([pred, label, gt_list, m, out_file, view, cur_split,ts[mndx]])
 
             all_preds[curm].append(cur_out)
 
