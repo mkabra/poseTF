@@ -286,7 +286,7 @@ def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
         pass
 
     try:
-        bb = read_entry(dt_params['cos_steps'])
+        bb = int(read_entry(dt_params['cos_steps']))
         conf.cos_steps = bb
     except KeyError:
         pass

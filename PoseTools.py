@@ -1353,15 +1353,19 @@ def get_latest_model_file_keras(conf, name):
 def get_crop_loc(lbl,ndx,view, on_gt=False):
     from APT_interface_mdn import read_entry
     # this is unnecessarily ugly just because matlab.
-    nviews = int(read_entry(lbl['cfg']['NumViews']))
-    if on_gt:
-        fname = 'movieFilesAllGTCropInfo'
-    else:
-        fname = 'movieFilesAllCropInfo'
+    if lbl['cropProjHasCrops'][0, 0] == 1:
+        nviews = int(read_entry(lbl['cfg']['NumViews']))
+        if on_gt:
+            fname = 'movieFilesAllGTCropInfo'
+        else:
+            fname = 'movieFilesAllCropInfo'
 
-    if nviews == 1:
-        crop_loc = lbl[lbl[fname][0, ndx]]['roi'].value[:, 0]
+        if nviews == 1:
+            crop_loc = lbl[lbl[fname][0, ndx]]['roi'].value[:, 0]
+        else:
+            crop_loc = lbl[lbl[lbl[fname][0, ndx]]['roi'][view][0]].value[:, 0]
     else:
-        crop_loc = lbl[lbl[lbl[fname][0, ndx]]['roi'][view][0]].value[:, 0]
+        crop_loc = None
+
     return crop_loc
 
