@@ -693,7 +693,7 @@ def create_cv_split_files(conf, n_splits=3):
             frames = multiResData.get_labeled_frames(lbl, ndx, trx_ndx)
             mm = [ndx] * frames.size
             tt = [trx_ndx] * frames.size
-            cur_trx_info = list(zip(mm, tt, frames.tolist()))
+            cur_trx_info = list(zip(mm, frames.tolist(), tt))
             trx_info.append(cur_trx_info)
             cur_mov_info.extend(cur_trx_info)
             n_labeled_frames += frames.size
