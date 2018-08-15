@@ -406,6 +406,7 @@ def db_from_lbl(conf, out_fns, split=True, split_file=None, on_gt=False):
             cur_trx = trx[trx_ndx]
             for fnum in frames:
                 if not check_fnum(fnum, cap, exp_name, ndx):
+                    print('Skipping frame {} {} {}'.format(ndx,fnum,trx_ndx))
                     continue
 
                 info = [ndx, fnum, trx_ndx]
