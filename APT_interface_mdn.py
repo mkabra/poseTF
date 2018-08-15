@@ -707,21 +707,21 @@ def create_cv_split_files(conf, n_splits=3):
         per_fold = np.zeros([n_splits])
         splits = [[] for _ in range(n_splits)]
 
-        if conf.splitType is 'movie':
+        if conf.splitType == 'movie':
             for ndx in range(len(local_dirs)):
                 valid_folds = np.where(per_fold < lbls_per_fold)[0]
                 cur_fold = np.random.choice(valid_folds)
                 splits[cur_fold].extend(mov_info[ndx])
                 per_fold[cur_fold] += len(mov_info[ndx])
 
-        elif conf.splitType is 'trx':
+        elif conf.splitType == 'trx':
             for tndx in range(len(trx_info)):
                 valid_folds = np.where(per_fold < lbls_per_fold)[0]
                 cur_fold = np.random.choice(valid_folds)
                 splits[cur_fold].extend(trx_info[tndx])
                 per_fold[cur_fold] += len(trx_info[tndx])
 
-        elif conf.splitType is 'frames':
+        elif conf.splitType == 'frames':
             for ndx in range(len(local_dirs)):
                 for mndx in range(len(mov_info[ndx])):
                     valid_folds = np.where(per_fold < lbls_per_fold)[0]
