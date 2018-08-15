@@ -172,12 +172,17 @@ def create_db(args):
             else:
 
                 cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
+                if not os.path.exists(cachedir):
+                    os.mkdir(cachedir)
                 conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
                 conf.splitType = args.split_type
+                print("Split type is {}".format(conf.splitType))
                 train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
 
                 for cur_split in range(nsplits):
-                    conf.cachedir = os.path.join(out_dir, args.name, '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
+                    conf.cachedir = os.path.join(out_dir, args.name, 'common', '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
+                    if not os.path.exists(conf.cachedir):
+                        os.mkdir(conf.cachedir)
                     conf.splitType = 'predefined'
                     split_file = split_files[cur_split]
                     if not args.only_check:
