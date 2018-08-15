@@ -122,6 +122,21 @@ def create_db(args):
     nviews = int(apt.read_entry(H['cfg']['NumViews']))
     all_nets = args.nets
 
+    all_split_files = []
+    for view in range(nviews):
+        if args.split is not None and not args.split_type.startswith('prog'):
+            cachedir = os.path.join(out_dir, args.name, 'common','splits_{}'.format(view))
+            if not os.path.exists(cachedir):
+                os.mkdir(cachedir)
+            conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
+            conf.splitType = args.split_type
+            print("Split type is {}".format(conf.splitType))
+            if not args.skip_split:
+                train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
+            else:
+                split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in range(nsplits)]
+            all_split_files.append(split_files)
+
     for curm in all_nets:
         for view in range(nviews):
 
@@ -171,16 +186,7 @@ def create_db(args):
 
             else:
 
-                cachedir = os.path.join(out_dir,args.name,'common','{}_view_{}'.format(curm,view))
-                if not os.path.exists(cachedir):
-                    os.mkdir(cachedir)
-                conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
-                conf.splitType = args.split_type
-                print("Split type is {}".format(conf.splitType))
-                if not args.skip_split:
-                    train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
-                else:
-                    split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in range(nsplits)]
+                split_files = all_split_files[view]
 
                 for cur_split in range(nsplits):
                     conf.cachedir = os.path.join(out_dir, args.name, 'common', '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))

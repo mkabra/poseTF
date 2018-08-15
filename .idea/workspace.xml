@@ -61,8 +61,8 @@
           <file leaf-file-name="apt_expts.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/apt_expts.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="281">
-                  <caret line="506" column="24" lean-forward="true" selection-start-line="506" selection-start-column="24" selection-end-line="506" selection-end-column="24" />
+                <state relative-caret-position="435">
+                  <caret line="189" lean-forward="true" selection-start-line="189" selection-end-line="189" />
                 </state>
               </provider>
             </entry>
@@ -81,6 +81,18 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="465">
                   <caret line="24" column="40" lean-forward="true" selection-start-line="24" selection-start-column="40" selection-end-line="24" selection-end-column="40" />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/multiResData.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="198">
+                  <caret line="406" column="45" lean-forward="true" selection-start-line="406" selection-start-column="45" selection-end-line="406" selection-end-column="45" />
+                  <folding>
+                    <element signature="e#0#37#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -129,8 +141,8 @@
           <file leaf-file-name="APT_interface_mdn.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="453">
-                  <caret line="754" selection-start-line="744" selection-end-line="754" />
+                <state relative-caret-position="315">
+                  <caret line="257" column="44" selection-start-line="257" selection-start-column="44" selection-end-line="257" selection-end-column="44" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
                   </folding>
@@ -145,18 +157,6 @@
                   <caret line="300" column="27" lean-forward="true" selection-start-line="300" selection-start-column="27" selection-end-line="300" selection-end-column="27" />
                   <folding>
                     <element signature="e#0#31#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="multiResData.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/multiResData.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="303">
-                  <caret line="402" column="4" selection-start-line="402" selection-start-column="4" selection-end-line="402" selection-end-column="4" />
-                  <folding>
-                    <element signature="e#0#37#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -665,13 +665,6 @@
       <option name="presentableId" value="Default" />
       <updated>1490041518520</updated>
     </task>
-    <task id="LOCAL-00161" summary="Bug fix in cropping. matlab to python indexing again. sigh.">
-      <created>1530589721054</created>
-      <option name="number" value="00161" />
-      <option name="presentableId" value="LOCAL-00161" />
-      <option name="project" value="LOCAL" />
-      <updated>1530589721055</updated>
-    </task>
     <task id="LOCAL-00162" summary="changing setting for preprocessing threads">
       <created>1530592595062</created>
       <option name="number" value="00162" />
@@ -1008,7 +1001,14 @@
       <option name="project" value="LOCAL" />
       <updated>1534322624322</updated>
     </task>
-    <option name="localTasksCounter" value="210" />
+    <task id="LOCAL-00210" summary="adding option to use previously generated split files for cv">
+      <created>1534324498821</created>
+      <option name="number" value="00210" />
+      <option name="presentableId" value="LOCAL-00210" />
+      <option name="project" value="LOCAL" />
+      <updated>1534324498822</updated>
+    </task>
+    <option name="localTasksCounter" value="211" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1132,7 +1132,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Script to run experiments" />
     <MESSAGE value="Adding the ability to run any model file on gt" />
     <MESSAGE value="Adding the ability to test the db created in apt_expts" />
     <MESSAGE value="Creating training dataset from cached images in lbl file." />
@@ -1157,7 +1156,8 @@
     <MESSAGE value="Bug fix" />
     <MESSAGE value="Bug fix for cv" />
     <MESSAGE value="save file time stamp in the output performance file" />
-    <option name="LAST_COMMIT_MESSAGE" value="save file time stamp in the output performance file" />
+    <MESSAGE value="adding option to use previously generated split files for cv" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding option to use previously generated split files for cv" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1518,16 +1518,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PoseCommon_dataset.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="300" column="27" lean-forward="true" selection-start-line="300" selection-start-column="27" selection-end-line="300" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/debug_apt_interface.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="465">
@@ -1559,16 +1549,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/multiResData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="402" column="4" selection-start-line="402" selection-start-column="4" selection-end-line="402" selection-end-column="4" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PoseTools.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="686">
@@ -1580,20 +1560,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
+    <entry file="file://$PROJECT_DIR$/PoseCommon_dataset.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="453">
-          <caret line="754" selection-start-line="744" selection-end-line="754" />
+        <state relative-caret-position="90">
+          <caret line="300" column="27" lean-forward="true" selection-start-line="300" selection-start-column="27" selection-end-line="300" selection-end-column="27" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/APT_interface_mdn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="257" column="44" selection-start-line="257" selection-start-column="44" selection-end-line="257" selection-end-column="44" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/multiResData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="406" column="45" lean-forward="true" selection-start-line="406" selection-start-column="45" selection-end-line="406" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/apt_expts.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="506" column="24" lean-forward="true" selection-start-line="506" selection-start-column="24" selection-end-line="506" selection-end-column="24" />
+        <state relative-caret-position="435">
+          <caret line="189" lean-forward="true" selection-start-line="189" selection-end-line="189" />
         </state>
       </provider>
     </entry>
