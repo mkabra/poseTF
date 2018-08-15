@@ -260,6 +260,7 @@ def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
     # conf.cropLoc = {(vid_nr, vid_nc): [crop_locY, crop_locX]}
     conf.labelfile = lbl_file
     conf.sel_sz = min(conf.imsz)
+    conf.rescale = float(read_entry(dt_params['scale']))
     conf.unet_rescale = float(read_entry(dt_params['scale']))
     conf.op_rescale = float(read_entry(dt_params['scale']))
     conf.dlc_rescale = float(read_entry(dt_params['scale']))
@@ -283,6 +284,13 @@ def create_conf(lbl_file, view, name, net_type='unet', cache_dir=None):
         conf.flipud = int(read_entry(dt_params['flipud'])) > 0.5
     except KeyError:
         pass
+
+    try:
+        bb = read_entry(dt_params['cos_steps'])
+        conf.cos_steps = bb
+    except KeyError:
+        pass
+
     try:
         conf.unet_steps = int(read_entry(dt_params['dl_steps']))
         conf.dl_steps = int(read_entry(dt_params['dl_steps']))
