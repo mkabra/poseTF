@@ -945,8 +945,9 @@ def classify_movie_fine(conf, movie_name, locs, self, sess, max_frames=-1, start
     return pred_locs
 
 
-def create_result_image(im, locs, perc):
-    f, ax = plt.subplots()
+def create_result_image(im, locs, perc, ax = None):
+    if ax is None:
+        f, ax = plt.subplots()
     ax.imshow(im) if im.ndim == 3 else ax.imshow(im, cmap='gray')
     # ax.scatter(locs[:,0],locs[:,1],s=20)
     cmap = cm.get_cmap('jet')

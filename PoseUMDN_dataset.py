@@ -119,11 +119,13 @@ class PoseUMDN(PoseCommon.PoseCommon):
         for ndx in range(n_layers_u):
 
             if ndx < len(dep_net.up_layers):
-                cur_ul = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
-                cur_dl = dep_net.down_layers[ndx]
-                cur_l = tf.concat([cur_ul,cur_dl],axis=3)
+                # cur_ul = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
+                # cur_dl = dep_net.down_layers[ndx]
+                # cur_l = tf.concat([cur_ul,cur_dl],axis=3)
+                # n_filt = cur_l.get_shape().as_list()[3]/2
 
-                n_filt = cur_l.get_shape().as_list()[3]/2
+                cur_l = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
+                n_filt = cur_l.get_shape().as_list()[3]
 
                 if mdn_prev is None:
                     X = cur_l
@@ -309,11 +311,13 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         # MDN downsample.
         for ndx in range(n_layers_u):
-            cur_ul = dep_net.up_layers[n_layers_u - ndx - 1]
-            cur_dl = dep_net.down_layers[ndx]
-            cur_l = tf.concat([cur_ul,cur_dl],axis=3)
+            # cur_ul = dep_net.up_layers[n_layers_u - ndx - 1]
+            # cur_dl = dep_net.down_layers[ndx]
+            # cur_l = tf.concat([cur_ul,cur_dl],axis=3)
+            # n_filt = cur_dl.get_shape().as_list()[3]
 
-            n_filt = cur_dl.get_shape().as_list()[3]
+            cur_l = dep_net.up_layers[n_layers_u - ndx - 1]
+            n_filt = cur_l.get_shape().as_list()[3]
 
             if mdn_prev is None:
                 X = cur_l
@@ -896,6 +900,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
             locs = cur_input[1]
             cur_dist = np.zeros([conf.batch_size,conf.n_classes])
+            cur_predlocs = np.zeros(pred_means.shape[0:1] + pred_means.shape[2:])
             for ndx in range(pred_means.shape[0]):
                 for gdx, gr in enumerate(self.conf.mdn_groups):
                     for g in gr:
@@ -907,7 +912,7 @@ class PoseUMDN(PoseCommon.PoseCommon):
                         # all predictions with wts > 0.
                         dd1 = np.sqrt(np.sum(jj ** 2, axis=-1))
                         cur_dist[ndx, g] = dd1 * self.conf.rescale
-                        cur_predlocs = mm
+                        cur_predlocs[ndx,g,...] = mm
 
             val_u_preds.append(u_pred)
             u_predlocs = PoseTools.get_pred_locs(u_pred)

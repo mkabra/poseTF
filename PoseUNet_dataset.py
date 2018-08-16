@@ -17,6 +17,8 @@ import multiResData
 from scipy import io as sio
 import re
 import json
+from tensorflow.contrib.layers import batch_norm
+
 # for tf_unet
 #from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
 #                            conv2d, deconv2d, max_pool, crop_and_concat, pixel_wise_softmax_2,
@@ -128,7 +130,96 @@ class PoseUNet(PoseCommon):
         # upsample
         for ndx in reversed(range(n_layers)):
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
-            X = tf.concat([X,layers[ndx]], axis=3)
+            X = tf.concat([X, self.down_layers[ndx]],axis=-1)
+            n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
+            for cndx in range(n_conv):
+                sc_name = 'layerup_{}_{}'.format(ndx, cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, n_filt)
+                all_layers.append(X)
+            up_layers.append(X)
+        self.all_layers = all_layers
+        self.up_layers = up_layers
+
+        # final conv
+        weights = tf.get_variable("out_weights", [3,3,n_filt,n_out],
+                                  initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable("out_biases", n_out,
+                                 initializer=tf.constant_initializer(0.))
+        conv = tf.nn.conv2d(X, weights, strides=[1, 1, 1, 1], padding='SAME')
+        X = tf.add(conv, biases, name = 'unet_pred')
+        # X = conv+biases
+        return X
+
+    def create_network_residual(self):
+
+        m_sz = min(self.conf.imsz)/self.conf.unet_rescale
+        max_layers = int(math.ceil(math.log(m_sz,2)))-1
+        sel_sz = self.conf.sel_sz
+        n_layers = int(math.ceil(math.log(sel_sz,2)))+2
+        n_layers = min(max_layers,n_layers) - 2
+
+        # n_layers = 6
+
+        n_conv = self.n_conv
+        conv = lambda a, b: conv_relu3(
+            a,b,self.ph['phase_train'], keep_prob=None,
+            use_leaky=self.conf.unet_use_leaky)
+
+        layers = []
+        up_layers = []
+        layers_sz = []
+        X = self.inputs[0]
+        n_out = self.conf.n_classes
+        all_layers = []
+
+        # downsample
+        n_filt = 128
+        n_filt_base = 32
+        max_filt = 512
+        # n_filt_base = 16
+        # max_filt = 256
+
+        X = conv(X, n_filt_base)
+        for ndx in range(n_layers):
+            X_in = X
+            for cndx in range(2):
+                sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
+                with tf.variable_scope(sc_name):
+                    X = conv(X, X_in.get_shape().as_list()[-1])
+                all_layers.append(X)
+            layers.append(X)
+            layers_sz.append(X.get_shape().as_list()[1:3])
+            X = X + X_in
+            n_filt = min(max_filt, n_filt_base * (2** (ndx+1)))
+
+            in_dim = X.get_shape().as_list()[3]
+            kernel_shape = [3, 3, in_dim, n_filt]
+            weights = tf.get_variable("weights", kernel_shape,
+                                      initializer=tf.contrib.layers.xavier_initializer())
+            biases = tf.get_variable("biases", kernel_shape[-1],
+                                     initializer=tf.constant_initializer(0.))
+            conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
+            conv = batch_norm(conv, decay=0.99, is_training=self.ph['phase_train'])
+            X = tf.nn.relu(conv + biases)
+
+        self.down_layers = layers
+
+        # few more convolution for the final layers
+
+        top_layers = []
+        for cndx in range(n_conv):
+            n_filt = min(max_filt, n_filt_base * (2** (n_layers)))
+            sc_name = 'layer_{}_{}'.format(n_layers,cndx)
+            with tf.variable_scope(sc_name):
+                X = conv(X, n_filt)
+                top_layers.append(X)
+        self.top_layers = top_layers
+        all_layers.extend(top_layers)
+
+        # upsample
+        for ndx in reversed(range(n_layers)):
+            X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
             n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
