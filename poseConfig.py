@@ -84,7 +84,8 @@ class config(object):
         self.numTest = 8
         self.dl_steps = 20000 # number of training iters
         self.cos_steps = 2 #number of times the learning rate is decayed
-        # rate should be reduced by gamma by the end of the training.
+        self.n_steps = 2
+        # rate will be reduced by gamma**n_steps by the end of the training.
 
         # range for contrast, brightness and rotation adjustment
         self.horzFlip = False

@@ -1,4 +1,22 @@
 
+from poseConfig import aliceConfig as conf
+import tensorflow as tf
+import multiResData
+conf.trange = 5
+conf.cachedir += '_dataset'
+# conf.dl_steps = 100000
+# conf.cos_steps = 4
+import PoseUMDN_dataset
+self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_bugfix')
+self.train_umdn()
+tf.reset_default_graph()
+V = self.classify_val()
+np.percentile(V[0],[90,95,98,99],axis=0)
+
+
+##
+
+
 import APT_interface_mdn as apat
 conf = apat.create_conf('/home/mayank/Dropbox (HHMI)/temp/20180807T130922_v73.lbl',0,'alice',cache_dir='/home/mayank/temp')
 ##
@@ -10,22 +28,6 @@ apt.main(args)
 
 ##
 
-from poseConfig import aliceConfig as conf
-import tensorflow as tf
-import multiResData
-conf.trange = 5
-conf.cachedir += '_dataset'
-conf.dl_steps = 100000
-conf.cos_steps = 4
-import PoseUMDN_dataset
-self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_cosine_4decay')
-self.train_umdn()
-tf.reset_default_graph()
-V = self.classify_val()
-np.percentile(V[0],[90,95,98,99],axis=0)
-
-
-##
 
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
