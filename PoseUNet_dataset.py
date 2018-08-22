@@ -106,13 +106,13 @@ class PoseUNet(PoseCommon):
             n_filt = min(max_filt, n_filt_base * (2** ndx))
 
             if ndx == 0:
-                n_conv = 1
+                n_conv = 2
             elif ndx == 1:
                 n_conv = 2
             elif ndx == 2:
-                n_conv = 4
+                n_conv = 2
             else:
-                n_conv = 6
+                n_conv = 4
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
@@ -146,13 +146,13 @@ class PoseUNet(PoseCommon):
             n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
 
             if ndx == 0:
-                n_conv = 1
+                n_conv = 2
             elif ndx == 1:
                 n_conv = 2
             elif ndx == 2:
-                n_conv = 4
+                n_conv = 2
             else:
-                n_conv = 6
+                n_conv = 4
 
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)

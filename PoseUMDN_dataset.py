@@ -143,14 +143,14 @@ class PoseUMDN(PoseCommon.PoseCommon):
                     X = tf.concat([mdn_prev, cur_l], axis=3)
                     # X = mdn_prev + cur_l # residual
 
-            if ndx == 0:
-                n_conv = 1
-            elif ndx == 1:
-                n_conv = 2
-            elif ndx == 2:
-                n_conv = 4
-            else:
-                n_conv = 6
+#            if ndx == 0:
+#                n_conv = 1
+#            elif ndx == 1:
+#                n_conv = 2
+#            elif ndx == 2:
+#                n_conv = 4
+#            else:
+#                n_conv = 6
 
             for c_ndx in range(n_conv):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
