@@ -1,3 +1,21 @@
+from poseConfig import aliceConfig as conf
+import tensorflow as tf
+tf.reset_default_graph()
+import multiResData
+conf.trange = 5
+conf.cachedir += '_dataset'
+# conf.dl_steps = 100000
+# conf.cos_steps = 4
+# import PoseUMDN_dataset
+# self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_test')
+
+import PoseUNet_dataset
+
+self = PoseUNet_dataset.PoseUNet(conf,name='pose_unet_fusion')
+
+self.train_unet()
+
+##
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 args =  '-name pend -cache /home/mayank/temp -type unet /home/mayank/work/poseTF/data/apt/pend_1_stripped_preProcDataCache_scale4_NumChans1_v73.lbl train -use_cache'
@@ -30,7 +48,7 @@ conf.cachedir += '_dataset'
 # self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_test')
 
 import PoseUNet_dataset
-self = PoseUNet_dataset.PoseUNet(conf,name='pose_unet_more_layers')
+self = PoseUNet_dataset.PoseUNet(conf,name='pose_unet_orig_layers')
 self.train_unet()
 tf.reset_default_graph()
 V = self.classify_val()

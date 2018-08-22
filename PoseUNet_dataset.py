@@ -18,6 +18,7 @@ from scipy import io as sio
 import re
 import json
 from tensorflow.contrib.layers import batch_norm
+import FusionNet
 
 # for tf_unet
 #from tf_unet_layers import (weight_variable, weight_variable_devonc, bias_variable,
@@ -69,9 +70,10 @@ class PoseUNet(PoseCommon):
         info.set_shape([conf.batch_size,3])
 
         with tf.variable_scope(self.net_name):
-           return self.create_network1()
+            # return self.create_network1()
             # return self.create_network_residual()
-
+            fn = FusionNet.FusionNet(conf.n_classes)
+            return fn.inference(self.inputs[0])
 
     def create_network1(self):
 
@@ -105,14 +107,14 @@ class PoseUNet(PoseCommon):
         for ndx in range(n_layers):
             n_filt = min(max_filt, n_filt_base * (2** ndx))
 
-            if ndx == 0:
-                n_conv = 1
-            elif ndx == 1:
-                n_conv = 2
-            elif ndx == 2:
-                n_conv = 4
-            else:
-                n_conv = 6
+            # if ndx == 0:
+            #     n_conv = 1
+            # elif ndx == 1:
+            #     n_conv = 2
+            # elif ndx == 2:
+            #     n_conv = 4
+            # else:
+            #     n_conv = 6
 
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
@@ -141,18 +143,31 @@ class PoseUNet(PoseCommon):
 
         # upsample
         for ndx in reversed(range(n_layers)):
-            X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
+            X = CNB.upscale('u_{}'.format(ndx), X, layers_sz[ndx])
+
+            # # upsample using deconv
+            # with tf.variable_scope('u_{}'.format(ndx)):
+            #     X_sh = X.get_shape().as_list()
+            #     w = tf.get_variable('w', [5, 5, X_sh[-1], X_sh[-1]],initializer=tf.contrib.layers.xavier_initializer())
+            #     out_shape = [X_sh[0],layers_sz[ndx][0],layers_sz[ndx][1],X_sh[-1]]
+            #     X = tf.nn.conv2d_transpose(X, w, output_shape=out_shape, strides=[1, 2, 2, 1], padding="SAME")
+            #     biases = tf.get_variable('biases', [out_shape[-1]], initializer=tf.constant_initializer(0))
+            #     conv_b = X + biases
+            #
+            #     bn = batch_norm(conv_b)
+            #     X = tf.nn.relu(bn)
+
             X = tf.concat([X,layers[ndx]], axis=3)
             n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
 
-            if ndx == 0:
-                n_conv = 1
-            elif ndx == 1:
-                n_conv = 2
-            elif ndx == 2:
-                n_conv = 4
-            else:
-                n_conv = 6
+            # if ndx == 0:
+            #     n_conv = 1
+            # elif ndx == 1:
+            #     n_conv = 2
+            # elif ndx == 2:
+            #     n_conv = 4
+            # else:
+            #     n_conv = 6
 
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
@@ -334,30 +349,27 @@ class PoseUNet(PoseCommon):
             learning_rate=0.0001)
 
 
-    def classify_val(self, train_type=0, at_step=-1, onTrain=False):
-        if train_type is 0:
-            if not onTrain:
-                val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
-            else:
-                val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
+    def classify_val(self, model_file=None, onTrain=False):
+        if not onTrain:
+            val_file = os.path.join(self.conf.cachedir, self.conf.valfilename + '.tfrecords')
         else:
-            val_file = os.path.join(self.conf.cachedir, self.conf.fulltrainfilename + '.tfrecords')
+            val_file = os.path.join(self.conf.cachedir, self.conf.trainfilename + '.tfrecords')
         print('Classifying data in {}'.format(val_file))
 
         num_val = 0
         for _ in tf.python_io.tf_record_iterator(val_file):
             num_val += 1
 
-        if at_step < 0:
-            sess = self.init_net_meta(train_type) #,True)
-        else:
+        # if at_step < 0:
+        #     sess = self.init_net_meta(train_type) #,True)
+        # else:
 
             #self.init_train(train_type)
-            self.setup_net()
-            self.pred = self.create_network()
-            self.create_saver()
-            sess = tf.Session()
-            start_at = self.init_and_restore(sess,True,['loss','dist'], at_step=at_step)
+        self.setup_train()
+        self.pred = self.create_network()
+        self.create_saver()
+        sess = tf.Session()
+        model_file = self.restore(sess,model_file)
 
         val_dist = []
         val_ims = []
@@ -400,14 +412,9 @@ class PoseUNet(PoseCommon):
         tf.reset_default_graph()
 
         dstr = PoseTools.get_datestr()
-        if at_step < 0:
-            model_file = self.get_latest_model_file()
-            start_at = int(re.findall('\d+$',model_file)[0]) + 1
-        else:
-            model_file = self.get_latest_model_file()
-            last_iter = re.findall('\d+$',model_file)[0]
-            model_file.replace(last_iter,'{}'.format(start_at-1))
 
+        last_iter = re.findall('\d+$',model_file)[0]
+        start_at = int(last_iter)
 
         f_name = '_'.join([ self.conf.expname, self.name, 'cv_results','{}'.format(start_at-1),dstr])
         out_file = os.path.join(self.conf.cachedir,f_name+'.json')
