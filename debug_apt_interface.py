@@ -1,4 +1,13 @@
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+args =  '-name pend -cache /home/mayank/temp -type unet /home/mayank/work/poseTF/data/apt/pend_1_stripped_preProcDataCache_scale4_NumChans1_v73.lbl train -use_cache'
+args = args.split()
+import APT_interface as apt
+apt.main(args)
+
+
+##
+import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from poseConfig import aliceConfig as conf
 import tensorflow as tf
