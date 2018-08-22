@@ -124,17 +124,20 @@ def create_db(args):
 
     all_split_files = []
     for view in range(nviews):
-        if args.split is not None and not args.split_type.startswith('prog'):
+        if args.split_type is not None and not args.split_type.startswith('prog'):
+            cachedir = os.path.join(out_dir, args.name, 'common')
+            if not os.path.exists(cachedir):
+                os.mkdir(cachedir)
             cachedir = os.path.join(out_dir, args.name, 'common','splits_{}'.format(view))
             if not os.path.exists(cachedir):
                 os.mkdir(cachedir)
             conf = apt.create_conf(args.lbl_file, view, args.name, cache_dir=cachedir)
             conf.splitType = args.split_type
             print("Split type is {}".format(conf.splitType))
-            if not args.skip_split:
+            if args.do_split:
                 train_info, val_info, split_files = apt.create_cv_split_files(conf, nsplits)
             else:
-                split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in nsplits]
+                split_files = [os.path.join(conf.cachedir, 'cv_split_fold_{}.json'.format(ndx)) for ndx in range(nsplits)]
             all_split_files.append(split_files)
 
     for curm in all_nets:
@@ -189,6 +192,9 @@ def create_db(args):
                 split_files = all_split_files[view]
 
                 for cur_split in range(nsplits):
+                    conf.cachedir = os.path.join(out_dir, args.name, 'common', '{}_view_{}'.format(curm,view))
+                    if not os.path.exists(conf.cachedir):
+                        os.mkdir(conf.cachedir)
                     conf.cachedir = os.path.join(out_dir, args.name, 'common', '{}_view_{}'.format(curm,view), 'cv_{}'.format(cur_split))
                     if not os.path.exists(conf.cachedir):
                         os.mkdir(conf.cachedir)
@@ -510,7 +516,7 @@ def main(argv):
                         required=True)
     parser.add_argument('-split_type', dest='split_type',
                         help='Type of split for CV. If not defined not CV is done', default=None)
-    parser.add_argument('-skip_split', dest='skip_split', help='Use previously created split files for CV', action='store_true')
+    parser.add_argument('-do_split', dest='do_split', help='Create split files for CV', action='store_true')
     parser.add_argument('-whose', dest='whose',
                         help='Use their or our code', required=True, choices=['theirs','ours','our_default'])
     parser.add_argument('-nets', dest='nets', help='Type of nets to run on. Options are unet, openpose, deeplabcut and leap. If not specified run on all nets', default = [], nargs = '*')

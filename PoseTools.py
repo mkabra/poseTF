@@ -1362,9 +1362,9 @@ def get_crop_loc(lbl,ndx,view, on_gt=False):
             fname = 'movieFilesAllCropInfo'
 
         if nviews == 1:
-            crop_loc = lbl[lbl[fname][0, ndx]]['roi'].value[:, 0]
+            crop_loc = lbl[lbl[fname][0, ndx]]['roi'].value[:, 0].astype('int')
         else:
-            crop_loc = lbl[lbl[lbl[fname][0, ndx]]['roi'][view][0]].value[:, 0]
+            crop_loc = lbl[lbl[lbl[fname][0, ndx]]['roi'][view][0]].value[:, 0].astype('int')
     else:
         crop_loc = None
 
