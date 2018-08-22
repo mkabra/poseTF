@@ -430,7 +430,8 @@ class PoseCommon(object):
 #                learning_rate=self.ph['learning_rate']).minimize(self.cost)
 
             # clipped gradients.
-            optimizer = tf.train.AdamOptimizer(
+#optimizer = tf.train.AdamOptimizer(
+            optimizer = tf.train.RMSPropOptimizer(
                 learning_rate=self.ph['learning_rate'])
             gradients, variables = zip(*optimizer.compute_gradients(self.cost))
             gradients = [None if gradient is None else
