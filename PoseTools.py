@@ -70,7 +70,7 @@ def get_cmap(n_classes):
 
 def scale_images(img, locs, scale, conf):
     sz = img.shape
-    simg = np.zeros((sz[0], int(sz[1]/ scale), int(sz[2]/ scale), sz[3]))
+    simg = np.zeros((sz[0], int(float(sz[1])/ scale), int(float(sz[2])/ scale), sz[3]))
     for ndx in range(sz[0]):
         if sz[3] == 1:
             simg[ndx, :, :, 0] = transform.resize(img[ndx, :, :, 0], simg.shape[1:3], preserve_range=True)
@@ -400,8 +400,8 @@ def blur_label(im_sz, loc, scale, blur_rad):
 
 def create_label_images(locs, im_sz, scale, blur_rad):
     n_classes = len(locs[0])
-    sz0 = int(math.ceil(old_div(float(im_sz[0]), scale)))
-    sz1 = int(math.ceil(old_div(float(im_sz[1]), scale)))
+    sz0 = int(float(im_sz[0]), scale)
+    sz1 = int(float(im_sz[1]), scale)
 
     label_ims = np.zeros((len(locs), sz0, sz1, n_classes))
     # labelims1 = np.zeros((len(locs),sz0,sz1,n_classes))

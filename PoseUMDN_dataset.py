@@ -50,6 +50,18 @@ def val_preproc_func(ims, locs, info, conf):
     return ims.astype('float32'), locs.astype('float32'), info.astype('float32'), hmaps.astype('float32')
 
 
+def conv_residual(x_in, n_filt, train_phase):
+    in_dim = x_in.get_shape().as_list()[3]
+    kernel_shape = [3, 3, in_dim, n_filt]
+    weights = tf.get_variable("weights", kernel_shape,
+                              initializer=tf.contrib.layers.xavier_initializer())
+    biases = tf.get_variable("biases", kernel_shape[-1],
+                             initializer=tf.constant_initializer(0.))
+    conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
+    conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+    return conv
+
+
 class PoseUMDN(PoseCommon.PoseCommon):
 
     def __init__(self, conf, name='pose_umdn',net_type='conv',
@@ -119,20 +131,28 @@ class PoseUMDN(PoseCommon.PoseCommon):
         for ndx in range(n_layers_u):
 
             if ndx < len(dep_net.up_layers):
-                # cur_ul = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
-                # cur_dl = dep_net.down_layers[ndx]
-                # cur_l = tf.concat([cur_ul,cur_dl],axis=3)
-                # n_filt = cur_l.get_shape().as_list()[3]/2
+                cur_ul = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
+                cur_dl = dep_net.down_layers[ndx]
+                cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
-                cur_l = dep_net.up_layers[n_layers_u - extra_layers - ndx - 1]
-                n_filt = cur_l.get_shape().as_list()[3]
+                n_filt = cur_l.get_shape().as_list()[3]/2
 
                 if mdn_prev is None:
                     X = cur_l
                 else:
                     X = tf.concat([mdn_prev, cur_l], axis=3)
+                    # X = mdn_prev + cur_l # residual
 
-            for c_ndx in range(n_conv-1):
+            if ndx == 0:
+                n_conv = 1
+            elif ndx == 1:
+                n_conv = 2
+            elif ndx == 2:
+                n_conv = 4
+            else:
+                n_conv = 6
+
+            for c_ndx in range(n_conv):
                 sc_name = 'mdn_{}_{}'.format(ndx,c_ndx)
                 with tf.variable_scope(sc_name):
                     X = conv(X, n_filt, self.ph['phase_train'])
@@ -152,6 +172,19 @@ class PoseUMDN(PoseCommon.PoseCommon):
                 X = tf.nn.relu(cur_conv + biases)
             mdn_prev = X
             self.mdn_layers2.append(X)
+
+            # with tf.variable_scope('mdn_{}'.format(ndx)):
+            #     X = conv_residual(X, n_filt, self.ph['phase_train'])
+            # with tf.variable_scope('mdn_{}_0'.format(ndx)):
+            #     X_in = X
+            #     X = conv_residual(X, n_filt, self.ph['phase_train'])
+            #     X = tf.nn.leaky_relu(X)
+            # with tf.variable_scope('mdn_{}_1'.format(ndx)):
+            #     X = conv_residual(X, n_filt, self.ph['phase_train'])
+            #     X = X + X_in
+            #     X = tf.nn.leaky_relu(X)
+            #
+            # self.mdn_layers1.append(X)
 
         # few more convolution for the outputs
         n_filt = X.get_shape().as_list()[3]
@@ -311,13 +344,11 @@ class PoseUMDN(PoseCommon.PoseCommon):
 
         # MDN downsample.
         for ndx in range(n_layers_u):
-            # cur_ul = dep_net.up_layers[n_layers_u - ndx - 1]
-            # cur_dl = dep_net.down_layers[ndx]
-            # cur_l = tf.concat([cur_ul,cur_dl],axis=3)
-            # n_filt = cur_dl.get_shape().as_list()[3]
+            cur_ul = dep_net.up_layers[n_layers_u - ndx - 1]
+            cur_dl = dep_net.down_layers[ndx]
+            cur_l = tf.concat([cur_ul,cur_dl],axis=3)
 
-            cur_l = dep_net.up_layers[n_layers_u - ndx - 1]
-            n_filt = cur_l.get_shape().as_list()[3]
+            n_filt = cur_dl.get_shape().as_list()[3]
 
             if mdn_prev is None:
                 X = cur_l

@@ -87,11 +87,12 @@ class PoseUNet(PoseCommon.PoseCommon):
         else:
             imsz = self.conf.imsz
             rescale = self.conf.unet_rescale
+            rimsz = [int(float(imsz[0])/rescale),int(float(imsz[0])/rescale)]
             self.ph['x'] = tf.placeholder(tf.float32,
-                               [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.imgDim],
+                               [None,rimsz[0],rimsz[1], self.conf.imgDim],
                                name='x')
             self.ph['y'] = tf.placeholder(tf.float32,
-                               [None,imsz[0]/rescale,imsz[1]/rescale, self.conf.n_classes],
+                               [None,rimsz[0],rimsz[1], self.conf.n_classes],
                                name='y')
 
             x_shape = [self.conf.batch_size, ] + self.ph['x'].get_shape().as_list()[1:]
@@ -332,9 +333,10 @@ class PoseUNet(PoseCommon.PoseCommon):
         self.fd[self.ph['x']] = self.xs
 
         rescale = self.conf.unet_rescale
-        imsz = [self.conf.imsz[0]/rescale, self.conf.imsz[1]/rescale,]
+        imsz = self.conf.imsz
+        rimsz = [int(float(imsz[0])/rescale), int(float(imsz[1])/rescale),]
         label_ims = PoseTools.create_label_images(
-            self.locs, imsz, 1, self.conf.label_blur_rad)
+            self.locs, rimsz, 1, self.conf.label_blur_rad)
         self.fd[self.ph['y']] = label_ims
 
 

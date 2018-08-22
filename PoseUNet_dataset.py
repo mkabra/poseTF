@@ -69,7 +69,9 @@ class PoseUNet(PoseCommon):
         info.set_shape([conf.batch_size,3])
 
         with tf.variable_scope(self.net_name):
-            return self.create_network1()
+           return self.create_network1()
+            # return self.create_network_residual()
+
 
     def create_network1(self):
 
@@ -102,6 +104,16 @@ class PoseUNet(PoseCommon):
 
         for ndx in range(n_layers):
             n_filt = min(max_filt, n_filt_base * (2** ndx))
+
+            if ndx == 0:
+                n_conv = 1
+            elif ndx == 1:
+                n_conv = 2
+            elif ndx == 2:
+                n_conv = 4
+            else:
+                n_conv = 6
+
             for cndx in range(n_conv):
                 sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
                 with tf.variable_scope(sc_name):
@@ -130,8 +142,18 @@ class PoseUNet(PoseCommon):
         # upsample
         for ndx in reversed(range(n_layers)):
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
-            X = tf.concat([X, self.down_layers[ndx]],axis=-1)
+            X = tf.concat([X,layers[ndx]], axis=3)
             n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
+
+            if ndx == 0:
+                n_conv = 1
+            elif ndx == 1:
+                n_conv = 2
+            elif ndx == 2:
+                n_conv = 4
+            else:
+                n_conv = 6
+
             for cndx in range(n_conv):
                 sc_name = 'layerup_{}_{}'.format(ndx, cndx)
                 with tf.variable_scope(sc_name):
@@ -152,6 +174,17 @@ class PoseUNet(PoseCommon):
         return X
 
     def create_network_residual(self):
+
+        def conv_residual(x_in,n_filt, train_phase):
+            in_dim = x_in.get_shape().as_list()[3]
+            kernel_shape = [3, 3, in_dim, n_filt]
+            weights = tf.get_variable("weights", kernel_shape,
+                                      initializer=tf.contrib.layers.xavier_initializer())
+            biases = tf.get_variable("biases", kernel_shape[-1],
+                                     initializer=tf.constant_initializer(0.))
+            conv = tf.nn.conv2d(x_in, weights, strides=[1, 1, 1, 1], padding='SAME')
+            conv = batch_norm(conv, decay=0.99, is_training=train_phase)
+            return conv
 
         m_sz = min(self.conf.imsz)/self.conf.unet_rescale
         max_layers = int(math.ceil(math.log(m_sz,2)))-1
@@ -180,52 +213,72 @@ class PoseUNet(PoseCommon):
         # n_filt_base = 16
         # max_filt = 256
 
-        X = conv(X, n_filt_base)
         for ndx in range(n_layers):
+            n_filt = min(max_filt, n_filt_base * (2** (ndx)))
+            if ndx == 0:
+                with tf.variable_scope('layerdown_{}'.format(ndx)):
+                    X_sh = conv_residual(X, n_filt, self.ph['phase_train'])
+            else:
+                X_sh = X
+
             X_in = X
-            for cndx in range(2):
-                sc_name = 'layerdown_{}_{}'.format(ndx,cndx)
-                with tf.variable_scope(sc_name):
-                    X = conv(X, X_in.get_shape().as_list()[-1])
-                all_layers.append(X)
+            with tf.variable_scope('layerdown_{}_0'.format(ndx)):
+                X = conv_residual(X, n_filt, self.ph['phase_train'])
+                X = tf.nn.leaky_relu(X)
+            with tf.variable_scope('layerdown_{}_1'.format(ndx)):
+                X = conv_residual(X, n_filt, self.ph['phase_train'])
+                X = X + X_sh
+                X = tf.nn.leaky_relu(X)
+
+            all_layers.append(X)
             layers.append(X)
             layers_sz.append(X.get_shape().as_list()[1:3])
-            X = X + X_in
-            n_filt = min(max_filt, n_filt_base * (2** (ndx+1)))
 
             in_dim = X.get_shape().as_list()[3]
+            n_filt = min(max_filt, n_filt_base * (2** (ndx+1)))
             kernel_shape = [3, 3, in_dim, n_filt]
-            weights = tf.get_variable("weights", kernel_shape,
-                                      initializer=tf.contrib.layers.xavier_initializer())
-            biases = tf.get_variable("biases", kernel_shape[-1],
-                                     initializer=tf.constant_initializer(0.))
-            conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
-            conv = batch_norm(conv, decay=0.99, is_training=self.ph['phase_train'])
-            X = tf.nn.relu(conv + biases)
+            with tf.variable_scope('layerdown_{}_2'.format(ndx)):
+                weights = tf.get_variable("weights1", kernel_shape, initializer=tf.contrib.layers.xavier_initializer())
+                biases = tf.get_variable("biases1", kernel_shape[-1], initializer=tf.constant_initializer(0.))
+                conv = tf.nn.conv2d(X, weights, strides=[1, 2, 2, 1], padding='SAME')
+                conv = batch_norm(conv, decay=0.99, is_training=self.ph['phase_train'])
+                X = conv
+#            X = tf.nn.relu(conv + biases)
 
         self.down_layers = layers
 
         # few more convolution for the final layers
-
         top_layers = []
-        for cndx in range(n_conv):
-            n_filt = min(max_filt, n_filt_base * (2** (n_layers)))
-            sc_name = 'layer_{}_{}'.format(n_layers,cndx)
-            with tf.variable_scope(sc_name):
-                X = conv(X, n_filt)
-                top_layers.append(X)
+        X_top_in = X
+        n_filt = min(max_filt, n_filt_base * (2** (n_layers)))
+        with tf.variable_scope('top_layer_{}_0'.format(n_layers)):
+            X = conv_residual(X, n_filt, self.ph['phase_train'])
+            X = tf.nn.leaky_relu(X)
+        with tf.variable_scope('top_layer_{}_1'.format(n_layers)):
+            X = conv_residual(X, n_filt, self.ph['phase_train'])
+            X += X_top_in
+            X = tf.nn.leaky_relu(X)
+        top_layers.append(X)
         self.top_layers = top_layers
         all_layers.extend(top_layers)
 
         # upsample
         for ndx in reversed(range(n_layers)):
             X = CNB.upscale('u_'.format(ndx), X, layers_sz[ndx])
-            n_filt = min(2 * max_filt, 2 * n_filt_base* (2** ndx))
-            for cndx in range(n_conv):
-                sc_name = 'layerup_{}_{}'.format(ndx, cndx)
-                with tf.variable_scope(sc_name):
-                    X = conv(X, n_filt)
-                all_layers.append(X)
+            n_filt = min(max_filt, n_filt_base* (2** ndx))
+            with tf.variable_scope('layerup_{}'.format(ndx)):
+                X = conv_residual(X, n_filt, self.ph['phase_train'])
+                X = X +  layers[ndx]
+                X_in = X
+            with tf.variable_scope('layerup_{}_0'.format(ndx)):
+                X = conv_residual(X, n_filt, self.ph['phase_train'])
+                X = tf.nn.leaky_relu(X)
+            with tf.variable_scope('layerup_{}_1'.format(ndx)):
+                X = conv_residual(X, n_filt, self.ph['phase_train'])
+                X += X_in
+                X = tf.nn.leaky_relu(X)
+
+            all_layers.append(X)
             up_layers.append(X)
         self.all_layers = all_layers
         self.up_layers = up_layers
@@ -271,17 +324,14 @@ class PoseUNet(PoseCommon):
         return sess, latest_model_file
 
 
-    def train_unet(self, restore):
+    def train_unet(self):
         def loss(inputs, pred):
             return tf.nn.l2_loss(pred-inputs[-1])
 
         PoseCommon.train(self,
-            restore=restore,
             create_network=self.create_network,
-            training_iters=self.conf.unet_steps,
             loss=loss,
-            learning_rate=0.0001,
-            td_fields=('loss','dist'))
+            learning_rate=0.0001)
 
 
     def classify_val(self, train_type=0, at_step=-1, onTrain=False):

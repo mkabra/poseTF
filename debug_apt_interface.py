@@ -1,14 +1,28 @@
-
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from poseConfig import aliceConfig as conf
 import tensorflow as tf
 import multiResData
 conf.trange = 5
 conf.cachedir += '_dataset'
+import mdn_keras
+mdn_keras.training(conf)
+
+##
+from poseConfig import aliceConfig as conf
+import tensorflow as tf
+tf.reset_default_graph()
+import multiResData
+conf.trange = 5
+conf.cachedir += '_dataset'
 # conf.dl_steps = 100000
 # conf.cos_steps = 4
-import PoseUMDN_dataset
-self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_bugfix')
-self.train_umdn()
+# import PoseUMDN_dataset
+# self = PoseUMDN_dataset.PoseUMDN(conf,name='pose_umdn_test')
+
+import PoseUNet_dataset
+self = PoseUNet_dataset.PoseUNet(conf,name='pose_unet_more_layers')
+self.train_unet()
 tf.reset_default_graph()
 V = self.classify_val()
 np.percentile(V[0],[90,95,98,99],axis=0)
